@@ -30,9 +30,9 @@ class BoardProperties(
 ) {
     fun tileBackgroundColor(row: Int, column: Int): Boolean {
         return if (row % 2 == 0) {
-            column % 2 == 0
-        } else {
             column % 2 != 0
+        } else {
+            column % 2 == 0
         }
     }
 
