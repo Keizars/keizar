@@ -1,0 +1,162 @@
+name: Release
+
+on:
+  push:
+    tags: [ 'v*' ]
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Get Tag # usage:  ${{ steps.tag.outputs.tag }}
+        id: tag
+        uses: dawidd6/action-get-tag@v1
+
+      - uses: bhowell2/github-substring-action@v1.0.0
+        id: tag-version # usage:  ${{ steps.tag-version.outputs.substring }}
+        with:
+          value: ${{ steps.tag.outputs.tag }}
+          index_of_str: "v"
+          default_return_value: ${{ steps.tag.outputs.tag }}
+
+      - name: Create Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN  }}
+        with:
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: ${{ steps.tag-version.outputs.substring }}
+          body: |
+            Automatically created from tag ${{ steps.tag.outputs.tag }}. Do not change anything until assets are uploaded.
+            
+            ----
+            
+            Scan QR code to download Android App：
+            ![](https://github.com/keizar24/keizar/releases/download/${{ steps.tag.outputs.tag }}/Keizar-${{ steps.tag-version.outputs.substring }}.apk.qrcode.png)
+
+          draft: true
+          prerelease: false
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      id: ${{ steps.create_release.outputs.id }}
+
+  release:
+    needs: [ create-release ]
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-2022
+          - ubuntu-20.04
+          - macos-12
+    env:
+      enableLocalPublishingTest: 'false'
+      gradleArgs: --scan "-Dorg.gradle.jvmargs=-Xmx4096m" "-Dfile.encoding=UTF-8"
+      isMac: ${{ startsWith(matrix.os, 'macos') }}
+      isWindows: ${{ startsWith(matrix.os, 'windows') }}
+      isUbuntu: ${{ startsWith(matrix.os, 'ubuntu') }}
+      isUnix: ${{ startsWith(matrix.os, 'macos') || startsWith(matrix.os, 'ubuntu') }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: Get Tag # usage:  ${{ steps.tag.outputs.tag }}
+        id: tag
+        uses: dawidd6/action-get-tag@v1
+
+
+      - if: ${{ env.isUnix == 'true' }}
+        uses: actions/setup-java@v2
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - if: ${{ env.isWindows == 'true' }}
+        uses: actions/setup-java@v2
+        with:
+          distribution: microsoft
+          java-version: 17
+
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Cache Konan
+        uses: pat-s/always-upload-cache@v3
+        with:
+          path: ~/.konan
+          key: ${{ runner.os }}-konan-${{ hashFiles('*.gradle.kts') }}
+          restore-keys: |
+            ${{ runner.os }}-konan-
+
+      - name: Cache Gradle
+        uses: pat-s/always-upload-cache@v3
+        with:
+          path: ~/.gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('*.gradle.kts') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Cache Maven
+        uses: pat-s/always-upload-cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('*.gradle.kts') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+
+      - if: ${{ env.isUnix == 'true' }}
+        run: chmod -R 777 *
+
+
+      - name: Clean and download dependencies
+        run: ./gradlew clean ${{ env.gradleArgs }}
+
+      - if: ${{ env.isMac == 'true' }}
+        name: Prepare Android Signing Key
+        id: android_signing_key
+        uses: timheuer/base64-to-file@v1.1
+        with:
+          fileName: 'android_signing_key'
+          fileDir: './'
+          encodedString: ${{ secrets.SIGNING_RELEASE_STOREFILE }}
+
+      - if: ${{ env.isMac == 'true' }}
+        name: Build Android APK
+        run: ./gradlew assembleRelease ${{ env.gradleArgs }}
+        env:
+          "signing_release_storeFileFromRoot": ${{ steps.android_signing_key.outputs.filePath }}
+          "signing_release_storePassword": ${{ secrets.SIGNING_RELEASE_STOREPASSWORD }}
+          "signing_release_keyAlias": ${{ secrets.SIGNING_RELEASE_KEYALIAS }}
+          "signing_release_keyPassword": ${{ secrets.SIGNING_RELEASE_KEYPASSWORD }}
+
+      - if: ${{ env.isMac == 'true' }}
+        name: Upload Android APK
+        run: "./gradlew :ci-helper:uploadAndroidApk ${{ env.gradleArgs }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN  }}
+          GITHUB_REPOSITORY: ${{ secrets.GITHUB_REPOSITORY  }}
+          CI_RELEASE_ID: ${{ needs.create-release.outputs.id }}
+          CI_TAG: ${{ steps.tag.outputs.tag }}
+
+      - if: ${{ env.isMac == 'true' }}
+        name: Generate QR code for APK
+        uses: snow-actions/qrcode@v1.0.0
+        with:
+          text: https://github.com/keizar24/keizar/releases/download/${{ steps.tag.outputs.tag }}/Keizar-${{ steps.tag-version.outputs.substring }}.apk
+          path: apk-qrcode.png
+
+      - if: ${{ env.isMac == 'true' }}
+        name: Upload QR code
+        run: "./gradlew :ci-helper:uploadAndroidApkQR ${{ env.gradleArgs }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN  }}
+          GITHUB_REPOSITORY: ${{ secrets.GITHUB_REPOSITORY  }}
+          CI_RELEASE_ID: ${{ needs.create-release.outputs.id }}
+          CI_TAG: ${{ steps.tag.outputs.tag }}
