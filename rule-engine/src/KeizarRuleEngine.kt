@@ -41,7 +41,7 @@ class BoardProperties(
     }
 
     companion object {
-        fun random(random: Random = Random) {
+        fun random(random: Random = Random): BoardProperties {
             val winningPos = BoardPos(4, 3)
             val map = generateSequence {
                 mapOf(
@@ -59,7 +59,7 @@ class BoardProperties(
 
             map.filter { it.isValid() }
 
-            BoardProperties(
+            return BoardProperties(
                 8, 8,
                 winningPos = winningPos,
                 tileTypes = map.first(),
