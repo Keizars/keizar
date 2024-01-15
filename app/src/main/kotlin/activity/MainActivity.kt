@@ -19,19 +19,19 @@ class MainActivity : BaseComponentActivity() {
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge(
-            // 透明状态栏
+            // transparent status bar
             statusBarStyle = SystemBarStyle.auto(
                 android.graphics.Color.TRANSPARENT,
                 android.graphics.Color.TRANSPARENT
             ),
-            // 透明导航栏
+            // transparent navigation bar
             navigationBarStyle = SystemBarStyle.auto(
                 android.graphics.Color.TRANSPARENT,
                 android.graphics.Color.TRANSPARENT,
             )
         )
 
-        // 允许画到 system bars
+        // allow drawing to system bars
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {

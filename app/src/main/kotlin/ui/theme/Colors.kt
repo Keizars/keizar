@@ -8,25 +8,16 @@ import androidx.compose.runtime.Stable
 import androidx.compose.ui.graphics.Color
 
 
-/**
- * 把颜色稍微变浅一点
- */
 @Composable
 fun Color.slightlyWeaken(): Color {
     return copy(alpha = 1 - 0.38f)
 }
 
-/**
- * 把颜色变浅
- */
 @Composable
 fun Color.weaken(): Color {
     return copy(alpha = 0.5f)
 }
 
-/**
- * 把颜色变得很浅
- */
 @Composable
 fun Color.stronglyWeaken(): Color {
     return copy(alpha = 0.38f)
