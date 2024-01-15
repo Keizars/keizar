@@ -1,9 +1,7 @@
 package org.keizar.game.local
 
-class Tile(val symbol: Symbol) {
-    var piece: Piece?= null
+import org.keizar.game.TileType
 
-    enum class Symbol {
-        PLAIN, KING, QUEEN, BISHOP, KNIGHT, ROOK, KEIZAR
-    }
+class Tile(val symbol: TileType) {
+    var piece: Piece?= null
 }
