@@ -56,11 +56,11 @@ class BoardProperties(
             "a1", "b1", "g1", "h1", "c2", "d2", "e2", "f2",
             "a8", "b8", "g8", "h8", "c7", "d7", "e7", "f7",
         ).map { BoardPos.fromString(it) }
-        
+
         fun random(random: Random = Random): BoardProperties {
-            val winningPos = BoardPos(4, 3)
             val map = generateSequence {
                 mapOf(
+                    BoardPos(4, 3) to TileType.KEIZAR,
                     BoardPos(random.nextInt(), random.nextInt()) to TileType.KING,
                     BoardPos(random.nextInt(), random.nextInt()) to TileType.QUEEN,
                     BoardPos(random.nextInt(), random.nextInt()) to TileType.BISHOP,
@@ -70,15 +70,14 @@ class BoardProperties(
             }
 
             fun Map<BoardPos, TileType>.isValid(): Boolean {
-                return keys.all { it != winningPos } && keys.distinct().size == this.size
+                return keys.distinct().size == this.size
             }
 
-            map.filter { it.isValid() }
-
+            val gen = map.filter { it.isValid() }.first()
             return BoardProperties(
                 8, 8,
-                winningPos = winningPos,
-                tileTypes = map.first(),
+                winningPos = gen.entries.first { it.value == TileType.KEIZAR }.key,
+                tileTypes = gen,
             )
         }
     }
