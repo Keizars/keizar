@@ -15,6 +15,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.material3.window.size.class0)
 
+    compileOnly(libs.atomicfu)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.viewbinding)
     implementation(libs.androidx.compose.foundation)
@@ -23,6 +24,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(libs.androidx.navigation.compose)
+    implementation(projects.utils.slf4jKt)
 
     implementation(libs.ktor.client.core)
     implementation(libs.koin.android)

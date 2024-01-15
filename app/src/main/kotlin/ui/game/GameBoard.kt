@@ -35,7 +35,7 @@ import org.keizar.game.TileType.BISHOP
 import org.keizar.game.TileType.KEIZAR
 import org.keizar.game.TileType.KING
 import org.keizar.game.TileType.KNIGHT
-import org.keizar.game.TileType.NORMAL
+import org.keizar.game.TileType.PLAIN
 import org.keizar.game.TileType.QUEEN
 import org.keizar.game.TileType.ROOK
 import kotlin.random.Random
@@ -46,6 +46,7 @@ fun GameBoard(
     properties: BoardProperties,
     modifier: Modifier = Modifier,
 ) {
+    val vm = remember { GameBoardViewModel() }
     Column(modifier) {
         for (row in properties.height - 1 downTo 0) {
             Row(
@@ -57,13 +58,31 @@ fun GameBoard(
                     Tile(
                         backgroundColor = if (properties.tileBackgroundColor(row, col)) Color.Black else Color.White,
                         contentColor = if (!properties.tileBackgroundColor(row, col)) Color.Black else Color.White,
-                        type = remember(properties) {
-                            properties.tileTypes[BoardPos(row, col)] ?: NORMAL
-                        },
                         Modifier
                             .weight(1f)
                             .fillMaxSize(),
-                    )
+                    ) {
+//                        remember {
+//                            DraggableAnchors<BoardPos> {
+//
+//                            }
+//                        }
+
+                        TileImage(
+                            type = remember(properties) {
+                                val currPos = BoardPos(row, col)
+                                properties.tileTypes[currPos] ?: PLAIN
+                            },
+                            Modifier
+                                .padding(4.dp)
+                                .fillMaxSize()
+//                                .anchoredDraggable(remember {
+//                                    AnchoredDraggableState(
+//                                        initialValue =
+//                                    )
+//                                }),
+                        )
+                    }
                 }
             }
         }
@@ -74,8 +93,8 @@ fun GameBoard(
 fun Tile(
     backgroundColor: Color,
     contentColor: Color,
-    type: TileType,
     modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
 ) {
     Row(
         modifier.background(backgroundColor),
@@ -83,12 +102,7 @@ fun Tile(
         horizontalArrangement = Arrangement.Center,
     ) {
         CompositionLocalProvider(LocalContentColor provides contentColor) {
-            TileImage(
-                type,
-                Modifier
-                    .padding(4.dp)
-                    .fillMaxSize()
-            )
+            content()
         }
     }
 }
@@ -103,7 +117,7 @@ fun TileImage(type: TileType, modifier: Modifier = Modifier) {
             KNIGHT -> Icon(Icons.Default.NightsStay, "Knight", Modifier.matchParentSize())
             ROOK -> Icon(Icons.Default.Room, "Rook", Modifier.matchParentSize())
             KEIZAR -> Icon(Icons.Default.Key, "Keizar", Modifier.matchParentSize())
-            NORMAL -> {}
+            PLAIN -> {}
         }
     }
 }
