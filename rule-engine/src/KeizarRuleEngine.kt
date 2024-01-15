@@ -22,7 +22,7 @@ interface Board {
     val tiles: Flow<List<BoardPos>>
 }
 
-class BoardProperties(
+data class BoardProperties(
     val width: Int,
     val height: Int,
     val winningPos: BoardPos,
@@ -58,24 +58,34 @@ class BoardProperties(
         ).map { BoardPos.fromString(it) }
 
         fun random(random: Random = Random): BoardProperties {
+            val width = 8
+            val height = 8
+            val keizarPos = BoardPos(4, 3)
+
+            val usedPositions = mutableSetOf(keizarPos)
+            fun nextPos(): BoardPos {
+                while (true) {
+                    val pos = BoardPos(random.nextInt(0, height - 1), random.nextInt(0, width - 1))
+                    if (usedPositions.add(pos)) {
+                        return pos
+                    }
+                }
+            }
+
             val map = generateSequence {
                 mapOf(
-                    BoardPos(4, 3) to TileType.KEIZAR,
-                    BoardPos(random.nextInt(), random.nextInt()) to TileType.KING,
-                    BoardPos(random.nextInt(), random.nextInt()) to TileType.QUEEN,
-                    BoardPos(random.nextInt(), random.nextInt()) to TileType.BISHOP,
-                    BoardPos(random.nextInt(), random.nextInt()) to TileType.KNIGHT,
-                    BoardPos(random.nextInt(), random.nextInt()) to TileType.ROOK,
+                    keizarPos to TileType.KEIZAR,
+                    nextPos() to TileType.KING,
+                    nextPos() to TileType.QUEEN,
+                    nextPos() to TileType.BISHOP,
+                    nextPos() to TileType.KNIGHT,
+                    nextPos() to TileType.ROOK,
                 )
             }
 
-            fun Map<BoardPos, TileType>.isValid(): Boolean {
-                return keys.distinct().size == this.size
-            }
-
-            val gen = map.filter { it.isValid() }.first()
+            val gen = map.first()
             return BoardProperties(
-                8, 8,
+                width, height,
                 winningPos = gen.entries.first { it.value == TileType.KEIZAR }.key,
                 tileTypes = gen,
             )
