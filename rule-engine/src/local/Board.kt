@@ -2,6 +2,15 @@ package org.keizar.game.local
 
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
+import org.keizar.game.Move
+import org.keizar.game.Player
+import org.keizar.game.TileType
+
+data class Piece(val player: Player, var pos: BoardPos)
+
+class Tile(val symbol: TileType) {
+    var piece: Piece?= null
+}
 
 class Board(
     private val boardProperties: BoardProperties,
@@ -21,7 +30,7 @@ class Board(
         // TODO("Not yet implemented")
         val temp = mutableListOf<Tile>()
         for (i in 0..<(boardProperties.width * boardProperties.height)) {
-            temp.add(Tile(Tile.Symbol.PLAIN))
+            temp.add(Tile(TileType.PLAIN))
         }
         tiles = temp
     }
@@ -60,12 +69,12 @@ class Board(
         return Move(source, dest, isCapture)
     }
 
-    fun havePieceInKeizar(player: Piece.Color): Boolean {
-        return pieceAt(boardProperties.winningPos)?.color == player
+    fun havePieceInKeizar(player: Player): Boolean {
+        return pieceAt(boardProperties.winningPos)?.player == player
     }
 
-    fun noValidMoves(player: Piece.Color): Boolean {
-        for (piece in pieces.filter { it.color == player }) {
+    fun noValidMoves(player: Player): Boolean {
+        for (piece in pieces.filter { it.player == player }) {
             if (showValidMoves(piece).isNotEmpty()) return false
         }
         return true

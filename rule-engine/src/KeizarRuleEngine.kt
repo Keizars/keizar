@@ -16,8 +16,18 @@ interface KeizarRuleEngine {
 
 interface Board {
     val properties: BoardProperties
+    
+    fun pieceAt(pos: BoardPos): Flow<Player?>
+}
 
-    val tiles: Flow<List<BoardPos>>
+enum class Player {
+    BLACK,
+    WHITE;
+    
+    fun other(): Player = when (this) {
+        BLACK -> WHITE
+        WHITE -> BLACK
+    }
 }
 
 enum class TileType {
@@ -28,4 +38,14 @@ enum class TileType {
     ROOK,
     KEIZAR,
     PLAIN,
+}
+
+class Move(
+    val source: BoardPos,
+    val dest: BoardPos,
+    val isCapture: Boolean,
+) {
+    override fun toString(): String {
+        return if (isCapture) "${source}-${dest}" else "${source}x${dest}"
+    }
 }

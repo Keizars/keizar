@@ -2,16 +2,18 @@ package org.keizar.game.local
 
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
+import org.keizar.game.Move
+import org.keizar.game.Player
 
 class RuleEngine(
     private val boardProperties: BoardProperties,
-    randomSeed: Int
+    randomSeed: Int,
 ) {
     private val board = Board(boardProperties, randomSeed)
     private val movesLog = mutableListOf<Move>()
     private var winningCounter: Int = 0
-    private var curPlayer: Piece.Color = boardProperties.startingPlayer
-    private var winner: Piece.Color? = null
+    private var curPlayer: Player = boardProperties.startingPlayer
+    private var winner: Player? = null
 
     fun showPossibleMoves(piece: Piece): List<BoardPos> {
         return board.showValidMoves(piece)
@@ -32,7 +34,7 @@ class RuleEngine(
     }
 
     private fun isValidMove(piece: Piece, dest: BoardPos): Boolean {
-        return piece.color == curPlayer && board.isValidMove(piece, dest)
+        return piece.player == curPlayer && board.isValidMove(piece, dest)
     }
 
     private fun updateWinningCounter() {
