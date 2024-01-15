@@ -1,6 +1,8 @@
 package org.keizar.game
 
 import kotlinx.coroutines.flow.Flow
+import org.keizar.game.local.Board
+import org.keizar.game.local.Tile
 
 interface KeizarRuleEngine {
     val board: Board
@@ -9,14 +11,9 @@ interface KeizarRuleEngine {
     suspend fun undo(): Boolean
     suspend fun redo(): Boolean
 
-    fun getAvailableTargets(from: Tile): Flow<List<Tile>>
-    suspend fun move(from: Tile, to: Tile): Boolean
+    fun getAvailableTargets(from: BoardPos): Flow<List<Tile>>
+    suspend fun move(from: BoardPos, to: BoardPos): Boolean
 }
-
-data class Tile(
-    val row: Int,
-    val column: Int,
-)
 
 interface Board {
     val properties: BoardProperties
@@ -24,8 +21,3 @@ interface Board {
     val tiles: Flow<List<Tile>>
 }
 
-class BoardProperties(
-    val width: Int,
-    val height: Int,
-    val winningTile: Tile,
-)
