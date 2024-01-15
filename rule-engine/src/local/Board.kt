@@ -3,9 +3,14 @@ package org.keizar.game.local
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 
-class Board(seed: Int) {
+class Board(
+    private val boardProperties: BoardProperties,
+    seed: Int
+) {
     private lateinit var tiles: List<Tile>
     private val pieces: MutableList<Piece> = mutableListOf()
+
+    private val BoardPos.index get() = row * boardProperties.width + col
 
     init {
         randomInitTiles(seed)
@@ -15,14 +20,14 @@ class Board(seed: Int) {
     private fun randomInitTiles(seed: Int) {
         // TODO("Not yet implemented")
         val temp = mutableListOf<Tile>()
-        for (i in 0..<(BoardProperties.BOARD_SIZE * BoardProperties.BOARD_SIZE)) {
+        for (i in 0..<(boardProperties.width * boardProperties.height)) {
             temp.add(Tile(Tile.Symbol.PLAIN))
         }
         tiles = temp
     }
 
     private fun initPieces() {
-        for ((color, startingPos) in BoardProperties.PIECES_STARTING_POS) {
+        for ((color, startingPos) in boardProperties.piecesStartingPos) {
             for (pos in startingPos) {
                 val piece = Piece(color, pos)
                 pieces.add(piece)
@@ -56,7 +61,7 @@ class Board(seed: Int) {
     }
 
     fun havePieceInKeizar(player: Piece.Color): Boolean {
-        return pieceAt(BoardProperties.KEIZAR_POS)?.color == player
+        return pieceAt(boardProperties.winningPos)?.color == player
     }
 
     fun noValidMoves(player: Piece.Color): Boolean {
@@ -72,8 +77,8 @@ class Board(seed: Int) {
 
     fun showValidMoves(piece: Piece): List<BoardPos> {
         // TODO("Not yet implemented")
-        return (0..BoardProperties.BOARD_SIZE).flatMap { row ->
-            (0..BoardProperties.BOARD_SIZE).map { col ->
+        return (0..boardProperties.width).flatMap { row ->
+            (0..boardProperties.height).map { col ->
                 BoardPos(row, col)
             }
         }

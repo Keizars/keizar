@@ -3,11 +3,14 @@ package org.keizar.game.local
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 
-class RuleEngine(randomSeed: Int) {
-    private val board = Board(randomSeed)
+class RuleEngine(
+    private val boardProperties: BoardProperties,
+    randomSeed: Int
+) {
+    private val board = Board(boardProperties, randomSeed)
     private val movesLog = mutableListOf<Move>()
     private var winningCounter: Int = 0
-    private var curPlayer: Piece.Color = BoardProperties.STARTING_PLAYER
+    private var curPlayer: Piece.Color = boardProperties.startingPlayer
     private var winner: Piece.Color? = null
 
     fun showPossibleMoves(piece: Piece): List<BoardPos> {
@@ -41,7 +44,7 @@ class RuleEngine(randomSeed: Int) {
     }
 
     private fun updateWinner() {
-        if (winningCounter == BoardProperties.WINNING_COUNT) {
+        if (winningCounter == boardProperties.winningCount) {
             winner = curPlayer
         }
         if (board.noValidMoves(curPlayer)) {
