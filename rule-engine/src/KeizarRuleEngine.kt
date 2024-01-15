@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface KeizarRuleEngine {
     val board: Board
+    val win: Flow<Boolean>
 
     suspend fun undo(): Boolean
     suspend fun redo(): Boolean
@@ -18,10 +19,13 @@ data class Tile(
 )
 
 interface Board {
-    val width: Int
-    val height: Int
-
-    val winningTile: Tile
+    val properties: BoardProperties
 
     val tiles: Flow<List<Tile>>
 }
+
+class BoardProperties(
+    val width: Int,
+    val height: Int,
+    val winningTile: Tile,
+)
