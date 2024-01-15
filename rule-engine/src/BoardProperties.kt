@@ -1,6 +1,5 @@
 package org.keizar.game
 
-import org.keizar.game.local.Piece
 import kotlin.random.Random
 
 data class BoardProperties(
