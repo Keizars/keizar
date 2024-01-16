@@ -49,7 +49,7 @@ class Board(
         return tiles[pos.index]
     }
 
-    private fun pieceAt(pos: BoardPos): Piece? {
+    fun pieceAt(pos: BoardPos): Piece? {
         return tiles[pos.index].piece
     }
 
