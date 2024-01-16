@@ -29,20 +29,21 @@ fun MainScreen() {
     ) {
         // Title or logo can be added here
         Box(modifier = Modifier) {
-            Icon(Icons.Default.Chair, "KEIZÁR")
+            Icon(Icons.Default.Chair, "KEIZÁR", modifier = Modifier.size(48.dp))
         }
 
-        // Single Player Button
-        Button(onClick = { /* TODO: Handle Single Player click */ }) {
+        Spacer(modifier = Modifier.size(80.dp))
+
+            // Single Player Button
+        Button(onClick = { /* TODO: Handle Single Player click */ }, modifier = Modifier.width(150.dp)) {
             Text("Single Player")
         }
 
-        Spacer(modifier = Modifier.height(10.dp)) // Adds space between buttons
+        Spacer(modifier = Modifier.size(50.dp))
 
-        // Multiplayer Button
-        Button(onClick = { /* TODO: Handle Multiplayer click */ }) {
+            // Multiplayer Button
+        Button(onClick = { /* TODO: Handle Multiplayer click */ }, modifier = Modifier.width(150.dp)) {
             Text("Multiplayer")
         }
-
     }
 }
