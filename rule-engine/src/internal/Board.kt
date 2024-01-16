@@ -5,6 +5,7 @@ import org.keizar.game.BoardProperties
 import org.keizar.game.Move
 import org.keizar.game.Player
 import org.keizar.game.TileType
+import org.keizar.game.internal.RuleEngineCore
 
 data class Piece(val player: Player, var pos: BoardPos)
 
@@ -14,6 +15,7 @@ class Tile(val type: TileType) {
 
 class Board(
     private val boardProperties: BoardProperties,
+    private val ruleEngineCore: RuleEngineCore,
 ) {
     private val tiles: List<Tile>
     private val pieces: MutableList<Piece> = mutableListOf()
@@ -21,9 +23,11 @@ class Board(
     private val BoardPos.index get() = row * boardProperties.width + col
 
     init {
-        val tempTiles = mutableListOf<Tile>()
+        val tempTiles = MutableList(boardProperties.width * boardProperties.height) {
+            Tile(TileType.PLAIN)
+        }
         boardProperties.tileArrangement.toList().map { (pos, type) ->
-            tempTiles.add(pos.index, Tile(type))
+            tempTiles[pos.index] = Tile(type)
         }
         tiles = tempTiles
         initPieces()
@@ -79,6 +83,7 @@ class Board(
     }
 
     fun showValidMoves(piece: Piece): List<BoardPos> {
+        ruleEngineCore.showValidMoves(tiles, piece)
         // TODO("Not yet implemented")
         return (0..boardProperties.width).flatMap { row ->
             (0..boardProperties.height).map { col ->
