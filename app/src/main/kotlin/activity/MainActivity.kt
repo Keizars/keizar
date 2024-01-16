@@ -9,12 +9,6 @@ import org.keizar.android.ui.KeizarApp
 import org.keizar.android.ui.game.MainScreen
 
 class MainActivity : BaseComponentActivity() {
-    private enum class AuthorizationState {
-        PROCESSING,
-        SUCCESS,
-        CANCELLED
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
