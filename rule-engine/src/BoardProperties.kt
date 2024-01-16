@@ -27,7 +27,7 @@ data class BoardProperties(
             )
 
             val standardTileArrangementFactory = StandardTileArrangementFactory {
-                randomSeed(randomSeed)
+                if (randomSeed != null) randomSeed(randomSeed)
                 fixAs(TileType.KEIZAR) {
                     listOf(keizarTilePos)
                 }

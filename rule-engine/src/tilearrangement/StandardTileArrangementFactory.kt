@@ -7,12 +7,12 @@ import kotlin.random.Random
 class StandardTileArrangementFactory(
     constraints: StandardTileArrangementFactory.() -> Unit
 ) : TileArrangementFactory {
-    private lateinit var random: Random
+    private var random: Random = Random
 
     private val result: MutableMap<BoardPos, TileType> = mutableMapOf()
 
-    fun randomSeed(seed: Int?) {
-        random = if (seed == null) Random else Random(seed)
+    fun randomSeed(seed: Int) {
+        random = Random(seed)
     }
 
     fun fixAs(tileType: TileType, positions: () -> Collection<BoardPos>) {
