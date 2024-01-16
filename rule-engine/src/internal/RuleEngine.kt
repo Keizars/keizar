@@ -4,6 +4,7 @@ import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.Move
 import org.keizar.game.Player
+import org.keizar.game.internal.RuleEngineCore
 
 interface RuleEngine {
     val winningCounter: Int
@@ -17,8 +18,9 @@ interface RuleEngine {
 
 class RuleEngineImpl(
     private val boardProperties: BoardProperties,
+    ruleEngineCore: RuleEngineCore,
 ) : RuleEngine {
-    private val board = Board(boardProperties)
+    private val board = Board(boardProperties, ruleEngineCore)
 
     private val movesLog = mutableListOf<Move>()
     override var winningCounter: Int = 0

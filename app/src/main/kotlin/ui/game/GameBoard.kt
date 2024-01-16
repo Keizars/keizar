@@ -38,6 +38,7 @@ import org.keizar.game.TileType.KNIGHT
 import org.keizar.game.TileType.PLAIN
 import org.keizar.game.TileType.QUEEN
 import org.keizar.game.TileType.ROOK
+import kotlin.random.Random
 
 
 @Composable
@@ -135,7 +136,7 @@ private fun PreviewGameBoard() {
     BoxWithConstraints {
         GameBoard(
             remember {
-                BoardProperties.getStandardProperties(randomSeed = 100)
+                BoardProperties.getStandardProperties(Random(100))
             },
             Modifier.size(min(maxWidth, maxHeight))
         )

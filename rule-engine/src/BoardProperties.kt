@@ -1,7 +1,7 @@
 package org.keizar.game
 
 import org.keizar.game.tilearrangement.StandardTileArrangementFactory
-import org.keizar.game.tilearrangement.TileArrangementFactory
+import kotlin.random.Random
 
 data class BoardProperties(
     val width: Int = 8,
@@ -11,14 +11,13 @@ data class BoardProperties(
     val startingPlayer: Player = Player.WHITE,
 
     val piecesStartingPos: List<Pair<Player, List<BoardPos>>>,
-    private val tileArrangementFactory: TileArrangementFactory,
+    val tileArrangement: Map<BoardPos, TileType>,
 ) {
-    val tileArrangement: Map<BoardPos, TileType> get() = tileArrangementFactory.build()
 
     fun tileBackgroundColor(row: Int, col: Int): Boolean = (row + col) % 2 == 0
 
     companion object {
-        fun getStandardProperties(randomSeed: Int? = null): BoardProperties {
+        fun getStandardProperties(random: Random): BoardProperties {
             val keizarTilePos: BoardPos = BoardPos.fromString("d5")
 
             val piecesStartingPos: List<Pair<Player, List<BoardPos>>> = listOf(
@@ -26,8 +25,8 @@ data class BoardProperties(
                 Player.BLACK to BoardPos.rangeStr("a7" to "h8"),
             )
 
-            val standardTileArrangementFactory = StandardTileArrangementFactory {
-                if (randomSeed != null) randomSeed(randomSeed)
+            val standardTileArrangement = StandardTileArrangementFactory {
+                random(random)
                 fixAs(TileType.KEIZAR) {
                     listOf(keizarTilePos)
                 }
@@ -52,7 +51,7 @@ data class BoardProperties(
                 fillWith(TileType.PLAIN) {
                     BoardPos.rangeStr("a1" to "h8")
                 }
-            }
+            }.build()
 
             return BoardProperties(
                 width = 8,
@@ -61,7 +60,7 @@ data class BoardProperties(
                 winningCount = 3,
                 startingPlayer = Player.WHITE,
                 piecesStartingPos = piecesStartingPos,
-                tileArrangementFactory = standardTileArrangementFactory
+                tileArrangement = standardTileArrangement
             )
         }
     }

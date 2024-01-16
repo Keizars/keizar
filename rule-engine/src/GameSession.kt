@@ -2,8 +2,10 @@ package org.keizar.game
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.local.RuleEngine
 import org.keizar.game.local.RuleEngineImpl
+import kotlin.random.Random
 
 interface GameSession {
     val properties: BoardProperties
@@ -18,13 +20,23 @@ interface GameSession {
 
     fun getAvailableTargets(from: BoardPos): Flow<List<BoardPos>>
     suspend fun move(from: BoardPos, to: BoardPos): Boolean
+
+    companion object {
+        fun create(random: Random): GameSession {
+            val properties = BoardProperties.getStandardProperties(random)
+            val ruleEngine = RuleEngineImpl(
+                boardProperties = properties,
+                ruleEngineCore = RuleEngineCoreImpl(),
+            )
+            return GameSessionImpl(properties, ruleEngine)
+        }
+    }
 }
 
 class GameSessionImpl(
     override val properties: BoardProperties,
+    private val ruleEngine: RuleEngine,
 ) : GameSession {
-    private val ruleEngine: RuleEngine = RuleEngineImpl(boardProperties = properties)
-
     override fun pieceAt(pos: BoardPos): Flow<Player?> {
         return flowOf(ruleEngine.pieceAt(pos))
     }

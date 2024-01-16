@@ -11,8 +11,8 @@ class StandardTileArrangementFactory(
 
     private val result: MutableMap<BoardPos, TileType> = mutableMapOf()
 
-    fun randomSeed(seed: Int) {
-        random = Random(seed)
+    fun random(random: Random) {
+        this.random = random
     }
 
     fun fixAs(tileType: TileType, positions: () -> Collection<BoardPos>) {
