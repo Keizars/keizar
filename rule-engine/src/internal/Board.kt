@@ -22,7 +22,7 @@ class Board(
 
     init {
         val tempTiles = mutableListOf<Tile>()
-        boardProperties.tileTypes.toList().map { (pos, type) ->
+        boardProperties.tileArrangement.toList().map { (pos, type) ->
             tempTiles.add(pos.index, Tile(type))
         }
         tiles = tempTiles
@@ -64,7 +64,7 @@ class Board(
     }
 
     fun havePieceInKeizar(player: Player): Boolean {
-        return pieceAt(boardProperties.winningPos)?.player == player
+        return pieceAt(boardProperties.keizarTilePos)?.player == player
     }
 
     fun noValidMoves(player: Player): Boolean {

@@ -1,44 +1,68 @@
 package org.keizar.game
 
-import kotlin.random.Random
+import org.keizar.game.tilearrangement.StandardTileArrangementFactory
+import org.keizar.game.tilearrangement.TileArrangementFactory
 
 data class BoardProperties(
     val width: Int = 8,
     val height: Int = 8,
-    val winningPos: BoardPos = BoardPos.fromString("d5"),
+    val keizarTilePos: BoardPos = BoardPos.fromString("d5"),
     val winningCount: Int = 3,
     val startingPlayer: Player = Player.WHITE,
 
-    val random: Random = Random(0xBEEF),
-    val piecesStartingPos: List<Pair<Player, List<BoardPos>>> = listOf(
-        Player.WHITE to listOf(
-            "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
-            "a2", "b2", "c2", "d2", "e2", "f2", "g2", "h2",
-        ).map { BoardPos.fromString(it) },
-        Player.BLACK to listOf(
-            "a7", "b7", "c7", "d7", "e7", "f7", "g7", "h7",
-            "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
-        ).map { BoardPos.fromString(it) }
-    ),
-    val fixedPlainTilePos: List<BoardPos> = listOf(
-        "a1", "b1", "g1", "h1", "c2", "d2", "e2", "f2",
-        "a8", "b8", "g8", "h8", "c7", "d7", "e7", "f7",
-    ).map { BoardPos.fromString(it) },
-    private val initialTilesFactory: InitialTilesFactory = PlainInitialTilesFactory(width, height),
+    val piecesStartingPos: List<Pair<Player, List<BoardPos>>>,
+    private val tileArrangementFactory: TileArrangementFactory,
 ) {
-    val tileTypes: Map<BoardPos, TileType> get() = initialTilesFactory.build()
+    val tileArrangement: Map<BoardPos, TileType> get() = tileArrangementFactory.build()
 
-    fun tileBackgroundColor(row: Int, column: Int): Boolean {
-        return if (row % 2 == 0) {
-            column % 2 == 0
-        } else {
-            column % 2 != 0
-        }
-    }
+    fun tileBackgroundColor(row: Int, col: Int): Boolean = (row + col) % 2 == 0
 
     companion object {
-        fun random(random: Random = Random): BoardProperties {
-            return BoardProperties(random = random)
+        fun getStandardProperties(randomSeed: Int = 0xBEEF): BoardProperties {
+            val keizarTilePos: BoardPos = BoardPos.fromString("d5")
+
+            val piecesStartingPos: List<Pair<Player, List<BoardPos>>> = listOf(
+                Player.WHITE to BoardPos.rangeStr("a1" to "h2"),
+                Player.BLACK to BoardPos.rangeStr("a7" to "h8"),
+            )
+
+            val standardTileArrangementFactory = StandardTileArrangementFactory {
+                randomSeed(randomSeed)
+                fixAs(TileType.KEIZAR) {
+                    listOf(keizarTilePos)
+                }
+                fixAs(TileType.PLAIN) {
+                    listOf(
+                        "a1", "b1", "g1", "h1", "c2", "d2", "e2", "f2",
+                        "a8", "b8", "g8", "h8", "c7", "d7", "e7", "f7",
+                    ).map { BoardPos.fromString(it) }
+                }
+                randomlyPut(TileType.QUEEN, TileType.BISHOP, TileType.KNIGHT, TileType.ROOK) {
+                    BoardPos.rangeStr("a1" to "h4").filter { it.color == TileColor.BLACK }
+                }
+                randomlyPut(TileType.KING, TileType.BISHOP, TileType.KNIGHT, TileType.ROOK) {
+                    BoardPos.rangeStr("a1" to "h4").filter { it.color == TileColor.WHITE }
+                }
+                randomlyPut(TileType.KING, TileType.BISHOP, TileType.KNIGHT, TileType.ROOK) {
+                    BoardPos.rangeStr("a5" to "h8").filter { it.color == TileColor.BLACK }
+                }
+                randomlyPut(TileType.QUEEN, TileType.BISHOP, TileType.KNIGHT, TileType.ROOK) {
+                    BoardPos.rangeStr("a5" to "h8").filter { it.color == TileColor.WHITE }
+                }
+                fillWith(TileType.PLAIN) {
+                    BoardPos.rangeStr("a1" to "h8")
+                }
+            }
+
+            return BoardProperties(
+                width = 8,
+                height = 8,
+                keizarTilePos = keizarTilePos,
+                winningCount = 3,
+                startingPlayer = Player.WHITE,
+                piecesStartingPos = piecesStartingPos,
+                tileArrangementFactory = standardTileArrangementFactory
+            )
         }
     }
 }

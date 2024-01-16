@@ -20,6 +20,11 @@ enum class TileType {
     PLAIN,
 }
 
+enum class TileColor {
+    BLACK,
+    WHITE
+}
+
 class Move(
     val source: BoardPos,
     val dest: BoardPos,

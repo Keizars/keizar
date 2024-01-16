@@ -1,14 +1,13 @@
-package org.keizar.game
+package org.keizar.game.tilearrangement
 
-interface InitialTilesFactory {
-    fun build(): Map<BoardPos, TileType>
-}
+import org.keizar.game.BoardPos
+import org.keizar.game.TileType
 
-class PlainInitialTilesFactory(
+class PlainTileArrangementFactory(
     private val boardWidth: Int,
     private val boardHeight: Int,
     private val winningPos: BoardPos = BoardPos.fromString("d5"),
-) : InitialTilesFactory {
+) : TileArrangementFactory {
     override fun build(): Map<BoardPos, TileType> {
         val tiles = mutableMapOf<BoardPos, TileType>()
         for (row in 0..<boardWidth) {

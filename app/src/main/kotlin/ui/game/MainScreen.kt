@@ -7,6 +7,6 @@ import org.keizar.game.BoardProperties
 @Composable
 fun MainScreen() {
     GameBoard(properties = remember {
-        BoardProperties.random()
+        BoardProperties.getStandardProperties()
     })
 }

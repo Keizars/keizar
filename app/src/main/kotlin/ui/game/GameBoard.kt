@@ -38,7 +38,6 @@ import org.keizar.game.TileType.KNIGHT
 import org.keizar.game.TileType.PLAIN
 import org.keizar.game.TileType.QUEEN
 import org.keizar.game.TileType.ROOK
-import kotlin.random.Random
 
 
 @Composable
@@ -56,8 +55,16 @@ fun GameBoard(
             ) {
                 for (col in 0..<properties.height) {
                     Tile(
-                        backgroundColor = if (properties.tileBackgroundColor(row, col)) Color.Black else Color.White,
-                        contentColor = if (!properties.tileBackgroundColor(row, col)) Color.Black else Color.White,
+                        backgroundColor = if (properties.tileBackgroundColor(
+                                row,
+                                col
+                            )
+                        ) Color.Black else Color.White,
+                        contentColor = if (!properties.tileBackgroundColor(
+                                row,
+                                col
+                            )
+                        ) Color.Black else Color.White,
                         Modifier
                             .weight(1f)
                             .fillMaxSize(),
@@ -71,7 +78,7 @@ fun GameBoard(
                         TileImage(
                             type = remember(properties) {
                                 val currPos = BoardPos(row, col)
-                                properties.tileTypes[currPos] ?: PLAIN
+                                properties.tileArrangement[currPos] ?: PLAIN
                             },
                             Modifier
                                 .padding(4.dp)
@@ -128,7 +135,7 @@ private fun PreviewGameBoard() {
     BoxWithConstraints {
         GameBoard(
             remember {
-                BoardProperties.random(Random(100))
+                BoardProperties.getStandardProperties(randomSeed = 100)
             },
             Modifier.size(min(maxWidth, maxHeight))
         )
