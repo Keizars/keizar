@@ -15,7 +15,7 @@ dependencies {
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.material3.window.size.class0)
 
-    compileOnly(libs.atomicfu)
+    implementation(libs.atomicfu)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.viewbinding)
     implementation(libs.androidx.compose.foundation)
