@@ -15,11 +15,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import org.keizar.game.BoardProperties
+import kotlin.random.Random
 
 @Composable
 @Preview(showBackground = true)
 fun MainScreen() {
+    val navController = rememberNavController()
+    NavHost(navController, startDestination = "home") {
+        composable("home") { HomePage(navController) }
+        composable("single player game") {
+            GameBoard(
+                properties = BoardProperties.getStandardProperties(Random(0)),
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+    }
+}
+
+@Composable
+fun HomePage(navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -34,14 +53,15 @@ fun MainScreen() {
 
         Spacer(modifier = Modifier.size(80.dp))
 
-            // Single Player Button
-        Button(onClick = { /* TODO: Handle Single Player click */ }, modifier = Modifier.width(150.dp)) {
+        // Single Player Button
+        Button(onClick = {navController.navigate("single player game") }, modifier = Modifier.width(150.dp)) {
             Text("Single Player")
         }
 
+
         Spacer(modifier = Modifier.size(50.dp))
 
-            // Multiplayer Button
+        // Multiplayer Button
         Button(onClick = { /* TODO: Handle Multiplayer click */ }, modifier = Modifier.width(150.dp)) {
             Text("Multiplayer")
         }
