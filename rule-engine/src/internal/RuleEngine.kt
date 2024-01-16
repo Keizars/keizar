@@ -1,5 +1,7 @@
 package org.keizar.game.local
 
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.Move
@@ -7,9 +9,9 @@ import org.keizar.game.Player
 import org.keizar.game.internal.RuleEngineCore
 
 interface RuleEngine {
-    val winningCounter: Int
-    val curPlayer: Player
-    val winner: Player?
+    val winningCounter: StateFlow<Int>
+    val curPlayer: StateFlow<Player>
+    val winner: StateFlow<Player?>
 
     fun showPossibleMoves(pos: BoardPos): List<BoardPos>
     fun move(source: BoardPos, dest: BoardPos): Boolean
@@ -23,12 +25,10 @@ class RuleEngineImpl(
     private val board = Board(boardProperties, ruleEngineCore)
 
     private val movesLog = mutableListOf<Move>()
-    override var winningCounter: Int = 0
-        internal set
-    override var curPlayer: Player = boardProperties.startingPlayer
-        internal set
-    override var winner: Player? = null
-        internal set
+    override val winningCounter: MutableStateFlow<Int> = MutableStateFlow(0)
+    override val curPlayer: MutableStateFlow<Player> =
+        MutableStateFlow(boardProperties.startingPlayer)
+    override val winner: MutableStateFlow<Player?> = MutableStateFlow(null)
 
     override fun showPossibleMoves(pos: BoardPos): List<BoardPos> {
         return board.pieceAt(pos)?.let { board.showValidMoves(it) } ?: listOf()
@@ -42,7 +42,7 @@ class RuleEngineImpl(
 
         val move = board.move(piece, dest)
         movesLog.add(move)
-        curPlayer = curPlayer.other()
+        curPlayer.value = curPlayer.value.other()
         updateWinningCounter()
         updateWinner()
 
@@ -54,23 +54,27 @@ class RuleEngineImpl(
     }
 
     private fun isValidMove(piece: Piece, dest: BoardPos): Boolean {
-        return piece.player == curPlayer && board.isValidMove(piece, dest)
+        return piece.player == curPlayer.value && board.isValidMove(piece, dest)
     }
 
     private fun updateWinningCounter() {
-        if (board.havePieceInKeizar(curPlayer)) {
-            ++winningCounter
+        if (board.havePieceInKeizar(curPlayer.value)) {
+            ++winningCounter.value
         } else {
-            winningCounter = 0
+            winningCounter.value = 0
         }
     }
 
     private fun updateWinner() {
-        if (winningCounter == boardProperties.winningCount) {
-            winner = curPlayer
+        if (winningCounter.value == boardProperties.winningCount) {
+            winner.value = curPlayer.value
         }
-        if (board.noValidMoves(curPlayer)) {
-            winner = if (board.havePieceInKeizar(curPlayer)) curPlayer else curPlayer.other()
+        if (board.noValidMoves(curPlayer.value)) {
+            winner.value = if (board.havePieceInKeizar(curPlayer.value)) {
+                curPlayer.value
+            } else {
+                curPlayer.value.other()
+            }
         }
     }
 }

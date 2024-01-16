@@ -12,7 +12,7 @@ class BoardPosTest {
     }
 
     @Test
-    fun `test range`() {
+    fun `test rangeFrom`() {
         val pos1 = BoardPos.fromString("a1")
         val pos2 = BoardPos.fromString("b4")
         val str = BoardPos.rangeFrom(pos1 to pos2).joinToString { it.toString() }
@@ -20,7 +20,7 @@ class BoardPosTest {
     }
 
     @Test
-    fun `test rangeStr`() {
+    fun `test range`() {
         val str = BoardPos.range("a1" to "d2").joinToString { it.toString() }
         assertEquals("a1, b1, c1, d1, a2, b2, c2, d2", str)
     }

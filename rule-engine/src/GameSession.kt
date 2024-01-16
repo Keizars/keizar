@@ -1,11 +1,17 @@
 package org.keizar.game
 
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.stateIn
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.local.RuleEngine
 import org.keizar.game.local.RuleEngineImpl
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.seconds
 
 interface GameSession {
     val properties: BoardProperties
@@ -22,7 +28,7 @@ interface GameSession {
     suspend fun move(from: BoardPos, to: BoardPos): Boolean
 
     companion object {
-        fun create(random: Random): GameSession {
+        fun create(random: Random = Random): GameSession {
             val properties = BoardProperties.getStandardProperties(random)
             val ruleEngine = RuleEngineImpl(
                 boardProperties = properties,
@@ -37,18 +43,21 @@ class GameSessionImpl(
     override val properties: BoardProperties,
     private val ruleEngine: RuleEngine,
 ) : GameSession {
-    override fun pieceAt(pos: BoardPos): Flow<Player?> {
-        return flowOf(ruleEngine.pieceAt(pos))
+    @Suppress("OPT_IN_USAGE")
+    override fun pieceAt(pos: BoardPos): StateFlow<Player?> {
+        return flow<Player?> {
+            while (true) {
+                ruleEngine.pieceAt(pos)
+                kotlinx.coroutines.delay(1.seconds)
+            }
+        }.stateIn(GlobalScope, started = SharingStarted.WhileSubscribed(), null)
     }
 
-    override val winner: Flow<Player?>
-        get() = flowOf(ruleEngine.winner)
+    override val winner: StateFlow<Player?> = ruleEngine.winner
 
-    override val winningCounter: Flow<Int>
-        get() = flowOf(ruleEngine.winningCounter)
+    override val winningCounter: StateFlow<Int> = ruleEngine.winningCounter
 
-    override val curPlayer: Flow<Player>
-        get() = flowOf(ruleEngine.curPlayer)
+    override val curPlayer: StateFlow<Player> = ruleEngine.curPlayer
 
     override suspend fun undo(): Boolean {
         // TODO("Not yet implemented")
