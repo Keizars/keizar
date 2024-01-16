@@ -5,24 +5,34 @@ import org.keizar.game.BoardProperties
 import org.keizar.game.Move
 import org.keizar.game.Player
 
-class InternalRuleEngine(
+interface RuleEngine {
+    val winningCounter: Int
+    val curPlayer: Player
+    val winner: Player?
+
+    fun showPossibleMoves(pos: BoardPos): List<BoardPos>
+    fun move(source: BoardPos, dest: BoardPos): Boolean
+    fun pieceAt(pos: BoardPos): Player?
+}
+
+class RuleEngineImpl(
     private val boardProperties: BoardProperties,
-) {
+) : RuleEngine {
     private val board = Board(boardProperties)
 
-    val movesLog = mutableListOf<Move>()
-    var winningCounter: Int = 0
+    private val movesLog = mutableListOf<Move>()
+    override var winningCounter: Int = 0
         internal set
-    var curPlayer: Player = boardProperties.startingPlayer
+    override var curPlayer: Player = boardProperties.startingPlayer
         internal set
-    var winner: Player? = null
+    override var winner: Player? = null
         internal set
 
-    fun showPossibleMoves(pos: BoardPos): List<BoardPos> {
+    override fun showPossibleMoves(pos: BoardPos): List<BoardPos> {
         return board.pieceAt(pos)?.let { board.showValidMoves(it) } ?: listOf()
     }
 
-    fun move(source: BoardPos, dest: BoardPos): Boolean {
+    override fun move(source: BoardPos, dest: BoardPos): Boolean {
         val piece = board.pieceAt(source) ?: return false
         if (!isValidMove(piece, dest)) {
             return false
@@ -37,7 +47,7 @@ class InternalRuleEngine(
         return true
     }
 
-    fun pieceAt(pos: BoardPos): Player? {
+    override fun pieceAt(pos: BoardPos): Player? {
         return board.pieceAt(pos)?.player
     }
 

@@ -2,9 +2,10 @@ package org.keizar.game
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
-import org.keizar.game.local.InternalRuleEngine
+import org.keizar.game.local.RuleEngine
+import org.keizar.game.local.RuleEngineImpl
 
-interface KeizarRuleEngine {
+interface GameSession {
     val properties: BoardProperties
 
     fun pieceAt(pos: BoardPos): Flow<Player?>
@@ -19,10 +20,10 @@ interface KeizarRuleEngine {
     suspend fun move(from: BoardPos, to: BoardPos): Boolean
 }
 
-class KeizarRuleEngineImpl(
+class GameSessionImpl(
     override val properties: BoardProperties,
-) : KeizarRuleEngine {
-    private val ruleEngine = InternalRuleEngine(boardProperties = properties)
+) : GameSession {
+    private val ruleEngine: RuleEngine = RuleEngineImpl(boardProperties = properties)
 
     override fun pieceAt(pos: BoardPos): Flow<Player?> {
         return flowOf(ruleEngine.pieceAt(pos))
@@ -54,5 +55,4 @@ class KeizarRuleEngineImpl(
     override suspend fun move(from: BoardPos, to: BoardPos): Boolean {
         return ruleEngine.move(from, to)
     }
-
 }
