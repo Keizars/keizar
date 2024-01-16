@@ -1,6 +1,7 @@
 package org.keizar.android.ui.game
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -17,10 +18,14 @@ import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Queue
 import androidx.compose.material.icons.filled.Room
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.Water
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,8 +33,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
+import org.keizar.android.ui.theme.slightlyWeaken
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
+import org.keizar.game.Player
 import org.keizar.game.TileType
 import org.keizar.game.TileType.BISHOP
 import org.keizar.game.TileType.KEIZAR
@@ -55,40 +62,42 @@ fun GameBoard(
                     .fillMaxWidth()
             ) {
                 for (col in 0..<properties.height) {
+                    val currentPick by vm.currentPick.collectAsState()
+                    val picked = remember(currentPick) {
+                        currentPick?.pos == BoardPos(row, col)
+                    }
+
                     Tile(
-                        backgroundColor = if (properties.tileBackgroundColor(
-                                row,
-                                col
+                        backgroundColor =
+                        when {
+                            picked -> if (properties.tileBackgroundColor(row, col)) Color(0xff8bc34a) else Color(
+                                0xffc5e1a5
                             )
-                        ) Color.Black else Color.White,
-                        contentColor = if (!properties.tileBackgroundColor(
-                                row,
-                                col
-                            )
-                        ) Color.Black else Color.White,
+
+                            properties.tileBackgroundColor(row, col) -> Color(0xff6d9a4a)
+                            else -> Color(0xffe8edc8)
+                        },
+                        contentColor =
+                        if (row >= properties.height / 2) Color.Black else Color.White,
                         Modifier
                             .weight(1f)
                             .fillMaxSize(),
                     ) {
-//                        remember {
-//                            DraggableAnchors<BoardPos> {
-//
-//                            }
-//                        }
+                        val player by remember(properties) {
+                            val currPos = BoardPos(row, col)
+                            vm.pieces[currPos]!!
+                        }.player.collectAsState(null)
 
                         TileImage(
-                            type = remember(properties) {
+                            tileType = remember(properties) {
                                 val currPos = BoardPos(row, col)
                                 properties.tileArrangement[currPos] ?: PLAIN
                             },
+                            player = player,
                             Modifier
+                                .clickable { vm.onClick(BoardPos(row, col)) }
                                 .padding(4.dp)
-                                .fillMaxSize()
-//                                .anchoredDraggable(remember {
-//                                    AnchoredDraggableState(
-//                                        initialValue =
-//                                    )
-//                                }),
+                                .fillMaxSize(),
                         )
                     }
                 }
@@ -116,16 +125,28 @@ fun Tile(
 }
 
 @Composable
-fun TileImage(type: TileType, modifier: Modifier = Modifier) {
+fun TileImage(
+    tileType: TileType,
+    player: Player?,
+    modifier: Modifier = Modifier
+) {
     Box(modifier = modifier) {
-        when (type) {
-            KING -> Icon(Icons.Default.Hiking, "King", Modifier.matchParentSize())
-            QUEEN -> Icon(Icons.Default.Queue, "Queen", Modifier.matchParentSize())
-            BISHOP -> Icon(Icons.Default.ShoppingCart, "Bishop", Modifier.matchParentSize())
-            KNIGHT -> Icon(Icons.Default.NightsStay, "Knight", Modifier.matchParentSize())
-            ROOK -> Icon(Icons.Default.Room, "Rook", Modifier.matchParentSize())
-            KEIZAR -> Icon(Icons.Default.Key, "Keizar", Modifier.matchParentSize())
-            PLAIN -> {}
+        CompositionLocalProvider(LocalContentColor provides LocalContentColor.current.slightlyWeaken()) {
+            when (tileType) {
+                KING -> Icon(Icons.Default.Hiking, "King", Modifier.matchParentSize())
+                QUEEN -> Icon(Icons.Default.Queue, "Queen", Modifier.matchParentSize())
+                BISHOP -> Icon(Icons.Default.ShoppingCart, "Bishop", Modifier.matchParentSize())
+                KNIGHT -> Icon(Icons.Default.NightsStay, "Knight", Modifier.matchParentSize())
+                ROOK -> Icon(Icons.Default.Room, "Rook", Modifier.matchParentSize())
+                KEIZAR -> Icon(Icons.Default.Key, "Keizar", Modifier.matchParentSize())
+                PLAIN -> {}
+            }
+        }
+        player?.let {
+            when (it) {
+                Player.BLACK -> Icon(Icons.Outlined.Block, "Player Black", Modifier.matchParentSize())
+                Player.WHITE -> Icon(Icons.Outlined.Water, "Player White", Modifier.matchParentSize())
+            }
         }
     }
 }

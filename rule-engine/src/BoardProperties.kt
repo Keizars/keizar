@@ -65,3 +65,12 @@ data class BoardProperties(
         }
     }
 }
+
+val BoardProperties.boardPoses: Sequence<BoardPos>
+    get() = sequence {
+        for (row in 0 until height) {
+            for (col in 0 until width) {
+                yield(BoardPos(row, col))
+            }
+        }
+    }
