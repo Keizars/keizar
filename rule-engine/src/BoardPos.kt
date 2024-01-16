@@ -15,7 +15,7 @@ data class BoardPos(val row: Int, val col: Int) {
             return BoardPos(str[1].digitToInt() - 1, str[0].code - 'a'.code)
         }
 
-        fun range(range: Pair<BoardPos, BoardPos>): List<BoardPos> {
+        fun rangeFrom(range: Pair<BoardPos, BoardPos>): List<BoardPos> {
             return (range.first.row..range.second.row).flatMap { row ->
                 (range.first.col..range.second.col).map { col ->
                     BoardPos(row, col)
@@ -23,8 +23,8 @@ data class BoardPos(val row: Int, val col: Int) {
             }
         }
 
-        fun rangeStr(range: Pair<String, String>): List<BoardPos> {
-            return range(fromString(range.first) to fromString(range.second))
+        fun range(range: Pair<String, String>): List<BoardPos> {
+            return rangeFrom(fromString(range.first) to fromString(range.second))
         }
     }
 }

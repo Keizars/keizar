@@ -21,8 +21,8 @@ data class BoardProperties(
             val keizarTilePos: BoardPos = BoardPos.fromString("d5")
 
             val piecesStartingPos: List<Pair<Player, List<BoardPos>>> = listOf(
-                Player.WHITE to BoardPos.rangeStr("a1" to "h2"),
-                Player.BLACK to BoardPos.rangeStr("a7" to "h8"),
+                Player.WHITE to BoardPos.range("a1" to "h2"),
+                Player.BLACK to BoardPos.range("a7" to "h8"),
             )
 
             val standardTileArrangement = StandardTileArrangementFactory {
@@ -37,19 +37,19 @@ data class BoardProperties(
                     ).map { BoardPos.fromString(it) }
                 }
                 randomlyPut(TileType.QUEEN, TileType.BISHOP, TileType.KNIGHT, TileType.ROOK) {
-                    BoardPos.rangeStr("a1" to "h4").filter { it.color == TileColor.BLACK }
+                    BoardPos.range("a1" to "h4").filter { it.color == TileColor.BLACK }
                 }
                 randomlyPut(TileType.KING, TileType.BISHOP, TileType.KNIGHT, TileType.ROOK) {
-                    BoardPos.rangeStr("a1" to "h4").filter { it.color == TileColor.WHITE }
+                    BoardPos.range("a1" to "h4").filter { it.color == TileColor.WHITE }
                 }
                 randomlyPut(TileType.KING, TileType.BISHOP, TileType.KNIGHT, TileType.ROOK) {
-                    BoardPos.rangeStr("a5" to "h8").filter { it.color == TileColor.BLACK }
+                    BoardPos.range("a5" to "h8").filter { it.color == TileColor.BLACK }
                 }
                 randomlyPut(TileType.QUEEN, TileType.BISHOP, TileType.KNIGHT, TileType.ROOK) {
-                    BoardPos.rangeStr("a5" to "h8").filter { it.color == TileColor.WHITE }
+                    BoardPos.range("a5" to "h8").filter { it.color == TileColor.WHITE }
                 }
                 fillWith(TileType.PLAIN) {
-                    BoardPos.rangeStr("a1" to "h8")
+                    BoardPos.range("a1" to "h8")
                 }
             }.build()
 
