@@ -17,7 +17,7 @@ data class BoardPos(val row: Int, val col: Int) {
 
         fun range(range: Pair<BoardPos, BoardPos>): List<BoardPos> {
             return (range.first.row..range.second.row).flatMap { row ->
-                (range.second.col..range.second.col).map { col ->
+                (range.first.col..range.second.col).map { col ->
                     BoardPos(row, col)
                 }
             }
