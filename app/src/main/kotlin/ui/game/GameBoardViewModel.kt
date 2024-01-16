@@ -11,12 +11,15 @@ import kotlinx.coroutines.flow.flowOf
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.game.BoardPos
+import org.keizar.game.BoardProperties
 import org.keizar.game.GameSession
 import org.keizar.game.Player
 import org.keizar.game.boardPoses
 import kotlin.random.Random
 
-class GameBoardViewModel : AbstractViewModel() {
+class GameBoardViewModel(
+    boardProperties: BoardProperties,
+) : AbstractViewModel() {
     private val game: GameSession = GameSession.create(Random)
 
     @Stable
@@ -29,7 +32,7 @@ class GameBoardViewModel : AbstractViewModel() {
     private val _currentPick = MutableStateFlow<Pick?>(null)
     val currentPick: StateFlow<Pick?> = _currentPick.asStateFlow()
 
-    private val currentPlayer: StateFlow<Player> = game.curPlayer.stateInBackground(Player.BLACK)
+    private val currentPlayer: StateFlow<Player> = game.curPlayer.stateInBackground(boardProperties.startingPlayer)
 
     /**
      * Currently available positions where the picked piece can move to. `null` if no piece is picked.

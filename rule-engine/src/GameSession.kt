@@ -45,10 +45,10 @@ class GameSessionImpl(
 ) : GameSession {
     @Suppress("OPT_IN_USAGE")
     override fun pieceAt(pos: BoardPos): StateFlow<Player?> {
-        return flow<Player?> {
+        return flow {
             while (true) {
-                ruleEngine.pieceAt(pos)
-                kotlinx.coroutines.delay(1.seconds)
+                emit(ruleEngine.pieceAt(pos))
+                kotlinx.coroutines.delay(0.1.seconds)
             }
         }.stateIn(GlobalScope, started = SharingStarted.WhileSubscribed(), null)
     }

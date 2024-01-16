@@ -53,7 +53,7 @@ fun GameBoard(
     properties: BoardProperties,
     modifier: Modifier = Modifier,
 ) {
-    val vm = remember { GameBoardViewModel() }
+    val vm = remember(properties) { GameBoardViewModel(properties) }
     Column(modifier) {
         for (row in properties.height - 1 downTo 0) {
             Row(
