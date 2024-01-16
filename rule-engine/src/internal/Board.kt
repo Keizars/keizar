@@ -8,31 +8,25 @@ import org.keizar.game.TileType
 
 data class Piece(val player: Player, var pos: BoardPos)
 
-class Tile(val symbol: TileType) {
+class Tile(val type: TileType) {
     var piece: Piece?= null
 }
 
 class Board(
     private val boardProperties: BoardProperties,
-    seed: Int
 ) {
-    private lateinit var tiles: List<Tile>
+    private val tiles: List<Tile>
     private val pieces: MutableList<Piece> = mutableListOf()
 
     private val BoardPos.index get() = row * boardProperties.width + col
 
     init {
-        randomInitTiles(seed)
-        initPieces()
-    }
-
-    private fun randomInitTiles(seed: Int) {
-        // TODO("Not yet implemented")
-        val temp = mutableListOf<Tile>()
-        for (i in 0..<(boardProperties.width * boardProperties.height)) {
-            temp.add(Tile(TileType.PLAIN))
+        val tempTiles = mutableListOf<Tile>()
+        boardProperties.tileTypes.toList().map { (pos, type) ->
+            tempTiles.add(pos.index, Tile(type))
         }
-        tiles = temp
+        tiles = tempTiles
+        initPieces()
     }
 
     private fun initPieces() {

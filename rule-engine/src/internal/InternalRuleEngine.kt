@@ -7,9 +7,8 @@ import org.keizar.game.Player
 
 class InternalRuleEngine(
     private val boardProperties: BoardProperties,
-    randomSeed: Int,
 ) {
-    private val board = Board(boardProperties, randomSeed)
+    private val board = Board(boardProperties)
 
     val movesLog = mutableListOf<Move>()
     var winningCounter: Int = 0

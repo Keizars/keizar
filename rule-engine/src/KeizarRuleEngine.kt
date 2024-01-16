@@ -22,7 +22,7 @@ interface KeizarRuleEngine {
 class KeizarRuleEngineImpl(
     override val properties: BoardProperties,
 ) : KeizarRuleEngine {
-    private val ruleEngine = InternalRuleEngine(boardProperties = properties, randomSeed = 0xBEEF)
+    private val ruleEngine = InternalRuleEngine(boardProperties = properties)
 
     override fun pieceAt(pos: BoardPos): Flow<Player?> {
         return flowOf(ruleEngine.pieceAt(pos))
