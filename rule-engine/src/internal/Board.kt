@@ -83,11 +83,6 @@ class Board(
     }
 
     fun showValidMoves(piece: Piece): List<BoardPos> {
-        // return ruleEngineCore.showValidMoves(tiles, piece)
-        return (0..boardProperties.width).flatMap { row ->
-            (0..boardProperties.height).map { col ->
-                BoardPos(row, col)
-            }
-        }
+        return ruleEngineCore.showValidMoves(tiles, piece) { index }
     }
 }

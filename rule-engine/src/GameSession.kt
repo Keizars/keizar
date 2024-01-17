@@ -32,7 +32,7 @@ interface GameSession {
             val properties = BoardProperties.getStandardProperties(random)
             val ruleEngine = RuleEngineImpl(
                 boardProperties = properties,
-                ruleEngineCore = RuleEngineCoreImpl(),
+                ruleEngineCore = RuleEngineCoreImpl(properties),
             )
             return GameSessionImpl(properties, ruleEngine)
         }

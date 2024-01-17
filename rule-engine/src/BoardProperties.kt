@@ -10,7 +10,7 @@ data class BoardProperties(
     val winningCount: Int = 3,
     val startingPlayer: Player = Player.WHITE,
 
-    val piecesStartingPos: List<Pair<Player, List<BoardPos>>>,
+    val piecesStartingPos: Map<Player, List<BoardPos>>,
     val tileArrangement: Map<BoardPos, TileType>,
 ) {
 
@@ -20,7 +20,7 @@ data class BoardProperties(
         fun getStandardProperties(random: Random): BoardProperties {
             val keizarTilePos: BoardPos = BoardPos.fromString("d5")
 
-            val piecesStartingPos: List<Pair<Player, List<BoardPos>>> = listOf(
+            val piecesStartingPos: Map<Player, List<BoardPos>> = mapOf(
                 Player.WHITE to BoardPos.range("a1" to "h2"),
                 Player.BLACK to BoardPos.range("a7" to "h8"),
             )
