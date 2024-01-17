@@ -75,4 +75,17 @@ class RuleEngineTest {
         assertEquals(ruleEngine.pieceAt(BoardPos("h2")), null)
         assertEquals(ruleEngine.pieceAt(BoardPos("h3")), Player.WHITE)
     }
+
+    @Test
+    fun `test showPossibleMoves`() {
+        val prop = BoardProperties.getStandardProperties(Random(100))
+        val ruleEngineCore = RuleEngineCoreImpl(prop)
+        val ruleEngine = RuleEngineImpl(prop, ruleEngineCore)
+
+        assertTrue(ruleEngine.move(BoardPos("d2"), BoardPos("d3")))
+        assertEquals(
+            listOf("d2", "d4", "c3", "c4", "e3", "e4").map { BoardPos.fromString(it) }.toSet(),
+            ruleEngine.showPossibleMoves(BoardPos("d3")).toSet(),
+        )
+    }
 }
