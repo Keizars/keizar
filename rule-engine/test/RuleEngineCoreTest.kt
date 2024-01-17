@@ -100,7 +100,7 @@ class RuleEngineCoreTest {
      *   4 _ _ _ _ _ _ _ _
      *   3 _ _ _ Q K _ _ _
      *   2 _ R _ r _ _ _ _
-     *   1 _ _ _ _ _ _ _ _
+     *   1 _ _ _ _ _ N _ _
      *     a b c d e f g h
      */
     private val pieces2 = listOf(
@@ -113,6 +113,7 @@ class RuleEngineCoreTest {
         Piece(Player.BLACK, BoardPos("d8")),
         Piece(Player.WHITE, BoardPos("e3")),
         Piece(Player.BLACK, BoardPos("g7")),
+        Piece(Player.WHITE, BoardPos("f1")),
     )
 
     private val board2 = run {
@@ -127,6 +128,7 @@ class RuleEngineCoreTest {
         board[BoardPos("d8").index] = Tile(TileType.KING)
         board[BoardPos("e3").index] = Tile(TileType.KING)
         board[BoardPos("g7").index] = Tile(TileType.QUEEN)
+        board[BoardPos("f1").index] = Tile(TileType.KNIGHT)
         for (piece in pieces2) {
             board[piece.pos.index].piece = piece
         }
@@ -140,7 +142,7 @@ class RuleEngineCoreTest {
         setOf("b6", "b8", "d6", "e5", "f4", "g3", "h2"),
         setOf("b2", "c2", "e2", "f2", "g2", "h2", "d1", "d3"),
         setOf(
-            "a3", "b3", "c3", "b1", "c2", "d2", "e2", "f1", "c4",
+            "a3", "b3", "c3", "b1", "c2", "d2", "e2", "c4",
             "e4", "f5", "g6", "h7", "d4", "d5", "d6", "d7", "d8"
         ),
         setOf("c8", "d7", "e7", "e8"),
@@ -149,12 +151,13 @@ class RuleEngineCoreTest {
             "g8", "h7", "h8", "h6", "f8", "d7", "e7", "f7", "f6",
             "e5", "d4", "c3", "b2", "g6", "g5", "g4", "g3", "g2", "g1"
         ),
+        setOf("d2", "g3", "h2"),
     ).map { set -> set.map { BoardPos.fromString(it) }.toSet() }
 
     @TestFactory
-    fun `test rook bishop queen and king movements`(): List<DynamicTest> {
+    fun `test special piece movements`(): List<DynamicTest> {
         return pieces2.indices.map { i ->
-            DynamicTest.dynamicTest("test RBQK movement $i") {
+            DynamicTest.dynamicTest("test special piece movement $i") {
                 assertEquals(
                     expectations2[i],
                     ruleEngineCore.showValidMoves(board2, pieces2[i]) { index }.toSet()
