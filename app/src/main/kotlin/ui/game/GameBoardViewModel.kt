@@ -32,7 +32,7 @@ class GameBoardViewModel(
     private val _currentPick = MutableStateFlow<Pick?>(null)
     val currentPick: StateFlow<Pick?> = _currentPick.asStateFlow()
 
-    private val currentPlayer: StateFlow<Player> = game.curPlayer.stateInBackground(boardProperties.startingPlayer)
+    private val currentPlayer: StateFlow<Player> = game.curPlayer
 
     /**
      * Currently available positions where the picked piece can move to. `null` if no piece is picked.

@@ -60,7 +60,7 @@ fun GameBoard(
                     .weight(1f)
                     .fillMaxWidth()
             ) {
-                for (col in 0..<properties.height) {
+                for (col in 0..<properties.width) {
                     val currentPick by vm.currentPick.collectAsState()
                     val picked = remember(currentPick) {
                         currentPick?.pos == BoardPos(row, col)
@@ -69,7 +69,11 @@ fun GameBoard(
                     Tile(
                         backgroundColor =
                         when {
-                            picked -> if (properties.tileBackgroundColor(row, col)) Color(0xff8bc34a) else Color(
+                            picked -> if (properties.tileBackgroundColor(
+                                    row,
+                                    col
+                                )
+                            ) Color(0xff8bc34a) else Color(
                                 0xffc5e1a5
                             )
 
