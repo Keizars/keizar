@@ -1,26 +1,28 @@
-package org.keizar.android.ui.game
+package org.keizar.android.ui.home
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chair
-import androidx.compose.material.icons.filled.Key
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import org.keizar.game.BoardProperties
-import kotlin.random.Random
+import org.keizar.android.ui.game.GamePage
 
 @Composable
 @Preview(showBackground = true)
@@ -28,12 +30,7 @@ fun MainScreen() {
     val navController = rememberNavController()
     NavHost(navController, startDestination = "home") {
         composable("home") { HomePage(navController) }
-        composable("single player game") {
-            GameBoard(
-                properties = BoardProperties.getStandardProperties(Random(0)),
-                modifier = Modifier.fillMaxSize()
-            )
-        }
+        composable("single player game") { GamePage() }
     }
 }
 
@@ -54,7 +51,7 @@ fun HomePage(navController: NavController) {
         Spacer(modifier = Modifier.size(80.dp))
 
         // Single Player Button
-        Button(onClick = {navController.navigate("single player game") }, modifier = Modifier.width(150.dp)) {
+        Button(onClick = { navController.navigate("single player game") }, modifier = Modifier.width(150.dp)) {
             Text("Single Player")
         }
 

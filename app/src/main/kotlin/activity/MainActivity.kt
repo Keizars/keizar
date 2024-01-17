@@ -6,7 +6,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.view.WindowCompat
 import org.keizar.android.ui.KeizarApp
-import org.keizar.android.ui.game.MainScreen
+import org.keizar.android.ui.home.MainScreen
 
 class MainActivity : BaseComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
