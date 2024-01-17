@@ -35,6 +35,9 @@ fun MainScreen() {
     NavHost(navController, startDestination = "home") {
         composable("home") { HomePage(navController) }
         composable("single player game") { GamePage() }
+        composable("multiplayer game") { /* TODO: multiplayer game page*/ }
+        composable("saved games") { /* TODO: saved games page*/ }
+        composable("tutorial") { /* TODO: tutorial page*/ }
     }
 }
 
