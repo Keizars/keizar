@@ -12,14 +12,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.Hiking
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.NightsStay
 import androidx.compose.material.icons.filled.Queue
 import androidx.compose.material.icons.filled.Room
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material.icons.outlined.Block
-import androidx.compose.material.icons.outlined.Water
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
@@ -144,8 +143,17 @@ fun TileImage(
         }
         player?.let {
             when (it) {
-                Player.BLACK -> Icon(Icons.Outlined.Block, "Player Black", Modifier.matchParentSize())
-                Player.WHITE -> Icon(Icons.Outlined.Water, "Player White", Modifier.matchParentSize())
+                Player.BLACK -> Icon(
+                    Icons.Default.Circle,
+                    "Player Black",
+                    Modifier.matchParentSize()
+                )
+
+                Player.WHITE -> Icon(
+                    Icons.Default.Circle,
+                    "Player White",
+                    Modifier.matchParentSize()
+                )
             }
         }
     }

@@ -17,7 +17,7 @@ data class BoardProperties(
     fun tileBackgroundColor(row: Int, col: Int): Boolean = (row + col) % 2 == 0
 
     companion object {
-        fun getStandardProperties(random: Random): BoardProperties {
+        fun getStandardProperties(random: Random = Random): BoardProperties {
             val keizarTilePos: BoardPos = BoardPos.fromString("d5")
 
             val piecesStartingPos: Map<Player, List<BoardPos>> = mapOf(

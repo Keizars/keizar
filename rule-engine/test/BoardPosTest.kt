@@ -5,6 +5,13 @@ import org.junit.jupiter.api.Test
 
 class BoardPosTest {
     @Test
+    fun `test fromString constructor`() {
+        val pos = BoardPos("c1")
+        assertEquals(0, pos.row)
+        assertEquals(2, pos.col)
+    }
+
+    @Test
     fun `test fromString`() {
         val pos = BoardPos.fromString("c1")
         assertEquals(0, pos.row)

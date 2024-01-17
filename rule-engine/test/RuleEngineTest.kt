@@ -6,21 +6,7 @@ import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.local.RuleEngineImpl
 import kotlin.random.Random
 
-class BoardPropertiesTest {
-//    @Test
-//    fun `test BoardPos range`() {
-//        val pos1 = BoardPos.fromString("a1")
-//        val pos2 = BoardPos.fromString("b4")
-//        val str = BoardPos.range(Pair("a1", "b4")).joinToString { it.toString() }
-//        assertEquals(str, "a1, b1, a2, b2, a3, b3, a4, b4")
-//    }
-//
-//    @Test
-//    fun `test BoardPos rangeStr`() {
-//        val str = BoardPos.rangeFrom("a1" to "d2").joinToString { it.toString() }
-//        assertEquals(str, "a1, b1, c1, d1, a2, b2, c2, d2")
-//    }
-
+class RuleEngineTest {
     @Test
     fun `generate board`() {
         val prop = BoardProperties.getStandardProperties(Random(1))

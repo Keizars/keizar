@@ -7,6 +7,8 @@ value class BoardPos private constructor(
 ) {
     constructor(row: Int, col: Int) : this((row.toLong() shl 32) or col.toLong())
 
+    constructor(str: String) : this(str[1].digitToInt() - 1, str[0].code - 'a'.code)
+
     val row: Int
         get() = (value shr 32).toInt()
 
@@ -23,7 +25,7 @@ value class BoardPos private constructor(
 
     companion object {
         fun fromString(str: String): BoardPos {
-            return BoardPos(str[1].digitToInt() - 1, str[0].code - 'a'.code)
+            return BoardPos(str)
         }
 
         fun rangeFrom(range: Pair<BoardPos, BoardPos>): List<BoardPos> {

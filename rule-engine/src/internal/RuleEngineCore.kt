@@ -179,6 +179,11 @@ class RuleEngineCoreImpl(
 
         // If the tile right in front of the piece is not a PLAIN tile, it can't move 2 steps
         // Otherwise, it can move 2 steps
-        return tileAt(BoardPos(piece.pos.row, piece.pos.col + 1)) == TileType.PLAIN
+        return tileAt(
+            BoardPos(
+                piece.pos.row + if (piece.player == Player.WHITE) 1 else -1,
+                piece.pos.col,
+            )
+        ) == TileType.PLAIN
     }
 }
