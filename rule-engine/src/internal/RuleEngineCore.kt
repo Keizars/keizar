@@ -51,29 +51,27 @@ class RuleEngineCoreImpl(
                 // end this route if out of range
                 if (curPos.outOfRange(boardProperties)) break
 
+                val blockedBy: Player? = tiles[curPos.index()].piece?.player
+
                 // end this route if blocked by an ally piece
-                if (tiles[curPos.index()].piece?.player == piece.player) break
+                if (blockedBy == piece.player) {
+                    break
+                } else if (blockedBy == piece.player.other()) {
+                    // the route is blocked by an opponent piece
+                    // if the route does not allow capturing, end the route
+                    if (route.permission == Route.Permission.MOVE) break
 
-                when (route.permission) {
-                    Route.Permission.CAPTURE -> {
-                        // end this route if not blocked by an opponent piece and can only capture
-                        if (tiles[curPos.index()].piece?.player != piece.player.other()) break
+                    // otherwise, record it as a valid place and end the route
+                    validMoves.add(curPos)
+                    break
+                } else {
+                    // the route is not blocked by anything
+                    // end the route if it only allows capturing
+                    if (route.permission == Route.Permission.CAPTURE) break
 
-                        // record the position as a valid position and end this route
-                        validMoves.add(curPos)
-                        break
-                    }
-
-                    Route.Permission.MOVE -> {
-                        // end this route if blocked by an opponent piece and cannot capture
-                        if (tiles[curPos.index()].piece?.player == piece.player.other()) break
-                    }
-
-                    else -> {}
+                    // otherwise, record it as a valid place and continue
+                    validMoves.add(curPos)
                 }
-
-                // record the position as a valid position
-                validMoves.add(curPos)
             }
         }
 
