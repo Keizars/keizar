@@ -17,9 +17,9 @@ interface GameSession {
     val properties: BoardProperties
 
     fun pieceAt(pos: BoardPos): Flow<Player?>
-    val winner: Flow<Player?>
-    val winningCounter: Flow<Int>
-    val curPlayer: Flow<Player>
+    val winner: StateFlow<Player?>
+    val winningCounter: StateFlow<Int>
+    val curPlayer: StateFlow<Player>
 
     suspend fun undo(): Boolean
     suspend fun redo(): Boolean

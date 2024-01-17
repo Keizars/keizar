@@ -1,6 +1,7 @@
 package org.keizar.game
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.local.RuleEngineImpl
@@ -54,5 +55,24 @@ class RuleEngineTest {
         assertEquals(checkList[5][1], 0)
         assertEquals(checkList[6][0], 23)
         assertEquals(checkList[6][1], 24)
+    }
+
+    @Test
+    fun `test move`() {
+        val prop = BoardProperties.getStandardProperties(Random(100))
+        val ruleEngineCore = RuleEngineCoreImpl(prop)
+        val ruleEngine = RuleEngineImpl(prop, ruleEngineCore)
+
+        assertTrue(ruleEngine.move(BoardPos("c2"), BoardPos("c4")))
+        assertEquals(ruleEngine.pieceAt(BoardPos("c2")), null)
+        assertEquals(ruleEngine.pieceAt(BoardPos("c4")), Player.WHITE)
+
+        assertTrue(ruleEngine.move(BoardPos("e7"), BoardPos("e5")))
+        assertEquals(ruleEngine.pieceAt(BoardPos("e7")), null)
+        assertEquals(ruleEngine.pieceAt(BoardPos("e5")), Player.BLACK)
+
+        assertTrue(ruleEngine.move(BoardPos("h2"), BoardPos("h3")))
+        assertEquals(ruleEngine.pieceAt(BoardPos("h2")), null)
+        assertEquals(ruleEngine.pieceAt(BoardPos("h3")), Player.WHITE)
     }
 }
