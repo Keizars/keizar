@@ -1,24 +1,19 @@
 package org.keizar.android.ui.game
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Circle
-import androidx.compose.material.icons.filled.Hiking
-import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.NightsStay
-import androidx.compose.material.icons.filled.Queue
-import androidx.compose.material.icons.filled.Room
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.Composable
@@ -28,6 +23,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -88,7 +85,6 @@ fun GameBoard(
                             player = player,
                             Modifier
                                 .clickable { vm.onClick(BoardPos(row, col)) }
-                                .padding(4.dp)
                                 .fillMaxSize(),
                         )
                     }
@@ -137,30 +133,87 @@ fun TileImage(
     Box(modifier = modifier) {
         CompositionLocalProvider(LocalContentColor provides LocalContentColor.current.slightlyWeaken()) {
             when (tileType) {
-                KING -> Icon(painter = painterResource(id = R.drawable.king), contentDescription = "King", Modifier.matchParentSize(), tint = Color.Unspecified)
-                QUEEN -> Icon(painter = painterResource(id = R.drawable.queen), contentDescription = "Queen", Modifier.matchParentSize(), tint = Color.Unspecified)
-                BISHOP -> Icon(painter = painterResource(id = R.drawable.bishop), contentDescription = "Bishop", Modifier.matchParentSize(), tint = Color.Unspecified)
-                KNIGHT -> Icon(painter = painterResource(id = R.drawable.knight), contentDescription = "Knight", Modifier.matchParentSize(), tint = Color.Unspecified)
-                ROOK -> Icon(painter = painterResource(id = R.drawable.rook), contentDescription = "Rook", Modifier.matchParentSize(), tint = Color.Unspecified)
-                KEIZAR -> Icon(painter = painterResource(id = R.drawable.keizar), contentDescription = "Keizar", Modifier.matchParentSize(), tint = Color.Unspecified)
+                KING -> Icon(
+                    painter = painterResource(id = R.drawable.king),
+                    contentDescription = "King",
+                    Modifier.matchParentSize(),
+                    tint = Color.Unspecified
+                )
+
+                QUEEN -> Icon(
+                    painter = painterResource(id = R.drawable.queen),
+                    contentDescription = "Queen",
+                    Modifier.matchParentSize(),
+                    tint = Color.Unspecified
+                )
+
+                BISHOP -> Icon(
+                    painter = painterResource(id = R.drawable.bishop),
+                    contentDescription = "Bishop",
+                    Modifier.matchParentSize(),
+                    tint = Color.Unspecified
+                )
+
+                KNIGHT -> Icon(
+                    painter = painterResource(id = R.drawable.knight),
+                    contentDescription = "Knight",
+                    Modifier.matchParentSize(),
+                    tint = Color.Unspecified
+                )
+
+                ROOK -> Icon(
+                    painter = painterResource(id = R.drawable.rook),
+                    contentDescription = "Rook",
+                    Modifier.matchParentSize(),
+                    tint = Color.Unspecified
+                )
+
+                KEIZAR -> Icon(
+                    painter = painterResource(id = R.drawable.keizar),
+                    contentDescription = "Keizar",
+                    Modifier.matchParentSize(),
+                    tint = Color.Unspecified
+                )
+
                 PLAIN -> {}
             }
         }
         player?.let {
-            when (it) {
-                Player.BLACK -> Icon(
-                    Icons.Default.Circle,
-                    "Player Black",
-                    Modifier.matchParentSize()
-                )
-
-                Player.WHITE -> Icon(
-                    Icons.Default.Circle,
-                    "Player White",
-                    Modifier.matchParentSize()
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .padding(10.dp)
+            ) {
+                PlayerIcon(
+//                    contentDescription = if (it == Player.BLACK) "Player Black" else "Player White",
+                    color = if (it == Player.BLACK) Color.Black else Color.White,
+                    modifier = Modifier.matchParentSize()
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun PlayerIcon(
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .clip(CircleShape)
+            .background(color)
+            .border(0.5.dp, Color.Gray, shape = CircleShape)
+            .padding(all = 4.5.dp)
+            .clip(CircleShape)
+            .border(1.dp, Color.Gray, shape = CircleShape)
+            .shadow(1.dp, CircleShape),
+    ) {
+        Spacer(
+            Modifier
+                .matchParentSize()
+                .background(color),
+        )
     }
 }
 
