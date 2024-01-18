@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import me.him188.ani.utils.logging.info
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.game.BoardPos
@@ -52,7 +53,9 @@ class GameBoardViewModel(
             _currentPick.value = Pick(pos)
         } else {
             launchInBackground {
-                game.move(pick.pos, pos)
+                game.move(pick.pos, pos).also {
+                    logger.info { "[board] move $pick to $pos: $it" }
+                }
                 _currentPick.value = null
             }
         }
