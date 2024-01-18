@@ -67,19 +67,7 @@ fun GameBoard(
                     }
 
                     Tile(
-                        backgroundColor =
-                        when {
-                            picked -> if (properties.tileBackgroundColor(
-                                    row,
-                                    col
-                                )
-                            ) Color(0xff8bc34a) else Color(
-                                0xffc5e1a5
-                            )
-
-                            properties.tileBackgroundColor(row, col) -> Color(0xff6d9a4a)
-                            else -> Color(0xffe8edc8)
-                        },
+                        backgroundColor = tileBackgroundColor(picked, properties, row, col),
                         contentColor =
                         if (row >= properties.height / 2) Color.Black else Color.White,
                         Modifier
@@ -107,6 +95,18 @@ fun GameBoard(
             }
         }
     }
+}
+
+@Composable
+private fun tileBackgroundColor(
+    picked: Boolean,
+    properties: BoardProperties,
+    row: Int,
+    col: Int
+) = when {
+    picked -> if (properties.tileBackgroundColor(row, col)) Color(0xff8bc34a) else Color(0xffc5e1a5)
+    properties.tileBackgroundColor(row, col) -> Color(0xff6d9a4a)
+    else -> Color(0xffe8edc8)
 }
 
 @Composable
