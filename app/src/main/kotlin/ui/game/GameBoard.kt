@@ -29,9 +29,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
+import org.keizar.android.R
 import org.keizar.android.ui.theme.slightlyWeaken
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
@@ -135,12 +137,12 @@ fun TileImage(
     Box(modifier = modifier) {
         CompositionLocalProvider(LocalContentColor provides LocalContentColor.current.slightlyWeaken()) {
             when (tileType) {
-                KING -> Icon(Icons.Default.Hiking, "King", Modifier.matchParentSize())
-                QUEEN -> Icon(Icons.Default.Queue, "Queen", Modifier.matchParentSize())
-                BISHOP -> Icon(Icons.Default.ShoppingCart, "Bishop", Modifier.matchParentSize())
-                KNIGHT -> Icon(Icons.Default.NightsStay, "Knight", Modifier.matchParentSize())
-                ROOK -> Icon(Icons.Default.Room, "Rook", Modifier.matchParentSize())
-                KEIZAR -> Icon(Icons.Default.Key, "Keizar", Modifier.matchParentSize())
+                KING -> Icon(painter = painterResource(id = R.drawable.king), contentDescription = "King", Modifier.matchParentSize(), tint = Color.Unspecified)
+                QUEEN -> Icon(painter = painterResource(id = R.drawable.queen), contentDescription = "Queen", Modifier.matchParentSize(), tint = Color.Unspecified)
+                BISHOP -> Icon(painter = painterResource(id = R.drawable.bishop), contentDescription = "Bishop", Modifier.matchParentSize(), tint = Color.Unspecified)
+                KNIGHT -> Icon(painter = painterResource(id = R.drawable.knight), contentDescription = "Knight", Modifier.matchParentSize(), tint = Color.Unspecified)
+                ROOK -> Icon(painter = painterResource(id = R.drawable.rook), contentDescription = "Rook", Modifier.matchParentSize(), tint = Color.Unspecified)
+                KEIZAR -> Icon(painter = painterResource(id = R.drawable.keizar), contentDescription = "Keizar", Modifier.matchParentSize(), tint = Color.Unspecified)
                 PLAIN -> {}
             }
         }

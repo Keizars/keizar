@@ -77,14 +77,14 @@ fun HomePage(navController: NavController) {
         Spacer(modifier = Modifier.size(50.dp))
 
         // Saved game Button
-        Button(onClick = { /* TODO: Handle Multiplayer click */ }, modifier = Modifier.width(170.dp)) {
+        Button(onClick = { /* TODO: Handle saved game click */ }, modifier = Modifier.width(170.dp)) {
             Text("Saved games")
         }
 
         Spacer(modifier = Modifier.size(50.dp))
 
         // Tutorial Button
-        Button(onClick = { /* TODO: Handle Multiplayer click */ }, modifier = Modifier.width(170.dp)) {
+        Button(onClick = { /* TODO: Handle tutorial click */ }, modifier = Modifier.width(170.dp)) {
             Text("Tutorial")
         }
     }
