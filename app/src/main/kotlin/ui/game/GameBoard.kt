@@ -205,6 +205,7 @@ private fun PlayerIcon(
             .background(color)
             .border(0.5.dp, Color.Gray, shape = CircleShape)
             .padding(all = 4.5.dp)
+            .shadow(1.dp, CircleShape)
             .clip(CircleShape)
             .border(1.dp, Color.Gray, shape = CircleShape)
             .shadow(1.dp, CircleShape),
