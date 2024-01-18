@@ -66,19 +66,18 @@ fun GameBoard(
                         currentPick?.pos == BoardPos(row, col)
                     }
 
+                    val player by remember(properties) {
+                        val currPos = BoardPos(row, col)
+                        vm.pieces[currPos]!!
+                    }.player.collectAsState(null)
+
                     Tile(
                         backgroundColor = tileBackgroundColor(picked, properties, row, col),
-                        contentColor =
-                        if (row >= properties.height / 2) Color.Black else Color.White,
+                        contentColor = if (player == Player.BLACK) Color.Black else Color.White,
                         Modifier
                             .weight(1f)
                             .fillMaxSize(),
                     ) {
-                        val player by remember(properties) {
-                            val currPos = BoardPos(row, col)
-                            vm.pieces[currPos]!!
-                        }.player.collectAsState(null)
-
                         TileImage(
                             tileType = remember(properties) {
                                 val currPos = BoardPos(row, col)
