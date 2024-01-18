@@ -25,6 +25,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     implementation(libs.androidx.navigation.compose)
     implementation(projects.utils.slf4jKt)
+    runtimeOnly(libs.slf4j.simple)
 
     implementation(libs.ktor.client.core)
     implementation(libs.koin.android)
