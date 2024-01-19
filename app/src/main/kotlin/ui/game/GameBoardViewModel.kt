@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.last
 import me.him188.ani.utils.logging.info
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.launchInBackground
@@ -21,7 +22,7 @@ import kotlin.random.Random
 class GameBoardViewModel(
     boardProperties: BoardProperties,
 ) : AbstractViewModel() {
-    private val game: GameSession = GameSession.create(Random)
+    private val game: GameSession = GameSession.create(boardProperties)
 
     @Stable
     val pieces: Map<BoardPos, Piece> = game.properties.boardPoses.map { pos ->

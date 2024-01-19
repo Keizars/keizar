@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.test.createTestCoroutineScope
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngine
 import org.keizar.game.internal.RuleEngineImpl
@@ -30,6 +31,10 @@ interface GameSession {
     companion object {
         fun create(random: Random = Random): GameSession {
             val properties = BoardProperties.getStandardProperties(random)
+            return create(properties)
+        }
+
+        fun create(properties: BoardProperties): GameSession {
             val ruleEngine = RuleEngineImpl(
                 boardProperties = properties,
                 ruleEngineCore = RuleEngineCoreImpl(properties),
