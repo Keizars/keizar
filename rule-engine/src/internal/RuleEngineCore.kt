@@ -2,6 +2,7 @@ package org.keizar.game.internal
 
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
+import org.keizar.game.Piece
 import org.keizar.game.Player
 import org.keizar.game.TileType
 import org.keizar.game.internal.RuleEngineCoreImpl.Route.Direction.B
@@ -35,13 +36,13 @@ class RuleEngineCoreImpl(
     ): List<BoardPos> {
         val validMoves = mutableListOf<BoardPos>()
 
-        val curTile = tiles[piece.pos.index()]
+        val curTile = tiles[piece.pos.value.index()]
         val routes = routesOf(curTile.type, piece.player, shouldPawnMoveTwoStep(piece) { pos ->
             tiles[pos.index()].type
         })
 
         for (route in routes) {
-            var curPos = piece.pos
+            var curPos = piece.pos.value
             for (step in 1..route.reach) {
                 // take one step forward
                 curPos = curPos.step(route.direction)
@@ -164,12 +165,12 @@ class RuleEngineCoreImpl(
 
     private fun shouldPawnMoveTwoStep(piece: Piece, tileAt: (BoardPos) -> TileType): Boolean {
         // If the piece is not in one of its starting positions, it can't move 2 steps
-        if (boardProperties.piecesStartingPos[piece.player]?.contains(piece.pos) != true) {
+        if (boardProperties.piecesStartingPos[piece.player]?.contains(piece.pos.value) != true) {
             return false
         }
 
         // If it is a black piece in the KEIZAR column, it can't move 2 steps
-        if (piece.player == Player.BLACK && piece.pos.col == boardProperties.keizarTilePos.col) {
+        if (piece.player == Player.BLACK && piece.pos.value.col == boardProperties.keizarTilePos.col) {
             return false
         }
 
@@ -177,8 +178,8 @@ class RuleEngineCoreImpl(
         // Otherwise, it can move 2 steps
         return tileAt(
             BoardPos(
-                piece.pos.row + if (piece.player == Player.WHITE) 1 else -1,
-                piece.pos.col,
+                piece.pos.value.row + if (piece.player == Player.WHITE) 1 else -1,
+                piece.pos.value.col,
             )
         ) == TileType.PLAIN
     }

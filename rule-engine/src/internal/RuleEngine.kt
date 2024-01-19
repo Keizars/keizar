@@ -5,12 +5,14 @@ import kotlinx.coroutines.flow.StateFlow
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.Move
+import org.keizar.game.Piece
 import org.keizar.game.Player
 
 interface RuleEngine {
     val winningCounter: StateFlow<Int>
     val curPlayer: StateFlow<Player>
     val winner: StateFlow<Player?>
+    val pieces: List<Piece>
 
     fun showPossibleMoves(pos: BoardPos): List<BoardPos>
     fun move(source: BoardPos, dest: BoardPos): Boolean
@@ -30,6 +32,8 @@ class RuleEngineImpl(
     override val curPlayer: MutableStateFlow<Player> =
         MutableStateFlow(boardProperties.startingPlayer)
     override val winner: MutableStateFlow<Player?> = MutableStateFlow(null)
+    override val pieces: List<Piece> = board.pieces
+
     private val lostPiecesCount: Map<Player, MutableStateFlow<Int>> = mapOf(
         Player.WHITE to MutableStateFlow(0),
         Player.BLACK to MutableStateFlow(0),
@@ -45,7 +49,7 @@ class RuleEngineImpl(
             return false
         }
 
-        val move = board.move(piece, dest)
+        val move = board.move(source, dest)
         movesLog.add(move)
         updateLostPieces(move)
         updateWinningCounter(move)

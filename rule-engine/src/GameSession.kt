@@ -16,6 +16,7 @@ import kotlin.time.Duration.Companion.seconds
 interface GameSession {
     val properties: BoardProperties
 
+    val pieces: List<Piece>
     fun pieceAt(pos: BoardPos): Flow<Player?>
     val winner: StateFlow<Player?>
     val winningCounter: StateFlow<Int>
@@ -49,6 +50,8 @@ class GameSessionImpl(
     override val properties: BoardProperties,
     private val ruleEngine: RuleEngine,
 ) : GameSession {
+    override val pieces: List<Piece> = ruleEngine.pieces
+
     @Suppress("OPT_IN_USAGE")
     override fun pieceAt(pos: BoardPos): StateFlow<Player?> {
         return flow {

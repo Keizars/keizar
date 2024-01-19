@@ -1,15 +1,16 @@
 package org.keizar.game.internal
 
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.Move
+import org.keizar.game.MutablePiece
+import org.keizar.game.Piece
 import org.keizar.game.Player
 import org.keizar.game.TileType
 
-data class Piece(val player: Player, var pos: BoardPos)
-
 class Tile(val type: TileType) {
-    var piece: Piece?= null
+    var piece: Piece? = null
 }
 
 class Board(
@@ -17,7 +18,8 @@ class Board(
     private val ruleEngineCore: RuleEngineCore,
 ) {
     private val tiles: List<Tile>
-    private val pieces: MutableList<Piece> = mutableListOf()
+    private val _pieces: MutableList<MutablePiece> = mutableListOf()
+    val pieces: List<Piece> get() = _pieces.map { it.asPiece() }
 
     private val BoardPos.index get() = row * boardProperties.width + col
 
@@ -33,11 +35,12 @@ class Board(
     }
 
     private fun initPieces() {
+        var index = 0
         for ((color, startingPos) in boardProperties.piecesStartingPos) {
             for (pos in startingPos) {
-                val piece = Piece(color, pos)
-                pieces.add(piece)
-                tileAt(pos).piece = piece
+                val piece = MutablePiece(index++, color, MutableStateFlow(pos))
+                _pieces.add(piece)
+                tileAt(pos).piece = piece.asPiece()
             }
         }
     }
@@ -50,18 +53,18 @@ class Board(
         return tiles[pos.index].piece
     }
 
-    fun move(piece: Piece, dest: BoardPos): Move {
+    fun move(source: BoardPos, dest: BoardPos): Move {
         // assume the move is valid
-        val targetPiece = pieceAt(dest)
-        val source = piece.pos
+        val piece = pieceAt(source)!!.let { _pieces[it.index] }
+        val targetPiece = pieceAt(dest)?.let { _pieces[it.index] }
         val isCapture = targetPiece != null
         if (isCapture) {
-            pieces.remove(targetPiece)
+            targetPiece?.isCaptured?.value = true
         }
 
         tileAt(source).piece = null
-        tileAt(dest).piece = piece
-        piece.pos = dest
+        tileAt(dest).piece = piece.asPiece()
+        piece.pos.value = dest
 
         return Move(source, dest, isCapture)
     }
@@ -71,8 +74,8 @@ class Board(
     }
 
     fun noValidMoves(player: Player): Boolean {
-        for (piece in pieces.filter { it.player == player }) {
-            if (showValidMoves(piece).isNotEmpty()) return false
+        for (piece in _pieces.filter { it.player == player }) {
+            if (showValidMoves(piece.asPiece()).isNotEmpty()) return false
         }
         return true
     }
@@ -86,6 +89,6 @@ class Board(
     }
 
     fun getAllPiecesPos(player: Player): List<BoardPos> {
-        return pieces.filter { it.player == player }.map { it.pos }
+        return _pieces.filter { it.player == player && !it.isCaptured.value }.map { it.pos.value }
     }
 }

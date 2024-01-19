@@ -1,10 +1,10 @@
 package org.keizar.game
 
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.keizar.game.internal.RuleEngineCoreImpl
-import org.keizar.game.internal.Piece
 import org.keizar.game.internal.Tile
 
 class RuleEngineCoreTest {
@@ -23,27 +23,30 @@ class RuleEngineCoreTest {
      *   1 P _ _ _ P P _ P
      *     a b c d e f g h
      */
+    private var index1 = 0
     private val pieces1 = listOf(
-        Piece(Player.WHITE, BoardPos("a1")),
-        Piece(Player.WHITE, BoardPos("b2")),
-        Piece(Player.WHITE, BoardPos("c3")),
-        Piece(Player.WHITE, BoardPos("d2")),
-        Piece(Player.WHITE, BoardPos("e1")),
-        Piece(Player.WHITE, BoardPos("f1")),
-        Piece(Player.WHITE, BoardPos("f2")),
-        Piece(Player.WHITE, BoardPos("g4")),
-        Piece(Player.WHITE, BoardPos("h1")),
-        Piece(Player.BLACK, BoardPos("a8")),
-        Piece(Player.BLACK, BoardPos("b7")),
-        Piece(Player.BLACK, BoardPos("c6")),
-        Piece(Player.BLACK, BoardPos("d7")),
-        Piece(Player.BLACK, BoardPos("f5")),
-        Piece(Player.BLACK, BoardPos("g5")),
-        Piece(Player.BLACK, BoardPos("h5")),
-        Piece(Player.WHITE, BoardPos("h7")),
-        Piece(Player.WHITE, BoardPos("g8")),
-        Piece(Player.BLACK, BoardPos("e5")),
-    )
+        Pair(Player.WHITE, BoardPos("a1")),
+        Pair(Player.WHITE, BoardPos("b2")),
+        Pair(Player.WHITE, BoardPos("c3")),
+        Pair(Player.WHITE, BoardPos("d2")),
+        Pair(Player.WHITE, BoardPos("e1")),
+        Pair(Player.WHITE, BoardPos("f1")),
+        Pair(Player.WHITE, BoardPos("f2")),
+        Pair(Player.WHITE, BoardPos("g4")),
+        Pair(Player.WHITE, BoardPos("h1")),
+        Pair(Player.BLACK, BoardPos("a8")),
+        Pair(Player.BLACK, BoardPos("b7")),
+        Pair(Player.BLACK, BoardPos("c6")),
+        Pair(Player.BLACK, BoardPos("d7")),
+        Pair(Player.BLACK, BoardPos("f5")),
+        Pair(Player.BLACK, BoardPos("g5")),
+        Pair(Player.BLACK, BoardPos("h5")),
+        Pair(Player.WHITE, BoardPos("h7")),
+        Pair(Player.WHITE, BoardPos("g8")),
+        Pair(Player.BLACK, BoardPos("e5")),
+    ).map {(player, pos) ->
+        Piece(index1++, player, MutableStateFlow(pos))
+    }
 
     private val board1: List<Tile> = run {
         val board = List(64) { Tile(TileType.PLAIN) }.toMutableList()
@@ -53,7 +56,7 @@ class RuleEngineCoreTest {
         board[BoardPos("h3").index] = Tile(TileType.KNIGHT)
         board[BoardPos("d5").index] = Tile(TileType.KEIZAR)
         for (piece in pieces1) {
-            board[piece.pos.index].piece = piece
+            board[piece.pos.value.index].piece = piece
         }
         board
     }
@@ -103,18 +106,21 @@ class RuleEngineCoreTest {
      *   1 _ _ _ _ _ N _ _
      *     a b c d e f g h
      */
+    private var index2 = 0
     private val pieces2 = listOf(
-        Piece(Player.WHITE, BoardPos("b2")),
-        Piece(Player.WHITE, BoardPos("b5")),
-        Piece(Player.WHITE, BoardPos("b6")),
-        Piece(Player.BLACK, BoardPos("c7")),
-        Piece(Player.BLACK, BoardPos("d2")),
-        Piece(Player.WHITE, BoardPos("d3")),
-        Piece(Player.BLACK, BoardPos("d8")),
-        Piece(Player.WHITE, BoardPos("e3")),
-        Piece(Player.BLACK, BoardPos("g7")),
-        Piece(Player.WHITE, BoardPos("f1")),
-    )
+        Pair(Player.WHITE, BoardPos("b2")),
+        Pair(Player.WHITE, BoardPos("b5")),
+        Pair(Player.WHITE, BoardPos("b6")),
+        Pair(Player.BLACK, BoardPos("c7")),
+        Pair(Player.BLACK, BoardPos("d2")),
+        Pair(Player.WHITE, BoardPos("d3")),
+        Pair(Player.BLACK, BoardPos("d8")),
+        Pair(Player.WHITE, BoardPos("e3")),
+        Pair(Player.BLACK, BoardPos("g7")),
+        Pair(Player.WHITE, BoardPos("f1")),
+    ).map {(player, pos) ->
+        Piece(index2++, player, MutableStateFlow(pos))
+    }
 
     private val board2 = run {
         val board = List(64) { Tile(TileType.PLAIN) }.toMutableList()
@@ -130,7 +136,7 @@ class RuleEngineCoreTest {
         board[BoardPos("g7").index] = Tile(TileType.QUEEN)
         board[BoardPos("f1").index] = Tile(TileType.KNIGHT)
         for (piece in pieces2) {
-            board[piece.pos.index].piece = piece
+            board[piece.pos.value.index].piece = piece
         }
         board
     }
