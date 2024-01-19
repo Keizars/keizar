@@ -91,7 +91,7 @@ jobs:
 
       - if: ${{ env.isMac == 'true' }}
         name: Upload Android APK packages
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: keizar-android
           path: android/build/outputs/apk/release/keizar-release.apk
