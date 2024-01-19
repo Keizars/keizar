@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
@@ -27,9 +28,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
+import androidx.compose.ui.unit.sp
 import org.keizar.android.R
 import org.keizar.android.ui.theme.slightlyWeaken
 import org.keizar.game.BoardPos
@@ -70,23 +73,46 @@ fun GameBoard(
                         vm.pieces[currPos]!!
                     }.player.collectAsState(null)
 
-                    Tile(
-                        backgroundColor = tileBackgroundColor(picked, properties, row, col),
-                        contentColor = if (player == Player.BLACK) Color.Black else Color.White,
-                        Modifier
-                            .weight(1f)
-                            .fillMaxSize(),
-                    ) {
-                        TileImage(
-                            tileType = remember(properties) {
-                                val currPos = BoardPos(row, col)
-                                properties.tileArrangement[currPos] ?: PLAIN
-                            },
-                            player = player,
+                    Box(modifier = Modifier
+                        .weight(1f)
+                        .fillMaxSize()) {
+                        Tile(
+                            backgroundColor = tileBackgroundColor(picked, properties, row, col),
+                            contentColor = if (player == Player.BLACK) Color.Black else Color.White,
                             Modifier
-                                .clickable { vm.onClick(BoardPos(row, col)) }
                                 .fillMaxSize(),
-                        )
+                        ) {
+                            TileImage(
+                                tileType = remember(properties) {
+                                    val currPos = BoardPos(row, col)
+                                    properties.tileArrangement[currPos] ?: PLAIN
+                                },
+                                player = player,
+                                Modifier
+                                    .clickable { vm.onClick(BoardPos(row, col)) }
+                                    .fillMaxSize(),
+                            )
+                        }
+
+                        if (col == 0) {
+                            Text(text = (row + 1).toString(),
+                                modifier = Modifier
+                                    .align(Alignment.TopStart)
+                                    .padding(top = 2.dp, start = 2.dp),
+                                style = TextStyle(fontSize = 10.sp),
+                                color = Color.Black
+                            )
+                        }
+
+                        if (row == 0) {
+                            Text(text = ('a' + col).toString(),
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .padding(bottom = 2.dp, end = 2.dp),
+                                style = TextStyle(fontSize = 10.sp),
+                                color = Color.Black
+                            )
+                        }
                     }
                 }
             }
