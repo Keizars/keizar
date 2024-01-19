@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.keizar.game.internal.RuleEngineCoreImpl
-import org.keizar.game.local.RuleEngineImpl
+import org.keizar.game.internal.RuleEngineImpl
 import kotlin.random.Random
 
 class RuleEngineTest {

@@ -4,8 +4,8 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.keizar.game.internal.RuleEngineCoreImpl
-import org.keizar.game.local.Piece
-import org.keizar.game.local.Tile
+import org.keizar.game.internal.Piece
+import org.keizar.game.internal.Tile
 
 class RuleEngineCoreTest {
     private val BoardPos.index get() = row * 8 + col
