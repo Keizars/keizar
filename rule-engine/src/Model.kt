@@ -31,6 +31,6 @@ class Move(
     val isCapture: Boolean,
 ) {
     override fun toString(): String {
-        return if (isCapture) "${source}-${dest}" else "${source}x${dest}"
+        return if (isCapture) "${source}x${dest}" else "${source}-${dest}"
     }
 }

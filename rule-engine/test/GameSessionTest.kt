@@ -62,4 +62,42 @@ class GameSessionTest {
         assertEquals(1, game.getLostPiecesCount(Player.WHITE).value)
         assertEquals(2, game.getLostPiecesCount(Player.BLACK).value)
     }
+
+    @Test
+    fun `test winning conditions`() = runTest {
+        val game = GameSession.create(Random(0))
+        assertEquals(null, game.winner.value)
+        assertEquals(0, game.winningCounter.value)
+
+        assertTrue(game.move(BoardPos("e2"), BoardPos("e3")))
+        assertTrue(game.move(BoardPos("d7"), BoardPos("d6")))
+        assertTrue(game.move(BoardPos("e3"), BoardPos("d5")))
+        assertTrue(game.move(BoardPos("a7"), BoardPos("a6")))
+        assertEquals(null, game.winner.value)
+        //assertEquals(1, game.winningCounter.value)
+
+        assertTrue(game.move(BoardPos("a2"), BoardPos("a3")))
+        assertTrue(game.move(BoardPos("a6"), BoardPos("a5")))
+        assertEquals(null, game.winner.value)
+        //assertEquals(2, game.winningCounter.value)
+
+        assertTrue(game.move(BoardPos("a3"), BoardPos("a4")))
+        assertTrue(game.move(BoardPos("d6"), BoardPos("d5")))
+        assertEquals(null, game.winner.value)
+        //assertEquals(0, game.winningCounter.value)
+
+        assertTrue(game.move(BoardPos("h2"), BoardPos("h3")))
+        assertTrue(game.move(BoardPos("f7"), BoardPos("f6")))
+        assertEquals(null, game.winner.value)
+        //assertEquals(1, game.winningCounter.value)
+
+        assertTrue(game.move(BoardPos("h3"), BoardPos("h4")))
+        assertTrue(game.move(BoardPos("f6"), BoardPos("f5")))
+        assertEquals(null, game.winner.value)
+        //assertEquals(2, game.winningCounter.value)
+
+        assertTrue(game.move(BoardPos("h4"), BoardPos("h5")))
+        assertEquals(Player.BLACK, game.winner.value)
+        //assertEquals(3, game.winningCounter.value)
+    }
 }

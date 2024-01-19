@@ -47,8 +47,8 @@ class RuleEngineImpl(
         val move = board.move(piece, dest)
         movesLog.add(move)
         updateLostPieces(move)
+        updateWinningCounter(move)
         curPlayer.value = curPlayer.value.other()
-        updateWinningCounter()
         updateWinner()
 
         return true
@@ -72,10 +72,10 @@ class RuleEngineImpl(
         return piece.player == curPlayer.value && board.isValidMove(piece, dest)
     }
 
-    private fun updateWinningCounter() {
-        if (board.havePieceInKeizar(curPlayer.value)) {
+    private fun updateWinningCounter(move: Move) {
+        if (board.havePieceInKeizar(curPlayer.value.other())) {
             ++winningCounter.value
-        } else {
+        } else if (move.dest == boardProperties.keizarTilePos) {
             winningCounter.value = 0
         }
     }
