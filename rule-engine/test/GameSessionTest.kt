@@ -41,4 +41,25 @@ class GameSessionTest {
             )
         }
     }
+
+    @Test
+    fun `test getLostPiecesCount`() = runTest {
+        val game = GameSession.create(Random(0))
+        assertEquals(0, game.getLostPiecesCount(Player.WHITE).value)
+        assertEquals(0, game.getLostPiecesCount(Player.BLACK).value)
+
+        assertTrue(game.move(BoardPos("f2"), BoardPos("f4")))
+        assertTrue(game.move(BoardPos("e7"), BoardPos("e5")))
+        assertTrue(game.move(BoardPos("f4"), BoardPos("e5")))
+
+        assertEquals(0, game.getLostPiecesCount(Player.WHITE).value)
+        assertEquals(1, game.getLostPiecesCount(Player.BLACK).value)
+
+        assertTrue(game.move(BoardPos("d7"), BoardPos("d6")))
+        assertTrue(game.move(BoardPos("e5"), BoardPos("d6")))
+        assertTrue(game.move(BoardPos("c7"), BoardPos("d6")))
+
+        assertEquals(1, game.getLostPiecesCount(Player.WHITE).value)
+        assertEquals(2, game.getLostPiecesCount(Player.BLACK).value)
+    }
 }

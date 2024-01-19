@@ -15,6 +15,7 @@ interface RuleEngine {
     fun showPossibleMoves(pos: BoardPos): List<BoardPos>
     fun move(source: BoardPos, dest: BoardPos): Boolean
     fun pieceAt(pos: BoardPos): Player?
+    fun getLostPiecesCount(player: Player): StateFlow<Int>
 }
 
 class RuleEngineImpl(
@@ -28,6 +29,10 @@ class RuleEngineImpl(
     override val curPlayer: MutableStateFlow<Player> =
         MutableStateFlow(boardProperties.startingPlayer)
     override val winner: MutableStateFlow<Player?> = MutableStateFlow(null)
+    private val lostPiecesCount: Map<Player, MutableStateFlow<Int>> = mapOf(
+        Player.WHITE to MutableStateFlow(0),
+        Player.BLACK to MutableStateFlow(0),
+    )
 
     override fun showPossibleMoves(pos: BoardPos): List<BoardPos> {
         return board.pieceAt(pos)?.let { board.showValidMoves(it) } ?: listOf()
@@ -41,6 +46,7 @@ class RuleEngineImpl(
 
         val move = board.move(piece, dest)
         movesLog.add(move)
+        updateLostPieces(move)
         curPlayer.value = curPlayer.value.other()
         updateWinningCounter()
         updateWinner()
@@ -48,8 +54,18 @@ class RuleEngineImpl(
         return true
     }
 
+    private fun updateLostPieces(move: Move) {
+        if (move.isCapture) {
+            ++lostPiecesCount[curPlayer.value.other()]!!.value
+        }
+    }
+
     override fun pieceAt(pos: BoardPos): Player? {
         return board.pieceAt(pos)?.player
+    }
+
+    override fun getLostPiecesCount(player: Player): StateFlow<Int> {
+        return lostPiecesCount[player]!!
     }
 
     private fun isValidMove(piece: Piece, dest: BoardPos): Boolean {

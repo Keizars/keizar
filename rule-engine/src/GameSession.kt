@@ -27,6 +27,7 @@ interface GameSession {
 
     fun getAvailableTargets(from: BoardPos): Flow<List<BoardPos>>
     suspend fun move(from: BoardPos, to: BoardPos): Boolean
+    fun getLostPiecesCount(player: Player): StateFlow<Int>
 
     companion object {
         fun create(random: Random = Random): GameSession {
@@ -80,5 +81,9 @@ class GameSessionImpl(
 
     override suspend fun move(from: BoardPos, to: BoardPos): Boolean {
         return ruleEngine.move(from, to)
+    }
+
+    override fun getLostPiecesCount(player: Player): StateFlow<Int> {
+        return ruleEngine.getLostPiecesCount(player)
     }
 }

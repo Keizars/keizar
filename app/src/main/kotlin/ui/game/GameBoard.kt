@@ -224,7 +224,7 @@ private fun PreviewGameBoard() {
     BoxWithConstraints {
         GameBoard(
             remember {
-                BoardProperties.getStandardProperties(Random(100))
+                BoardProperties.getStandardProperties(Random(0))
             },
             Modifier.size(min(maxWidth, maxHeight))
         )
