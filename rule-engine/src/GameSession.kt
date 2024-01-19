@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.test.createTestCoroutineScope
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngine
 import org.keizar.game.internal.RuleEngineImpl
@@ -26,6 +25,7 @@ interface GameSession {
     suspend fun redo(): Boolean
 
     fun getAvailableTargets(from: BoardPos): Flow<List<BoardPos>>
+    fun getAllPiecesPos(player: Player): Flow<List<BoardPos>>
     suspend fun move(from: BoardPos, to: BoardPos): Boolean
     fun getLostPiecesCount(player: Player): StateFlow<Int>
 
@@ -77,6 +77,10 @@ class GameSessionImpl(
 
     override fun getAvailableTargets(from: BoardPos): Flow<List<BoardPos>> {
         return flowOf(ruleEngine.showPossibleMoves(from))
+    }
+
+    override fun getAllPiecesPos(player: Player): Flow<List<BoardPos>> {
+        return flowOf(ruleEngine.getAllPiecesPos(player))
     }
 
     override suspend fun move(from: BoardPos, to: BoardPos): Boolean {

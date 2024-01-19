@@ -84,4 +84,8 @@ class Board(
     fun showValidMoves(piece: Piece): List<BoardPos> {
         return ruleEngineCore.showValidMoves(tiles, piece) { index }
     }
+
+    fun getAllPiecesPos(player: Player): List<BoardPos> {
+        return pieces.filter { it.player == player }.map { it.pos }
+    }
 }

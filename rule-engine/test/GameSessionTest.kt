@@ -1,6 +1,8 @@
 package org.keizar.game
 
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.toSet
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -99,5 +101,47 @@ class GameSessionTest {
         assertTrue(game.move(BoardPos("h4"), BoardPos("h5")))
         assertEquals(Player.BLACK, game.winner.value)
         //assertEquals(3, game.winningCounter.value)
+    }
+
+
+    @Test
+    fun `test getAllPiecesPos`() = runTest {
+        val game = GameSession.create(Random(0))
+        assertEquals(
+            BoardPos.range("a1" to "h2").toSet(),
+            game.getAllPiecesPos(Player.WHITE).last().toSet(),
+        )
+        assertEquals(
+            BoardPos.range("a7" to "h8").toSet(),
+            game.getAllPiecesPos(Player.BLACK).last().toSet(),
+        )
+
+        assertTrue(game.move(BoardPos("f2"), BoardPos("f4")))
+        assertEquals(
+            setOf(
+                "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+                "a2", "b2", "c2", "d2", "e2", "f4", "g2", "h2",
+            ).map { BoardPos.fromString(it) }.toSet(),
+            game.getAllPiecesPos(Player.WHITE).last().toSet(),
+        )
+
+        assertTrue(game.move(BoardPos("e7"), BoardPos("e5")))
+        assertTrue(game.move(BoardPos("f4"), BoardPos("e5")))
+
+        assertEquals(
+            setOf(
+                "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+                "a2", "b2", "c2", "d2", "e2", "g2", "h2", "e5"
+            ).map { BoardPos.fromString(it) }.toSet(),
+            game.getAllPiecesPos(Player.WHITE).last().toSet(),
+        )
+
+        assertEquals(
+            setOf(
+                "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
+                "a7", "b7", "c7", "d7", "f7", "g7", "h7",
+            ).map { BoardPos.fromString(it) }.toSet(),
+            game.getAllPiecesPos(Player.BLACK).last().toSet(),
+        )
     }
 }

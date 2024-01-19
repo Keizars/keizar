@@ -16,6 +16,7 @@ interface RuleEngine {
     fun move(source: BoardPos, dest: BoardPos): Boolean
     fun pieceAt(pos: BoardPos): Player?
     fun getLostPiecesCount(player: Player): StateFlow<Int>
+    fun getAllPiecesPos(player: Player): List<BoardPos>
 }
 
 class RuleEngineImpl(
@@ -66,6 +67,10 @@ class RuleEngineImpl(
 
     override fun getLostPiecesCount(player: Player): StateFlow<Int> {
         return lostPiecesCount[player]!!
+    }
+
+    override fun getAllPiecesPos(player: Player): List<BoardPos> {
+        return board.getAllPiecesPos(player)
     }
 
     private fun isValidMove(piece: Piece, dest: BoardPos): Boolean {
