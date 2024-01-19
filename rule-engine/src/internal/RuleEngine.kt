@@ -1,4 +1,4 @@
-package org.keizar.game.local
+package org.keizar.game.internal
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -6,7 +6,6 @@ import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.Move
 import org.keizar.game.Player
-import org.keizar.game.internal.RuleEngineCore
 
 interface RuleEngine {
     val winningCounter: StateFlow<Int>

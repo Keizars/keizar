@@ -8,8 +8,8 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import org.keizar.game.internal.RuleEngineCoreImpl
-import org.keizar.game.local.RuleEngine
-import org.keizar.game.local.RuleEngineImpl
+import org.keizar.game.internal.RuleEngine
+import org.keizar.game.internal.RuleEngineImpl
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 

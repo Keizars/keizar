@@ -20,8 +20,6 @@ import org.keizar.game.internal.RuleEngineCoreImpl.Route.Direction.KRB
 import org.keizar.game.internal.RuleEngineCoreImpl.Route.Direction.KRF
 import org.keizar.game.internal.RuleEngineCoreImpl.Route.Direction.L
 import org.keizar.game.internal.RuleEngineCoreImpl.Route.Direction.R
-import org.keizar.game.local.Piece
-import org.keizar.game.local.Tile
 
 interface RuleEngineCore {
     fun showValidMoves(tiles: List<Tile>, piece: Piece, index: BoardPos.() -> Int): List<BoardPos>

@@ -1,11 +1,10 @@
-package org.keizar.game.local
+package org.keizar.game.internal
 
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.Move
 import org.keizar.game.Player
 import org.keizar.game.TileType
-import org.keizar.game.internal.RuleEngineCore
 
 data class Piece(val player: Player, var pos: BoardPos)
 
