@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -90,13 +91,16 @@ fun BoardPieces(
                     .size(tileSize)
                     .padding(10.dp),
             ) {
-                val color = if (piece.player == Player.BLACK) Color.Black else Color.White
+                val color = piece.player.pieceColor()
                 PlayerIcon(color = color, Modifier.matchParentSize())
             }
         }
     }
 }
 
+@Stable
+fun Player.pieceColor() =
+    if (this == Player.BLACK) Color.Black else Color.White
 
 @Composable
 internal fun PlayerIcon(

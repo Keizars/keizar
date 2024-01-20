@@ -23,6 +23,9 @@ interface GameBoardViewModel {
     @Stable
     val pieceArranger: PieceArranger
 
+    @Stable
+    val player: StateFlow<Player>
+
     /**
      * List of the pieces on the board.
      */
@@ -76,6 +79,9 @@ private class GameBoardViewModelImpl(
     private val game: GameSession = GameSession.create(boardProperties)
 
     override val pieceArranger = PieceArranger(boardProperties = boardProperties)
+
+    @Stable
+    override val player: StateFlow<Player> = game.curPlayer
 
     @Stable
     override val pieces: List<UiPiece> = game.pieces.map {

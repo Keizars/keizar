@@ -19,10 +19,12 @@ fun GameBoard(
 ) {
     val vm = rememberGameBoardViewModel(boardProperties = properties)
     Box(modifier = modifier) {
-        BoardBackground(properties, vm, modifier)
-        BoardPieces(vm, modifier)
+        BoardBackground(properties, vm)
+        BoardPieces(vm)
+        PossibleMovesOverlay(vm)
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable

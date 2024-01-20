@@ -30,6 +30,8 @@ interface PieceArranger {
      * Returns a flow of the offsets starting from the top-left corner of the board, for the [pos].
      */
     fun offsetFor(pos: Flow<BoardPos>): Flow<DpOffset>
+
+    fun offsetFor(pos: BoardPos): Flow<DpOffset>
 }
 
 fun PieceArranger(
@@ -64,9 +66,27 @@ private class PieceArrangerImpl(
             tileWidth, tileHeight,
             pos
         ) { boardHeight, tileWidth, tileHeight, p ->
-            val x = tileWidth * p.col
-            val y = boardHeight - tileHeight * (p.row + 1) // from bottom to top
-            DpOffset(x, y)
+            calculateOffset(boardHeight, tileWidth, tileHeight, p)
         }
+    }
+
+    override fun offsetFor(pos: BoardPos): Flow<DpOffset> {
+        return combine(
+            totalHeight,
+            tileWidth, tileHeight,
+        ) { boardHeight, tileWidth, tileHeight ->
+            calculateOffset(boardHeight, tileWidth, tileHeight, pos)
+        }
+    }
+
+    private fun calculateOffset(
+        boardHeight: Dp,
+        tileWidth: Dp,
+        tileHeight: Dp,
+        p: BoardPos,
+    ): DpOffset {
+        val x = tileWidth * p.col
+        val y = boardHeight - tileHeight * (p.row + 1) // from bottom to top
+        return DpOffset(x, y)
     }
 }
