@@ -1,6 +1,7 @@
 package org.keizar.android.ui.game
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,9 +15,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -27,9 +31,11 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
 import org.keizar.game.BoardProperties
 import org.keizar.game.Player
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.seconds
 
 
 /**
@@ -49,18 +55,25 @@ fun BoardPieces(
             pieceArranger.setDimensions(maxWidth, maxHeight)
         }
 
+        // Animate position after initialization
+        var loaded by remember { mutableStateOf(false) }
+        LaunchedEffect(true) {
+            delay(1.seconds)
+            loaded = true
+        }
+
         val tileSize by pieceArranger.tileSize.collectAsStateWithLifecycle(DpSize.Zero)
 
         for (piece in vm.pieces) {
             val targetOffset by piece.offsetInBoard.collectAsStateWithLifecycle(DpOffset.Zero)
             val offsetX by animateDpAsState(
                 targetValue = targetOffset.x,
-                animationSpec = tween(),
+                animationSpec = if (loaded) tween() else snap(),
                 label = "offsetX"
             )
             val offsetY by animateDpAsState(
                 targetValue = targetOffset.y,
-                animationSpec = tween(),
+                animationSpec = if (loaded) tween() else snap(),
                 label = "offsetY"
             )
             Box(
@@ -86,7 +99,7 @@ fun BoardPieces(
 
 
 @Composable
-private fun PlayerIcon(
+internal fun PlayerIcon(
     color: Color,
     modifier: Modifier = Modifier,
 ) {
