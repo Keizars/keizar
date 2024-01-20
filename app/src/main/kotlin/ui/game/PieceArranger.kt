@@ -1,0 +1,72 @@
+package org.keizar.android.ui.game
+
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.DpSize
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import org.keizar.game.BoardPos
+import org.keizar.game.BoardProperties
+
+
+/**
+ * Arranges the pieces on the board.
+ */
+interface PieceArranger {
+    /**
+     * Size of each tile.
+     */
+    val tileSize: Flow<DpSize>
+
+    /**
+     * Updates the total width and height of the board.
+     */
+    fun setDimensions(totalWidth: Dp, totalHeight: Dp)
+
+    /**
+     * Returns a flow of the offsets starting from the top-left corner of the board, for the [pos].
+     */
+    fun offsetFor(pos: Flow<BoardPos>): Flow<DpOffset>
+}
+
+fun PieceArranger(
+    boardProperties: BoardProperties,
+): PieceArranger {
+    return PieceArrangerImpl(boardProperties)
+}
+
+private class PieceArrangerImpl(
+    private val boardProperties: BoardProperties,
+) : PieceArranger {
+    private val totalWidth: MutableSharedFlow<Dp> =
+        MutableSharedFlow(replay = 1, extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+    private val totalHeight: MutableSharedFlow<Dp> =
+        MutableSharedFlow(replay = 1, extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    override fun setDimensions(totalWidth: Dp, totalHeight: Dp) {
+        this.totalWidth.tryEmit(totalWidth)
+        this.totalHeight.tryEmit(totalHeight)
+    }
+
+    private val tileWidth = totalWidth.map { it / boardProperties.width }
+    private val tileHeight = totalHeight.map { it / boardProperties.height }
+
+    override val tileSize: Flow<DpSize> = combine(tileWidth, tileHeight) { width, height ->
+        DpSize(width, height)
+    }
+
+    override fun offsetFor(pos: Flow<BoardPos>): Flow<DpOffset> {
+        return combine(
+            totalHeight,
+            tileWidth, tileHeight,
+            pos
+        ) { boardHeight, tileWidth, tileHeight, p ->
+            val x = tileWidth * p.col
+            val y = boardHeight - tileHeight * (p.row + 1) // from bottom to top
+            DpOffset(x, y)
+        }
+    }
+}

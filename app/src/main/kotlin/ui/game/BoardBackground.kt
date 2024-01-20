@@ -1,6 +1,5 @@
 package org.keizar.android.ui.game
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -11,10 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -26,6 +25,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.keizar.android.R
 import org.keizar.android.ui.theme.slightlyWeaken
 import org.keizar.game.BoardPos
@@ -54,11 +54,12 @@ fun BoardBackground(
                             .weight(1f)
                             .fillMaxSize()
                     ) {
-                        val currentPick by vm.currentPick.collectAsState()
+                        val currentPick by vm.currentPick.collectAsStateWithLifecycle()
                         val picked = remember(currentPick) {
                             currentPick?.pos == BoardPos(row, col)
                         }
                         Tile(
+                            onClick = { vm.onClickTile(BoardPos(row, col)) },
                             backgroundColor = tileBackgroundColor(picked, properties, row, col),
                             Modifier
                                 .fillMaxSize(),
@@ -173,15 +174,21 @@ private fun tileBackgroundColor(
 
 @Composable
 fun Tile(
+    onClick: () -> Unit,
     backgroundColor: Color,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    Box(
-        modifier.background(backgroundColor),
-        contentAlignment = Alignment.Center,
+    Surface(
+        onClick = onClick,
+        modifier,
+        color = backgroundColor
     ) {
-        content()
+        Box(
+            contentAlignment = Alignment.Center,
+        ) {
+            content()
+        }
     }
 }
 
@@ -252,9 +259,7 @@ private fun PreviewBoardBackground() {
         }
         BoardBackground(
             prop,
-            remember {
-                GameBoardViewModel(prop)
-            },
+            rememberGameBoardViewModel(boardProperties = prop),
             Modifier.size(min(maxWidth, maxHeight))
         )
     }

@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
-import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngine
+import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
@@ -17,6 +17,8 @@ interface GameSession {
     val properties: BoardProperties
 
     val pieces: List<Piece>
+
+    @Deprecated("use pieces instead.")
     fun pieceAt(pos: BoardPos): Flow<Player?>
     val winner: StateFlow<Player?>
     val winningCounter: StateFlow<Int>

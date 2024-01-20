@@ -17,10 +17,10 @@ fun GameBoard(
     properties: BoardProperties,
     modifier: Modifier = Modifier,
 ) {
-    val vm = remember(properties) { GameBoardViewModel(properties) }
+    val vm = rememberGameBoardViewModel(boardProperties = properties)
     Box(modifier = modifier) {
         BoardBackground(properties, vm, modifier)
-        BoardPieces(properties, vm, modifier)
+        BoardPieces(vm, modifier)
     }
 }
 

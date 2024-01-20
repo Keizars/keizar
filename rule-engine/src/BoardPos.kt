@@ -12,6 +12,9 @@ value class BoardPos private constructor(
     val row: Int
         get() = (value shr 32).toInt()
 
+    /**
+     * Starts from 0
+     */
     val col: Int
         get() = value.toInt()
 

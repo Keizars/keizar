@@ -1,63 +1,87 @@
 package org.keizar.android.ui.game
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.keizar.game.BoardProperties
+import org.keizar.game.Player
 import kotlin.random.Random
 
 
+/**
+ * Composes pieces on the board.
+ *
+ * @see BoardBackground
+ */
 @Composable
 fun BoardPieces(
-    properties: BoardProperties,
     vm: GameBoardViewModel,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier) {
+    BoxWithConstraints(modifier = modifier) {
+        // Notify the PieceArranger with updated dimensions
+        val pieceArranger = vm.pieceArranger
+        SideEffect {
+            pieceArranger.setDimensions(maxWidth, maxHeight)
+        }
 
+        val tileSize by pieceArranger.tileSize.collectAsStateWithLifecycle(DpSize.Zero)
+
+        for (piece in vm.pieces) {
+            val targetOffset by piece.offsetInBoard.collectAsStateWithLifecycle(DpOffset.Zero)
+            val offsetX by animateDpAsState(
+                targetValue = targetOffset.x,
+                animationSpec = tween(),
+                label = "offsetX"
+            )
+            val offsetY by animateDpAsState(
+                targetValue = targetOffset.y,
+                animationSpec = tween(),
+                label = "offsetY"
+            )
+            Box(
+                Modifier
+                    .background(Color.Transparent)
+                    .offset(offsetX, offsetY)
+                    .clickable(
+                        remember {
+                            MutableInteractionSource()
+                        },
+                        indication = null
+                    ) { vm.onClickPiece(piece) }
+                    .clip(CircleShape)
+                    .size(tileSize)
+                    .padding(10.dp),
+            ) {
+                val color = if (piece.player == Player.BLACK) Color.Black else Color.White
+                PlayerIcon(color = color, Modifier.matchParentSize())
+            }
+        }
     }
-}
-
-@Composable
-private fun Piece(
-    modifier: Modifier = Modifier,
-) {
-//    contentColor = if (player == Player.BLACK) Color.Black else Color.White,
-
-    Box {
-
-    }
-}
-
-@Composable
-private fun PlayerIconBox(
-    modifier: Modifier = Modifier,
-) {
-//    Box(
-//        modifier = Modifier
-//            .matchParentSize()
-//            .padding(10.dp)
-//    ) {
-//        PlayerIcon(
-////                    contentDescription = if (it == Player.BLACK) "Player Black" else "Player White",
-//            color = if (it == Player.BLACK) Color.Black else Color.White,
-//            modifier = Modifier.matchParentSize()
-//        )
-//    }
 }
 
 
@@ -92,14 +116,12 @@ private fun PreviewBoardPiecesWithBackground() {
         val prop = remember {
             BoardProperties.getStandardProperties(Random(0))
         }
-        val vm = remember {
-            GameBoardViewModel(prop)
-        }
+        val vm = rememberGameBoardViewModel(prop)
         BoardBackground(
             prop,
             vm,
             Modifier.size(min(maxWidth, maxHeight))
         )
-        BoardPieces(properties = prop, vm = vm)
+        BoardPieces(vm = vm)
     }
 }
