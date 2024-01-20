@@ -38,18 +38,25 @@ class Move(
     }
 }
 
-data class Piece(
-    val index: Int,
-    val player: Player,
-    val pos: StateFlow<BoardPos>,
-    val isCaptured: StateFlow<Boolean> = MutableStateFlow(false),
-)
-
-data class MutablePiece(
-    val index: Int,
-    val player: Player,
-    val pos: MutableStateFlow<BoardPos>,
-    val isCaptured: MutableStateFlow<Boolean> = MutableStateFlow(false),
-) {
-    fun asPiece(): Piece = Piece(index, player, pos, isCaptured)
+interface Piece {
+    val index: Int
+    val player: Player
+    val pos: StateFlow<BoardPos>
+    val isCaptured: StateFlow<Boolean>
 }
+
+class MutablePiece(
+    override val index: Int,
+    override val player: Player,
+    override val pos: MutableStateFlow<BoardPos>,
+    override val isCaptured: MutableStateFlow<Boolean> = MutableStateFlow(false),
+) : Piece
+
+/**
+ * Get a read-only view of this.
+ */
+fun MutablePiece.asPiece(): Piece = ReadOnlyPiece(this)
+
+private class ReadOnlyPiece(
+    private val piece: Piece,
+) : Piece by piece

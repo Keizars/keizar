@@ -45,7 +45,7 @@ class RuleEngineCoreTest {
         Pair(Player.WHITE, BoardPos("g8")),
         Pair(Player.BLACK, BoardPos("e5")),
     ).map {(player, pos) ->
-        Piece(index1++, player, MutableStateFlow(pos))
+        MutablePiece(index1++, player, MutableStateFlow(pos))
     }
 
     private val board1: List<Tile> = run {
@@ -119,7 +119,7 @@ class RuleEngineCoreTest {
         Pair(Player.BLACK, BoardPos("g7")),
         Pair(Player.WHITE, BoardPos("f1")),
     ).map {(player, pos) ->
-        Piece(index2++, player, MutableStateFlow(pos))
+        MutablePiece(index2++, player, MutableStateFlow(pos))
     }
 
     private val board2 = run {

@@ -8,6 +8,7 @@ import org.keizar.game.MutablePiece
 import org.keizar.game.Piece
 import org.keizar.game.Player
 import org.keizar.game.TileType
+import org.keizar.game.asPiece
 
 class Tile(val type: TileType) {
     var piece: Piece? = null
