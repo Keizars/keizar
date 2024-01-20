@@ -5,13 +5,17 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.DpOffset
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import me.him188.ani.utils.logging.info
 import org.keizar.android.ui.foundation.AbstractViewModel
+import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
@@ -44,6 +48,13 @@ interface GameBoardViewModel {
     @Stable
     val availablePositions: SharedFlow<List<BoardPos>?>
 
+    /**
+     * `true` if the last move is done by [onRelease].
+     */
+    @Stable
+    val lastMoveIsDrag: MutableStateFlow<Boolean>
+
+    // clicking
 
     /**
      * Called when the player single-clicks the piece.
@@ -55,10 +66,27 @@ interface GameBoardViewModel {
      */
     fun onClickTile(pos: BoardPos)
 
+
+    // dragging
+
     /**
      * Called when the player long-presses the piece.
      */
     fun onHold(piece: UiPiece)
+
+    /**
+     * The offset of the piece from the point where the player stared holding the piece.
+     *
+     * If the player is not holding any piece, the flow emits [DpOffset.Zero].
+     */
+    val draggingOffset: StateFlow<DpOffset>
+
+    /**
+     * Add the given [offset] to the current [draggingOffset].
+     *
+     * This is called when the player drags the piece.
+     */
+    fun addDraggingOffset(offset: DpOffset)
 
     /**
      * Called when the player releases the piece after long-pressing it.
@@ -87,7 +115,8 @@ private class GameBoardViewModelImpl(
     override val pieces: List<UiPiece> = game.pieces.map {
         UiPiece(
             enginePiece = it,
-            offsetInBoard = pieceArranger.offsetFor(it.pos).shareInBackground()
+            offsetInBoard = pieceArranger.offsetFor(it.pos).shareInBackground(),
+            backgroundScope
         )
     }
 
@@ -109,15 +138,17 @@ private class GameBoardViewModelImpl(
         }
     }.shareInBackground()
 
+    override val lastMoveIsDrag: MutableStateFlow<Boolean> = MutableStateFlow(false)
+
     override fun onClickPiece(piece: UiPiece) {
         val currentPick = currentPick.value
         if (currentPick == null) {
             if (piece.player != currentPlayer.value) return
-            this.currentPick.value = Pick(piece)
+            startPick(piece)
         } else {
             // Pick another piece
+            completePick(isDrag = false)
             launchInBackground {
-                this@GameBoardViewModelImpl.currentPick.value = null
                 movePiece(currentPick.piece.pos.value, piece.pos.value)
             }
             return
@@ -126,10 +157,54 @@ private class GameBoardViewModelImpl(
 
     override fun onClickTile(pos: BoardPos) {
         val pick = currentPick.value ?: return
+        completePick(isDrag = false)
         launchInBackground {
-            this@GameBoardViewModelImpl.currentPick.value = null
             movePiece(pick.piece.pos.value, pos)
         }
+    }
+
+    override val draggingOffset = MutableStateFlow(DpOffset.Zero)
+
+    override fun onHold(piece: UiPiece) {
+        if (piece.player != currentPlayer.value) return
+        startPick(piece)
+    }
+
+
+    override fun addDraggingOffset(offset: DpOffset) {
+        this.draggingOffset.value += offset
+    }
+
+    override fun onRelease(piece: UiPiece) {
+        val currentPick = currentPick.value ?: return
+        if (currentPick.piece != piece) return
+
+        val dragOffset = draggingOffset.value
+
+        piece.hide() // hide it now to avoid flickering
+        launchInBackground {
+            try {
+                movePiece(
+                    currentPick.pos,
+                    pieceArranger.getNearestPos(dragOffset, from = piece.pos.value).first()
+                )
+                completePick(isDrag = true)
+            } finally {
+                piece.cancelHide()
+            }
+        }
+        return
+    }
+
+
+    private fun startPick(piece: UiPiece) {
+        this.currentPick.value = Pick(piece)
+    }
+
+    private fun completePick(isDrag: Boolean) {
+        this.currentPick.value = null
+        lastMoveIsDrag.value = isDrag
+        draggingOffset.value = DpOffset.Zero
     }
 
     private suspend fun movePiece(from: BoardPos, to: BoardPos) {
@@ -138,13 +213,6 @@ private class GameBoardViewModelImpl(
         }
     }
 
-    override fun onHold(piece: UiPiece) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onRelease(piece: UiPiece) {
-        TODO("Not yet implemented")
-    }
 }
 
 @Immutable
@@ -164,5 +232,20 @@ class UiPiece internal constructor(
     /**
      * The offset of the piece on the board, starting from the top-left corner.
      */
-    val offsetInBoard: SharedFlow<DpOffset>
-) : Piece by enginePiece 
+    val offsetInBoard: SharedFlow<DpOffset>,
+    override val backgroundScope: CoroutineScope,
+) : Piece by enginePiece, HasBackgroundScope {
+
+    private val _overrideVisible = MutableStateFlow<Boolean?>(null)
+    val isVisible = combine(_overrideVisible, isCaptured) { override, isCaptured ->
+        override ?: !isCaptured
+    }.shareInBackground()
+
+    fun hide() {
+        _overrideVisible.value = false
+    }
+
+    fun cancelHide() {
+        _overrideVisible.value = null
+    }
+}

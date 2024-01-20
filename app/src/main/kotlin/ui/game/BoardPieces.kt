@@ -6,10 +6,13 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.draggable2D
+import androidx.compose.foundation.gestures.rememberDraggable2DState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.absoluteOffset
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -26,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpSize
@@ -59,32 +63,63 @@ fun BoardPieces(
         // Animate position after initialization
         var loaded by remember { mutableStateOf(false) }
         LaunchedEffect(true) {
-            delay(1.seconds)
+            delay(2.seconds)
             loaded = true
         }
 
         val tileSize by pieceArranger.tileSize.collectAsStateWithLifecycle(DpSize.Zero)
 
         for (piece in vm.pieces) {
-            val isCaptured by piece.isCaptured.collectAsStateWithLifecycle()
-            if (isCaptured) {
+            val isVisible by piece.isVisible.collectAsStateWithLifecycle(false)
+            if (!isVisible) {
                 continue
             }
+
             val targetOffset by piece.offsetInBoard.collectAsStateWithLifecycle(DpOffset.Zero)
+            val lastMoveIsDrag by vm.lastMoveIsDrag.collectAsStateWithLifecycle(false)
+            val shouldAnimateMovement = loaded && !lastMoveIsDrag
+
             val offsetX by animateDpAsState(
                 targetValue = targetOffset.x,
-                animationSpec = if (loaded) tween() else snap(),
+                animationSpec = if (shouldAnimateMovement) tween() else snap(),
                 label = "offsetX"
             )
             val offsetY by animateDpAsState(
                 targetValue = targetOffset.y,
-                animationSpec = if (loaded) tween() else snap(),
+                animationSpec = if (shouldAnimateMovement) tween() else snap(),
                 label = "offsetY"
             )
+
+            val density = LocalDensity.current
+            val draggableState = rememberDraggable2DState {
+                with(density) {
+                    vm.addDraggingOffset(DpOffset(it.x.toDp(), it.y.toDp()))
+                }
+            }
+
+            val pick by vm.currentPick.collectAsStateWithLifecycle()
+            val draggingOffset by vm.draggingOffset.collectAsStateWithLifecycle(DpOffset.Zero)
+
             Box(
                 Modifier
                     .background(Color.Transparent)
                     .offset(offsetX, offsetY)
+                    .then(
+                        if (pick?.piece == piece) {
+                            Modifier.absoluteOffset(draggingOffset.x, draggingOffset.y)
+                        } else {
+                            Modifier
+                        }
+                    )
+                    .draggable2D(
+                        draggableState,
+                        onDragStarted = {
+                            vm.onHold(piece)
+                        },
+                        onDragStopped = {
+                            vm.onRelease(piece)
+                        },
+                    )
                     .clickable(
                         remember {
                             MutableInteractionSource()
@@ -93,7 +128,15 @@ fun BoardPieces(
                     ) { vm.onClickPiece(piece) }
                     .clip(CircleShape)
                     .size(tileSize)
-                    .padding(10.dp),
+                    .padding(10.dp)
+                    .then(
+                        // shadow if dragging
+                        if (pick?.piece == piece) {
+                            Modifier.shadow(4.dp, shape = CircleShape)
+                        } else {
+                            Modifier
+                        }
+                    ),
             ) {
                 val color = piece.player.pieceColor()
                 PlayerIcon(color = color, Modifier.matchParentSize())
@@ -143,6 +186,9 @@ private fun PreviewBoardPiecesWithBackground() {
             vm,
             Modifier.size(min(maxWidth, maxHeight))
         )
-        BoardPieces(vm = vm)
+        BoardPieces(
+            vm = vm,
+            Modifier.size(min(maxWidth, maxHeight))
+        )
     }
 }

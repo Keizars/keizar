@@ -31,7 +31,17 @@ interface PieceArranger {
      */
     fun offsetFor(pos: Flow<BoardPos>): Flow<DpOffset>
 
+    /**
+     * Returns a flow of the offsets starting from the top-left corner of the board, for the [pos].
+     */
     fun offsetFor(pos: BoardPos): Flow<DpOffset>
+
+    /**
+     * Returns the nearest [BoardPos] for the given [value], relative to the position [from].
+     *
+     * If [from] is `null`, the nearest position is calculated as an absolute offset from the top-left corner of the board.
+     */
+    fun getNearestPos(value: DpOffset, from: BoardPos? = null): Flow<BoardPos>
 }
 
 fun PieceArranger(
@@ -79,6 +89,31 @@ private class PieceArrangerImpl(
         }
     }
 
+    override fun getNearestPos(value: DpOffset, from: BoardPos?): Flow<BoardPos> {
+        return combine(
+            totalHeight,
+            tileWidth, tileHeight,
+        ) { boardHeight, tileWidth, tileHeight ->
+            // center of tile
+            val fromOffset = if (from == null) {
+                DpOffset.Zero
+            } else {
+                calculateOffset(boardHeight, tileWidth, tileHeight, from)
+            } + DpOffset(
+                x = tileWidth / 2,
+                y = tileHeight / 2,
+            )
+
+            val absoluteX = fromOffset.x + value.x
+            val absoluteY = fromOffset.y + value.y
+
+            BoardPos(
+                row = boardProperties.height - ((absoluteY - absoluteY % tileHeight) / tileHeight).toInt() - 1,
+                col = ((absoluteX - absoluteX % tileWidth) / tileWidth).toInt(),
+            )
+        }
+    }
+
     private fun calculateOffset(
         boardHeight: Dp,
         tileWidth: Dp,
@@ -90,3 +125,5 @@ private class PieceArrangerImpl(
         return DpOffset(x, y)
     }
 }
+
+private operator fun Dp.rem(other: Dp): Dp = Dp(value % other.value)
