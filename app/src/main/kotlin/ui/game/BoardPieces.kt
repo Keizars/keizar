@@ -66,6 +66,10 @@ fun BoardPieces(
         val tileSize by pieceArranger.tileSize.collectAsStateWithLifecycle(DpSize.Zero)
 
         for (piece in vm.pieces) {
+            val isCaptured by piece.isCaptured.collectAsStateWithLifecycle()
+            if (isCaptured) {
+                continue
+            }
             val targetOffset by piece.offsetInBoard.collectAsStateWithLifecycle(DpOffset.Zero)
             val offsetX by animateDpAsState(
                 targetValue = targetOffset.x,
