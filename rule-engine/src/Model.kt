@@ -43,6 +43,8 @@ interface Piece {
     val player: Player
     val pos: StateFlow<BoardPos>
     val isCaptured: StateFlow<Boolean>
+
+    override fun toString(): String
 }
 
 class MutablePiece(
@@ -50,7 +52,11 @@ class MutablePiece(
     override val player: Player,
     override val pos: MutableStateFlow<BoardPos>,
     override val isCaptured: MutableStateFlow<Boolean> = MutableStateFlow(false),
-) : Piece
+) : Piece {
+    override fun toString(): String {
+        return "Piece(index=$index, player=$player, pos=${pos.value}, isCaptured=${isCaptured.value})"
+    }
+}
 
 /**
  * Get a read-only view of this.
