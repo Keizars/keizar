@@ -1,25 +1,18 @@
 package org.keizar.game
 
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.stateIn
 import org.keizar.game.internal.RuleEngine
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
 import kotlin.random.Random
-import kotlin.time.Duration.Companion.seconds
 
 interface GameSession {
     val properties: BoardProperties
 
     val pieces: List<Piece>
 
-    @Deprecated("use pieces instead.")
-    fun pieceAt(pos: BoardPos): Flow<Player?>
     val winner: StateFlow<Player?>
     val winningCounter: StateFlow<Int>
     val curPlayer: StateFlow<Player>
@@ -53,16 +46,6 @@ class GameSessionImpl(
     private val ruleEngine: RuleEngine,
 ) : GameSession {
     override val pieces: List<Piece> = ruleEngine.pieces
-
-    @Suppress("OPT_IN_USAGE")
-    override fun pieceAt(pos: BoardPos): StateFlow<Player?> {
-        return flow {
-            while (true) {
-                emit(ruleEngine.pieceAt(pos))
-                kotlinx.coroutines.delay(0.1.seconds)
-            }
-        }.stateIn(GlobalScope, started = SharingStarted.WhileSubscribed(), null)
-    }
 
     override val winner: StateFlow<Player?> = ruleEngine.winner
 
