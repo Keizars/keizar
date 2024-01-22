@@ -12,7 +12,7 @@ import kotlin.random.Random
 class GameSessionTest {
     @Test
     fun `test curPlayer`() = runTest {
-        val game = GameSession.create(Random(100))
+        val game = GameSession.create(100)
         val curPlayer: StateFlow<Player> = game.curPlayer
         assertEquals(Player.WHITE, curPlayer.value)
         game.move(BoardPos("a2"), BoardPos("a3"))
@@ -23,7 +23,7 @@ class GameSessionTest {
 
     @Test
     fun `test getAvailableTargets`() = runTest {
-        val game = GameSession.create(Random(100))
+        val game = GameSession.create(100)
         val targets1 = game.getAvailableTargets(BoardPos("d2"))
         val targets2 = game.getAvailableTargets(BoardPos("e2"))
 
@@ -46,7 +46,7 @@ class GameSessionTest {
 
     @Test
     fun `test getLostPiecesCount`() = runTest {
-        val game = GameSession.create(Random(0))
+        val game = GameSession.create(0)
         assertEquals(0, game.getLostPiecesCount(Player.WHITE).value)
         assertEquals(0, game.getLostPiecesCount(Player.BLACK).value)
 
@@ -67,7 +67,7 @@ class GameSessionTest {
 
     @Test
     fun `test winning conditions`() = runTest {
-        val game = GameSession.create(Random(0))
+        val game = GameSession.create(0)
         assertEquals(null, game.winner.value)
         assertEquals(0, game.winningCounter.value)
 
@@ -106,7 +106,7 @@ class GameSessionTest {
 
     @Test
     fun `test getAllPiecesPos`() = runTest {
-        val game = GameSession.create(Random(0))
+        val game = GameSession.create(0)
         assertEquals(
             BoardPos.range("a1" to "h2").toSet(),
             game.getAllPiecesPos(Player.WHITE).last().toSet(),
@@ -147,7 +147,7 @@ class GameSessionTest {
 
     @Test
     fun `test pieces`() = runTest {
-        val game = GameSession.create(Random(0))
+        val game = GameSession.create(0)
         val pieces = game.pieces
         assertEquals(
             BoardPos.range("a1" to "h2").toSet() + BoardPos.range("a7" to "h8").toSet(),
@@ -187,7 +187,7 @@ class GameSessionTest {
 
     @Test
     fun `test getSnapshot and restore`() = runTest {
-        val game = GameSession.create(Random(0))
+        val game = GameSession.create(0)
         val pieces = game.pieces
         assertEquals(
             BoardPos.range("a1" to "h2").toSet() + BoardPos.range("a7" to "h8").toSet(),

@@ -37,7 +37,12 @@ interface GameSession {
     }
 
     companion object {
-        fun create(random: Random = Random): GameSession {
+        fun create(seed: Int? = null): GameSession {
+            val properties = BoardProperties.getStandardProperties(seed)
+            return create(properties)
+        }
+
+        fun create(random: Random): GameSession {
             val properties = BoardProperties.getStandardProperties(random)
             return create(properties)
         }

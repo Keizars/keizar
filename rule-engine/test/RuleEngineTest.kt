@@ -10,7 +10,7 @@ import kotlin.random.Random
 class RuleEngineTest {
     @Test
     fun `generate board`() {
-        val prop = BoardProperties.getStandardProperties(Random(1))
+        val prop = BoardProperties.getStandardProperties(1)
         assertEquals(8, prop.width)
         assertEquals(8, prop.height)
         assertEquals("d5", prop.keizarTilePos.toString())
@@ -26,7 +26,7 @@ class RuleEngineTest {
 
     @Test
     fun `check standard tile arrangement`() {
-        val prop = BoardProperties.getStandardProperties(Random(1))
+        val prop = BoardProperties.getStandardProperties(1)
         assertEquals("d5", prop.keizarTilePos.toString())
         val arrangement = prop.tileArrangement
         val checkList = MutableList(7){ MutableList(2){0} }
@@ -59,7 +59,7 @@ class RuleEngineTest {
 
     @Test
     fun `test move`() {
-        val prop = BoardProperties.getStandardProperties(Random(100))
+        val prop = BoardProperties.getStandardProperties(100)
         val ruleEngineCore = RuleEngineCoreImpl(prop)
         val ruleEngine = RuleEngineImpl(prop, ruleEngineCore)
 
@@ -78,7 +78,7 @@ class RuleEngineTest {
 
     @Test
     fun `test showPossibleMoves`() {
-        val prop = BoardProperties.getStandardProperties(Random(100))
+        val prop = BoardProperties.getStandardProperties(100)
         val ruleEngineCore = RuleEngineCoreImpl(prop)
         val ruleEngine = RuleEngineImpl(prop, ruleEngineCore)
 
