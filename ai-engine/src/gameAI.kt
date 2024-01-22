@@ -1,11 +1,10 @@
 package org.keizar.aiengine
 
 
-import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.flow.last
 import org.keizar.game.BoardPos
 import org.keizar.game.GameSession
 import org.keizar.game.Player
-import kotlin.random.Random
 
 interface GameAI {
     val game: GameSession
@@ -23,11 +22,15 @@ class RandomGameAIImpl(
     override suspend fun FindBestMove():Pair<BoardPos,BoardPos>? {
         val player = game.curPlayer.value
         return if (myplayer == player){
-            val myPieces = game.getAllPiecesPos(myplayer).toList()[0]
-            val randomItem = myPieces[Random.nextInt(myPieces.size)]
-            val validTargets = game.getAvailableTargets(randomItem).toList()[0]
+            val myPieces = game.getAllPiecesPos(myplayer).last()
+            var randomPos = myPieces.random()
+            var validTargets = game.getAvailableTargets(randomPos).last()
+            while (validTargets.isEmpty()) {
+                randomPos = myPieces.random()
+                validTargets = game.getAvailableTargets(randomPos).last()
+            }
             val randomTarget = validTargets.random()
-            Pair(randomItem, randomTarget)
+            Pair(randomPos, randomTarget)
         } else null
 
     }

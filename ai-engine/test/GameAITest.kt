@@ -13,7 +13,7 @@ import org.keizar.game.Player
 class GameSessionTest {
     @Test
     fun `test generate a move`() = runTest {
-         val game = GameSession.create(Random(100))
+        val game = GameSession.create(Random(100))
         val curPlayer: StateFlow<Player> = game.curPlayer
         assertEquals(Player.WHITE, curPlayer.value)
         val gameai = RandomGameAIImpl(game, curPlayer.value)
