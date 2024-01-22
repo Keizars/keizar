@@ -1,17 +1,12 @@
 package org.keizar.android.ui.home
 
+import android.app.Activity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.Image
-import androidx.compose.ui.res.painterResource
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Chair
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -19,6 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -48,10 +45,10 @@ fun HomePage(navController: NavController) {
             .fillMaxSize()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.SpaceAround
     ) {
         // Title or logo can be added here
-        Box(modifier = Modifier) {
+        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
             Icon(
                 painter = painterResource(id = R.drawable.keizar_icon),
                 contentDescription = "Keizar Icon",
@@ -59,33 +56,36 @@ fun HomePage(navController: NavController) {
             )
         }
 
-        Spacer(modifier = Modifier.size(80.dp))
+        Column(
+            Modifier
+                .padding(bottom = 80.dp)
+                .weight(2f),
+            verticalArrangement = Arrangement.SpaceEvenly,
+        ) {
+            // Single Player Button
+            Button(onClick = { navController.navigate("single player game") }, modifier = Modifier.width(170.dp)) {
+                Text("Play vs Computer")
+            }
 
-        // Single Player Button
-        Button(onClick = { navController.navigate("single player game") }, modifier = Modifier.width(170.dp)) {
-            Text("Play vs Computer")
-        }
+            // Multiplayer Button
+            Button(onClick = { /* TODO: Handle Multiplayer click */ }, modifier = Modifier.width(170.dp)) {
+                Text("2 players")
+            }
 
+            // Saved game Button
+            Button(onClick = { /* TODO: Handle saved game click */ }, modifier = Modifier.width(170.dp)) {
+                Text("Saved games")
+            }
 
-        Spacer(modifier = Modifier.size(50.dp))
+            // Tutorial Button
+            Button(onClick = { /* TODO: Handle tutorial click */ }, modifier = Modifier.width(170.dp)) {
+                Text("Tutorial")
+            }
 
-        // Multiplayer Button
-        Button(onClick = { /* TODO: Handle Multiplayer click */ }, modifier = Modifier.width(170.dp)) {
-            Text("2 players")
-        }
-
-        Spacer(modifier = Modifier.size(50.dp))
-
-        // Saved game Button
-        Button(onClick = { /* TODO: Handle saved game click */ }, modifier = Modifier.width(170.dp)) {
-            Text("Saved games")
-        }
-
-        Spacer(modifier = Modifier.size(50.dp))
-
-        // Tutorial Button
-        Button(onClick = { /* TODO: Handle tutorial click */ }, modifier = Modifier.width(170.dp)) {
-            Text("Tutorial")
+            val context = LocalContext.current
+            Button(onClick = { if (context is Activity) context.finish() }, modifier = Modifier.width(170.dp)) {
+                Text("Exit")
+            }
         }
     }
 }
