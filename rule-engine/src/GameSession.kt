@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.flowOf
 import org.keizar.game.internal.RuleEngine
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
+import org.keizar.game.serialization.GameSnapshot
 import kotlin.random.Random
 
 interface GameSession {
@@ -25,6 +26,16 @@ interface GameSession {
     suspend fun move(from: BoardPos, to: BoardPos): Boolean
     fun getLostPiecesCount(player: Player): StateFlow<Int>
 
+    fun getSnapshot(): GameSnapshot {
+        return GameSnapshot(
+            properties = properties,
+            winningCounter = winningCounter.value,
+            curPlayer = curPlayer.value,
+            winner = winner.value,
+            pieces = pieces.map { it.getSnapShot() }
+        )
+    }
+
     companion object {
         fun create(random: Random = Random): GameSession {
             val properties = BoardProperties.getStandardProperties(random)
@@ -38,6 +49,17 @@ interface GameSession {
             )
             return GameSessionImpl(properties, ruleEngine)
         }
+
+        fun restore(snapshot: GameSnapshot): GameSession {
+            return GameSessionImpl(
+                properties = snapshot.properties,
+                ruleEngine = RuleEngineImpl.restore(
+                    gameSnapshot = snapshot,
+                    ruleEngineCore = RuleEngineCoreImpl(snapshot.properties),
+                )
+            )
+        }
+
     }
 }
 

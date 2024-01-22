@@ -1,8 +1,10 @@
 package org.keizar.game
 
+import kotlinx.serialization.Serializable
 import org.keizar.game.tilearrangement.StandardTileArrangementFactory
 import kotlin.random.Random
 
+@Serializable
 data class BoardProperties(
     val width: Int = 8,
     val height: Int = 8,
@@ -12,6 +14,7 @@ data class BoardProperties(
 
     val piecesStartingPos: Map<Player, List<BoardPos>>,
     val tileArrangement: Map<BoardPos, TileType>,
+    val seed: Int? = null,
 ) {
 
     fun tileBackgroundColor(row: Int, col: Int): Boolean = (row + col) % 2 == 0

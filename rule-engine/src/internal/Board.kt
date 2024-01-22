@@ -9,6 +9,7 @@ import org.keizar.game.Piece
 import org.keizar.game.Player
 import org.keizar.game.TileType
 import org.keizar.game.asPiece
+import org.keizar.game.serialization.PieceSnapshot
 
 class Tile(val type: TileType) {
     var piece: Piece? = null
@@ -43,6 +44,16 @@ class Board(
                 _pieces.add(piece)
                 tileAt(pos).piece = piece.asPiece()
             }
+        }
+    }
+
+    fun rearrangePieces(pieces: List<PieceSnapshot>) {
+        tiles.map { it.piece = null }
+        _pieces.clear()
+        for (pieceSnapshot in pieces) {
+            val piece = MutablePiece.restore(pieceSnapshot)
+            _pieces.add(piece)
+            if (!piece.isCaptured.value) tileAt(piece.pos.value).piece = piece.asPiece()
         }
     }
 

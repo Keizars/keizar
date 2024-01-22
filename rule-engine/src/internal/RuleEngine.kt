@@ -7,6 +7,7 @@ import org.keizar.game.BoardProperties
 import org.keizar.game.Move
 import org.keizar.game.Piece
 import org.keizar.game.Player
+import org.keizar.game.serialization.GameSnapshot
 
 interface RuleEngine {
     val winningCounter: StateFlow<Int>
@@ -21,23 +22,34 @@ interface RuleEngine {
     fun getAllPiecesPos(player: Player): List<BoardPos>
 }
 
-class RuleEngineImpl(
+class RuleEngineImpl private constructor(
     private val boardProperties: BoardProperties,
-    ruleEngineCore: RuleEngineCore,
+    private val board: Board,
+
+    private val movesLog: MutableList<Move>,
+    override val winningCounter: MutableStateFlow<Int>,
+    override val curPlayer: MutableStateFlow<Player>,
+    override val winner: MutableStateFlow<Player?>,
+
+    private val lostPiecesCount: Map<Player, MutableStateFlow<Int>>
 ) : RuleEngine {
-    private val board = Board(boardProperties, ruleEngineCore)
 
-    private val movesLog = mutableListOf<Move>()
-    override val winningCounter: MutableStateFlow<Int> = MutableStateFlow(0)
-    override val curPlayer: MutableStateFlow<Player> =
-        MutableStateFlow(boardProperties.startingPlayer)
-    override val winner: MutableStateFlow<Player?> = MutableStateFlow(null)
-    override val pieces: List<Piece> = board.pieces
-
-    private val lostPiecesCount: Map<Player, MutableStateFlow<Int>> = mapOf(
-        Player.WHITE to MutableStateFlow(0),
-        Player.BLACK to MutableStateFlow(0),
+    constructor(boardProperties: BoardProperties, ruleEngineCore: RuleEngineCore) : this(
+        boardProperties = boardProperties,
+        board = Board(
+            boardProperties, ruleEngineCore
+        ),
+        movesLog = mutableListOf<Move>(),
+        winningCounter = MutableStateFlow(0),
+        curPlayer = MutableStateFlow(boardProperties.startingPlayer),
+        winner = MutableStateFlow(null),
+        lostPiecesCount = mapOf(
+            Player.WHITE to MutableStateFlow(0),
+            Player.BLACK to MutableStateFlow(0),
+        ),
     )
+
+    override val pieces: List<Piece> = board.pieces
 
     override fun showPossibleMoves(pos: BoardPos): List<BoardPos> {
         return board.pieceAt(pos)?.let { board.showValidMoves(it) } ?: listOf()
@@ -99,6 +111,27 @@ class RuleEngineImpl(
             } else {
                 curPlayer.value.other()
             }
+        }
+    }
+
+    companion object {
+        fun restore(gameSnapshot: GameSnapshot, ruleEngineCore: RuleEngineCore): RuleEngine {
+            val board = Board(gameSnapshot.properties, ruleEngineCore)
+            board.rearrangePieces(gameSnapshot.pieces)
+            val whiteLostPieces = board.pieces.count { it.isCaptured.value && it.player == Player.WHITE }
+            val blackLostPieces = board.pieces.count { it.isCaptured.value && it.player == Player.BLACK }
+            return RuleEngineImpl(
+                boardProperties = gameSnapshot.properties,
+                board = board,
+                movesLog = mutableListOf(),
+                winningCounter = MutableStateFlow(gameSnapshot.winningCounter),
+                curPlayer = MutableStateFlow(gameSnapshot.curPlayer),
+                winner = MutableStateFlow(gameSnapshot.winner),
+                lostPiecesCount = mapOf(
+                    Player.WHITE to MutableStateFlow(whiteLostPieces),
+                    Player.BLACK to MutableStateFlow(blackLostPieces),
+                ),
+            )
         }
     }
 }

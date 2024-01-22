@@ -1,7 +1,10 @@
 package org.keizar.game
 
+import kotlinx.serialization.Serializable
+
 
 @JvmInline
+@Serializable
 value class BoardPos private constructor(
     private val value: Long,
 ) {
