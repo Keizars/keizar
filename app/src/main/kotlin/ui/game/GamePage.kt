@@ -16,19 +16,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.navigation.NavController
-import org.keizar.game.BoardProperties
+import org.keizar.android.ui.game.configuration.GameStartConfiguration
 
 @Composable
 fun GameScene(
-    boardProperties: BoardProperties,
+    startConfiguration: GameStartConfiguration,
     navController: NavController,
 ) {
-    GamePage(boardProperties, onClickHome = { navController.popBackStack("home", false) })
+    GamePage(startConfiguration, onClickHome = { navController.popBackStack("home", false) })
 }
 
 @Composable
 fun GamePage(
-    boardProperties: BoardProperties,
+    startConfiguration: GameStartConfiguration,
     onClickHome: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -49,7 +49,7 @@ fun GamePage(
             Column(modifier = Modifier.padding(contentPadding)) {
                 BoxWithConstraints {
                     GameBoard(
-                        properties = boardProperties,
+                        startConfiguration = startConfiguration,
                         modifier = Modifier
                             .padding(vertical = 16.dp)
                             .size(min(maxWidth, maxHeight)),

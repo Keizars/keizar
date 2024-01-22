@@ -30,7 +30,6 @@ import org.keizar.android.R
 import org.keizar.android.ui.game.GameScene
 import org.keizar.android.ui.game.configuration.GameConfigurationScene
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
-import org.keizar.game.BoardProperties
 
 @Composable
 @Preview(showBackground = true)
@@ -53,8 +52,8 @@ fun MainScreen() {
             entry.arguments?.getString("configuration")?.let {
                 val configuration = ProtoBuf.decodeFromHexString(GameStartConfiguration.serializer(), it)
                 GameScene(
-                    boardProperties = BoardProperties.getStandardProperties(configuration.seed),
-                    navController
+                    startConfiguration = configuration,
+                    navController = navController,
                 )
             }
         }

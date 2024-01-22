@@ -35,12 +35,11 @@ import kotlin.random.Random
 
 @Composable
 fun BoardBackground(
-    properties: BoardProperties,
     vm: GameBoardViewModel,
     modifier: Modifier = Modifier,
 ) {
     BoardBackground(
-        properties = properties,
+        properties = vm.boardProperties,
         currentPick = vm.currentPick.collectAsStateWithLifecycle().value,
         onClickTile = { vm.onClickTile(it) },
         modifier,
@@ -68,7 +67,7 @@ fun BoardBackground(
                             .fillMaxSize()
                     ) {
                         val picked = remember(currentPick) {
-                            currentPick?.pos == BoardPos(row, col)
+                            currentPick?.viewPos == BoardPos(row, col)
                         }
                         Tile(
                             onClick = { onClickTile(BoardPos(row, col)) },
@@ -270,7 +269,6 @@ private fun PreviewBoardBackground() {
             BoardProperties.getStandardProperties(Random(0))
         }
         BoardBackground(
-            prop,
             rememberGameBoardViewModel(boardProperties = prop),
             Modifier.size(min(maxWidth, maxHeight))
         )

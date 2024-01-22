@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
+import org.keizar.game.Player
 
 
 /**
@@ -27,12 +28,12 @@ interface PieceArranger {
     fun setDimensions(totalWidth: Dp, totalHeight: Dp)
 
     /**
-     * Returns a flow of the offsets starting from the top-left corner of the board, for the [pos].
+     * Returns a flow of the offsets starting from the top-left corner of the board, for the **logical** [pos].
      */
     fun offsetFor(pos: Flow<BoardPos>): Flow<DpOffset>
 
     /**
-     * Returns a flow of the offsets starting from the top-left corner of the board, for the [pos].
+     * Returns a flow of the offsets starting from the top-left corner of the board, for the **logical** [pos].
      */
     fun offsetFor(pos: BoardPos): Flow<DpOffset>
 
@@ -40,18 +41,38 @@ interface PieceArranger {
      * Returns the nearest [BoardPos] for the given [value], relative to the position [from].
      *
      * If [from] is `null`, the nearest position is calculated as an absolute offset from the top-left corner of the board.
+     *
+     * @return the nearest **logical** [BoardPos].
      */
     fun getNearestPos(value: DpOffset, from: BoardPos? = null): Flow<BoardPos>
+
+    /**
+     * Returns a flow of the **logical** [BoardPos] for the given **view** [viewPos].
+     */
+    fun viewToLogical(viewPos: BoardPos): Flow<BoardPos>
+
+    /**
+     * Returns a flow of the **view** [BoardPos] for the given **logical** [logicalPos].
+     */
+    fun logicalToView(logicalPos: BoardPos): Flow<BoardPos>
 }
 
+/**
+ * Creates a [PieceArranger] for the given [boardProperties] and [player][viewedAs].
+ * @param viewedAs the player who is viewing the board.
+ * If it is [Player.WHITE], the white pieces will be placed to the bottom of the board.
+ * If it is [Player.BLACK], the black pieces will be placed to the bottom of the board.
+ */
 fun PieceArranger(
     boardProperties: BoardProperties,
+    viewedAs: Flow<Player>,
 ): PieceArranger {
-    return PieceArrangerImpl(boardProperties)
+    return PieceArrangerImpl(boardProperties, viewedAs)
 }
 
 private class PieceArrangerImpl(
     private val boardProperties: BoardProperties,
+    private val player: Flow<Player>,
 ) : PieceArranger {
     private val totalWidth: MutableSharedFlow<Dp> =
         MutableSharedFlow(replay = 1, extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
@@ -74,9 +95,10 @@ private class PieceArrangerImpl(
         return combine(
             totalHeight,
             tileWidth, tileHeight,
-            pos
-        ) { boardHeight, tileWidth, tileHeight, p ->
-            calculateOffset(boardHeight, tileWidth, tileHeight, p)
+            pos,
+            player,
+        ) { boardHeight, tileWidth, tileHeight, p, player ->
+            calculateOffset(boardHeight, tileWidth, tileHeight, p.adjustedFor(player))
         }
     }
 
@@ -84,8 +106,9 @@ private class PieceArrangerImpl(
         return combine(
             totalHeight,
             tileWidth, tileHeight,
-        ) { boardHeight, tileWidth, tileHeight ->
-            calculateOffset(boardHeight, tileWidth, tileHeight, pos)
+            player,
+        ) { boardHeight, tileWidth, tileHeight, player ->
+            calculateOffset(boardHeight, tileWidth, tileHeight, pos.adjustedFor(player))
         }
     }
 
@@ -93,7 +116,8 @@ private class PieceArrangerImpl(
         return combine(
             totalHeight,
             tileWidth, tileHeight,
-        ) { boardHeight, tileWidth, tileHeight ->
+            player,
+        ) { boardHeight, tileWidth, tileHeight, player ->
             // center of tile
             val fromOffset = if (from == null) {
                 DpOffset.Zero
@@ -110,7 +134,19 @@ private class PieceArrangerImpl(
             BoardPos(
                 row = boardProperties.height - ((absoluteY - absoluteY % tileHeight) / tileHeight).toInt() - 1,
                 col = ((absoluteX - absoluteX % tileWidth) / tileWidth).toInt(),
-            )
+            ).adjustedFor(player)
+        }
+    }
+
+    override fun viewToLogical(viewPos: BoardPos): Flow<BoardPos> {
+        return player.map {
+            viewPos.adjustedFor(it)
+        }
+    }
+
+    override fun logicalToView(logicalPos: BoardPos): Flow<BoardPos> {
+        return player.map {
+            logicalPos.adjustedFor(it)
         }
     }
 
@@ -123,6 +159,17 @@ private class PieceArrangerImpl(
         val x = tileWidth * p.col
         val y = boardHeight - tileHeight * (p.row + 1) // from bottom to top
         return DpOffset(x, y)
+    }
+
+    private fun BoardPos.adjustedFor(player: Player): BoardPos {
+        return if (player == Player.WHITE) {
+            this
+        } else {
+            BoardPos(
+                row = boardProperties.height - row - 1,
+                col = boardProperties.width - col - 1,
+            )
+        }
     }
 }
 

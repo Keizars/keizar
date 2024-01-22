@@ -47,6 +47,10 @@ class Move(
 interface Piece {
     val index: Int
     val player: Player
+
+    /**
+     * The position of the piece on the board. It is always the logical position, i.e. seen as a [Player.WHITE].
+     */
     val pos: StateFlow<BoardPos>
     val isCaptured: StateFlow<Boolean>
 

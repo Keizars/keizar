@@ -6,6 +6,7 @@ import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.DpOffset
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,6 +14,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import me.him188.ani.utils.logging.info
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
@@ -24,6 +26,9 @@ import org.keizar.game.Piece
 import org.keizar.game.Player
 
 interface GameBoardViewModel {
+    @Stable
+    val boardProperties: BoardProperties
+
     @Stable
     val pieceArranger: PieceArranger
 
@@ -43,7 +48,7 @@ interface GameBoardViewModel {
     val currentPick: StateFlow<Pick?>
 
     /**
-     * Currently available positions where the picked piece can move to. `null` if no piece is picked.
+     * Currently available **view** positions where the picked piece can move to. `null` if no piece is picked.
      */
     @Stable
     val availablePositions: SharedFlow<List<BoardPos>?>
@@ -72,8 +77,11 @@ interface GameBoardViewModel {
 
     /**
      * Called when the player single-clicks the empty tile.
+     *
+     * @param viewPos the position of the tile, relative to the top-left corner of the board.
+     * It may be different from the logical position if the player is viewing the board as [Player.BLACK].
      */
-    fun onClickTile(pos: BoardPos)
+    fun onClickTile(viewPos: BoardPos)
 
 
     // dragging
@@ -104,18 +112,22 @@ interface GameBoardViewModel {
 }
 
 @Composable
-fun rememberGameBoardViewModel(boardProperties: BoardProperties): GameBoardViewModel {
+fun rememberGameBoardViewModel(boardProperties: BoardProperties, viewedAs: Player = Player.WHITE): GameBoardViewModel {
     return remember {
-        GameBoardViewModelImpl(boardProperties)
+        GameBoardViewModelImpl(boardProperties, viewedAs = viewedAs)
     }
 }
 
 private class GameBoardViewModelImpl(
-    boardProperties: BoardProperties,
+    override val boardProperties: BoardProperties,
+    viewedAs: Player,
 ) : AbstractViewModel(), GameBoardViewModel {
     private val game: GameSession = GameSession.create(boardProperties)
 
-    override val pieceArranger = PieceArranger(boardProperties = boardProperties)
+    override val pieceArranger = PieceArranger(
+        boardProperties = boardProperties,
+        viewedAs = flowOf(viewedAs)
+    )
 
     @Stable
     override val player: StateFlow<Player> = game.curPlayer
@@ -152,8 +164,10 @@ private class GameBoardViewModelImpl(
         if (pick == null) {
             flowOf(emptyList())
         } else {
-            game.getAvailableTargets(pick.pos)
+            game.getAvailableTargets(pick.viewPos)
         }
+    }.map { list ->
+        list.map { pos -> pieceArranger.logicalToView(pos).first() }
     }.shareInBackground()
 
     override val lastMoveIsDrag: MutableStateFlow<Boolean> = MutableStateFlow(false)
@@ -162,22 +176,24 @@ private class GameBoardViewModelImpl(
         val currentPick = currentPick.value
         if (currentPick == null) {
             if (piece.player != currentPlayer.value) return
-            startPick(piece)
+            launchInBackground(start = CoroutineStart.UNDISPATCHED) {
+                startPick(piece)
+            }
         } else {
             // Pick another piece
             completePick(isDrag = false)
-            launchInBackground {
+            launchInBackground(start = CoroutineStart.UNDISPATCHED) {
                 movePiece(currentPick.piece.pos.value, piece.pos.value)
             }
             return
         }
     }
 
-    override fun onClickTile(pos: BoardPos) {
+    override fun onClickTile(viewPos: BoardPos) {
         val pick = currentPick.value ?: return
         completePick(isDrag = false)
-        launchInBackground {
-            movePiece(pick.piece.pos.value, pos)
+        launchInBackground(start = CoroutineStart.UNDISPATCHED) {
+            movePiece(pick.piece.pos.value, pieceArranger.viewToLogical(viewPos).first())
         }
     }
 
@@ -185,7 +201,9 @@ private class GameBoardViewModelImpl(
 
     override fun onHold(piece: UiPiece) {
         if (piece.player != currentPlayer.value) return
-        startPick(piece)
+        launchInBackground(start = CoroutineStart.UNDISPATCHED) {
+            startPick(piece)
+        }
     }
 
 
@@ -200,10 +218,10 @@ private class GameBoardViewModelImpl(
         val dragOffset = draggingOffset.value
 
         piece.hide() // hide it now to avoid flickering
-        launchInBackground {
+        launchInBackground(start = CoroutineStart.UNDISPATCHED) {
             try {
                 movePiece(
-                    currentPick.pos,
+                    currentPick.viewPos,
                     pieceArranger.getNearestPos(dragOffset, from = piece.pos.value).first()
                 )
                 completePick(isDrag = true)
@@ -215,8 +233,8 @@ private class GameBoardViewModelImpl(
     }
 
 
-    private fun startPick(piece: UiPiece) {
-        this.currentPick.value = Pick(piece)
+    private suspend fun startPick(piece: UiPiece) {
+        this.currentPick.value = Pick(piece, pieceArranger.viewToLogical(piece.pos.value).first())
     }
 
     private fun completePick(isDrag: Boolean) {
@@ -236,9 +254,8 @@ private class GameBoardViewModelImpl(
 @Immutable
 class Pick(
     val piece: UiPiece,
-) {
-    val pos get() = piece.pos.value
-}
+    val viewPos: BoardPos
+)
 
 
 /**

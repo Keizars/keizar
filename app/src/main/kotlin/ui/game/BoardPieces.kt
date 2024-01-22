@@ -182,7 +182,6 @@ private fun PreviewBoardPiecesWithBackground() {
         }
         val vm = rememberGameBoardViewModel(prop)
         BoardBackground(
-            prop,
             vm,
             Modifier.size(min(maxWidth, maxHeight))
         )

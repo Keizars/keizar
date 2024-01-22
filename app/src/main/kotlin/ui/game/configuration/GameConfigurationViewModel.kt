@@ -13,6 +13,7 @@ import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.game.BoardProperties
 import org.keizar.game.Difficulty
 import org.keizar.game.Player
+import kotlin.random.Random
 
 interface GameConfigurationViewModel {
     @Stable
@@ -39,7 +40,7 @@ interface GameConfigurationViewModel {
     fun createGameStartConfiguration(): GameStartConfiguration {
         return GameStartConfiguration(
             seed = boardSeedText.value.toIntOrNull() ?: BoardProperties.generateRandomSeed(),
-            playAs = playAs.value,
+            playAs = playAs.value ?: if (Random.nextBoolean()) Player.WHITE else Player.BLACK,
             difficulty = difficulty.value,
         )
     }
@@ -51,9 +52,11 @@ fun rememberGameConfigurationViewModel(): GameConfigurationViewModel = GameConfi
 @Serializable
 class GameStartConfiguration(
     @ProtoNumber(1) val seed: Int,
-    @ProtoNumber(2) val playAs: Player?,
+    @ProtoNumber(2) val playAs: Player,
     @ProtoNumber(3) val difficulty: Difficulty,
 )
+
+fun GameStartConfiguration.createBoard(): BoardProperties = BoardProperties.getStandardProperties(seed)
 
 private class GameConfigurationViewModelImpl(
     initialBoardSeed: Int = BoardProperties.generateRandomSeed(),
