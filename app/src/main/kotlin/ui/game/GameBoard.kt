@@ -8,6 +8,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.min
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.material3.Text
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import org.keizar.game.BoardProperties
 import kotlin.random.Random
 
@@ -18,11 +23,22 @@ fun GameBoard(
     modifier: Modifier = Modifier,
 ) {
     val vm = rememberGameBoardViewModel(boardProperties = properties)
-    Box(modifier = modifier) {
-        BoardBackground(properties, vm)
-        BoardPieces(vm)
-        PossibleMovesOverlay(vm)
+    Column(modifier = Modifier) {
+        WinningCounter(vm)
+
+        Box(modifier = modifier) {
+            BoardBackground(properties, vm)
+            BoardPieces(vm)
+            PossibleMovesOverlay(vm)
+        }
+
     }
+}
+
+@Composable
+fun WinningCounter(vm: GameBoardViewModel) {
+    val winningCounter by vm.winningCounter.collectAsState()
+    Text(text = "Winning Keizar Counter: $winningCounter")
 }
 
 

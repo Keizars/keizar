@@ -54,6 +54,9 @@ interface GameBoardViewModel {
     @Stable
     val lastMoveIsDrag: MutableStateFlow<Boolean>
 
+    @Stable
+    val winningCounter: StateFlow<Int>
+
     // clicking
 
     /**
@@ -125,6 +128,9 @@ private class GameBoardViewModelImpl(
 
     @Stable
     private val currentPlayer: StateFlow<Player> = game.curPlayer
+
+    @Stable
+    override val winningCounter: StateFlow<Int> = game.winningCounter
 
     /**
      * Currently available positions where the picked piece can move to. `null` if no piece is picked.
