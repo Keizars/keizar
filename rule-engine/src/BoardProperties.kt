@@ -2,6 +2,7 @@ package org.keizar.game
 
 import kotlinx.serialization.Serializable
 import org.keizar.game.tilearrangement.StandardTileArrangementFactory
+import kotlin.math.absoluteValue
 import kotlin.random.Random
 
 @Serializable
@@ -20,8 +21,10 @@ data class BoardProperties(
     fun tileBackgroundColor(row: Int, col: Int): Boolean = (row + col) % 2 == 0
 
     companion object {
+        fun generateRandomSeed(): Int = Random.nextInt().absoluteValue // Use absolute value so easier to share
+        
         fun getStandardProperties(randomSeed: Int? = null): BoardProperties {
-            val seed = randomSeed ?: Random.nextInt()
+            val seed = randomSeed ?: generateRandomSeed()
             val keizarTilePos: BoardPos = BoardPos.fromString("d5")
 
             val piecesStartingPos: Map<Player, List<BoardPos>> = mapOf(

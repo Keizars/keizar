@@ -14,7 +14,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,11 +33,25 @@ import org.keizar.game.Player
 import org.keizar.game.TileType
 import kotlin.random.Random
 
-
 @Composable
 fun BoardBackground(
     properties: BoardProperties,
     vm: GameBoardViewModel,
+    modifier: Modifier = Modifier,
+) {
+    BoardBackground(
+        properties = properties,
+        currentPick = vm.currentPick.collectAsStateWithLifecycle().value,
+        onClickTile = { vm.onClickTile(it) },
+        modifier,
+    )
+}
+
+@Composable
+fun BoardBackground(
+    properties: BoardProperties,
+    currentPick: Pick?,
+    onClickTile: (BoardPos) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier) {
@@ -54,12 +67,11 @@ fun BoardBackground(
                             .weight(1f)
                             .fillMaxSize()
                     ) {
-                        val currentPick by vm.currentPick.collectAsStateWithLifecycle()
                         val picked = remember(currentPick) {
                             currentPick?.pos == BoardPos(row, col)
                         }
                         Tile(
-                            onClick = { vm.onClickTile(BoardPos(row, col)) },
+                            onClick = { onClickTile(BoardPos(row, col)) },
                             backgroundColor = tileBackgroundColor(picked, properties, row, col),
                             Modifier
                                 .fillMaxSize(),

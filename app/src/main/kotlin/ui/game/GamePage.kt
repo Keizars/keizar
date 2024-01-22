@@ -15,11 +15,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
+import androidx.navigation.NavController
 import org.keizar.game.BoardProperties
-import kotlin.random.Random
+
+@Composable
+fun GameScene(
+    boardProperties: BoardProperties,
+    navController: NavController,
+) {
+    GamePage(boardProperties, onClickHome = { navController.popBackStack("home", false) })
+}
 
 @Composable
 fun GamePage(
+    boardProperties: BoardProperties,
+    onClickHome: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier) {
@@ -28,7 +38,7 @@ fun GamePage(
                 TopAppBar(
                     title = { Text(text = "Game") },
                     navigationIcon = {
-                        IconButton(onClick = { }) {
+                        IconButton(onClick = onClickHome) {
 //                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                             Icon(Icons.Rounded.Home, contentDescription = "Back")
                         }
@@ -39,7 +49,7 @@ fun GamePage(
             Column(modifier = Modifier.padding(contentPadding)) {
                 BoxWithConstraints {
                     GameBoard(
-                        properties = BoardProperties.getStandardProperties(Random(0)),
+                        properties = boardProperties,
                         modifier = Modifier
                             .padding(vertical = 16.dp)
                             .size(min(maxWidth, maxHeight)),

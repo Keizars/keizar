@@ -10,18 +10,18 @@ interface GameAI {
     val game: GameSession
     val myplayer: Player
 
-    suspend fun FindBestMove(): Pair<BoardPos,BoardPos>?
-    suspend fun MakeMove():Pair<BoardPos,BoardPos>?
+    suspend fun FindBestMove(): Pair<BoardPos, BoardPos>?
+    suspend fun MakeMove(): Pair<BoardPos, BoardPos>?
 }
 
 class RandomGameAIImpl(
     override val game: GameSession,
     override val myplayer: Player
-):GameAI {
+) : GameAI {
 
-    override suspend fun FindBestMove():Pair<BoardPos,BoardPos>? {
+    override suspend fun FindBestMove(): Pair<BoardPos, BoardPos>? {
         val player = game.curPlayer.value
-        return if (myplayer == player){
+        return if (myplayer == player) {
             val myPieces = game.getAllPiecesPos(myplayer).last()
             var randomPos = myPieces.random()
             var validTargets = game.getAvailableTargets(randomPos).last()
@@ -35,7 +35,7 @@ class RandomGameAIImpl(
 
     }
 
-    override suspend fun MakeMove(): Pair<BoardPos,BoardPos>? {
+    override suspend fun MakeMove(): Pair<BoardPos, BoardPos>? {
         val best_move = FindBestMove()
         return best_move
     }

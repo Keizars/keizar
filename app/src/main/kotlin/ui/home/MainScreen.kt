@@ -19,11 +19,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import kotlinx.serialization.decodeFromHexString
+import kotlinx.serialization.protobuf.ProtoBuf
 import org.keizar.android.R
-import org.keizar.android.ui.game.GamePage
+import org.keizar.android.ui.game.GameScene
+import org.keizar.android.ui.game.configuration.GameConfigurationScene
+import org.keizar.android.ui.game.configuration.GameStartConfiguration
+import org.keizar.game.BoardProperties
 
 @Composable
 @Preview(showBackground = true)
@@ -31,7 +38,26 @@ fun MainScreen() {
     val navController = rememberNavController()
     NavHost(navController, startDestination = "home") {
         composable("home") { HomePage(navController) }
-        composable("single player game") { GamePage() }
+        composable(
+            "single player game",
+        ) {
+            GameConfigurationScene(navController)
+        }
+        composable(
+            "game",
+            listOf(navArgument("configuration") {
+                nullable = false
+                type = NavType.StringType
+            })
+        ) { entry ->
+            entry.arguments?.getString("configuration")?.let {
+                val configuration = ProtoBuf.decodeFromHexString(GameStartConfiguration.serializer(), it)
+                GameScene(
+                    boardProperties = BoardProperties.getStandardProperties(configuration.seed),
+                    navController
+                )
+            }
+        }
         composable("multiplayer game") { /* TODO: multiplayer game page*/ }
         composable("saved games") { /* TODO: saved games page*/ }
         composable("tutorial") { /* TODO: tutorial page*/ }

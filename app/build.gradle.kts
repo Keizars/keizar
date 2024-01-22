@@ -3,6 +3,7 @@ plugins {
     id("org.jetbrains.compose")
     id("com.android.application")
     kotlin("android")
+    kotlin("plugin.serialization")
     id("kotlinx-atomicfu")
     id("kotlin-parcelize")
 }
@@ -28,6 +29,8 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(projects.utils.slf4jKt)
     runtimeOnly(libs.slf4j.android)
+
+    implementation(libs.kotlinx.serialization.protobuf)
 
     implementation(libs.ktor.client.core)
     implementation(libs.koin.android)
