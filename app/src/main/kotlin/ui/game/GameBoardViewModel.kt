@@ -57,6 +57,12 @@ interface GameBoardViewModel {
     @Stable
     val winningCounter: StateFlow<Int>
 
+    @Stable
+    val blackCapturedPieces: StateFlow<Int>
+
+    @Stable
+    val whiteCapturedPieces: StateFlow<Int>
+
     // clicking
 
     /**
@@ -131,6 +137,12 @@ private class GameBoardViewModelImpl(
 
     @Stable
     override val winningCounter: StateFlow<Int> = game.winningCounter
+
+    @Stable
+    override val blackCapturedPieces: StateFlow<Int> = game.getLostPiecesCount(Player.BLACK)
+
+    @Stable
+    override val whiteCapturedPieces: StateFlow<Int> = game.getLostPiecesCount(Player.WHITE)
 
     /**
      * Currently available positions where the picked piece can move to. `null` if no piece is picked.
