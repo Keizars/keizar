@@ -6,6 +6,7 @@ import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import org.keizar.game.GameSession
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import org.keizar.game.Player
@@ -40,10 +41,11 @@ class RandomGameAIImpl(
                     game.confirmNextTurn(myPlayer)
                 }
 
-                val role = it.curRole.value
-                if (myRole == role) {
-                    val bestPos = findBestMove(it, role)
-                    it.move(bestPos.first, bestPos.second)
+                it.curRole.collect{role ->
+                    if (myRole == role) {
+                        val bestPos = findBestMove(it, role)
+                        it.move(bestPos.first, bestPos.second)
+                    }
                 }
             }
 
@@ -53,15 +55,13 @@ class RandomGameAIImpl(
     override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos> {
         val allPieces = round.getAllPiecesPos(role).first()
         var randomPiece = allPieces.random()
+        var validTargets = round.getAvailableTargets(randomPiece).first()
         do {
             randomPiece = allPieces.random()
-            val validTargets = round.getAvailableTargets(randomPiece).first()
+            validTargets = round.getAvailableTargets(randomPiece).first()
         } while (validTargets.isEmpty() && allPieces.isNotEmpty())
 
-        val randomTarget = round.getAvailableTargets(randomPiece)
-                .filter { it.isNotEmpty() }
-                .first()
-                .random()
+        val randomTarget = validTargets.random()
         return Pair(randomPiece, randomTarget)
     }
 
