@@ -21,11 +21,12 @@ class TurnSessionTest {
     fun `test generate a AI`() = runTest {
         val game = GameSession.create(100)
         val context = EmptyCoroutineContext
-        val ai1 = RandomGameAIImpl(game, Player.Player1, context)
-        val ai2 = RandomGameAIImpl(game, Player.Player2, context)
+        val ai1 = RandomGameAIImpl(game, Player.Player1, context, true)
+        val ai2 = RandomGameAIImpl(game, Player.Player2, context, true)
         ai1.start()
         ai2.start()
         val winner = game.finalWinner.filterNotNull().first()
         assertNotNull(winner)
+        println(winner)
     }
 }

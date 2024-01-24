@@ -32,6 +32,7 @@ class RandomGameAIImpl(
     override val game: GameSession,
     override val myPlayer: Player,
     private val parentCoroutineContext: CoroutineContext,
+    private val test: Boolean
 ) : GameAI {
 
     private val myCoroutione: CoroutineScope =
@@ -44,8 +45,9 @@ class RandomGameAIImpl(
                 it.curRole.collect{role ->
                     if (myRole == role) {
                         val bestPos = findBestMove(it, role)
-                        delay(Random.nextLong(1500L..3000L))
-                        println(myPlayer.toString() + "played: " + bestPos)
+                        if (!test){
+                            delay(Random.nextLong(1500L..3000L))
+                        }
                         it.move(bestPos.first, bestPos.second)
                     }
                 }
