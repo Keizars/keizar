@@ -1,15 +1,16 @@
 package org.keizar.aiengine
 
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import org.keizar.game.BoardPos
+import org.keizar.game.GameSession
+import org.keizar.game.Player
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
-import org.keizar.game.GameSession
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.first
-import org.keizar.game.Player
 import kotlin.coroutines.CoroutineContext
 
 interface GameAI {
@@ -30,7 +31,8 @@ class RandomGameAIImpl(
     private val parentCoroutineContext: CoroutineContext,
 ) : GameAI {
 
-    private val myCoroutione: CoroutineScope = CoroutineScope(parentCoroutineContext + Job())
+    private val myCoroutione: CoroutineScope =
+        CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
     override suspend fun start() {
         myCoroutione.launch {
