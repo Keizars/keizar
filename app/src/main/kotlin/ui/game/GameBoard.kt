@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -38,6 +39,21 @@ fun GameBoard(
         WinningCounter(vm)
 
         CapturedPieces(vm, Role.BLACK)
+
+        val winner = vm.winner.collectAsState()
+        val finalWinner = vm.finalWinner.collectAsState()
+
+        if (finalWinner.value != null) {
+            AlertDialog(onDismissRequest = { /*TODO*/ }, confirmButton = { /*TODO*/ })
+        } else {
+            if (winner.value != null) {
+                if (winner.value == Role.WHITE) {
+                    AlertDialog(onDismissRequest = { /*TODO*/ }, confirmButton = { /*TODO*/ })
+                } else {
+                    AlertDialog(onDismissRequest = { /*TODO*/ }, confirmButton = { /*TODO*/ })
+                }
+            }
+        }
 
         Box(modifier = modifier) {
             BoardBackground(vm)

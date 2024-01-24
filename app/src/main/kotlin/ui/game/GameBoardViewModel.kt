@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import me.him188.ani.utils.logging.info
@@ -68,6 +69,12 @@ interface GameBoardViewModel {
 
     @Stable
     val whiteCapturedPieces: StateFlow<Int>
+
+    @Stable
+    val winner: StateFlow<Role?>
+
+    @Stable
+    val finalWinner: StateFlow<Player?>
 
     // clicking
 
@@ -167,6 +174,17 @@ private class GameBoardViewModelImpl(
     @Stable
     override val whiteCapturedPieces: StateFlow<Int> =
         game.currentTurn.flatMapLatest { it.getLostPiecesCount(Role.WHITE) }.stateInBackground(0)
+
+
+
+    
+    @Stable
+    override val winner: StateFlow<Role?> = game.currentTurn.flatMapLatest { it.winner }
+        .stateInBackground(null)
+
+
+    @Stable
+    override val finalWinner: StateFlow<Player?> = game.finalWinner.stateInBackground(null)
 
     /**
      * Currently available positions where the picked piece can move to. `null` if no piece is picked.
