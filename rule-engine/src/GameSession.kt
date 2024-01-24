@@ -5,13 +5,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapMerge
-import kotlinx.coroutines.flow.stateIn
-import org.keizar.game.internal.RuleEngine
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
 import org.keizar.game.serialization.GameSnapshot
-import java.lang.reflect.Constructor
 import kotlin.random.Random
 
 interface GameSession {
@@ -32,7 +28,7 @@ interface GameSession {
     /**
      * Accumulated number of pieces this player has captured.
      */
-    fun capturedPieces(player: Player): StateFlow<Int>
+    fun capturedPieces(player: Player): Flow<Int>
 
     fun confirmNextTurn(player: Player)
 
@@ -107,16 +103,16 @@ class GameSessionImpl(
         nextTurnAgreement = mutableListOf(false, false)
     }
 
-    override fun currentRole(player: Player): Flow<Role> {
+    override fun currentRole(player: Player): StateFlow<Role> {
         return curRoles[player.ordinal]
     }
 
-    override fun wonTurns(player: Player): Flow<Int> {
+    override fun wonTurns(player: Player): StateFlow<Int> {
         return wonTurns[player.ordinal]
     }
 
     override fun capturedPieces(player: Player): Flow<Int> {
-        return combine(turns.map { it.getLostPiecesCount(curRoles[player.ordinal].value) }) {
+        return combine(turns.map { it.getLostPiecesCount(currentRole(player).value) }) {
             it.sum()
         }
     }
