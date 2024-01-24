@@ -44,7 +44,7 @@ class RandomGameAIImpl(
                 it.curRole.collect{role ->
                     if (myRole == role) {
                         val bestPos = findBestMove(it, role)
-                        delay(Random.nextLong(0L..100L))
+                        delay(Random.nextLong(1500L..3000L))
                         println(myPlayer.toString() + "played: " + bestPos)
                         it.move(bestPos.first, bestPos.second)
                     }
