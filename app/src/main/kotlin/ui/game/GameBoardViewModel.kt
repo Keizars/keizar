@@ -37,6 +37,9 @@ interface GameBoardViewModel {
     @Stable
     val selfRole: StateFlow<Role>
 
+    @Stable
+    val selfPlayer: Player
+
     /**
      * List of the pieces on the board.
      */
@@ -117,6 +120,11 @@ interface GameBoardViewModel {
      * Called when the player releases the piece after long-pressing it.
      */
     fun onRelease(piece: UiPiece)
+
+    /**
+     * Called when the the first round is finished by the players to start the next one.
+     */
+    fun startNextRound(selfPlayer: Player)
 }
 
 @Composable
@@ -137,6 +145,9 @@ private class GameBoardViewModelImpl(
 
     @Stable
     override val selfRole: StateFlow<Role> = game.currentRole(selfPlayer)
+
+    @Stable
+    override val selfPlayer: Player = selfPlayer
 
     @Stable
     override val pieceArranger = PieceArranger(
@@ -279,6 +290,10 @@ private class GameBoardViewModelImpl(
         game.currentRound.first().move(from, to).also {
             logger.info { "[board] move $from to $to: $it" }
         }
+    }
+
+    override fun startNextRound(selfPlayer: Player) {
+        game.confirmNextTurn(selfPlayer)
     }
 
 }

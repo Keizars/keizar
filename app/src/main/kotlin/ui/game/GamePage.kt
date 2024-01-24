@@ -102,6 +102,7 @@ fun GamePage(
                         modifier = Modifier
                             .padding(vertical = 16.dp)
                             .size(min(maxWidth, maxHeight)),
+                        onClickHome = onClickHome,
                     )
                 }
             }
