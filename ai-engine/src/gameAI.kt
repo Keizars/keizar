@@ -38,7 +38,7 @@ class RandomGameAIImpl(
             game.currentRound.collect{
                 val winner = it.winner.value
                 if (winner != null) {
-                    game.confirmNextTurn(myPlayer)
+                    game.confirmNextRound(myPlayer)
                 }
 
                 it.curRole.collect{role ->

@@ -293,7 +293,7 @@ private class GameBoardViewModelImpl(
     }
 
     override fun startNextRound(selfPlayer: Player) {
-        game.confirmNextTurn(selfPlayer)
+        game.confirmNextRound(selfPlayer)
     }
 
 }

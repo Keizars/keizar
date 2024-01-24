@@ -32,7 +32,7 @@ interface GameSession {
      */
     fun capturedPieces(player: Player): Flow<Int>
 
-    fun confirmNextTurn(player: Player): Boolean
+    fun confirmNextRound(player: Player): Boolean
 
     fun getSnapshot(): GameSnapshot = GameSnapshot(
         properties = properties,
@@ -146,7 +146,8 @@ class GameSessionImpl(
         }
     }
 
-    override fun confirmNextTurn(player: Player): Boolean {
+    override fun confirmNextRound(player: Player): Boolean {
+        if (currentRoundNo.value >= properties.turns) return false
         nextRoundAgreement[player.ordinal] = true
         if (nextRoundAgreement.all { it }) {
             proceedToNextTurn()
@@ -157,9 +158,8 @@ class GameSessionImpl(
 
     private fun proceedToNextTurn() {
         rounds[currentRoundNo.value].winner.value?.let { ++wonRounds[it.ordinal].value }
-        if (currentRoundNo.value == properties.turns) {
+        if (currentRoundNo.value == properties.turns - 1) {
             updateFinalWinner()
-            return
         }
         ++_currentRoundNo.value
         curRoles.forEach { role -> role.value = role.value.other() }
