@@ -15,8 +15,9 @@ interface GameSession {
 
     val turns: List<TurnSession>
     val currentTurn: StateFlow<TurnSession>
+    val currentTurnNo: StateFlow<Int>
 
-    val finalWinner: StateFlow<Player?>
+    val finalWinner: Flow<GameResult?>
 
     fun currentRole(player: Player): StateFlow<Role>
 
@@ -75,8 +76,10 @@ class GameSessionImpl(
 
     private val _currentTurn: MutableStateFlow<TurnSession>
     override val currentTurn: StateFlow<TurnSession>
-    private val _finalWinner: MutableStateFlow<Player?> = MutableStateFlow(null)
-    override val finalWinner: StateFlow<Player?> = _finalWinner.asStateFlow()
+    private val _currentTurnNo: MutableStateFlow<Int> = MutableStateFlow(0)
+    override val currentTurnNo: StateFlow<Int> = _currentTurnNo.asStateFlow()
+    override val finalWinner: Flow<GameResult?>
+    private val haveWinner: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     private val curRoles: List<MutableStateFlow<Role>>
     private val wonTurns: List<MutableStateFlow<Int>>
@@ -101,6 +104,28 @@ class GameSessionImpl(
         )
 
         nextTurnAgreement = mutableListOf(false, false)
+
+        finalWinner = combine(
+            haveWinner,
+            wonTurns(Player.Player1),
+            wonTurns(Player.Player2),
+            capturedPieces(Player.Player1),
+            capturedPieces(Player.Player2),
+        ) { haveWinner, player1Wins, player2Wins, player1LostPieces, player2LostPieces ->
+            if (!haveWinner) {
+                null
+            } else if (player1Wins > player2Wins) {
+                GameResult.Winner(Player.Player1)
+            } else if (player1Wins < player2Wins) {
+                GameResult.Winner(Player.Player2)
+            } else if (player1LostPieces < player2LostPieces) {
+                GameResult.Winner(Player.Player1)
+            } else if (player1LostPieces > player2LostPieces) {
+                GameResult.Winner(Player.Player2)
+            } else {
+                GameResult.Draw
+            }
+        }
     }
 
     override fun currentRole(player: Player): StateFlow<Role> {
@@ -126,7 +151,18 @@ class GameSessionImpl(
     }
 
     private fun proceedToNextTurn() {
-        TODO("Not yet implemented")
+        currentTurn.value.winner.value?.let { ++wonTurns[it.ordinal].value }
+        if (currentTurnNo.value == properties.turns) {
+            updateFinalWinner()
+            return
+        }
+        ++_currentTurnNo.value
+        _currentTurn.value = turns[currentTurnNo.value]
+        curRoles.forEach { role -> role.value = role.value.other() }
+    }
+
+    private fun updateFinalWinner() {
+        haveWinner.value = true
     }
 
     override fun getSnapshot(): GameSnapshot {
@@ -137,4 +173,23 @@ class GameSessionImpl(
 enum class Player {
     Player1,
     Player2,
+}
+
+sealed class GameResult {
+    data object Draw : GameResult()
+    data class Winner(val player: Player) : GameResult()
+    companion object {
+        fun values(): Array<GameResult> {
+            return arrayOf(Draw, Winner(Player.Player1), Winner(Player.Player2))
+        }
+
+        fun valueOf(value: String): GameResult {
+            return when (value) {
+                "DRAW" -> Draw
+                "WINNER1" -> Winner(Player.Player1)
+                "WINNER2" -> Winner(Player.Player2)
+                else -> throw IllegalArgumentException("No object org.keizar.game.GameResult.$value")
+            }
+        }
+    }
 }
