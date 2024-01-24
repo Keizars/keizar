@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.min
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
 import org.keizar.game.Difficulty
+import org.keizar.game.GameResult
 import org.keizar.game.GameSession
 import org.keizar.game.Player
 import org.keizar.game.Role
@@ -36,15 +37,26 @@ fun GameBoard(
         selfPlayer = Player.Player1,
     )
     Column(modifier = Modifier) {
+        val winner = vm.winner.collectAsState()
+        val finalWinner = vm.finalWinner.collectAsState()
+
         WinningCounter(vm)
 
         CapturedPieces(vm, Role.BLACK)
 
-        val winner = vm.winner.collectAsState()
-        val finalWinner = vm.finalWinner.collectAsState()
+        Box(modifier = modifier) {
+            BoardBackground(vm)
+            BoardPieces(vm)
+            PossibleMovesOverlay(vm)
+        }
+        CapturedPieces(vm, Role.WHITE)
 
         if (finalWinner.value != null) {
-            AlertDialog(onDismissRequest = { /*TODO*/ }, confirmButton = { /*TODO*/ })
+            if (finalWinner.value is GameResult.Draw) {
+                // AlertDialog(onDismissRequest = { Text(text = "Game Over, Draw!") }, confirmButton = { /*TODO*/ })
+            } else {
+                // AlertDialog(onDismissRequest = { Text(text = "Game Over, ${finalWinner.value} wins!") }, confirmButton = { /*TODO*/ })
+            }
         } else {
             if (winner.value != null) {
                 if (winner.value == Role.WHITE) {
@@ -54,13 +66,6 @@ fun GameBoard(
                 }
             }
         }
-
-        Box(modifier = modifier) {
-            BoardBackground(vm)
-            BoardPieces(vm)
-            PossibleMovesOverlay(vm)
-        }
-        CapturedPieces(vm, Role.WHITE)
     }
 }
 

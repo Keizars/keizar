@@ -21,6 +21,7 @@ import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
+import org.keizar.game.GameResult
 import org.keizar.game.GameSession
 import org.keizar.game.Piece
 import org.keizar.game.Player
@@ -73,7 +74,7 @@ interface GameBoardViewModel {
     val winner: StateFlow<Role?>
 
     @Stable
-    val finalWinner: StateFlow<Player?>
+    val finalWinner: StateFlow<GameResult?>
 
     // clicking
 
@@ -183,7 +184,7 @@ private class GameBoardViewModelImpl(
 
 
     @Stable
-    override val finalWinner: StateFlow<Player?> = game.finalWinner.stateInBackground(null)
+    override val finalWinner: StateFlow<GameResult?> = game.finalWinner.stateInBackground(null)
 
     /**
      * Currently available positions where the picked piece can move to. `null` if no piece is picked.
