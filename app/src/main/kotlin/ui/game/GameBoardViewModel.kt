@@ -48,7 +48,7 @@ interface GameBoardViewModel {
     val currentPick: StateFlow<Pick?>
 
     /**
-     * Currently available **view** positions where the picked piece can move to. `null` if no piece is picked.
+     * Currently available **logical** positions where the picked piece can move to. `null` if no piece is picked.
      */
     @Stable
     val availablePositions: SharedFlow<List<BoardPos>?>
@@ -164,10 +164,10 @@ private class GameBoardViewModelImpl(
         if (pick == null) {
             flowOf(emptyList())
         } else {
-            game.getAvailableTargets(pick.viewPos)
+            game.getAvailableTargets(pieceArranger.viewToLogical(pick.viewPos).first())
         }
     }.map { list ->
-        list.map { pos -> pieceArranger.logicalToView(pos).first() }
+        list
     }.shareInBackground()
 
     override val lastMoveIsDrag: MutableStateFlow<Boolean> = MutableStateFlow(false)

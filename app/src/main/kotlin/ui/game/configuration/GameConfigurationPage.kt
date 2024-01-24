@@ -28,6 +28,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
@@ -37,10 +38,12 @@ import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.get
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.serialization.encodeToHexString
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.keizar.android.ui.external.placeholder.placeholder
 import org.keizar.android.ui.game.BoardBackground
+import org.keizar.android.ui.game.PieceArranger
 import org.keizar.game.Difficulty
 import org.keizar.game.Player
 import org.keizar.game.Player.BLACK
@@ -140,6 +143,11 @@ private fun BoardLayoutPreview(vm: GameConfigurationViewModel) {
         ) {
             boardProperties?.let {
                 BoardBackground(
+                    remember {
+                        PieceArranger(
+                            it,
+                            vm.playAs.filterNotNull(),)
+                    },
                     properties = it,
                     currentPick = null,
                     onClickTile = {},

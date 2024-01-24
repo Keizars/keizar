@@ -14,7 +14,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,6 +41,7 @@ fun BoardBackground(
     modifier: Modifier = Modifier,
 ) {
     BoardBackground(
+        vm.pieceArranger,
         properties = vm.boardProperties,
         currentPick = vm.currentPick.collectAsStateWithLifecycle().value,
         onClickTile = { vm.onClickTile(it) },
@@ -48,6 +51,7 @@ fun BoardBackground(
 
 @Composable
 fun BoardBackground(
+    pieceArranger: PieceArranger,
     properties: BoardProperties,
     currentPick: Pick?,
     onClickTile: (BoardPos) -> Unit,
@@ -76,8 +80,11 @@ fun BoardBackground(
                                 .fillMaxSize(),
                         ) {
                             TileImage(
-                                tileType = remember(properties) {
-                                    val currPos = BoardPos(row, col)
+                                tileType = kotlin.run {
+                                    val viewPos = snapshotFlow { BoardPos(row, col) }
+                                    val currPos by remember(properties) {
+                                        pieceArranger.viewToLogical(viewPos)
+                                    }.collectAsStateWithLifecycle(BoardPos(0, 0))
                                     properties.tileArrangement[currPos] ?: TileType.PLAIN
                                 },
                                 player = null,

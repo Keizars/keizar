@@ -52,6 +52,11 @@ interface PieceArranger {
     fun viewToLogical(viewPos: BoardPos): Flow<BoardPos>
 
     /**
+     * Returns a flow of the **logical** [BoardPos] for the given **view** [viewPos].
+     */
+    fun viewToLogical(viewPos: Flow<BoardPos>): Flow<BoardPos>
+
+    /**
      * Returns a flow of the **view** [BoardPos] for the given **logical** [logicalPos].
      */
     fun logicalToView(logicalPos: BoardPos): Flow<BoardPos>
@@ -141,6 +146,12 @@ private class PieceArrangerImpl(
     override fun viewToLogical(viewPos: BoardPos): Flow<BoardPos> {
         return player.map {
             viewPos.adjustedFor(it)
+        }
+    }
+
+    override fun viewToLogical(viewPos: Flow<BoardPos>): Flow<BoardPos> {
+        return player.combine(viewPos) { it, vp ->
+            vp.adjustedFor(it)
         }
     }
 
