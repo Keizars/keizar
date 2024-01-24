@@ -7,6 +7,9 @@ import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import org.keizar.game.GameSession
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.first
 import kotlin.coroutines.CoroutineContext
 
 interface GameAI {
@@ -17,40 +20,41 @@ interface GameAI {
 
     suspend fun FindBestMove(round: RoundSession): Pair<BoardPos, BoardPos>?
 
+    suspend fun end()
+
 }
 
 class RandomGameAIImpl(
     override val game: GameSession,
     override val myPlayer: Role,
-    val parentCoroutineContext: CoroutineContext,
+    private val parentCoroutineContext: CoroutineContext,
 ) : GameAI {
 
     override suspend fun start() {
         val myCoroutione: CoroutineScope = CoroutineScope(parentCoroutineContext)
         myCoroutione.launch {
-            val round: RoundSession = game.currentRound.last()
-            val player = round.curRole.value
-            if (myPlayer == player) {
-                val best_pos = FindBestMove(round)
-                if (best_pos != null) {
-                    round.move(best_pos.first, best_pos.second)
+            game.currentRound.collect{
+                val player = it.curRole.value
+                if (myPlayer == player) {
+                    val bestPos = FindBestMove(it)
+                    it.move(bestPos.first, bestPos.second)
                 }
             }
-
         }
     }
 
-    override suspend fun FindBestMove(round: RoundSession): Pair<BoardPos, BoardPos>? {
-        val player = round.curRole.value
-        val myPieces = round.getAllPiecesPos(myPlayer).last()
-        var randomPos = myPieces.random()
-        var validTargets = round.getAvailableTargets(randomPos).last()
-        while (validTargets.isEmpty()) {
-            randomPos = myPieces.random()
-            validTargets = round.getAvailableTargets(randomPos).last()
-        }
-        val randomTarget = validTargets.random()
-        return Pair(randomPos, randomTarget)
+    override suspend fun FindBestMove(round: RoundSession): Pair<BoardPos, BoardPos> {
+        val allPieces = round.getAllPiecesPos(myPlayer).first()
+        var randomPiece = allPieces.random()
+        val randomTarget = round.getAvailableTargets(randomPiece)
+                .filter { it.isNotEmpty() }
+                .first()
+                .random()
+        return Pair(randomPiece, randomTarget)
+    }
+
+    override suspend fun end() {
+        TODO("Not yet implemented")
     }
 
 
