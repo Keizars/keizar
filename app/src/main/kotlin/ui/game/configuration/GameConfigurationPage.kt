@@ -103,7 +103,6 @@ private fun GameConfigurationPage(
                 item { BoardSeedTextField(vm) }
                 item { PlayAsSelector(vm) }
                 item { DifficultySelector(vm) }
-                // Spacer item to push content up, might not be needed depending on content size
                 item { Spacer(modifier = Modifier.height(16.dp)) }
             }
 
