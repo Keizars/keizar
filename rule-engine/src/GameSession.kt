@@ -1,6 +1,5 @@
 package org.keizar.game
 
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
@@ -15,17 +14,17 @@ interface GameSession {
 
     val finalWinner: StateFlow<Player?>
 
-    fun currentRole(player: Player): Flow<Role>
+    fun currentRole(player: Player): StateFlow<Role>
 
     /**
      * Accumulated number of turns this player has won.
      */
-    fun wonTurns(player: Player): Flow<Int>
+    fun wonTurns(player: Player): StateFlow<Int>
 
     /**
      * Accumulated number of pieces this player has captured.
      */
-    fun capturedPieces(player: Player): Flow<Int>
+    fun capturedPieces(player: Player): StateFlow<Int>
 
     fun getSnapshot(): GameSnapshot
 
