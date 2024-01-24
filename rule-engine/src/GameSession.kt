@@ -5,16 +5,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
-import org.keizar.game.serialization.GameSnapshot
-import kotlin.random.Random
+import org.keizar.game.serialization.RoundSnapshot
 
 interface GameSession {
     val properties: BoardProperties
 
     val rounds: List<RoundSession>
-    val currentRound: StateFlow<RoundSession>
+    val currentRound: Flow<RoundSession>
     val currentRoundNo: StateFlow<Int>
 
     val finalWinner: Flow<GameResult?>
@@ -33,16 +34,11 @@ interface GameSession {
 
     fun confirmNextTurn(player: Player)
 
-    fun getSnapshot(): GameSnapshot
+    fun getSnapshot(): RoundSnapshot
 
     companion object {
         fun create(seed: Int? = null): GameSession {
             val properties = BoardProperties.getStandardProperties(seed)
-            return create(properties)
-        }
-
-        fun create(random: Random): GameSession {
-            val properties = BoardProperties.getStandardProperties(random)
             return create(properties)
         }
 
@@ -74,36 +70,34 @@ class GameSessionImpl(
 ) : GameSession {
     override val rounds: List<RoundSession>
 
-    private val _currentTurn: MutableStateFlow<RoundSession>
-    override val currentRound: StateFlow<RoundSession>
-    private val _currentTurnNo: MutableStateFlow<Int> = MutableStateFlow(0)
-    override val currentRoundNo: StateFlow<Int> = _currentTurnNo.asStateFlow()
+    override val currentRound: Flow<RoundSession>
+    private val _currentRoundNo: MutableStateFlow<Int> = MutableStateFlow(0)
+    override val currentRoundNo: StateFlow<Int> = _currentRoundNo.asStateFlow()
     override val finalWinner: Flow<GameResult?>
     private val haveWinner: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     private val curRoles: List<MutableStateFlow<Role>>
-    private val wonTurns: List<MutableStateFlow<Int>>
+    private val wonRounds: List<MutableStateFlow<Int>>
 
-    private val nextTurnAgreement: MutableList<Boolean>
+    private val nextRoundAgreement: MutableList<Boolean>
 
     init {
         rounds = (1..properties.turns).map {
             roundSessionConstructor()
         }
-        _currentTurn = MutableStateFlow(rounds[0])
-        currentRound = _currentTurn.asStateFlow()
+        currentRound = currentRoundNo.map { rounds[it] }
 
         curRoles = listOf(
             MutableStateFlow(Role.WHITE),
             MutableStateFlow(Role.BLACK),
         )
 
-        wonTurns = listOf(
+        wonRounds = listOf(
             MutableStateFlow(0),
             MutableStateFlow(0),
         )
 
-        nextTurnAgreement = mutableListOf(false, false)
+        nextRoundAgreement = mutableListOf(false, false)
 
         finalWinner = combine(
             haveWinner,
@@ -133,7 +127,7 @@ class GameSessionImpl(
     }
 
     override fun wonRounds(player: Player): StateFlow<Int> {
-        return wonTurns[player.ordinal]
+        return wonRounds[player.ordinal]
     }
 
     override fun capturedPieces(player: Player): Flow<Int> {
@@ -143,21 +137,20 @@ class GameSessionImpl(
     }
 
     override fun confirmNextTurn(player: Player) {
-        nextTurnAgreement[player.ordinal] = true
-        if (nextTurnAgreement.all { it }) {
+        nextRoundAgreement[player.ordinal] = true
+        if (nextRoundAgreement.all { it }) {
             proceedToNextTurn()
-            nextTurnAgreement.forEachIndexed { index, _ -> nextTurnAgreement[index] = false }
+            nextRoundAgreement.forEachIndexed { index, _ -> nextRoundAgreement[index] = false }
         }
     }
 
     private fun proceedToNextTurn() {
-        currentRound.value.winner.value?.let { ++wonTurns[it.ordinal].value }
+        rounds[currentRoundNo.value].winner.value?.let { ++wonRounds[it.ordinal].value }
         if (currentRoundNo.value == properties.turns) {
             updateFinalWinner()
             return
         }
-        ++_currentTurnNo.value
-        _currentTurn.value = rounds[currentRoundNo.value]
+        ++_currentRoundNo.value
         curRoles.forEach { role -> role.value = role.value.other() }
     }
 
@@ -165,18 +158,22 @@ class GameSessionImpl(
         haveWinner.value = true
     }
 
-    override fun getSnapshot(): GameSnapshot {
+    override fun getSnapshot(): RoundSnapshot {
         TODO("Not yet implemented")
     }
 }
 
+@Serializable
 enum class Player {
     Player1,
     Player2,
 }
 
+@Serializable
 sealed class GameResult {
+    @Serializable
     data object Draw : GameResult()
+    @Serializable
     data class Winner(val player: Player) : GameResult()
     companion object {
         fun values(): Array<GameResult> {
