@@ -102,7 +102,7 @@ fun GameBoard(
                     Role.BLACK -> {
                         if (showDialogRound) {
                             AlertDialog(onDismissRequest = {showDialogRound = false},
-                                title = { Text(text = "Game Over, White wins!") },
+                                title = { Text(text = "Game Over, Black wins!") },
                                 confirmButton = {
                                     Button(onClick = {
                                         vm.startNextRound(vm.selfPlayer)
