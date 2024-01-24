@@ -32,7 +32,7 @@ class RandomGameAIImpl(
     override val game: GameSession,
     override val myPlayer: Player,
     private val parentCoroutineContext: CoroutineContext,
-    private val test: Boolean
+    private val test: Boolean = false
 ) : GameAI {
 
     private val myCoroutione: CoroutineScope =
