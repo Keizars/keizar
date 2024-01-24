@@ -43,19 +43,22 @@ fun GameBoard(
     Column(modifier = Modifier) {
         val winner = vm.winner.collectAsState().value
         val finalWinner = vm.finalWinner.collectAsState().value
+        var showDialogRound by remember { mutableStateOf(true) }
+        val selfRole = vm.selfRole.collectAsState().value
 
         WinningCounter(vm)
 
-        CapturedPieces(vm, Role.BLACK)
+        CapturedPieces(vm, selfRole)
+
 
         Box(modifier = modifier) {
             BoardBackground(vm)
             BoardPieces(vm)
             PossibleMovesOverlay(vm)
         }
-        CapturedPieces(vm, Role.WHITE)
 
-        var showDialogRound by remember { mutableStateOf(true) }
+        CapturedPieces(vm, selfRole.other())
+
         when (finalWinner) {
             is GameResult.Draw -> {
                 AlertDialog(onDismissRequest = {},
@@ -125,7 +128,7 @@ fun CapturedPieces(vm: GameBoardViewModel, role: Role) {
     }
     if (role == Role.WHITE) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "White Captured Pieces:")
+            Text(text = "Captured White Pieces:")
             for (i in 0 until capturedPieces) {
                 PlayerIcon(
                     color = Color.White,
@@ -137,7 +140,7 @@ fun CapturedPieces(vm: GameBoardViewModel, role: Role) {
         }
     } else {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "Black Captured Pieces:")
+            Text(text = "Captured Black Pieces:")
             for (i in 0 until capturedPieces) {
                 PlayerIcon(
                     color = Color.Black,
