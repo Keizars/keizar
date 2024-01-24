@@ -13,18 +13,18 @@ import kotlin.random.Random
 interface GameSession {
     val properties: BoardProperties
 
-    val turns: List<TurnSession>
-    val currentTurn: StateFlow<TurnSession>
-    val currentTurnNo: StateFlow<Int>
+    val rounds: List<RoundSession>
+    val currentRound: StateFlow<RoundSession>
+    val currentRoundNo: StateFlow<Int>
 
     val finalWinner: Flow<GameResult?>
 
     fun currentRole(player: Player): StateFlow<Role>
 
     /**
-     * Accumulated number of turns this player has won.
+     * Accumulated number of rounds this player has won.
      */
-    fun wonTurns(player: Player): StateFlow<Int>
+    fun wonRounds(player: Player): StateFlow<Int>
 
     /**
      * Accumulated number of pieces this player has captured.
@@ -52,7 +52,7 @@ interface GameSession {
                 ruleEngineCore = RuleEngineCoreImpl(properties),
             )
             return GameSessionImpl(properties) {
-                TurnSessionImpl(ruleEngine)
+                RoundSessionImpl(ruleEngine)
             }
         }
 
@@ -70,14 +70,14 @@ interface GameSession {
 
 class GameSessionImpl(
     override val properties: BoardProperties,
-    turnSessionConstructor: () -> TurnSession,
+    roundSessionConstructor: () -> RoundSession,
 ) : GameSession {
-    override val turns: List<TurnSession>
+    override val rounds: List<RoundSession>
 
-    private val _currentTurn: MutableStateFlow<TurnSession>
-    override val currentTurn: StateFlow<TurnSession>
+    private val _currentTurn: MutableStateFlow<RoundSession>
+    override val currentRound: StateFlow<RoundSession>
     private val _currentTurnNo: MutableStateFlow<Int> = MutableStateFlow(0)
-    override val currentTurnNo: StateFlow<Int> = _currentTurnNo.asStateFlow()
+    override val currentRoundNo: StateFlow<Int> = _currentTurnNo.asStateFlow()
     override val finalWinner: Flow<GameResult?>
     private val haveWinner: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
@@ -87,11 +87,11 @@ class GameSessionImpl(
     private val nextTurnAgreement: MutableList<Boolean>
 
     init {
-        turns = (1..properties.turns).map {
-            turnSessionConstructor()
+        rounds = (1..properties.turns).map {
+            roundSessionConstructor()
         }
-        _currentTurn = MutableStateFlow(turns[0])
-        currentTurn = _currentTurn.asStateFlow()
+        _currentTurn = MutableStateFlow(rounds[0])
+        currentRound = _currentTurn.asStateFlow()
 
         curRoles = listOf(
             MutableStateFlow(Role.WHITE),
@@ -107,8 +107,8 @@ class GameSessionImpl(
 
         finalWinner = combine(
             haveWinner,
-            wonTurns(Player.Player1),
-            wonTurns(Player.Player2),
+            wonRounds(Player.Player1),
+            wonRounds(Player.Player2),
             capturedPieces(Player.Player1),
             capturedPieces(Player.Player2),
         ) { haveWinner, player1Wins, player2Wins, player1LostPieces, player2LostPieces ->
@@ -132,12 +132,12 @@ class GameSessionImpl(
         return curRoles[player.ordinal]
     }
 
-    override fun wonTurns(player: Player): StateFlow<Int> {
+    override fun wonRounds(player: Player): StateFlow<Int> {
         return wonTurns[player.ordinal]
     }
 
     override fun capturedPieces(player: Player): Flow<Int> {
-        return combine(turns.map { it.getLostPiecesCount(currentRole(player).value) }) {
+        return combine(rounds.map { it.getLostPiecesCount(currentRole(player).value) }) {
             it.sum()
         }
     }
@@ -151,13 +151,13 @@ class GameSessionImpl(
     }
 
     private fun proceedToNextTurn() {
-        currentTurn.value.winner.value?.let { ++wonTurns[it.ordinal].value }
-        if (currentTurnNo.value == properties.turns) {
+        currentRound.value.winner.value?.let { ++wonTurns[it.ordinal].value }
+        if (currentRoundNo.value == properties.turns) {
             updateFinalWinner()
             return
         }
         ++_currentTurnNo.value
-        _currentTurn.value = turns[currentTurnNo.value]
+        _currentTurn.value = rounds[currentRoundNo.value]
         curRoles.forEach { role -> role.value = role.value.other() }
     }
 

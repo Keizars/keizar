@@ -7,14 +7,13 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.keizar.game.GameSession
 import org.keizar.game.Role
-import org.keizar.game.TurnSession
 
 
-class TurnSessionTest {
+class RoundSessionTest {
     @Test
     fun `test generate a move`() = runTest {
         val game = GameSession.create(100)
-        val turn = game.currentTurn.value
+        val turn = game.currentRound.value
         val curRole: StateFlow<Role> = turn.curRole
         assertEquals(Role.WHITE, curRole.value)
         val gameai = RandomGameAIImpl(turn, curRole.value)
@@ -30,7 +29,7 @@ class TurnSessionTest {
     @Test
     fun `test generate a move when not my turn`() = runTest {
         val game = GameSession.create(100)
-        val turn = game.currentTurn.value
+        val turn = game.currentRound.value
         val curRole: StateFlow<Role> = turn.curRole
         assertEquals(Role.WHITE, curRole.value)
         val gameai = RandomGameAIImpl(turn, Role.BLACK)

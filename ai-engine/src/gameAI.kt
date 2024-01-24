@@ -4,10 +4,10 @@ package org.keizar.aiengine
 import kotlinx.coroutines.flow.last
 import org.keizar.game.BoardPos
 import org.keizar.game.Role
-import org.keizar.game.TurnSession
+import org.keizar.game.RoundSession
 
 interface GameAI {
-    val game: TurnSession
+    val game: RoundSession
     val myplayer: Role
 
     suspend fun FindBestMove(): Pair<BoardPos, BoardPos>?
@@ -15,7 +15,7 @@ interface GameAI {
 }
 
 class RandomGameAIImpl(
-    override val game: TurnSession,
+    override val game: RoundSession,
     override val myplayer: Role
 ) : GameAI {
 

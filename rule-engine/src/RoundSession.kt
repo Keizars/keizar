@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
 import org.keizar.game.internal.RuleEngine
 
-interface TurnSession {
+interface RoundSession {
     val pieces: List<Piece>
 
     val winner: StateFlow<Role?>
@@ -21,9 +21,9 @@ interface TurnSession {
     fun getLostPiecesCount(role: Role): StateFlow<Int>
 }
 
-class TurnSessionImpl(
+class RoundSessionImpl(
     private val ruleEngine: RuleEngine,
-) : TurnSession {
+) : RoundSession {
     override val pieces: List<Piece> = ruleEngine.pieces
 
     override val winner: StateFlow<Role?> = ruleEngine.winner

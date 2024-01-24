@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import me.him188.ani.utils.logging.info
@@ -145,7 +144,7 @@ private class GameBoardViewModelImpl(
     )
 
     @Stable
-    override val pieces: StateFlow<List<UiPiece>> = game.currentTurn.map { it.pieces }.map { list ->
+    override val pieces: StateFlow<List<UiPiece>> = game.currentRound.map { it.pieces }.map { list ->
         list.map {
             UiPiece(
                 enginePiece = it,
@@ -160,26 +159,26 @@ private class GameBoardViewModelImpl(
 
     @Stable
     private val currentRole: StateFlow<Role> =
-        game.currentTurn.flatMapLatest { it.curRole }.stateInBackground(Role.WHITE)
+        game.currentRound.flatMapLatest { it.curRole }.stateInBackground(Role.WHITE)
 
     @Stable
-    override val winningCounter: StateFlow<Int> = game.currentTurn
+    override val winningCounter: StateFlow<Int> = game.currentRound
         .flatMapLatest { it.winningCounter }
         .stateInBackground(0)
 
     @Stable
     override val blackCapturedPieces: StateFlow<Int> =
-        game.currentTurn.flatMapLatest { it.getLostPiecesCount(Role.BLACK) }.stateInBackground(0)
+        game.currentRound.flatMapLatest { it.getLostPiecesCount(Role.BLACK) }.stateInBackground(0)
 
     @Stable
     override val whiteCapturedPieces: StateFlow<Int> =
-        game.currentTurn.flatMapLatest { it.getLostPiecesCount(Role.WHITE) }.stateInBackground(0)
+        game.currentRound.flatMapLatest { it.getLostPiecesCount(Role.WHITE) }.stateInBackground(0)
 
 
 
     
     @Stable
-    override val winner: StateFlow<Role?> = game.currentTurn.flatMapLatest { it.winner }
+    override val winner: StateFlow<Role?> = game.currentRound.flatMapLatest { it.winner }
         .stateInBackground(null)
 
 
@@ -190,7 +189,7 @@ private class GameBoardViewModelImpl(
      * Currently available positions where the picked piece can move to. `null` if no piece is picked.
      */
     @Stable
-    override val availablePositions: SharedFlow<List<BoardPos>?> = game.currentTurn.flatMapLatest { turn ->
+    override val availablePositions: SharedFlow<List<BoardPos>?> = game.currentRound.flatMapLatest { turn ->
         currentPick.flatMapLatest { pick ->
             if (pick == null) {
                 flowOf(emptyList())
@@ -276,7 +275,7 @@ private class GameBoardViewModelImpl(
     }
 
     private suspend fun movePiece(from: BoardPos, to: BoardPos) {
-        game.currentTurn.value.move(from, to).also {
+        game.currentRound.value.move(from, to).also {
             logger.info { "[board] move $from to $to: $it" }
         }
     }

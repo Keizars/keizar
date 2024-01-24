@@ -7,11 +7,11 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-class TurnSessionTest {
+class RoundSessionTest {
     @Test
     fun `test curPlayer`() = runTest {
         val game = GameSession.create(100)
-        val turn = game.currentTurn.value
+        val turn = game.currentRound.value
         val curRole: StateFlow<Role> = turn.curRole
         assertEquals(Role.WHITE, curRole.value)
         turn.move(BoardPos("a2"), BoardPos("a3"))
@@ -23,7 +23,7 @@ class TurnSessionTest {
     @Test
     fun `test getAvailableTargets`() = runTest {
         val game = GameSession.create(100)
-        val turn = game.currentTurn.value
+        val turn = game.currentRound.value
         val targets1 = turn.getAvailableTargets(BoardPos("d2"))
         val targets2 = turn.getAvailableTargets(BoardPos("e2"))
 
@@ -47,7 +47,7 @@ class TurnSessionTest {
     @Test
     fun `test getLostPiecesCount`() = runTest {
         val game = GameSession.create(100)
-        val turn = game.currentTurn.value
+        val turn = game.currentRound.value
         assertEquals(0, turn.getLostPiecesCount(Role.WHITE).value)
         assertEquals(0, turn.getLostPiecesCount(Role.BLACK).value)
 
@@ -69,7 +69,7 @@ class TurnSessionTest {
     @Test
     fun `test winning conditions`() = runTest {
         val game = GameSession.create(100)
-        val turn = game.currentTurn.value
+        val turn = game.currentRound.value
         assertEquals(null, turn.winner.value)
         assertEquals(0, turn.winningCounter.value)
 
@@ -109,7 +109,7 @@ class TurnSessionTest {
     @Test
     fun `test getAllPiecesPos`() = runTest {
         val game = GameSession.create(100)
-        val turn = game.currentTurn.value
+        val turn = game.currentRound.value
         assertEquals(
             BoardPos.range("a1" to "h2").toSet(),
             turn.getAllPiecesPos(Role.WHITE).last().toSet(),
@@ -151,7 +151,7 @@ class TurnSessionTest {
     @Test
     fun `test pieces`() = runTest {
         val game = GameSession.create(100)
-        val turn = game.currentTurn.value
+        val turn = game.currentRound.value
         val pieces = turn.pieces
         assertEquals(
             BoardPos.range("a1" to "h2").toSet() + BoardPos.range("a7" to "h8").toSet(),
