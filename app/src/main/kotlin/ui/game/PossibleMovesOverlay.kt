@@ -64,7 +64,7 @@ fun PossibleMovesOverlay(
 private fun PreviewPossibleMovesOverlay() {
     BoxWithConstraints {
         val vm = rememberGameBoardViewModel(
-            game = GameSession.create(BoardProperties.getStandardProperties(Random(0))),
+            game = GameSession.create(BoardProperties.getStandardProperties(0)),
             selfPlayer = Player.Player1,
         )
         LaunchedEffect(true) {

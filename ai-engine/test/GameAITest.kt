@@ -1,20 +1,21 @@
 package org.keizar.aiengine
 
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.keizar.game.GameSession
 import org.keizar.game.Role
-import org.keizar.game.TurnSession
+import org.keizar.game.RoundSession
 
-//
-//class TurnSessionTest {
+
+//class RoundSessionTest {
 //    @Test
 //    fun `test generate a move`() = runTest {
 //        val game = GameSession.create(100)
-//        val turn = game.currentTurn.value
+//        val turn = game.currentRound.last()
 //        val curRole: StateFlow<Role> = turn.curRole
 //        assertEquals(Role.WHITE, curRole.value)
 //        val gameai = RandomGameAIImpl(turn, curRole.value)

@@ -275,7 +275,7 @@ fun TileImage(
 private fun PreviewBoardBackground() {
     BoxWithConstraints {
         val prop = remember {
-            BoardProperties.getStandardProperties(Random(0))
+            BoardProperties.getStandardProperties(0)
         }
         BoardBackground(
             rememberGameBoardViewModel(

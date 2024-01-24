@@ -181,7 +181,7 @@ internal fun PlayerIcon(
 private fun PreviewBoardPiecesWithBackground() {
     BoxWithConstraints {
         val prop = remember {
-            BoardProperties.getStandardProperties(Random(0))
+            BoardProperties.getStandardProperties(0)
         }
         val vm = rememberGameBoardViewModel(
             game = GameSession.create(prop),

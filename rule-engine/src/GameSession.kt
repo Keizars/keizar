@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
+import org.keizar.game.serialization.GameSnapshot
 
 interface GameSession {
     val properties: BoardProperties
@@ -31,9 +32,13 @@ interface GameSession {
      */
     fun capturedPieces(player: Player): Flow<Int>
 
-    fun confirmNextTurn(player: Player)
+    fun confirmNextTurn(player: Player): Boolean
 
-//    fun getSnapshot(): RoundSnapshot
+    fun getSnapshot(): GameSnapshot = GameSnapshot(
+        properties = properties,
+        rounds = rounds.map { it.getSnapshot() },
+        currentRoundNo = currentRoundNo.value,
+    )
 
     companion object {
         fun create(seed: Int? = null): GameSession {
@@ -51,26 +56,32 @@ interface GameSession {
             }
         }
 
-//        fun restore(snapshot: GameSnapshot): GameSession {
-//            return TurnSessionImpl(
-//                properties = snapshot.properties,
-//                ruleEngine = RuleEngineImpl.restore(
-//                    gameSnapshot = snapshot,
-//                    ruleEngineCore = RuleEngineCoreImpl(snapshot.properties),
-//                )
-//            )
-//        }
+        fun restore(snapshot: GameSnapshot): GameSession {
+            return GameSessionImpl(
+                properties = snapshot.properties,
+                startFromRoundNo = snapshot.currentRoundNo,
+            ) { index ->
+                RoundSessionImpl(
+                    ruleEngine = RuleEngineImpl.restore(
+                        properties = snapshot.properties,
+                        roundSnapshot = snapshot.rounds[index],
+                        ruleEngineCore = RuleEngineCoreImpl(snapshot.properties),
+                    )
+                )
+            }
+        }
     }
 }
 
 class GameSessionImpl(
     override val properties: BoardProperties,
-    roundSessionConstructor: () -> RoundSession,
+    startFromRoundNo: Int = 0,
+    roundSessionConstructor: (index: Int) -> RoundSession,
 ) : GameSession {
     override val rounds: List<RoundSession>
 
     override val currentRound: Flow<RoundSession>
-    private val _currentRoundNo: MutableStateFlow<Int> = MutableStateFlow(0)
+    private val _currentRoundNo: MutableStateFlow<Int> = MutableStateFlow(startFromRoundNo)
     override val currentRoundNo: StateFlow<Int> = _currentRoundNo.asStateFlow()
     override val finalWinner: Flow<GameResult?>
     private val haveWinner: MutableStateFlow<Boolean> = MutableStateFlow(false)
@@ -81,8 +92,8 @@ class GameSessionImpl(
     private val nextRoundAgreement: MutableList<Boolean>
 
     init {
-        rounds = (1..properties.turns).map {
-            roundSessionConstructor()
+        rounds = (0..<properties.turns).map {
+            roundSessionConstructor(it)
         }
         currentRound = currentRoundNo.map { rounds[it] }
 
@@ -135,12 +146,13 @@ class GameSessionImpl(
         }
     }
 
-    override fun confirmNextTurn(player: Player) {
+    override fun confirmNextTurn(player: Player): Boolean {
         nextRoundAgreement[player.ordinal] = true
         if (nextRoundAgreement.all { it }) {
             proceedToNextTurn()
             nextRoundAgreement.forEachIndexed { index, _ -> nextRoundAgreement[index] = false }
         }
+        return true
     }
 
     private fun proceedToNextTurn() {
@@ -156,10 +168,6 @@ class GameSessionImpl(
     private fun updateFinalWinner() {
         haveWinner.value = true
     }
-
-//    override fun getSnapshot(): RoundSnapshot {
-//        TODO("Not yet implemented")
-//    }
 }
 
 @Serializable
@@ -172,6 +180,7 @@ enum class Player {
 sealed class GameResult {
     @Serializable
     data object Draw : GameResult()
+
     @Serializable
     data class Winner(val player: Player) : GameResult()
     companion object {

@@ -7,7 +7,7 @@ import org.keizar.game.BoardProperties
 import org.keizar.game.Move
 import org.keizar.game.Piece
 import org.keizar.game.Role
-import org.keizar.game.serialization.GameSnapshot
+import org.keizar.game.serialization.RoundSnapshot
 
 interface RuleEngine {
     val winningCounter: StateFlow<Int>
@@ -115,18 +115,24 @@ class RuleEngineImpl private constructor(
     }
 
     companion object {
-        fun restore(gameSnapshot: GameSnapshot, ruleEngineCore: RuleEngineCore): RuleEngine {
-            val board = Board(gameSnapshot.properties, ruleEngineCore)
-            board.rearrangePieces(gameSnapshot.pieces)
-            val whiteLostPieces = board.pieces.count { it.isCaptured.value && it.role == Role.WHITE }
-            val blackLostPieces = board.pieces.count { it.isCaptured.value && it.role == Role.BLACK }
+        fun restore(
+            properties: BoardProperties,
+            roundSnapshot: RoundSnapshot,
+            ruleEngineCore: RuleEngineCore
+        ): RuleEngine {
+            val board = Board(properties, ruleEngineCore)
+            board.rearrangePieces(roundSnapshot.pieces)
+            val whiteLostPieces =
+                board.pieces.count { it.isCaptured.value && it.role == Role.WHITE }
+            val blackLostPieces =
+                board.pieces.count { it.isCaptured.value && it.role == Role.BLACK }
             return RuleEngineImpl(
-                boardProperties = gameSnapshot.properties,
+                boardProperties = properties,
                 board = board,
                 movesLog = mutableListOf(),
-                winningCounter = MutableStateFlow(gameSnapshot.winningCounter),
-                curRole = MutableStateFlow(gameSnapshot.curRole),
-                winner = MutableStateFlow(gameSnapshot.winner),
+                winningCounter = MutableStateFlow(roundSnapshot.winningCounter),
+                curRole = MutableStateFlow(roundSnapshot.curRole),
+                winner = MutableStateFlow(roundSnapshot.winner),
                 lostPiecesCount = mapOf(
                     Role.WHITE to MutableStateFlow(whiteLostPieces),
                     Role.BLACK to MutableStateFlow(blackLostPieces),
