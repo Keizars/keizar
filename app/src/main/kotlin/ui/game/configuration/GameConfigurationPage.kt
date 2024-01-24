@@ -181,13 +181,13 @@ private fun PlayAsSelector(vm: GameConfigurationViewModel) {
         ) {
             Text(renderPlayAs(BLACK))
         }
-        SegmentedButton(
-            selected = playAs == null,
-            onClick = { vm.setPlayAs(null) },
-            shape = RectangleShape,
-        ) {
-            Text(renderPlayAs(null))
-        }
+//        SegmentedButton(
+//            selected = playAs == null,
+//            onClick = { vm.setPlayAs(null) },
+//            shape = RectangleShape,
+//        ) {
+//            Text(renderPlayAs(null))
+//        }
         SegmentedButton(
             selected = playAs == WHITE,
             onClick = { vm.setPlayAs(WHITE) },

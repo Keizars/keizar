@@ -67,7 +67,7 @@ private class GameConfigurationViewModelImpl(
         boardSeed.map { BoardProperties.getStandardProperties(it ?: 0) }
             .shareInBackground()
 
-    override val playAs: MutableStateFlow<Role?> = MutableStateFlow(null)
+    override val playAs: MutableStateFlow<Role?> = MutableStateFlow(Role.WHITE)
     override fun setPlayAs(role: Role?) {
         playAs.value = role
     }
