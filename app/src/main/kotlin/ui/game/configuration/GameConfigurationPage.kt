@@ -7,9 +7,12 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -29,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
@@ -87,22 +91,29 @@ private fun GameConfigurationPage(
         Column(
             Modifier
                 .padding(contentPadding)
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            BoardLayoutPreview(vm)
-            BoardSeedTextField(vm)
-            PlayAsSelector(vm)
-            DifficultySelector(vm)
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f) // This makes the LazyColumn fill the available space, leaving space for the Button at the bottom
+                    .padding(horizontal = 16.dp)
+            ) {
+                item { BoardLayoutPreview(vm) }
+                item { BoardSeedTextField(vm) }
+                item { PlayAsSelector(vm) }
+                item { DifficultySelector(vm) }
+                // Spacer item to push content up, might not be needed depending on content size
+                item { Spacer(modifier = Modifier.height(16.dp)) }
+            }
 
-            Spacer(modifier = Modifier.weight(1f))
-
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                Button(onClick = { onClickStart(vm.createGameStartConfiguration()) }, Modifier.padding(top = 32.dp)) {
+            Row(Modifier.fillMaxWidth().height(50.dp), horizontalArrangement = Arrangement.End) {
+                Button(onClick = { onClickStart(vm.createGameStartConfiguration()) }, Modifier.padding(top = 10.dp).height(45.dp)) {
                     Text("Start", style = MaterialTheme.typography.bodyLarge)
                     Icon(
                         Icons.AutoMirrored.Default.ArrowForward,
                         contentDescription = "Start",
-                        Modifier.padding(start = 12.dp)
+                        Modifier.padding(start = 4.dp)
                     )
                 }
             }
@@ -134,12 +145,16 @@ private fun BoardSeedTextField(
 private fun BoardLayoutPreview(vm: GameConfigurationViewModel) {
     BoxWithConstraints {
         val boardProperties = vm.boardProperties.collectAsStateWithLifecycle(null).value
+        val boardSize = min(maxWidth, maxHeight)
+
+        val sizeFactor = 1f
+        val adjustedBoardSize = boardSize * sizeFactor
         Box(
             Modifier
-                .padding(bottom = 32.dp)
-                .size(min(maxWidth, maxHeight))
+                .padding(bottom = 16.dp)
+                .size(adjustedBoardSize)
                 .clip(RoundedCornerShape(ROUND_CORNER_RADIUS))
-                .placeholder(boardProperties == null)
+                .placeholder(boardProperties == null),
         ) {
             boardProperties?.let {
                 BoardBackground(
@@ -248,7 +263,7 @@ private fun renderPlayAs(entry: Player?) = when (entry) {
 }
 
 
-@Preview
+@Preview(heightDp = 400)
 @Composable
 private fun PreviewGameConfigurationPage() {
     GameConfigurationPage(
