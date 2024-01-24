@@ -40,31 +40,32 @@ class RandomGameAIImpl(
 
     override fun start() {
         myCoroutione.launch {
-            val myRole: Role = game.currentRole(myPlayer).first()
-            game.currentRound.collect{
-                it.curRole.collect{role ->
-                    if (myRole == role) {
-                        val bestPos = findBestMove(it, role)
-                        if (!test){
-                            delay(Random.nextLong(1500L..3000L))
+            game.currentRole(myPlayer).collect { myRole ->
+                game.currentRound.collect {
+                    it.curRole.collect { role ->
+                        if (myRole == role) {
+                            val bestPos = findBestMove(it, role)
+                            if (!test) {
+                                delay(Random.nextLong(1500L..3000L))
+                            }
+                            it.move(bestPos.first, bestPos.second)
                         }
-                        it.move(bestPos.first, bestPos.second)
                     }
                 }
             }
-
         }
 
         myCoroutione.launch {
-            val myRole: Role = game.currentRole(myPlayer).first()
-            game.currentRound.collect{
-               it.winner.collect{
-                    if (it != null) {
-                        game.confirmNextRound(myPlayer)
+            game.currentRole(myPlayer).collect { myRole ->
+                game.currentRound.collect{
+                    it.winner.collect{
+                        if (it != null) {
+                            game.confirmNextRound(myPlayer)
+                        }
                     }
                 }
             }
-     }
+        }
     }
 
     override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos> {
