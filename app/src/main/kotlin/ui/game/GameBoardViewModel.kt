@@ -276,7 +276,7 @@ private class GameBoardViewModelImpl(
     }
 
     private suspend fun movePiece(from: BoardPos, to: BoardPos) {
-        game.currentRound.value.move(from, to).also {
+        game.currentRound.first().move(from, to).also {
             logger.info { "[board] move $from to $to: $it" }
         }
     }
