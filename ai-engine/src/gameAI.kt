@@ -20,7 +20,7 @@ interface GameAI {
     val game: GameSession
     val myPlayer: Player
 
-    suspend fun start()
+    fun start()
 
     suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos>?
 
@@ -37,7 +37,7 @@ class RandomGameAIImpl(
     private val myCoroutione: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
-    override suspend fun start() {
+    override fun start() {
         myCoroutione.launch {
             val myRole: Role = game.currentRole(myPlayer).first()
             game.currentRound.collect{
