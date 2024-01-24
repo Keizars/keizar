@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import me.him188.ani.utils.logging.info
+import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground
@@ -133,11 +134,26 @@ fun rememberGameBoardViewModel(
     selfPlayer: Player,
 ): GameBoardViewModel {
     return remember {
-        GameBoardViewModelImpl(game, selfPlayer)
+        SinglePlayerGameBoardViewModel(game, selfPlayer)
     }
 }
 
-private class GameBoardViewModelImpl(
+private class SinglePlayerGameBoardViewModel(
+    game: GameSession,
+    selfPlayer: Player,
+) : BaseGameBoardViewModel(
+    game,
+    selfPlayer,
+) {
+    private val gameAi =
+        RandomGameAIImpl(game, Player.entries.first { it != selfPlayer }, backgroundScope.coroutineContext)
+
+    init {
+        gameAi.start()
+    }
+}
+
+private sealed class BaseGameBoardViewModel(
     private val game: GameSession,
     selfPlayer: Player,
 ) : AbstractViewModel(), GameBoardViewModel {
@@ -187,8 +203,6 @@ private class GameBoardViewModelImpl(
         game.currentRound.flatMapLatest { it.getLostPiecesCount(Role.WHITE) }.stateInBackground(0)
 
 
-
-    
     @Stable
     override val winner: StateFlow<Role?> = game.currentRound.flatMapLatest { it.winner }
         .stateInBackground(null)

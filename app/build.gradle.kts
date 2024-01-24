@@ -34,6 +34,7 @@ dependencies {
 
     implementation(libs.ktor.client.core)
     implementation(libs.koin.android)
+    implementation(projects.aiEngine)
     implementation(projects.ruleEngine)
 }
 
