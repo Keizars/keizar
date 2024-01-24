@@ -184,8 +184,8 @@ private sealed class BaseGameBoardViewModel(
     override val currentPick: MutableStateFlow<Pick?> = MutableStateFlow(null)
 
     @Stable
-    private val currentRole: StateFlow<Role> =
-        game.currentRound.flatMapLatest { it.curRole }.stateInBackground(Role.WHITE)
+    private val currentRole: StateFlow<Role> = selfRole
+//        game.currentRound.flatMapLatest { it.curRole }.stateInBackground(Role.WHITE)
 
     @Stable
     override val winningCounter: StateFlow<Int> = game.currentRound
@@ -230,7 +230,7 @@ private sealed class BaseGameBoardViewModel(
     override fun onClickPiece(piece: UiPiece) {
         val currentPick = currentPick.value
         if (currentPick == null) {
-            if (piece.role != currentRole.value) return
+            if (piece.role != selfRole.value) return
             launchInBackground(start = CoroutineStart.UNDISPATCHED) {
                 startPick(piece)
             }
