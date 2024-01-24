@@ -20,6 +20,8 @@ import androidx.compose.ui.unit.min
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
 import org.keizar.game.Difficulty
+import org.keizar.game.GameSession
+import org.keizar.game.Player
 import org.keizar.game.Role
 
 
@@ -29,8 +31,8 @@ fun GameBoard(
     modifier: Modifier = Modifier,
 ) {
     val vm = rememberGameBoardViewModel(
-        boardProperties = startConfiguration.createBoard(),
-        viewedAs = startConfiguration.playAs,
+        GameSession.create(startConfiguration.createBoard()),
+        selfPlayer = Player.Player1,
     )
     Column(modifier = Modifier) {
         WinningCounter(vm)
@@ -84,7 +86,6 @@ fun CapturedPieces(vm: GameBoardViewModel, role: Role) {
 fun WinningCounter(vm: GameBoardViewModel) {
     val winningCounter by vm.winningCounter.collectAsState()
     Text(text = "Winning Keizar Counter: $winningCounter")
-
 }
 
 

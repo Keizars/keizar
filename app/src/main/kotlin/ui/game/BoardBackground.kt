@@ -31,6 +31,8 @@ import org.keizar.android.R
 import org.keizar.android.ui.theme.slightlyWeaken
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
+import org.keizar.game.GameSession
+import org.keizar.game.Player
 import org.keizar.game.Role
 import org.keizar.game.TileType
 import kotlin.random.Random
@@ -276,7 +278,11 @@ private fun PreviewBoardBackground() {
             BoardProperties.getStandardProperties(Random(0))
         }
         BoardBackground(
-            rememberGameBoardViewModel(boardProperties = prop),
+            rememberGameBoardViewModel(
+                game = GameSession.create(prop),
+                selfPlayer = Player.Player1,
+            ),
+
             Modifier.size(min(maxWidth, maxHeight))
         )
     }

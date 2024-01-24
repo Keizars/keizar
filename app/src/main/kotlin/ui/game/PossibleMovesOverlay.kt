@@ -21,7 +21,10 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.first
 import org.keizar.game.BoardProperties
+import org.keizar.game.GameSession
+import org.keizar.game.Player
 import org.keizar.game.Role
 import kotlin.random.Random
 
@@ -39,7 +42,7 @@ fun PossibleMovesOverlay(
                 val offset by remember(vm, boardPos) { vm.pieceArranger.offsetFor(boardPos) }
                     .collectAsStateWithLifecycle(DpOffset.Zero)
 
-                val player by vm.role.collectAsStateWithLifecycle()
+                val player by vm.selfRole.collectAsStateWithLifecycle()
                 Box(
                     Modifier
                         .background(Color.Transparent)
@@ -60,9 +63,12 @@ fun PossibleMovesOverlay(
 @Composable
 private fun PreviewPossibleMovesOverlay() {
     BoxWithConstraints {
-        val vm = rememberGameBoardViewModel(boardProperties = BoardProperties.getStandardProperties(Random(0)))
+        val vm = rememberGameBoardViewModel(
+            game = GameSession.create(BoardProperties.getStandardProperties(Random(0))),
+            selfPlayer = Player.Player1,
+        )
         LaunchedEffect(true) {
-            vm.onClickPiece(vm.pieces.first { it.role == Role.WHITE })
+            vm.onClickPiece(vm.pieces.first().first { it.role == Role.WHITE })
         }
         PossibleMovesOverlay(
             vm,

@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import org.keizar.game.BoardProperties
+import org.keizar.game.GameSession
+import org.keizar.game.Player
 import org.keizar.game.Role
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
@@ -69,7 +71,8 @@ fun BoardPieces(
 
         val tileSize by pieceArranger.tileSize.collectAsStateWithLifecycle(DpSize.Zero)
 
-        for (piece in vm.pieces) {
+        val pieces by vm.pieces.collectAsStateWithLifecycle()
+        for (piece in pieces) {
             val isVisible by piece.isVisible.collectAsStateWithLifecycle(false)
             if (!isVisible) {
                 continue
@@ -180,7 +183,10 @@ private fun PreviewBoardPiecesWithBackground() {
         val prop = remember {
             BoardProperties.getStandardProperties(Random(0))
         }
-        val vm = rememberGameBoardViewModel(prop)
+        val vm = rememberGameBoardViewModel(
+            game = GameSession.create(prop),
+            selfPlayer = Player.Player1,
+        )
         BoardBackground(
             vm,
             Modifier.size(min(maxWidth, maxHeight))
