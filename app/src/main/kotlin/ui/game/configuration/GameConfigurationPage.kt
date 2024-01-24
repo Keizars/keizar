@@ -97,7 +97,7 @@ private fun GameConfigurationPage(
             Spacer(modifier = Modifier.weight(1f))
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                Button(onClick = { onClickStart(vm.createGameStartConfiguration()) }, Modifier.padding(top = 32.dp)) {
+                Button(onClick = { onClickStart(vm.configuration.value) }, Modifier.padding(top = 32.dp)) {
                     Text("Start", style = MaterialTheme.typography.bodyLarge)
                     Icon(
                         Icons.AutoMirrored.Default.ArrowForward,
@@ -114,14 +114,14 @@ private fun GameConfigurationPage(
 private fun BoardSeedTextField(
     vm: GameConfigurationViewModel,
 ) {
-    val boardSeedText by vm.boardSeedText.collectAsStateWithLifecycle()
+    val text by vm.configurationSeedText.collectAsStateWithLifecycle()
     OutlinedTextField(
-        value = boardSeedText,
-        onValueChange = { vm.setBoardSeedText(it) },
-        label = { Text(text = "Board seed") },
+        value = text,
+        onValueChange = { vm.setConfigurationSeedText(it) },
+        label = { Text(text = "Seed") },
         supportingText = { Text(text = "Explore new board layouts by changing the seed") },
         trailingIcon = {
-            IconButton(onClick = { vm.updateRandomBoardSeed() }) {
+            IconButton(onClick = { vm.updateRandomSeed() }) {
                 Icon(Icons.Default.Refresh, contentDescription = "Generate random seed")
             }
         },
@@ -146,7 +146,8 @@ private fun BoardLayoutPreview(vm: GameConfigurationViewModel) {
                     remember {
                         PieceArranger(
                             it,
-                            vm.playAs.filterNotNull(),)
+                            vm.playAs.filterNotNull(),
+                        )
                     },
                     properties = it,
                     currentPick = null,
@@ -173,7 +174,7 @@ private fun PlayAsSelector(vm: GameConfigurationViewModel) {
             .padding(top = 4.dp)
             .fillMaxWidth()
     ) {
-        val playAs by vm.playAs.collectAsStateWithLifecycle()
+        val playAs by vm.playAs.collectAsStateWithLifecycle(null)
         SegmentedButton(
             selected = playAs == BLACK,
             onClick = { vm.setPlayAs(BLACK) },
@@ -213,7 +214,7 @@ private fun DifficultySelector(vm: GameConfigurationViewModel) {
             .padding(top = 4.dp)
             .fillMaxWidth()
     ) {
-        val selected by vm.difficulty.collectAsStateWithLifecycle()
+        val selected by vm.difficulty.collectAsStateWithLifecycle(Difficulty.EASY)
         SegmentedButton(
             selected = selected == Difficulty.EASY,
             onClick = { vm.setDifficulty(Difficulty.EASY) },

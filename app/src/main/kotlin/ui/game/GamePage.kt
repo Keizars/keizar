@@ -26,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.navigation.NavController
+import org.keizar.android.encode
 import org.keizar.android.ui.KeizarApp
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.game.Difficulty
@@ -75,7 +76,7 @@ fun GamePage(
                     actions = {
                         IconButton(onClick = {
                             showGameConfigurationDialog = true
-                            clipboard.setText(AnnotatedString(startConfiguration.seed.toString()))
+                            clipboard.setText(AnnotatedString(startConfiguration.encode()))
                         }) {
                             Icon(Icons.Outlined.Share, contentDescription = "Share")
                         }
@@ -105,7 +106,7 @@ private fun PreviewGamePage() {
         GamePage(
             startConfiguration = GameStartConfiguration(
                 difficulty = Difficulty.EASY,
-                seed = 0,
+                layoutSeed = 0,
                 playAs = Role.WHITE,
             ),
             onClickHome = {},

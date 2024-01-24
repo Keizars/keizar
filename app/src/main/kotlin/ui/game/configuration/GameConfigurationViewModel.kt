@@ -7,83 +7,107 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.merge
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
+import org.keizar.android.GameStartConfigurationEncoder
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.game.BoardProperties
 import org.keizar.game.Difficulty
 import org.keizar.game.Role
-import kotlin.random.Random
 
 interface GameConfigurationViewModel {
-    @Stable
-    val boardSeedText: StateFlow<String>
+    val configuration: StateFlow<GameStartConfiguration>
+    val configurationSeed: Flow<String>
+    fun updateRandomSeed()
 
     @Stable
-    val boardSeed: Flow<Int?>
+    val layoutSeed: Flow<Int?>
 
     @Stable
     val boardProperties: SharedFlow<BoardProperties>
-    fun setBoardSeedText(value: String)
-    fun updateRandomBoardSeed()
-
 
     @Stable
-    val playAs: StateFlow<Role?>
+    val configurationSeedText: StateFlow<String>
+    fun setConfigurationSeedText(value: String)
+
+    @Stable
+    val playAs: Flow<Role?>
     fun setPlayAs(role: Role?)
 
     @Stable
-    val difficulty: StateFlow<Difficulty>
+    val difficulty: Flow<Difficulty>
     fun setDifficulty(difficulty: Difficulty)
-
-
-    fun createGameStartConfiguration(): GameStartConfiguration {
-        return GameStartConfiguration(
-            seed = boardSeedText.value.toIntOrNull() ?: BoardProperties.generateRandomSeed(),
-            playAs = playAs.value ?: if (Random.nextBoolean()) Role.WHITE else Role.BLACK,
-            difficulty = difficulty.value,
-        )
-    }
 }
 
 @Composable
 fun rememberGameConfigurationViewModel(): GameConfigurationViewModel = GameConfigurationViewModelImpl()
 
 @Serializable
-class GameStartConfiguration(
-    @ProtoNumber(1) val seed: Int,
+data class GameStartConfiguration(
+    @ProtoNumber(1) val layoutSeed: Int,
     @ProtoNumber(2) val playAs: Role,
     @ProtoNumber(3) val difficulty: Difficulty,
-)
+) {
+    companion object {
+        fun random(): GameStartConfiguration {
+            return GameStartConfiguration(
+                layoutSeed = BoardProperties.generateRandomSeed(),
+                playAs = Role.entries.random(),
+                difficulty = Difficulty.EASY,
+            )
+        }
+    }
+}
 
-fun GameStartConfiguration.createBoard(): BoardProperties = BoardProperties.getStandardProperties(seed)
+fun GameStartConfiguration.createBoard(): BoardProperties = BoardProperties.getStandardProperties(layoutSeed)
 
-private class GameConfigurationViewModelImpl(
-    initialBoardSeed: Int = BoardProperties.generateRandomSeed(),
-) : GameConfigurationViewModel, AbstractViewModel() {
-    override val boardSeedText = MutableStateFlow(initialBoardSeed.toString())
-    override val boardSeed: Flow<Int?> = boardSeedText.map { it.toIntOrNull() }
+private class GameConfigurationViewModelImpl : GameConfigurationViewModel, AbstractViewModel() {
+    override val configuration: MutableStateFlow<GameStartConfiguration> =
+        MutableStateFlow(GameStartConfiguration.random())
+    override val configurationSeed: Flow<String> = configuration.map { GameStartConfigurationEncoder.encode(it) }
+
+    private val _configurationSeedText = MutableStateFlow(configuration.value.layoutSeed.toString())
+    override val configurationSeedText = merge(_configurationSeedText, configurationSeed).stateInBackground("")
+    override val layoutSeed: Flow<Int?> = configuration.map { it.layoutSeed }
     override val boardProperties: SharedFlow<BoardProperties> =
-        boardSeed.map { BoardProperties.getStandardProperties(it ?: 0) }
+        layoutSeed.map { BoardProperties.getStandardProperties(it ?: 0) }
             .shareInBackground()
 
-    override val playAs: MutableStateFlow<Role?> = MutableStateFlow(Role.WHITE)
+    override val playAs: Flow<Role?> = configuration.map { it.playAs }
     override fun setPlayAs(role: Role?) {
-        playAs.value = role
+        updateConfiguration {
+            copy(playAs = role ?: Role.WHITE)
+        }
     }
 
-    override val difficulty: MutableStateFlow<Difficulty> = MutableStateFlow(Difficulty.EASY)
+    override val difficulty: Flow<Difficulty> = configuration.map { it.difficulty }
 
     override fun setDifficulty(difficulty: Difficulty) {
-        this.difficulty.value = difficulty
+        updateConfiguration {
+            copy(difficulty = difficulty)
+        }
     }
 
-    override fun setBoardSeedText(value: String) {
-        boardSeedText.value = value
+    override fun setConfigurationSeedText(value: String) {
+        _configurationSeedText.value = value
+        value.toIntOrNull()?.let { seed ->
+            updateConfiguration {
+                copy(layoutSeed = seed)
+            }
+        }
     }
 
-    override fun updateRandomBoardSeed() {
-        boardSeedText.value = BoardProperties.generateRandomSeed().toString()
+    override fun updateRandomSeed() {
+        val newSeed = BoardProperties.generateRandomSeed()
+        _configurationSeedText.value = newSeed.toString()
+        updateConfiguration {
+            GameStartConfiguration.random()
+        }
+    }
+
+    private inline fun updateConfiguration(block: GameStartConfiguration.() -> GameStartConfiguration) {
+        this.configuration.value = this.configuration.value.block()
     }
 
 }
