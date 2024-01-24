@@ -3,24 +3,24 @@ package org.keizar.aiengine
 
 import kotlinx.coroutines.flow.last
 import org.keizar.game.BoardPos
-import org.keizar.game.GameSession
-import org.keizar.game.Player
+import org.keizar.game.Role
+import org.keizar.game.TurnSession
 
 interface GameAI {
-    val game: GameSession
-    val myplayer: Player
+    val game: TurnSession
+    val myplayer: Role
 
     suspend fun FindBestMove(): Pair<BoardPos, BoardPos>?
     suspend fun MakeMove(): Pair<BoardPos, BoardPos>?
 }
 
 class RandomGameAIImpl(
-    override val game: GameSession,
-    override val myplayer: Player
+    override val game: TurnSession,
+    override val myplayer: Role
 ) : GameAI {
 
     override suspend fun FindBestMove(): Pair<BoardPos, BoardPos>? {
-        val player = game.curPlayer.value
+        val player = game.curRole.value
         return if (myplayer == player) {
             val myPieces = game.getAllPiecesPos(myplayer).last()
             var randomPos = myPieces.random()

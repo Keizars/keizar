@@ -2,28 +2,26 @@ package org.keizar.game
 
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.last
-import kotlinx.coroutines.flow.toSet
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import kotlin.random.Random
 
-class GameSessionTest {
+class TurnSessionTest {
     @Test
     fun `test curPlayer`() = runTest {
-        val game = GameSession.create(100)
-        val curPlayer: StateFlow<Player> = game.curPlayer
-        assertEquals(Player.WHITE, curPlayer.value)
+        val game = TurnSession.create(100)
+        val curRole: StateFlow<Role> = game.curRole
+        assertEquals(Role.WHITE, curRole.value)
         game.move(BoardPos("a2"), BoardPos("a3"))
-        assertEquals(Player.BLACK, curPlayer.value)
+        assertEquals(Role.BLACK, curRole.value)
         game.move(BoardPos("d7"), BoardPos("d6"))
-        assertEquals(Player.WHITE, curPlayer.value)
+        assertEquals(Role.WHITE, curRole.value)
     }
 
     @Test
     fun `test getAvailableTargets`() = runTest {
-        val game = GameSession.create(100)
+        val game = TurnSession.create(100)
         val targets1 = game.getAvailableTargets(BoardPos("d2"))
         val targets2 = game.getAvailableTargets(BoardPos("e2"))
 
@@ -46,28 +44,28 @@ class GameSessionTest {
 
     @Test
     fun `test getLostPiecesCount`() = runTest {
-        val game = GameSession.create(0)
-        assertEquals(0, game.getLostPiecesCount(Player.WHITE).value)
-        assertEquals(0, game.getLostPiecesCount(Player.BLACK).value)
+        val game = TurnSession.create(0)
+        assertEquals(0, game.getLostPiecesCount(Role.WHITE).value)
+        assertEquals(0, game.getLostPiecesCount(Role.BLACK).value)
 
         assertTrue(game.move(BoardPos("f2"), BoardPos("f4")))
         assertTrue(game.move(BoardPos("e7"), BoardPos("e5")))
         assertTrue(game.move(BoardPos("f4"), BoardPos("e5")))
 
-        assertEquals(0, game.getLostPiecesCount(Player.WHITE).value)
-        assertEquals(1, game.getLostPiecesCount(Player.BLACK).value)
+        assertEquals(0, game.getLostPiecesCount(Role.WHITE).value)
+        assertEquals(1, game.getLostPiecesCount(Role.BLACK).value)
 
         assertTrue(game.move(BoardPos("d7"), BoardPos("d6")))
         assertTrue(game.move(BoardPos("e5"), BoardPos("d6")))
         assertTrue(game.move(BoardPos("c7"), BoardPos("d6")))
 
-        assertEquals(1, game.getLostPiecesCount(Player.WHITE).value)
-        assertEquals(2, game.getLostPiecesCount(Player.BLACK).value)
+        assertEquals(1, game.getLostPiecesCount(Role.WHITE).value)
+        assertEquals(2, game.getLostPiecesCount(Role.BLACK).value)
     }
 
     @Test
     fun `test winning conditions`() = runTest {
-        val game = GameSession.create(0)
+        val game = TurnSession.create(0)
         assertEquals(null, game.winner.value)
         assertEquals(0, game.winningCounter.value)
 
@@ -99,21 +97,21 @@ class GameSessionTest {
         //assertEquals(2, game.winningCounter.value)
 
         assertTrue(game.move(BoardPos("h4"), BoardPos("h5")))
-        assertEquals(Player.BLACK, game.winner.value)
+        assertEquals(Role.BLACK, game.winner.value)
         //assertEquals(3, game.winningCounter.value)
     }
 
 
     @Test
     fun `test getAllPiecesPos`() = runTest {
-        val game = GameSession.create(0)
+        val game = TurnSession.create(0)
         assertEquals(
             BoardPos.range("a1" to "h2").toSet(),
-            game.getAllPiecesPos(Player.WHITE).last().toSet(),
+            game.getAllPiecesPos(Role.WHITE).last().toSet(),
         )
         assertEquals(
             BoardPos.range("a7" to "h8").toSet(),
-            game.getAllPiecesPos(Player.BLACK).last().toSet(),
+            game.getAllPiecesPos(Role.BLACK).last().toSet(),
         )
 
         assertTrue(game.move(BoardPos("f2"), BoardPos("f4")))
@@ -122,7 +120,7 @@ class GameSessionTest {
                 "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
                 "a2", "b2", "c2", "d2", "e2", "f4", "g2", "h2",
             ).map { BoardPos.fromString(it) }.toSet(),
-            game.getAllPiecesPos(Player.WHITE).last().toSet(),
+            game.getAllPiecesPos(Role.WHITE).last().toSet(),
         )
 
         assertTrue(game.move(BoardPos("e7"), BoardPos("e5")))
@@ -133,7 +131,7 @@ class GameSessionTest {
                 "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
                 "a2", "b2", "c2", "d2", "e2", "g2", "h2", "e5"
             ).map { BoardPos.fromString(it) }.toSet(),
-            game.getAllPiecesPos(Player.WHITE).last().toSet(),
+            game.getAllPiecesPos(Role.WHITE).last().toSet(),
         )
 
         assertEquals(
@@ -141,13 +139,13 @@ class GameSessionTest {
                 "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
                 "a7", "b7", "c7", "d7", "f7", "g7", "h7",
             ).map { BoardPos.fromString(it) }.toSet(),
-            game.getAllPiecesPos(Player.BLACK).last().toSet(),
+            game.getAllPiecesPos(Role.BLACK).last().toSet(),
         )
     }
 
     @Test
     fun `test pieces`() = runTest {
-        val game = GameSession.create(0)
+        val game = TurnSession.create(0)
         val pieces = game.pieces
         assertEquals(
             BoardPos.range("a1" to "h2").toSet() + BoardPos.range("a7" to "h8").toSet(),
@@ -160,7 +158,7 @@ class GameSessionTest {
                 "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
                 "a2", "b2", "c2", "d2", "e2", "f4", "g2", "h2",
             ).map { BoardPos.fromString(it) }.toSet(),
-            pieces.filter { it.player == Player.WHITE }.map { it.pos.value }.toSet(),
+            pieces.filter { it.role == Role.WHITE }.map { it.pos.value }.toSet(),
         )
 
         assertTrue(game.move(BoardPos("e7"), BoardPos("e5")))
@@ -171,7 +169,7 @@ class GameSessionTest {
                 "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
                 "a2", "b2", "c2", "d2", "e2", "g2", "h2", "e5"
             ).map { BoardPos.fromString(it) }.toSet(),
-            pieces.filter { it.player == Player.WHITE && !it.isCaptured.value }.map { it.pos.value }
+            pieces.filter { it.role == Role.WHITE && !it.isCaptured.value }.map { it.pos.value }
                 .toSet(),
         )
 
@@ -180,14 +178,14 @@ class GameSessionTest {
                 "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
                 "a7", "b7", "c7", "d7", "f7", "g7", "h7",
             ).map { BoardPos.fromString(it) }.toSet(),
-            pieces.filter { it.player == Player.BLACK && !it.isCaptured.value }.map { it.pos.value }
+            pieces.filter { it.role == Role.BLACK && !it.isCaptured.value }.map { it.pos.value }
                 .toSet(),
         )
     }
 
     @Test
     fun `test getSnapshot and restore`() = runTest {
-        val game = GameSession.create(0)
+        val game = TurnSession.create(0)
         val pieces = game.pieces
         assertEquals(
             BoardPos.range("a1" to "h2").toSet() + BoardPos.range("a7" to "h8").toSet(),
@@ -200,11 +198,11 @@ class GameSessionTest {
                 "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
                 "a2", "b2", "c2", "d2", "e2", "f4", "g2", "h2",
             ).map { BoardPos.fromString(it) }.toSet(),
-            pieces.filter { it.player == Player.WHITE }.map { it.pos.value }.toSet(),
+            pieces.filter { it.role == Role.WHITE }.map { it.pos.value }.toSet(),
         )
 
         val snapshot = game.getSnapshot()
-        val newGame = GameSession.restore(snapshot)
+        val newGame = TurnSession.restore(snapshot)
         val newPieces = newGame.pieces
         assertEquals(snapshot, newGame.getSnapshot())
 
@@ -216,7 +214,7 @@ class GameSessionTest {
                 "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
                 "a2", "b2", "c2", "d2", "e2", "g2", "h2", "e5"
             ).map { BoardPos.fromString(it) }.toSet(),
-            newPieces.filter { it.player == Player.WHITE && !it.isCaptured.value }.map { it.pos.value }
+            newPieces.filter { it.role == Role.WHITE && !it.isCaptured.value }.map { it.pos.value }
                 .toSet(),
         )
 
@@ -225,18 +223,18 @@ class GameSessionTest {
                 "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
                 "a7", "b7", "c7", "d7", "f7", "g7", "h7",
             ).map { BoardPos.fromString(it) }.toSet(),
-            newPieces.filter { it.player == Player.BLACK && !it.isCaptured.value }.map { it.pos.value }
+            newPieces.filter { it.role == Role.BLACK && !it.isCaptured.value }.map { it.pos.value }
                 .toSet(),
         )
 
-        assertEquals(0, newGame.getLostPiecesCount(Player.WHITE).value)
-        assertEquals(1, newGame.getLostPiecesCount(Player.BLACK).value)
+        assertEquals(0, newGame.getLostPiecesCount(Role.WHITE).value)
+        assertEquals(1, newGame.getLostPiecesCount(Role.BLACK).value)
 
         assertTrue(newGame.move(BoardPos("d7"), BoardPos("d6")))
         assertTrue(newGame.move(BoardPos("e5"), BoardPos("d6")))
         assertTrue(newGame.move(BoardPos("c7"), BoardPos("d6")))
 
-        assertEquals(1, newGame.getLostPiecesCount(Player.WHITE).value)
-        assertEquals(2, newGame.getLostPiecesCount(Player.BLACK).value)
+        assertEquals(1, newGame.getLostPiecesCount(Role.WHITE).value)
+        assertEquals(2, newGame.getLostPiecesCount(Role.BLACK).value)
     }
 }

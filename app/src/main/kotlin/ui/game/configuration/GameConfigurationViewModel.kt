@@ -12,7 +12,7 @@ import kotlinx.serialization.protobuf.ProtoNumber
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.game.BoardProperties
 import org.keizar.game.Difficulty
-import org.keizar.game.Player
+import org.keizar.game.Role
 import kotlin.random.Random
 
 interface GameConfigurationViewModel {
@@ -29,8 +29,8 @@ interface GameConfigurationViewModel {
 
 
     @Stable
-    val playAs: StateFlow<Player?>
-    fun setPlayAs(player: Player?)
+    val playAs: StateFlow<Role?>
+    fun setPlayAs(role: Role?)
 
     @Stable
     val difficulty: StateFlow<Difficulty>
@@ -40,7 +40,7 @@ interface GameConfigurationViewModel {
     fun createGameStartConfiguration(): GameStartConfiguration {
         return GameStartConfiguration(
             seed = boardSeedText.value.toIntOrNull() ?: BoardProperties.generateRandomSeed(),
-            playAs = playAs.value ?: if (Random.nextBoolean()) Player.WHITE else Player.BLACK,
+            playAs = playAs.value ?: if (Random.nextBoolean()) Role.WHITE else Role.BLACK,
             difficulty = difficulty.value,
         )
     }
@@ -52,7 +52,7 @@ fun rememberGameConfigurationViewModel(): GameConfigurationViewModel = GameConfi
 @Serializable
 class GameStartConfiguration(
     @ProtoNumber(1) val seed: Int,
-    @ProtoNumber(2) val playAs: Player,
+    @ProtoNumber(2) val playAs: Role,
     @ProtoNumber(3) val difficulty: Difficulty,
 )
 
@@ -67,9 +67,9 @@ private class GameConfigurationViewModelImpl(
         boardSeed.map { BoardProperties.getStandardProperties(it ?: 0) }
             .shareInBackground()
 
-    override val playAs: MutableStateFlow<Player?> = MutableStateFlow(null)
-    override fun setPlayAs(player: Player?) {
-        playAs.value = player
+    override val playAs: MutableStateFlow<Role?> = MutableStateFlow(null)
+    override fun setPlayAs(role: Role?) {
+        playAs.value = role
     }
 
     override val difficulty: MutableStateFlow<Difficulty> = MutableStateFlow(Difficulty.EASY)

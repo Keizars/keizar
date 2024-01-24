@@ -21,9 +21,9 @@ import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
-import org.keizar.game.GameSession
 import org.keizar.game.Piece
-import org.keizar.game.Player
+import org.keizar.game.Role
+import org.keizar.game.TurnSession
 
 interface GameBoardViewModel {
     @Stable
@@ -33,7 +33,7 @@ interface GameBoardViewModel {
     val pieceArranger: PieceArranger
 
     @Stable
-    val player: StateFlow<Player>
+    val role: StateFlow<Role>
 
     /**
      * List of the pieces on the board.
@@ -79,7 +79,7 @@ interface GameBoardViewModel {
      * Called when the player single-clicks the empty tile.
      *
      * @param viewPos the position of the tile, relative to the top-left corner of the board.
-     * It may be different from the logical position if the player is viewing the board as [Player.BLACK].
+     * It may be different from the logical position if the player is viewing the board as [Role.BLACK].
      */
     fun onClickTile(viewPos: BoardPos)
 
@@ -112,7 +112,7 @@ interface GameBoardViewModel {
 }
 
 @Composable
-fun rememberGameBoardViewModel(boardProperties: BoardProperties, viewedAs: Player = Player.WHITE): GameBoardViewModel {
+fun rememberGameBoardViewModel(boardProperties: BoardProperties, viewedAs: Role = Role.WHITE): GameBoardViewModel {
     return remember {
         GameBoardViewModelImpl(boardProperties, viewedAs = viewedAs)
     }
@@ -120,9 +120,9 @@ fun rememberGameBoardViewModel(boardProperties: BoardProperties, viewedAs: Playe
 
 private class GameBoardViewModelImpl(
     override val boardProperties: BoardProperties,
-    viewedAs: Player,
+    viewedAs: Role,
 ) : AbstractViewModel(), GameBoardViewModel {
-    private val game: GameSession = GameSession.create(boardProperties)
+    private val game: TurnSession = TurnSession.create(boardProperties)
 
     override val pieceArranger = PieceArranger(
         boardProperties = boardProperties,
@@ -130,7 +130,7 @@ private class GameBoardViewModelImpl(
     )
 
     @Stable
-    override val player: StateFlow<Player> = game.curPlayer
+    override val role: StateFlow<Role> = game.curRole
 
     @Stable
     override val pieces: List<UiPiece> = game.pieces.map {
@@ -145,16 +145,16 @@ private class GameBoardViewModelImpl(
     override val currentPick: MutableStateFlow<Pick?> = MutableStateFlow(null)
 
     @Stable
-    private val currentPlayer: StateFlow<Player> = game.curPlayer
+    private val currentRole: StateFlow<Role> = game.curRole
 
     @Stable
     override val winningCounter: StateFlow<Int> = game.winningCounter
 
     @Stable
-    override val blackCapturedPieces: StateFlow<Int> = game.getLostPiecesCount(Player.BLACK)
+    override val blackCapturedPieces: StateFlow<Int> = game.getLostPiecesCount(Role.BLACK)
 
     @Stable
-    override val whiteCapturedPieces: StateFlow<Int> = game.getLostPiecesCount(Player.WHITE)
+    override val whiteCapturedPieces: StateFlow<Int> = game.getLostPiecesCount(Role.WHITE)
 
     /**
      * Currently available positions where the picked piece can move to. `null` if no piece is picked.
@@ -175,7 +175,7 @@ private class GameBoardViewModelImpl(
     override fun onClickPiece(piece: UiPiece) {
         val currentPick = currentPick.value
         if (currentPick == null) {
-            if (piece.player != currentPlayer.value) return
+            if (piece.role != currentRole.value) return
             launchInBackground(start = CoroutineStart.UNDISPATCHED) {
                 startPick(piece)
             }
@@ -200,7 +200,7 @@ private class GameBoardViewModelImpl(
     override val draggingOffset = MutableStateFlow(DpOffset.Zero)
 
     override fun onHold(piece: UiPiece) {
-        if (piece.player != currentPlayer.value) return
+        if (piece.role != currentRole.value) return
         launchInBackground(start = CoroutineStart.UNDISPATCHED) {
             startPick(piece)
         }

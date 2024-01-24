@@ -25,25 +25,25 @@ class RuleEngineCoreTest {
      */
     private var index1 = 0
     private val pieces1 = listOf(
-        Pair(Player.WHITE, BoardPos("a1")),
-        Pair(Player.WHITE, BoardPos("b2")),
-        Pair(Player.WHITE, BoardPos("c3")),
-        Pair(Player.WHITE, BoardPos("d2")),
-        Pair(Player.WHITE, BoardPos("e1")),
-        Pair(Player.WHITE, BoardPos("f1")),
-        Pair(Player.WHITE, BoardPos("f2")),
-        Pair(Player.WHITE, BoardPos("g4")),
-        Pair(Player.WHITE, BoardPos("h1")),
-        Pair(Player.BLACK, BoardPos("a8")),
-        Pair(Player.BLACK, BoardPos("b7")),
-        Pair(Player.BLACK, BoardPos("c6")),
-        Pair(Player.BLACK, BoardPos("d7")),
-        Pair(Player.BLACK, BoardPos("f5")),
-        Pair(Player.BLACK, BoardPos("g5")),
-        Pair(Player.BLACK, BoardPos("h5")),
-        Pair(Player.WHITE, BoardPos("h7")),
-        Pair(Player.WHITE, BoardPos("g8")),
-        Pair(Player.BLACK, BoardPos("e5")),
+        Pair(Role.WHITE, BoardPos("a1")),
+        Pair(Role.WHITE, BoardPos("b2")),
+        Pair(Role.WHITE, BoardPos("c3")),
+        Pair(Role.WHITE, BoardPos("d2")),
+        Pair(Role.WHITE, BoardPos("e1")),
+        Pair(Role.WHITE, BoardPos("f1")),
+        Pair(Role.WHITE, BoardPos("f2")),
+        Pair(Role.WHITE, BoardPos("g4")),
+        Pair(Role.WHITE, BoardPos("h1")),
+        Pair(Role.BLACK, BoardPos("a8")),
+        Pair(Role.BLACK, BoardPos("b7")),
+        Pair(Role.BLACK, BoardPos("c6")),
+        Pair(Role.BLACK, BoardPos("d7")),
+        Pair(Role.BLACK, BoardPos("f5")),
+        Pair(Role.BLACK, BoardPos("g5")),
+        Pair(Role.BLACK, BoardPos("h5")),
+        Pair(Role.WHITE, BoardPos("h7")),
+        Pair(Role.WHITE, BoardPos("g8")),
+        Pair(Role.BLACK, BoardPos("e5")),
     ).map {(player, pos) ->
         MutablePiece(index1++, player, MutableStateFlow(pos))
     }
@@ -108,16 +108,16 @@ class RuleEngineCoreTest {
      */
     private var index2 = 0
     private val pieces2 = listOf(
-        Pair(Player.WHITE, BoardPos("b2")),
-        Pair(Player.WHITE, BoardPos("b5")),
-        Pair(Player.WHITE, BoardPos("b6")),
-        Pair(Player.BLACK, BoardPos("c7")),
-        Pair(Player.BLACK, BoardPos("d2")),
-        Pair(Player.WHITE, BoardPos("d3")),
-        Pair(Player.BLACK, BoardPos("d8")),
-        Pair(Player.WHITE, BoardPos("e3")),
-        Pair(Player.BLACK, BoardPos("g7")),
-        Pair(Player.WHITE, BoardPos("f1")),
+        Pair(Role.WHITE, BoardPos("b2")),
+        Pair(Role.WHITE, BoardPos("b5")),
+        Pair(Role.WHITE, BoardPos("b6")),
+        Pair(Role.BLACK, BoardPos("c7")),
+        Pair(Role.BLACK, BoardPos("d2")),
+        Pair(Role.WHITE, BoardPos("d3")),
+        Pair(Role.BLACK, BoardPos("d8")),
+        Pair(Role.WHITE, BoardPos("e3")),
+        Pair(Role.BLACK, BoardPos("g7")),
+        Pair(Role.WHITE, BoardPos("f1")),
     ).map {(player, pos) ->
         MutablePiece(index2++, player, MutableStateFlow(pos))
     }

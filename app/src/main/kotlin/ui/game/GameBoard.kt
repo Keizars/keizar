@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.min
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
 import org.keizar.game.Difficulty
-import org.keizar.game.Player
+import org.keizar.game.Role
 
 
 @Composable
@@ -35,25 +35,25 @@ fun GameBoard(
     Column(modifier = Modifier) {
         WinningCounter(vm)
 
-        CapturedPieces(vm, Player.BLACK)
+        CapturedPieces(vm, Role.BLACK)
 
         Box(modifier = modifier) {
             BoardBackground(vm)
             BoardPieces(vm)
             PossibleMovesOverlay(vm)
         }
-        CapturedPieces(vm, Player.WHITE)
+        CapturedPieces(vm, Role.WHITE)
     }
 }
 
 @Composable
-fun CapturedPieces(vm: GameBoardViewModel, player: Player) {
-    val capturedPieces by if (player == Player.WHITE) {
+fun CapturedPieces(vm: GameBoardViewModel, role: Role) {
+    val capturedPieces by if (role == Role.WHITE) {
         vm.whiteCapturedPieces.collectAsState()
     } else {
         vm.blackCapturedPieces.collectAsState()
     }
-    if (player == Player.WHITE) {
+    if (role == Role.WHITE) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(text = "White Captured Pieces:")
             for (i in 0 until capturedPieces) {
@@ -96,7 +96,7 @@ private fun PreviewGameBoard() {
             remember {
                 GameStartConfiguration(
                     seed = 0,
-                    playAs = Player.WHITE,
+                    playAs = Role.WHITE,
                     difficulty = Difficulty.EASY,
                 )
             },

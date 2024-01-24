@@ -31,7 +31,7 @@ import org.keizar.android.R
 import org.keizar.android.ui.theme.slightlyWeaken
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
-import org.keizar.game.Player
+import org.keizar.game.Role
 import org.keizar.game.TileType
 import kotlin.random.Random
 
@@ -87,7 +87,7 @@ fun BoardBackground(
                                     }.collectAsStateWithLifecycle(BoardPos(0, 0))
                                     properties.tileArrangement[currPos] ?: TileType.PLAIN
                                 },
-                                player = null,
+                                role = null,
                                 Modifier
                                     .fillMaxSize(),
                             )
@@ -213,7 +213,7 @@ fun Tile(
 @Composable
 fun TileImage(
     tileType: TileType,
-    player: Player?,
+    role: Role?,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {

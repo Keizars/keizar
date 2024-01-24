@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import org.keizar.game.BoardProperties
-import org.keizar.game.Player
+import org.keizar.game.Role
 import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
@@ -138,7 +138,7 @@ fun BoardPieces(
                         }
                     ),
             ) {
-                val color = piece.player.pieceColor()
+                val color = piece.role.pieceColor()
                 PlayerIcon(color = color, Modifier.matchParentSize())
             }
         }
@@ -146,8 +146,8 @@ fun BoardPieces(
 }
 
 @Stable
-fun Player.pieceColor() =
-    if (this == Player.BLACK) Color.Black else Color.White
+fun Role.pieceColor() =
+    if (this == Role.BLACK) Color.Black else Color.White
 
 @Composable
 internal fun PlayerIcon(

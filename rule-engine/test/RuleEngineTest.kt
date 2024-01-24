@@ -5,7 +5,6 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
-import kotlin.random.Random
 
 class RuleEngineTest {
     @Test
@@ -19,7 +18,7 @@ class RuleEngineTest {
         val pos1 = BoardPos.fromString("a2")
         val pos2 = BoardPos.fromString("a3")
         ruleEngine.move(pos1, pos2)
-        assertEquals(ruleEngine.pieceAt(pos2), Player.WHITE)
+        assertEquals(ruleEngine.pieceAt(pos2), Role.WHITE)
         assertEquals(ruleEngine.pieceAt(pos1), null)
 
     }
@@ -65,15 +64,15 @@ class RuleEngineTest {
 
         assertTrue(ruleEngine.move(BoardPos("c2"), BoardPos("c4")))
         assertEquals(ruleEngine.pieceAt(BoardPos("c2")), null)
-        assertEquals(ruleEngine.pieceAt(BoardPos("c4")), Player.WHITE)
+        assertEquals(ruleEngine.pieceAt(BoardPos("c4")), Role.WHITE)
 
         assertTrue(ruleEngine.move(BoardPos("e7"), BoardPos("e5")))
         assertEquals(ruleEngine.pieceAt(BoardPos("e7")), null)
-        assertEquals(ruleEngine.pieceAt(BoardPos("e5")), Player.BLACK)
+        assertEquals(ruleEngine.pieceAt(BoardPos("e5")), Role.BLACK)
 
         assertTrue(ruleEngine.move(BoardPos("h2"), BoardPos("h3")))
         assertEquals(ruleEngine.pieceAt(BoardPos("h2")), null)
-        assertEquals(ruleEngine.pieceAt(BoardPos("h3")), Player.WHITE)
+        assertEquals(ruleEngine.pieceAt(BoardPos("h3")), Role.WHITE)
     }
 
     @Test

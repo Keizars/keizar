@@ -45,9 +45,9 @@ import org.keizar.android.ui.external.placeholder.placeholder
 import org.keizar.android.ui.game.BoardBackground
 import org.keizar.android.ui.game.PieceArranger
 import org.keizar.game.Difficulty
-import org.keizar.game.Player
-import org.keizar.game.Player.BLACK
-import org.keizar.game.Player.WHITE
+import org.keizar.game.Role
+import org.keizar.game.Role.BLACK
+import org.keizar.game.Role.WHITE
 
 @Composable
 fun GameConfigurationScene(
@@ -241,7 +241,7 @@ private fun DifficultySelector(vm: GameConfigurationViewModel) {
 }
 
 @Stable
-private fun renderPlayAs(entry: Player?) = when (entry) {
+private fun renderPlayAs(entry: Role?) = when (entry) {
     BLACK -> "Black"
     WHITE -> "White"
     null -> "Random"

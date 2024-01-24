@@ -11,9 +11,10 @@ data class BoardProperties(
     val height: Int = 8,
     val keizarTilePos: BoardPos = BoardPos.fromString("d5"),
     val winningCount: Int = 3,
-    val startingPlayer: Player = Player.WHITE,
+    val startingRole: Role = Role.WHITE,
+    val turns: Int = 2,
 
-    val piecesStartingPos: Map<Player, List<BoardPos>>,
+    val piecesStartingPos: Map<Role, List<BoardPos>>,
     val tileArrangement: Map<BoardPos, TileType>,
     val seed: Int? = null,
 ) {
@@ -27,9 +28,9 @@ data class BoardProperties(
             val seed = randomSeed ?: generateRandomSeed()
             val keizarTilePos: BoardPos = BoardPos.fromString("d5")
 
-            val piecesStartingPos: Map<Player, List<BoardPos>> = mapOf(
-                Player.WHITE to BoardPos.range("a1" to "h2"),
-                Player.BLACK to BoardPos.range("a7" to "h8"),
+            val piecesStartingPos: Map<Role, List<BoardPos>> = mapOf(
+                Role.WHITE to BoardPos.range("a1" to "h2"),
+                Role.BLACK to BoardPos.range("a7" to "h8"),
             )
 
             val standardTileArrangement = StandardTileArrangementFactory {
@@ -65,7 +66,7 @@ data class BoardProperties(
                 height = 8,
                 keizarTilePos = keizarTilePos,
                 winningCount = 3,
-                startingPlayer = Player.WHITE,
+                startingRole = Role.WHITE,
                 piecesStartingPos = piecesStartingPos,
                 tileArrangement = standardTileArrangement,
                 seed = seed,
@@ -75,9 +76,9 @@ data class BoardProperties(
         fun getStandardProperties(random: Random): BoardProperties {
             val keizarTilePos: BoardPos = BoardPos.fromString("d5")
 
-            val piecesStartingPos: Map<Player, List<BoardPos>> = mapOf(
-                Player.WHITE to BoardPos.range("a1" to "h2"),
-                Player.BLACK to BoardPos.range("a7" to "h8"),
+            val piecesStartingPos: Map<Role, List<BoardPos>> = mapOf(
+                Role.WHITE to BoardPos.range("a1" to "h2"),
+                Role.BLACK to BoardPos.range("a7" to "h8"),
             )
 
             val standardTileArrangement = StandardTileArrangementFactory {
@@ -113,7 +114,7 @@ data class BoardProperties(
                 height = 8,
                 keizarTilePos = keizarTilePos,
                 winningCount = 3,
-                startingPlayer = Player.WHITE,
+                startingRole = Role.WHITE,
                 piecesStartingPos = piecesStartingPos,
                 tileArrangement = standardTileArrangement
             )
