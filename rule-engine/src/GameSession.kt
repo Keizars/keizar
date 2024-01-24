@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
-import org.keizar.game.serialization.RoundSnapshot
 
 interface GameSession {
     val properties: BoardProperties
@@ -34,7 +33,7 @@ interface GameSession {
 
     fun confirmNextTurn(player: Player)
 
-    fun getSnapshot(): RoundSnapshot
+//    fun getSnapshot(): RoundSnapshot
 
     companion object {
         fun create(seed: Int? = null): GameSession {
@@ -158,9 +157,9 @@ class GameSessionImpl(
         haveWinner.value = true
     }
 
-    override fun getSnapshot(): RoundSnapshot {
-        TODO("Not yet implemented")
-    }
+//    override fun getSnapshot(): RoundSnapshot {
+//        TODO("Not yet implemented")
+//    }
 }
 
 @Serializable
