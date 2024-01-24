@@ -4,6 +4,7 @@ package org.keizar.aiengine
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.keizar.game.BoardPos
@@ -12,12 +13,14 @@ import org.keizar.game.Player
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import kotlin.coroutines.CoroutineContext
+import kotlin.random.Random
+import kotlin.random.nextLong
 
 interface GameAI {
     val game: GameSession
     val myPlayer: Player
 
-    fun start()
+    suspend fun start()
 
     suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos>?
 
@@ -34,18 +37,14 @@ class RandomGameAIImpl(
     private val myCoroutione: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
-    override fun start() {
+    override suspend fun start() {
         myCoroutione.launch {
             val myRole: Role = game.currentRole(myPlayer).first()
-            game.currentRound.collect {
-                val winner = it.winner.value
-                if (winner != null) {
-                    game.confirmNextRound(myPlayer)
-                }
-
-                it.curRole.collect { role ->
+            game.currentRound.collect{
+                it.curRole.collect{role ->
                     if (myRole == role) {
                         val bestPos = findBestMove(it, role)
+                        delay(Random.nextLong(0L..100L))
                         println(myPlayer.toString() + "played: " + bestPos)
                         it.move(bestPos.first, bestPos.second)
                     }
@@ -53,6 +52,17 @@ class RandomGameAIImpl(
             }
 
         }
+
+        myCoroutione.launch {
+            val myRole: Role = game.currentRole(myPlayer).first()
+            game.currentRound.collect{
+               it.winner.collect{
+                    if (it != null) {
+                        game.confirmNextRound(myPlayer)
+                    }
+                }
+            }
+     }
     }
 
     override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos> {
