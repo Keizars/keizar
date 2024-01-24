@@ -21,6 +21,7 @@ import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
 import org.keizar.game.Difficulty
 import org.keizar.game.Player
+import java.sql.Types.NULL
 
 
 @Composable
@@ -55,7 +56,7 @@ fun CapturedPieces(vm: GameBoardViewModel, player: Player) {
     }
     if (player == Player.WHITE) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "White Captured Pieces:")
+            Text(text = "Captured White Pieces:")
             for (i in 0 until capturedPieces) {
                 PlayerIcon(
                     color = Color.White,
@@ -67,7 +68,7 @@ fun CapturedPieces(vm: GameBoardViewModel, player: Player) {
         }
     } else {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "Black Captured Pieces:")
+            Text(text = "Captured Black Pieces:")
             for (i in 0 until capturedPieces) {
                 PlayerIcon(
                     color = Color.Black,
