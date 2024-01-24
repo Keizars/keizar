@@ -12,7 +12,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -53,6 +55,7 @@ fun GameBoard(
         }
         CapturedPieces(vm, Role.WHITE)
 
+        var showDialogRound by remember { mutableStateOf(true) }
         when (finalWinner) {
             is GameResult.Draw -> {
                 AlertDialog(onDismissRequest = {},
@@ -78,23 +81,34 @@ fun GameBoard(
                     null -> {
                         // do nothing
                     }
+
                     Role.WHITE -> {
-                        AlertDialog(onDismissRequest = {},
-                            title = { Text(text = "Game Over, White wins!") },
-                            confirmButton = {
-                                Button(onClick = { vm.startNextRound(vm.selfPlayer) }) {
-                                    Text(text = "Start the next round")
-                                }
-                            })
+                        if (showDialogRound) {
+                            AlertDialog(onDismissRequest = {showDialogRound = false},
+                                title = { Text(text = "Game Over, White wins!") },
+                                confirmButton = {
+                                    Button(onClick = {
+                                        vm.startNextRound(vm.selfPlayer)
+                                        showDialogRound = false
+                                    }) {
+                                        Text(text = "Start the next round")
+                                    }
+                                })
+                        }
                     }
                     Role.BLACK -> {
-                        AlertDialog(onDismissRequest = {},
-                            title = { Text(text = "Game Over, Black wins!") },
-                            confirmButton = {
-                                Button(onClick = { vm.startNextRound(vm.selfPlayer) }) {
-                                    Text(text = "Start the next round")
-                                }
-                            })
+                        if (showDialogRound) {
+                            AlertDialog(onDismissRequest = {showDialogRound = false},
+                                title = { Text(text = "Game Over, White wins!") },
+                                confirmButton = {
+                                    Button(onClick = {
+                                        vm.startNextRound(vm.selfPlayer)
+                                        showDialogRound = false
+                                    }) {
+                                        Text(text = "Start the next round")
+                                    }
+                                })
+                        }
                     }
                 }
             }
