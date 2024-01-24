@@ -47,11 +47,11 @@ interface GameSession {
         }
 
         fun create(properties: BoardProperties): GameSession {
-            val ruleEngine = RuleEngineImpl(
-                boardProperties = properties,
-                ruleEngineCore = RuleEngineCoreImpl(properties),
-            )
             return GameSessionImpl(properties) {
+                val ruleEngine = RuleEngineImpl(
+                    boardProperties = properties,
+                    ruleEngineCore = RuleEngineCoreImpl(properties),
+                )
                 RoundSessionImpl(ruleEngine)
             }
         }
@@ -157,7 +157,11 @@ class GameSessionImpl(
     }
 
     private fun proceedToNextTurn() {
-        rounds[currentRoundNo.value].winner.value?.let { ++wonRounds[it.ordinal].value }
+        val winningRole: Role? = rounds[currentRoundNo.value].winner.value
+        val winningPlayer: Player? = winningRole?.let {
+            if (currentRole(Player.Player1).value == it) Player.Player1 else Player.Player2
+        }
+        winningPlayer?.let { ++wonRounds[it.ordinal].value }
         if (currentRoundNo.value == properties.turns - 1) {
             updateFinalWinner()
         }
