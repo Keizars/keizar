@@ -22,7 +22,6 @@ interface TurnSession {
 }
 
 class TurnSessionImpl(
-    override val properties: BoardProperties,
     private val ruleEngine: RuleEngine,
 ) : TurnSession {
     override val pieces: List<Piece> = ruleEngine.pieces

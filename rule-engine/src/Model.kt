@@ -68,7 +68,7 @@ interface Piece {
 
 class MutablePiece(
     override val index: Int,
-    val role: Role,
+    override val role: Role,
     override val pos: MutableStateFlow<BoardPos>,
     override val isCaptured: MutableStateFlow<Boolean> = MutableStateFlow(false),
 ) : Piece {
