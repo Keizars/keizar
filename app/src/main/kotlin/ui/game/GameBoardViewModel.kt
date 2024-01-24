@@ -153,17 +153,15 @@ private class SinglePlayerGameBoardViewModel(
     }
 }
 
+@Suppress("LeakingThis")
 private sealed class BaseGameBoardViewModel(
     private val game: GameSession,
-    selfPlayer: Player,
+    @Stable override val selfPlayer: Player,
 ) : AbstractViewModel(), GameBoardViewModel {
     override val boardProperties = game.properties
 
     @Stable
     override val selfRole: StateFlow<Role> = game.currentRole(selfPlayer)
-
-    @Stable
-    override val selfPlayer: Player = selfPlayer
 
     @Stable
     override val pieceArranger = PieceArranger(
