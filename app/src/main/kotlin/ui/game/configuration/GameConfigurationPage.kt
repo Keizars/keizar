@@ -141,15 +141,10 @@ private fun BoardLayoutPreview(vm: GameConfigurationViewModel) {
                 .clip(RoundedCornerShape(ROUND_CORNER_RADIUS))
                 .placeholder(boardProperties == null)
         ) {
-            boardProperties?.let {
+            boardProperties?.let { prop ->
                 BoardBackground(
-                    remember {
-                        PieceArranger(
-                            it,
-                            vm.playAs.filterNotNull(),
-                        )
-                    },
-                    properties = it,
+                    remember(prop, vm) { PieceArranger(prop, vm.playAs.filterNotNull()) },
+                    properties = prop,
                     currentPick = null,
                     onClickTile = {},
                     Modifier.matchParentSize(),
