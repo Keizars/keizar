@@ -5,7 +5,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import org.keizar.game.BoardPos
 import org.keizar.game.GameSession
@@ -40,29 +43,25 @@ class RandomGameAIImpl(
 
     override fun start() {
         myCoroutione.launch {
-            game.currentRole(myPlayer).collect { myRole ->
-                game.currentRound.collect {
-                    it.curRole.collect { role ->
-                        if (myRole == role) {
-                            val bestPos = findBestMove(it, role)
-                            if (!test) {
-                                delay(Random.nextLong(1500L..3000L))
-                            }
-                            it.move(bestPos.first, bestPos.second)
+            combine(game.currentRole(myPlayer), game.currentRound) { myRole, session ->
+                myRole to session
+            }.collectLatest { (myRole, session) ->
+                session.curRole.collect { currentRole ->
+                    if (myRole == currentRole) {
+                        val bestPos = findBestMove(session, currentRole)
+                        if (!test) {
+                            delay(Random.nextLong(1500L..3000L))
                         }
+                        session.move(bestPos.first, bestPos.second)
                     }
                 }
             }
         }
 
         myCoroutione.launch {
-            game.currentRole(myPlayer).collect { myRole ->
-                game.currentRound.collect{
-                    it.winner.collect{
-                        if (it != null) {
-                            game.confirmNextRound(myPlayer)
-                        }
-                    }
+            game.currentRound.flatMapLatest { it.winner }.collect {
+                if (it != null) {
+                    game.confirmNextRound(myPlayer)
                 }
             }
         }
