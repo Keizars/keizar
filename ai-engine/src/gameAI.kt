@@ -1,44 +1,90 @@
 package org.keizar.aiengine
 
 
-import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import org.keizar.game.BoardPos
 import org.keizar.game.GameSession
 import org.keizar.game.Player
+import org.keizar.game.Role
+import org.keizar.game.RoundSession
+import kotlin.coroutines.CoroutineContext
+import kotlin.random.Random
+import kotlin.random.nextLong
 
 interface GameAI {
     val game: GameSession
-    val myplayer: Player
+    val myPlayer: Player
 
-    suspend fun FindBestMove(): Pair<BoardPos, BoardPos>?
-    suspend fun MakeMove(): Pair<BoardPos, BoardPos>?
+    fun start()
+
+    suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos>?
+
+    suspend fun end()
+
 }
 
 class RandomGameAIImpl(
     override val game: GameSession,
-    override val myplayer: Player
+    override val myPlayer: Player,
+    private val parentCoroutineContext: CoroutineContext,
+    private val test: Boolean = false
 ) : GameAI {
 
-    override suspend fun FindBestMove(): Pair<BoardPos, BoardPos>? {
-        val player = game.curPlayer.value
-        return if (myplayer == player) {
-            val myPieces = game.getAllPiecesPos(myplayer).last()
-            var randomPos = myPieces.random()
-            var validTargets = game.getAvailableTargets(randomPos).last()
-            while (validTargets.isEmpty()) {
-                randomPos = myPieces.random()
-                validTargets = game.getAvailableTargets(randomPos).last()
+    private val myCoroutione: CoroutineScope =
+        CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
+
+    override fun start() {
+        myCoroutione.launch {
+            game.currentRole(myPlayer).collect { myRole ->
+                game.currentRound.collect {
+                    it.curRole.collect { role ->
+                        if (myRole == role) {
+                            val bestPos = findBestMove(it, role)
+                            if (!test) {
+                                delay(Random.nextLong(1500L..3000L))
+                            }
+                            it.move(bestPos.first, bestPos.second)
+                        }
+                    }
+                }
             }
-            val randomTarget = validTargets.random()
-            Pair(randomPos, randomTarget)
-        } else null
+        }
 
+        myCoroutione.launch {
+            game.currentRole(myPlayer).collect { myRole ->
+                game.currentRound.collect{
+                    it.winner.collect{
+                        if (it != null) {
+                            game.confirmNextRound(myPlayer)
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    override suspend fun MakeMove(): Pair<BoardPos, BoardPos>? {
-        val best_move = FindBestMove()
-        return best_move
+    override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos> {
+        val allPieces = round.getAllPiecesPos(role).first()
+        var randomPiece = allPieces.random()
+        var validTargets = round.getAvailableTargets(randomPiece).first()
+        do {
+            randomPiece = allPieces.random()
+            validTargets = round.getAvailableTargets(randomPiece).first()
+        } while (validTargets.isEmpty() && allPieces.isNotEmpty())
+
+        val randomTarget = validTargets.random()
+        return Pair(randomPiece, randomTarget)
     }
+
+    override suspend fun end() {
+        myCoroutione.cancel()
+    }
+
 
 }
 

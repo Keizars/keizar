@@ -6,11 +6,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,41 +24,109 @@ import androidx.compose.ui.unit.min
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
 import org.keizar.game.Difficulty
+import org.keizar.game.GameResult
+import org.keizar.game.GameSession
 import org.keizar.game.Player
-import java.sql.Types.NULL
+import org.keizar.game.Role
 
 
 @Composable
 fun GameBoard(
     startConfiguration: GameStartConfiguration,
     modifier: Modifier = Modifier,
+    onClickHome: () -> Unit,
 ) {
     val vm = rememberGameBoardViewModel(
-        boardProperties = startConfiguration.createBoard(),
-        viewedAs = startConfiguration.playAs,
+        GameSession.create(startConfiguration.createBoard()),
+        selfPlayer = Player.Player1,
     )
     Column(modifier = Modifier) {
+        val winner = vm.winner.collectAsState().value
+        val finalWinner = vm.finalWinner.collectAsState().value
+        var showDialogRound by remember { mutableStateOf(true) }
+        val selfRole = vm.selfRole.collectAsState().value
+
         WinningCounter(vm)
 
-        CapturedPieces(vm, Player.BLACK)
+        CapturedPieces(vm, selfRole)
+
 
         Box(modifier = modifier) {
             BoardBackground(vm)
             BoardPieces(vm)
             PossibleMovesOverlay(vm)
         }
-        CapturedPieces(vm, Player.WHITE)
+
+        CapturedPieces(vm, selfRole.other())
+
+        when (finalWinner) {
+            is GameResult.Draw -> {
+                AlertDialog(onDismissRequest = {},
+                    title = { Text(text = "Game Over, Draw") },
+                    confirmButton = {
+                        Button(onClick = onClickHome) {
+                            Text(text = "Back to main page")
+                        }
+                    })
+            }
+
+            is GameResult.Winner -> {
+                AlertDialog(onDismissRequest = {},
+                    title = { Text(text = "Game Over, ${finalWinner.player} wins!") },
+                    confirmButton = {
+                        Button(onClick = onClickHome) {
+                            Text(text = "Back to main page")
+                        }
+                    })
+            }
+            null -> {
+                when (winner) {
+                    null -> {
+                        // do nothing
+                    }
+
+                    Role.WHITE -> {
+                        if (showDialogRound) {
+                            AlertDialog(onDismissRequest = {showDialogRound = false},
+                                title = { Text(text = "Game Over, White wins!") },
+                                confirmButton = {
+                                    Button(onClick = {
+                                        vm.startNextRound(vm.selfPlayer)
+                                        showDialogRound = false
+                                    }) {
+                                        Text(text = "Start the next round")
+                                    }
+                                })
+                        }
+                    }
+                    Role.BLACK -> {
+                        if (showDialogRound) {
+                            AlertDialog(onDismissRequest = {showDialogRound = false},
+                                title = { Text(text = "Game Over, Black wins!") },
+                                confirmButton = {
+                                    Button(onClick = {
+                                        vm.startNextRound(vm.selfPlayer)
+                                        showDialogRound = false
+                                    }) {
+                                        Text(text = "Start the next round")
+                                    }
+                                })
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
 @Composable
-fun CapturedPieces(vm: GameBoardViewModel, player: Player) {
-    val capturedPieces by if (player == Player.WHITE) {
+fun CapturedPieces(vm: GameBoardViewModel, role: Role) {
+    val capturedPieces by if (role == Role.WHITE) {
         vm.whiteCapturedPieces.collectAsState()
     } else {
         vm.blackCapturedPieces.collectAsState()
     }
-    if (player == Player.WHITE) {
+    if (role == Role.WHITE) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(text = "Captured White Pieces:")
             for (i in 0 until capturedPieces) {
@@ -85,7 +157,6 @@ fun CapturedPieces(vm: GameBoardViewModel, player: Player) {
 fun WinningCounter(vm: GameBoardViewModel) {
     val winningCounter by vm.winningCounter.collectAsState()
     Text(text = "Winning Keizar Counter: $winningCounter")
-
 }
 
 
@@ -96,12 +167,13 @@ private fun PreviewGameBoard() {
         GameBoard(
             remember {
                 GameStartConfiguration(
-                    seed = 0,
-                    playAs = Player.WHITE,
+                    layoutSeed = 0,
+                    playAs = Role.WHITE,
                     difficulty = Difficulty.EASY,
                 )
             },
-            Modifier.size(min(maxWidth, maxHeight))
+            Modifier.size(min(maxWidth, maxHeight)),
+            onClickHome = { /* Navigate to home page*/ },
         )
     }
 }

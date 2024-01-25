@@ -16,14 +16,17 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import me.him188.ani.utils.logging.info
+import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
+import org.keizar.game.GameResult
 import org.keizar.game.GameSession
 import org.keizar.game.Piece
 import org.keizar.game.Player
+import org.keizar.game.Role
 
 interface GameBoardViewModel {
     @Stable
@@ -33,13 +36,16 @@ interface GameBoardViewModel {
     val pieceArranger: PieceArranger
 
     @Stable
-    val player: StateFlow<Player>
+    val selfRole: StateFlow<Role>
+
+    @Stable
+    val selfPlayer: Player
 
     /**
      * List of the pieces on the board.
      */
     @Stable
-    val pieces: List<UiPiece>
+    val pieces: StateFlow<List<UiPiece>>
 
     /**
      * Currently picked piece. `null` if no piece is picked.
@@ -68,6 +74,12 @@ interface GameBoardViewModel {
     @Stable
     val whiteCapturedPieces: StateFlow<Int>
 
+    @Stable
+    val winner: StateFlow<Role?>
+
+    @Stable
+    val finalWinner: StateFlow<GameResult?>
+
     // clicking
 
     /**
@@ -79,7 +91,7 @@ interface GameBoardViewModel {
      * Called when the player single-clicks the empty tile.
      *
      * @param viewPos the position of the tile, relative to the top-left corner of the board.
-     * It may be different from the logical position if the player is viewing the board as [Player.BLACK].
+     * It may be different from the logical position if the player is viewing the board as [Role.BLACK].
      */
     fun onClickTile(viewPos: BoardPos)
 
@@ -109,65 +121,108 @@ interface GameBoardViewModel {
      * Called when the player releases the piece after long-pressing it.
      */
     fun onRelease(piece: UiPiece)
+
+    /**
+     * Called when the the first round is finished by the players to start the next one.
+     */
+    fun startNextRound(selfPlayer: Player)
 }
 
 @Composable
-fun rememberGameBoardViewModel(boardProperties: BoardProperties, viewedAs: Player = Player.WHITE): GameBoardViewModel {
+fun rememberGameBoardViewModel(
+    game: GameSession,
+    selfPlayer: Player,
+): GameBoardViewModel {
     return remember {
-        GameBoardViewModelImpl(boardProperties, viewedAs = viewedAs)
+        SinglePlayerGameBoardViewModel(game, selfPlayer)
     }
 }
 
-private class GameBoardViewModelImpl(
-    override val boardProperties: BoardProperties,
-    viewedAs: Player,
-) : AbstractViewModel(), GameBoardViewModel {
-    private val game: GameSession = GameSession.create(boardProperties)
+private class SinglePlayerGameBoardViewModel(
+    game: GameSession,
+    selfPlayer: Player,
+) : BaseGameBoardViewModel(
+    game,
+    selfPlayer,
+) {
+    private val gameAi =
+        RandomGameAIImpl(game, Player.entries.first { it != selfPlayer }, backgroundScope.coroutineContext)
 
+    init {
+        gameAi.start()
+    }
+}
+
+@Suppress("LeakingThis")
+private sealed class BaseGameBoardViewModel(
+    private val game: GameSession,
+    @Stable override val selfPlayer: Player,
+) : AbstractViewModel(), GameBoardViewModel {
+    override val boardProperties = game.properties
+
+    @Stable
+    override val selfRole: StateFlow<Role> = game.currentRole(selfPlayer)
+
+    @Stable
     override val pieceArranger = PieceArranger(
         boardProperties = boardProperties,
-        viewedAs = flowOf(viewedAs)
+        viewedAs = selfRole
     )
 
     @Stable
-    override val player: StateFlow<Player> = game.curPlayer
-
-    @Stable
-    override val pieces: List<UiPiece> = game.pieces.map {
-        UiPiece(
-            enginePiece = it,
-            offsetInBoard = pieceArranger.offsetFor(it.pos).shareInBackground(),
-            backgroundScope
-        )
-    }
+    override val pieces: StateFlow<List<UiPiece>> = game.currentRound.map { it.pieces }.map { list ->
+        list.map {
+            UiPiece(
+                enginePiece = it,
+                offsetInBoard = pieceArranger.offsetFor(it.pos).shareInBackground(),
+                backgroundScope
+            )
+        }
+    }.stateInBackground(emptyList())
 
     @Stable
     override val currentPick: MutableStateFlow<Pick?> = MutableStateFlow(null)
 
     @Stable
-    private val currentPlayer: StateFlow<Player> = game.curPlayer
+    private val currentRole: StateFlow<Role> = selfRole
+//        game.currentRound.flatMapLatest { it.curRole }.stateInBackground(Role.WHITE)
 
     @Stable
-    override val winningCounter: StateFlow<Int> = game.winningCounter
+    override val winningCounter: StateFlow<Int> = game.currentRound
+        .flatMapLatest { it.winningCounter }
+        .stateInBackground(0)
 
     @Stable
-    override val blackCapturedPieces: StateFlow<Int> = game.getLostPiecesCount(Player.BLACK)
+    override val blackCapturedPieces: StateFlow<Int> =
+        game.currentRound.flatMapLatest { it.getLostPiecesCount(Role.BLACK) }.stateInBackground(0)
 
     @Stable
-    override val whiteCapturedPieces: StateFlow<Int> = game.getLostPiecesCount(Player.WHITE)
+    override val whiteCapturedPieces: StateFlow<Int> =
+        game.currentRound.flatMapLatest { it.getLostPiecesCount(Role.WHITE) }.stateInBackground(0)
+
+
+    @Stable
+    override val winner: StateFlow<Role?> = game.currentRound.flatMapLatest { it.winner }
+        .stateInBackground(null)
+
+
+    @Stable
+    override val finalWinner: StateFlow<GameResult?> = game.finalWinner.stateInBackground(null)
 
     /**
      * Currently available positions where the picked piece can move to. `null` if no piece is picked.
      */
     @Stable
-    override val availablePositions: SharedFlow<List<BoardPos>?> = currentPick.flatMapLatest { pick ->
-        if (pick == null) {
-            flowOf(emptyList())
-        } else {
-            game.getAvailableTargets(pieceArranger.viewToLogical(pick.viewPos).first())
+    override val availablePositions: SharedFlow<List<BoardPos>?> = game.currentRound.flatMapLatest { turn ->
+        currentPick.flatMapLatest { pick ->
+            if (pick == null) {
+                flowOf(emptyList())
+            } else {
+                turn.getAvailableTargets(pieceArranger.viewToLogical(pick.viewPos).first())
+            }
+        }.map { list ->
+            list
         }
-    }.map { list ->
-        list
     }.shareInBackground()
 
     override val lastMoveIsDrag: MutableStateFlow<Boolean> = MutableStateFlow(false)
@@ -175,7 +230,7 @@ private class GameBoardViewModelImpl(
     override fun onClickPiece(piece: UiPiece) {
         val currentPick = currentPick.value
         if (currentPick == null) {
-            if (piece.player != currentPlayer.value) return
+            if (piece.role != selfRole.value) return
             launchInBackground(start = CoroutineStart.UNDISPATCHED) {
                 startPick(piece)
             }
@@ -200,7 +255,7 @@ private class GameBoardViewModelImpl(
     override val draggingOffset = MutableStateFlow(DpOffset.Zero)
 
     override fun onHold(piece: UiPiece) {
-        if (piece.player != currentPlayer.value) return
+        if (piece.role != currentRole.value) return
         launchInBackground(start = CoroutineStart.UNDISPATCHED) {
             startPick(piece)
         }
@@ -244,9 +299,13 @@ private class GameBoardViewModelImpl(
     }
 
     private suspend fun movePiece(from: BoardPos, to: BoardPos) {
-        game.move(from, to).also {
+        game.currentRound.first().move(from, to).also {
             logger.info { "[board] move $from to $to: $it" }
         }
+    }
+
+    override fun startNextRound(selfPlayer: Player) {
+        game.confirmNextRound(selfPlayer)
     }
 
 }

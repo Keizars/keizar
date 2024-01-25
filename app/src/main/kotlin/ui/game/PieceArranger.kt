@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
-import org.keizar.game.Player
+import org.keizar.game.Role
 
 
 /**
@@ -65,19 +65,19 @@ interface PieceArranger {
 /**
  * Creates a [PieceArranger] for the given [boardProperties] and [player][viewedAs].
  * @param viewedAs the player who is viewing the board.
- * If it is [Player.WHITE], the white pieces will be placed to the bottom of the board.
- * If it is [Player.BLACK], the black pieces will be placed to the bottom of the board.
+ * If it is [Role.WHITE], the white pieces will be placed to the bottom of the board.
+ * If it is [Role.BLACK], the black pieces will be placed to the bottom of the board.
  */
 fun PieceArranger(
     boardProperties: BoardProperties,
-    viewedAs: Flow<Player>,
+    viewedAs: Flow<Role>,
 ): PieceArranger {
     return PieceArrangerImpl(boardProperties, viewedAs)
 }
 
 private class PieceArrangerImpl(
     private val boardProperties: BoardProperties,
-    private val player: Flow<Player>,
+    private val role: Flow<Role>,
 ) : PieceArranger {
     private val totalWidth: MutableSharedFlow<Dp> =
         MutableSharedFlow(replay = 1, extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
@@ -101,7 +101,7 @@ private class PieceArrangerImpl(
             totalHeight,
             tileWidth, tileHeight,
             pos,
-            player,
+            role,
         ) { boardHeight, tileWidth, tileHeight, p, player ->
             calculateOffset(boardHeight, tileWidth, tileHeight, p.adjustedFor(player))
         }
@@ -111,7 +111,7 @@ private class PieceArrangerImpl(
         return combine(
             totalHeight,
             tileWidth, tileHeight,
-            player,
+            role,
         ) { boardHeight, tileWidth, tileHeight, player ->
             calculateOffset(boardHeight, tileWidth, tileHeight, pos.adjustedFor(player))
         }
@@ -121,7 +121,7 @@ private class PieceArrangerImpl(
         return combine(
             totalHeight,
             tileWidth, tileHeight,
-            player,
+            role,
         ) { boardHeight, tileWidth, tileHeight, player ->
             // center of tile
             val fromOffset = if (from == null) {
@@ -144,19 +144,19 @@ private class PieceArrangerImpl(
     }
 
     override fun viewToLogical(viewPos: BoardPos): Flow<BoardPos> {
-        return player.map {
+        return role.map {
             viewPos.adjustedFor(it)
         }
     }
 
     override fun viewToLogical(viewPos: Flow<BoardPos>): Flow<BoardPos> {
-        return player.combine(viewPos) { it, vp ->
+        return role.combine(viewPos) { it, vp ->
             vp.adjustedFor(it)
         }
     }
 
     override fun logicalToView(logicalPos: BoardPos): Flow<BoardPos> {
-        return player.map {
+        return role.map {
             logicalPos.adjustedFor(it)
         }
     }
@@ -172,8 +172,8 @@ private class PieceArrangerImpl(
         return DpOffset(x, y)
     }
 
-    private fun BoardPos.adjustedFor(player: Player): BoardPos {
-        return if (player == Player.WHITE) {
+    private fun BoardPos.adjustedFor(role: Role): BoardPos {
+        return if (role == Role.WHITE) {
             this
         } else {
             BoardPos(

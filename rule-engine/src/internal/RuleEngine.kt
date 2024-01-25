@@ -6,20 +6,20 @@ import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.Move
 import org.keizar.game.Piece
-import org.keizar.game.Player
-import org.keizar.game.serialization.GameSnapshot
+import org.keizar.game.Role
+import org.keizar.game.serialization.RoundSnapshot
 
 interface RuleEngine {
     val winningCounter: StateFlow<Int>
-    val curPlayer: StateFlow<Player>
-    val winner: StateFlow<Player?>
+    val curRole: StateFlow<Role>
+    val winner: StateFlow<Role?>
     val pieces: List<Piece>
 
     fun showPossibleMoves(pos: BoardPos): List<BoardPos>
     fun move(source: BoardPos, dest: BoardPos): Boolean
-    fun pieceAt(pos: BoardPos): Player?
-    fun getLostPiecesCount(player: Player): StateFlow<Int>
-    fun getAllPiecesPos(player: Player): List<BoardPos>
+    fun pieceAt(pos: BoardPos): Role?
+    fun getLostPiecesCount(role: Role): StateFlow<Int>
+    fun getAllPiecesPos(role: Role): List<BoardPos>
 }
 
 class RuleEngineImpl private constructor(
@@ -28,10 +28,10 @@ class RuleEngineImpl private constructor(
 
     private val movesLog: MutableList<Move>,
     override val winningCounter: MutableStateFlow<Int>,
-    override val curPlayer: MutableStateFlow<Player>,
-    override val winner: MutableStateFlow<Player?>,
+    override val curRole: MutableStateFlow<Role>,
+    override val winner: MutableStateFlow<Role?>,
 
-    private val lostPiecesCount: Map<Player, MutableStateFlow<Int>>
+    private val lostPiecesCount: Map<Role, MutableStateFlow<Int>>
 ) : RuleEngine {
 
     constructor(boardProperties: BoardProperties, ruleEngineCore: RuleEngineCore) : this(
@@ -41,11 +41,11 @@ class RuleEngineImpl private constructor(
         ),
         movesLog = mutableListOf<Move>(),
         winningCounter = MutableStateFlow(0),
-        curPlayer = MutableStateFlow(boardProperties.startingPlayer),
+        curRole = MutableStateFlow(boardProperties.startingRole),
         winner = MutableStateFlow(null),
         lostPiecesCount = mapOf(
-            Player.WHITE to MutableStateFlow(0),
-            Player.BLACK to MutableStateFlow(0),
+            Role.WHITE to MutableStateFlow(0),
+            Role.BLACK to MutableStateFlow(0),
         ),
     )
 
@@ -65,7 +65,7 @@ class RuleEngineImpl private constructor(
         movesLog.add(move)
         updateLostPieces(move)
         updateWinningCounter(move)
-        curPlayer.value = curPlayer.value.other()
+        curRole.value = curRole.value.other()
         updateWinner()
 
         return true
@@ -73,28 +73,28 @@ class RuleEngineImpl private constructor(
 
     private fun updateLostPieces(move: Move) {
         if (move.isCapture) {
-            ++lostPiecesCount[curPlayer.value.other()]!!.value
+            ++lostPiecesCount[curRole.value.other()]!!.value
         }
     }
 
-    override fun pieceAt(pos: BoardPos): Player? {
-        return board.pieceAt(pos)?.player
+    override fun pieceAt(pos: BoardPos): Role? {
+        return board.pieceAt(pos)?.role
     }
 
-    override fun getLostPiecesCount(player: Player): StateFlow<Int> {
-        return lostPiecesCount[player]!!
+    override fun getLostPiecesCount(role: Role): StateFlow<Int> {
+        return lostPiecesCount[role]!!
     }
 
-    override fun getAllPiecesPos(player: Player): List<BoardPos> {
-        return board.getAllPiecesPos(player)
+    override fun getAllPiecesPos(role: Role): List<BoardPos> {
+        return board.getAllPiecesPos(role)
     }
 
     private fun isValidMove(piece: Piece, dest: BoardPos): Boolean {
-        return piece.player == curPlayer.value && board.isValidMove(piece, dest)
+        return piece.role == curRole.value && board.isValidMove(piece, dest)
     }
 
     private fun updateWinningCounter(move: Move) {
-        if (board.havePieceInKeizar(curPlayer.value.other())) {
+        if (board.havePieceInKeizar(curRole.value.other())) {
             ++winningCounter.value
         } else if (move.dest == boardProperties.keizarTilePos) {
             winningCounter.value = 0
@@ -103,33 +103,39 @@ class RuleEngineImpl private constructor(
 
     private fun updateWinner() {
         if (winningCounter.value == boardProperties.winningCount) {
-            winner.value = curPlayer.value
+            winner.value = curRole.value
         }
-        if (board.noValidMoves(curPlayer.value)) {
-            winner.value = if (board.havePieceInKeizar(curPlayer.value)) {
-                curPlayer.value
+        if (board.noValidMoves(curRole.value)) {
+            winner.value = if (board.havePieceInKeizar(curRole.value)) {
+                curRole.value
             } else {
-                curPlayer.value.other()
+                curRole.value.other()
             }
         }
     }
 
     companion object {
-        fun restore(gameSnapshot: GameSnapshot, ruleEngineCore: RuleEngineCore): RuleEngine {
-            val board = Board(gameSnapshot.properties, ruleEngineCore)
-            board.rearrangePieces(gameSnapshot.pieces)
-            val whiteLostPieces = board.pieces.count { it.isCaptured.value && it.player == Player.WHITE }
-            val blackLostPieces = board.pieces.count { it.isCaptured.value && it.player == Player.BLACK }
+        fun restore(
+            properties: BoardProperties,
+            roundSnapshot: RoundSnapshot,
+            ruleEngineCore: RuleEngineCore
+        ): RuleEngine {
+            val board = Board(properties, ruleEngineCore)
+            board.rearrangePieces(roundSnapshot.pieces)
+            val whiteLostPieces =
+                board.pieces.count { it.isCaptured.value && it.role == Role.WHITE }
+            val blackLostPieces =
+                board.pieces.count { it.isCaptured.value && it.role == Role.BLACK }
             return RuleEngineImpl(
-                boardProperties = gameSnapshot.properties,
+                boardProperties = properties,
                 board = board,
                 movesLog = mutableListOf(),
-                winningCounter = MutableStateFlow(gameSnapshot.winningCounter),
-                curPlayer = MutableStateFlow(gameSnapshot.curPlayer),
-                winner = MutableStateFlow(gameSnapshot.winner),
+                winningCounter = MutableStateFlow(roundSnapshot.winningCounter),
+                curRole = MutableStateFlow(roundSnapshot.curRole),
+                winner = MutableStateFlow(roundSnapshot.winner),
                 lostPiecesCount = mapOf(
-                    Player.WHITE to MutableStateFlow(whiteLostPieces),
-                    Player.BLACK to MutableStateFlow(blackLostPieces),
+                    Role.WHITE to MutableStateFlow(whiteLostPieces),
+                    Role.BLACK to MutableStateFlow(blackLostPieces),
                 ),
             )
         }

@@ -3,7 +3,7 @@ package org.keizar.game.internal
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.Piece
-import org.keizar.game.Player
+import org.keizar.game.Role
 import org.keizar.game.TileType
 import org.keizar.game.internal.RuleEngineCoreImpl.Route.Direction.B
 import org.keizar.game.internal.RuleEngineCoreImpl.Route.Direction.BL
@@ -37,7 +37,7 @@ class RuleEngineCoreImpl(
         val validMoves = mutableListOf<BoardPos>()
 
         val curTile = tiles[piece.pos.value.index()]
-        val routes = routesOf(curTile.type, piece.player, shouldPawnMoveTwoStep(piece) { pos ->
+        val routes = routesOf(curTile.type, piece.role, shouldPawnMoveTwoStep(piece) { pos ->
             tiles[pos.index()].type
         })
 
@@ -50,12 +50,12 @@ class RuleEngineCoreImpl(
                 // end this route if out of range
                 if (curPos.outOfRange(boardProperties)) break
 
-                val blockedBy: Player? = tiles[curPos.index()].piece?.player
+                val blockedBy: Role? = tiles[curPos.index()].piece?.role
 
                 // end this route if blocked by an ally piece
-                if (blockedBy == piece.player) {
+                if (blockedBy == piece.role) {
                     break
-                } else if (blockedBy == piece.player.other()) {
+                } else if (blockedBy == piece.role.other()) {
                     // the route is blocked by an opponent piece
                     // if the route does not allow capturing, end the route
                     if (route.permission == Route.Permission.MOVE) break
@@ -125,7 +125,7 @@ class RuleEngineCoreImpl(
 
     private fun routesOf(
         tileType: TileType,
-        player: Player,
+        role: Role,
         pawnMovesTwoStep: Boolean = false
     ): List<Route> {
         return when (tileType) {
@@ -134,7 +134,7 @@ class RuleEngineCoreImpl(
                 Route(FL, 1), Route(FR, 1), Route(BL, 1), Route(BR, 1),
             )
 
-            TileType.QUEEN -> routesOf(TileType.BISHOP, player) + routesOf(TileType.ROOK, player)
+            TileType.QUEEN -> routesOf(TileType.BISHOP, role) + routesOf(TileType.ROOK, role)
 
             TileType.BISHOP -> listOf(
                 Route(FL), Route(FR), Route(BL), Route(BR),
@@ -153,24 +153,24 @@ class RuleEngineCoreImpl(
 
             TileType.PLAIN -> listOf(
                 Route(
-                    if (player == Player.WHITE) F else B,
+                    if (role == Role.WHITE) F else B,
                     if (pawnMovesTwoStep) 2 else 1,
                     Route.Permission.MOVE
                 ),
-                Route(if (player == Player.WHITE) FL else BL, 1, Route.Permission.CAPTURE),
-                Route(if (player == Player.WHITE) FR else BR, 1, Route.Permission.CAPTURE),
+                Route(if (role == Role.WHITE) FL else BL, 1, Route.Permission.CAPTURE),
+                Route(if (role == Role.WHITE) FR else BR, 1, Route.Permission.CAPTURE),
             )
         }
     }
 
     private fun shouldPawnMoveTwoStep(piece: Piece, tileAt: (BoardPos) -> TileType): Boolean {
         // If the piece is not in one of its starting positions, it can't move 2 steps
-        if (boardProperties.piecesStartingPos[piece.player]?.contains(piece.pos.value) != true) {
+        if (boardProperties.piecesStartingPos[piece.role]?.contains(piece.pos.value) != true) {
             return false
         }
 
         // If it is a black piece in the KEIZAR column, it can't move 2 steps
-        if (piece.player == Player.BLACK && piece.pos.value.col == boardProperties.keizarTilePos.col) {
+        if (piece.role == Role.BLACK && piece.pos.value.col == boardProperties.keizarTilePos.col) {
             return false
         }
 
@@ -178,7 +178,7 @@ class RuleEngineCoreImpl(
         // Otherwise, it can move 2 steps
         return tileAt(
             BoardPos(
-                piece.pos.value.row + if (piece.player == Player.WHITE) 1 else -1,
+                piece.pos.value.row + if (piece.role == Role.WHITE) 1 else -1,
                 piece.pos.value.col,
             )
         ) == TileType.PLAIN

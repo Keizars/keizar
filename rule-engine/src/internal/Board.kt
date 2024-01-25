@@ -6,7 +6,7 @@ import org.keizar.game.BoardProperties
 import org.keizar.game.Move
 import org.keizar.game.MutablePiece
 import org.keizar.game.Piece
-import org.keizar.game.Player
+import org.keizar.game.Role
 import org.keizar.game.TileType
 import org.keizar.game.asPiece
 import org.keizar.game.serialization.PieceSnapshot
@@ -81,12 +81,12 @@ class Board(
         return Move(source, dest, isCapture)
     }
 
-    fun havePieceInKeizar(player: Player): Boolean {
-        return pieceAt(boardProperties.keizarTilePos)?.player == player
+    fun havePieceInKeizar(role: Role): Boolean {
+        return pieceAt(boardProperties.keizarTilePos)?.role == role
     }
 
-    fun noValidMoves(player: Player): Boolean {
-        for (piece in _pieces.filter { it.player == player }) {
+    fun noValidMoves(role: Role): Boolean {
+        for (piece in _pieces.filter { it.role == role }) {
             if (showValidMoves(piece.asPiece()).isNotEmpty()) return false
         }
         return true
@@ -100,7 +100,7 @@ class Board(
         return ruleEngineCore.showValidMoves(tiles, piece) { index }
     }
 
-    fun getAllPiecesPos(player: Player): List<BoardPos> {
-        return _pieces.filter { it.player == player && !it.isCaptured.value }.map { it.pos.value }
+    fun getAllPiecesPos(role: Role): List<BoardPos> {
+        return _pieces.filter { it.role == role && !it.isCaptured.value }.map { it.pos.value }
     }
 }

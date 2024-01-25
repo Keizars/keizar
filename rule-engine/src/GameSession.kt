@@ -1,40 +1,44 @@
 package org.keizar.game
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.flowOf
-import org.keizar.game.internal.RuleEngine
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
 import org.keizar.game.serialization.GameSnapshot
-import kotlin.random.Random
 
 interface GameSession {
     val properties: BoardProperties
 
-    val pieces: List<Piece>
+    val rounds: List<RoundSession>
+    val currentRound: Flow<RoundSession>
+    val currentRoundNo: StateFlow<Int>
 
-    val winner: StateFlow<Player?>
-    val winningCounter: StateFlow<Int>
-    val curPlayer: StateFlow<Player>
+    val finalWinner: Flow<GameResult?>
 
-    suspend fun undo(): Boolean
-    suspend fun redo(): Boolean
+    fun currentRole(player: Player): StateFlow<Role>
 
-    fun getAvailableTargets(from: BoardPos): Flow<List<BoardPos>>
-    fun getAllPiecesPos(player: Player): Flow<List<BoardPos>>
-    suspend fun move(from: BoardPos, to: BoardPos): Boolean
-    fun getLostPiecesCount(player: Player): StateFlow<Int>
+    /**
+     * Accumulated number of rounds this player has won.
+     */
+    fun wonRounds(player: Player): StateFlow<Int>
 
-    fun getSnapshot(): GameSnapshot {
-        return GameSnapshot(
-            properties = properties,
-            winningCounter = winningCounter.value,
-            curPlayer = curPlayer.value,
-            winner = winner.value,
-            pieces = pieces.map { it.getSnapShot() }
-        )
-    }
+    /**
+     * Accumulated number of pieces this player has captured.
+     */
+    fun capturedPieces(player: Player): Flow<Int>
+
+    fun confirmNextRound(player: Player): Boolean
+
+    fun getSnapshot(): GameSnapshot = GameSnapshot(
+        properties = properties,
+        rounds = rounds.map { it.getSnapshot() },
+        currentRoundNo = currentRoundNo.value,
+    )
 
     companion object {
         fun create(seed: Int? = null): GameSession {
@@ -42,67 +46,159 @@ interface GameSession {
             return create(properties)
         }
 
-        fun create(random: Random): GameSession {
-            val properties = BoardProperties.getStandardProperties(random)
-            return create(properties)
-        }
-
         fun create(properties: BoardProperties): GameSession {
-            val ruleEngine = RuleEngineImpl(
-                boardProperties = properties,
-                ruleEngineCore = RuleEngineCoreImpl(properties),
-            )
-            return GameSessionImpl(properties, ruleEngine)
+            return GameSessionImpl(properties) {
+                val ruleEngine = RuleEngineImpl(
+                    boardProperties = properties,
+                    ruleEngineCore = RuleEngineCoreImpl(properties),
+                )
+                RoundSessionImpl(ruleEngine)
+            }
         }
 
         fun restore(snapshot: GameSnapshot): GameSession {
             return GameSessionImpl(
                 properties = snapshot.properties,
-                ruleEngine = RuleEngineImpl.restore(
-                    gameSnapshot = snapshot,
-                    ruleEngineCore = RuleEngineCoreImpl(snapshot.properties),
+                startFromRoundNo = snapshot.currentRoundNo,
+            ) { index ->
+                RoundSessionImpl(
+                    ruleEngine = RuleEngineImpl.restore(
+                        properties = snapshot.properties,
+                        roundSnapshot = snapshot.rounds[index],
+                        ruleEngineCore = RuleEngineCoreImpl(snapshot.properties),
+                    )
                 )
-            )
+            }
         }
-
     }
 }
 
 class GameSessionImpl(
     override val properties: BoardProperties,
-    private val ruleEngine: RuleEngine,
+    startFromRoundNo: Int = 0,
+    roundSessionConstructor: (index: Int) -> RoundSession,
 ) : GameSession {
-    override val pieces: List<Piece> = ruleEngine.pieces
+    override val rounds: List<RoundSession>
 
-    override val winner: StateFlow<Player?> = ruleEngine.winner
+    override val currentRound: Flow<RoundSession>
+    private val _currentRoundNo: MutableStateFlow<Int> = MutableStateFlow(startFromRoundNo)
+    override val currentRoundNo: StateFlow<Int> = _currentRoundNo.asStateFlow()
+    override val finalWinner: Flow<GameResult?>
+    private val haveWinner: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
-    override val winningCounter: StateFlow<Int> = ruleEngine.winningCounter
+    private val curRoles: List<MutableStateFlow<Role>>
+    private val wonRounds: List<MutableStateFlow<Int>>
 
-    override val curPlayer: StateFlow<Player> = ruleEngine.curPlayer
+    private val nextRoundAgreement: MutableList<Boolean>
 
-    override suspend fun undo(): Boolean {
-        // TODO("Not yet implemented")
+    init {
+        rounds = (0..<properties.turns).map {
+            roundSessionConstructor(it)
+        }
+        currentRound = currentRoundNo.map { rounds[it] }
+
+        curRoles = listOf(
+            MutableStateFlow(Role.WHITE),
+            MutableStateFlow(Role.BLACK),
+        )
+
+        wonRounds = listOf(
+            MutableStateFlow(0),
+            MutableStateFlow(0),
+        )
+
+        nextRoundAgreement = mutableListOf(false, false)
+
+        finalWinner = combine(
+            haveWinner,
+            wonRounds(Player.Player1),
+            wonRounds(Player.Player2),
+            capturedPieces(Player.Player1),
+            capturedPieces(Player.Player2),
+        ) { haveWinner, player1Wins, player2Wins, player1LostPieces, player2LostPieces ->
+            if (!haveWinner) {
+                null
+            } else if (player1Wins > player2Wins) {
+                GameResult.Winner(Player.Player1)
+            } else if (player1Wins < player2Wins) {
+                GameResult.Winner(Player.Player2)
+            } else if (player1LostPieces < player2LostPieces) {
+                GameResult.Winner(Player.Player1)
+            } else if (player1LostPieces > player2LostPieces) {
+                GameResult.Winner(Player.Player2)
+            } else {
+                GameResult.Draw
+            }
+        }
+    }
+
+    override fun currentRole(player: Player): StateFlow<Role> {
+        return curRoles[player.ordinal]
+    }
+
+    override fun wonRounds(player: Player): StateFlow<Int> {
+        return wonRounds[player.ordinal]
+    }
+
+    override fun capturedPieces(player: Player): Flow<Int> {
+        return combine(rounds.map { it.getLostPiecesCount(currentRole(player).value) }) {
+            it.sum()
+        }
+    }
+
+    override fun confirmNextRound(player: Player): Boolean {
+        if (currentRoundNo.value >= properties.turns) return false
+        nextRoundAgreement[player.ordinal] = true
+        if (nextRoundAgreement.all { it }) {
+            proceedToNextTurn()
+            nextRoundAgreement.forEachIndexed { index, _ -> nextRoundAgreement[index] = false }
+        }
         return true
     }
 
-    override suspend fun redo(): Boolean {
-        // TODO("Not yet implemented")
-        return true
+    private fun proceedToNextTurn() {
+        val winningRole: Role? = rounds[currentRoundNo.value].winner.value
+        val winningPlayer: Player? = winningRole?.let {
+            if (currentRole(Player.Player1).value == it) Player.Player1 else Player.Player2
+        }
+        winningPlayer?.let { ++wonRounds[it.ordinal].value }
+        if (currentRoundNo.value == properties.turns - 1) {
+            updateFinalWinner()
+        }
+        ++_currentRoundNo.value
+        curRoles.forEach { role -> role.value = role.value.other() }
     }
 
-    override fun getAvailableTargets(from: BoardPos): Flow<List<BoardPos>> {
-        return flowOf(ruleEngine.showPossibleMoves(from))
+    private fun updateFinalWinner() {
+        haveWinner.value = true
     }
+}
 
-    override fun getAllPiecesPos(player: Player): Flow<List<BoardPos>> {
-        return flowOf(ruleEngine.getAllPiecesPos(player))
-    }
+@Serializable
+enum class Player {
+    Player1,
+    Player2,
+}
 
-    override suspend fun move(from: BoardPos, to: BoardPos): Boolean {
-        return ruleEngine.move(from, to)
-    }
+@Serializable
+sealed class GameResult {
+    @Serializable
+    data object Draw : GameResult()
 
-    override fun getLostPiecesCount(player: Player): StateFlow<Int> {
-        return ruleEngine.getLostPiecesCount(player)
+    @Serializable
+    data class Winner(val player: Player) : GameResult()
+    companion object {
+        fun values(): Array<GameResult> {
+            return arrayOf(Draw, Winner(Player.Player1), Winner(Player.Player2))
+        }
+
+        fun valueOf(value: String): GameResult {
+            return when (value) {
+                "DRAW" -> Draw
+                "WINNER1" -> Winner(Player.Player1)
+                "WINNER2" -> Winner(Player.Player2)
+                else -> throw IllegalArgumentException("No object org.keizar.game.GameResult.$value")
+            }
+        }
     }
 }

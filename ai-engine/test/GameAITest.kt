@@ -2,37 +2,31 @@ package org.keizar.aiengine
 
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
-import kotlin.random.Random
 import org.keizar.game.GameSession
 import org.keizar.game.Player
+import org.keizar.game.Role
+import org.keizar.game.RoundSession
+import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.test.assertNotNull
 
 
-class GameSessionTest {
+class TurnSessionTest {
     @Test
-    fun `test generate a move`() = runTest {
+    fun `test generate a AI`() = runTest {
         val game = GameSession.create(100)
-        val curPlayer: StateFlow<Player> = game.curPlayer
-        assertEquals(Player.WHITE, curPlayer.value)
-        val gameai = RandomGameAIImpl(game, curPlayer.value)
-
-        val move = gameai.MakeMove()
-        println (move)
-        if (move != null) {
-            game.move(move.first, move.second)
-        }
-        assertEquals(game.curPlayer.value, Player.BLACK)
-    }
-
-    @Test
-    fun `test generate a move when not my turn`() = runTest {
-        val game = GameSession.create(100)
-        val curPlayer: StateFlow<Player> = game.curPlayer
-        assertEquals(Player.WHITE, curPlayer.value)
-        val gameai = RandomGameAIImpl(game, Player.BLACK)
-        val move = gameai.MakeMove()
-        assertNull(move)
+        val context = EmptyCoroutineContext
+        val ai1 = RandomGameAIImpl(game, Player.Player1, context, true)
+        val ai2 = RandomGameAIImpl(game, Player.Player2, context, true)
+        ai1.start()
+        ai2.start()
+        val winner = game.finalWinner.filterNotNull().first()
+        assertNotNull(winner)
+        println(winner)
     }
 }

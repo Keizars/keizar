@@ -6,11 +6,11 @@ import kotlinx.serialization.Serializable
 import org.keizar.game.serialization.PieceSnapshot
 
 @Serializable
-enum class Player {
+enum class Role {
     BLACK,
     WHITE;
 
-    fun other(): Player = when (this) {
+    fun other(): Role = when (this) {
         BLACK -> WHITE
         WHITE -> BLACK
     }
@@ -46,10 +46,10 @@ class Move(
 
 interface Piece {
     val index: Int
-    val player: Player
+    val role: Role
 
     /**
-     * The position of the piece on the board. It is always the logical position, i.e. seen as a [Player.WHITE].
+     * The position of the piece on the board. It is always the logical position, i.e. seen as a [Role.WHITE].
      */
     val pos: StateFlow<BoardPos>
     val isCaptured: StateFlow<Boolean>
@@ -59,7 +59,7 @@ interface Piece {
     fun getSnapShot(): PieceSnapshot {
         return PieceSnapshot(
             index = index,
-            player = player,
+            role = role,
             pos = pos.value,
             isCaptured = isCaptured.value,
         )
@@ -68,19 +68,19 @@ interface Piece {
 
 class MutablePiece(
     override val index: Int,
-    override val player: Player,
+    override val role: Role,
     override val pos: MutableStateFlow<BoardPos>,
     override val isCaptured: MutableStateFlow<Boolean> = MutableStateFlow(false),
 ) : Piece {
     override fun toString(): String {
-        return "Piece(index=$index, player=$player, pos=${pos.value}, isCaptured=${isCaptured.value})"
+        return "Piece(index=$index, player=$role, pos=${pos.value}, isCaptured=${isCaptured.value})"
     }
 
     companion object {
         fun restore(snapshot: PieceSnapshot): MutablePiece {
             return MutablePiece(
                 index = snapshot.index,
-                player = snapshot.player,
+                role = snapshot.role,
                 pos = MutableStateFlow(snapshot.pos),
                 isCaptured = MutableStateFlow(snapshot.isCaptured),
             )
