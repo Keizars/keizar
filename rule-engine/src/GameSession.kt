@@ -92,10 +92,13 @@ class GameSessionImpl(
     private val nextRoundAgreement: MutableList<Boolean>
 
     init {
-        rounds = (0..<properties.turns).map {
+        rounds = (0..<properties.rounds).map {
             roundSessionConstructor(it)
         }
-        currentRound = currentRoundNo.map { rounds[it] }
+        currentRound = currentRoundNo.map {
+            // prevent IndexOutOfBounds Exception after game ends
+            rounds[if (it >= properties.rounds) properties.rounds - 1 else it]
+        }
 
         curRoles = listOf(
             MutableStateFlow(Role.WHITE),
@@ -147,7 +150,7 @@ class GameSessionImpl(
     }
 
     override fun confirmNextRound(player: Player): Boolean {
-        if (currentRoundNo.value >= properties.turns) return false
+        if (currentRoundNo.value >= properties.rounds) return false
         nextRoundAgreement[player.ordinal] = true
         if (nextRoundAgreement.all { it }) {
             proceedToNextTurn()
@@ -162,7 +165,7 @@ class GameSessionImpl(
             if (currentRole(Player.Player1).value == it) Player.Player1 else Player.Player2
         }
         winningPlayer?.let { ++wonRounds[it.ordinal].value }
-        if (currentRoundNo.value == properties.turns - 1) {
+        if (currentRoundNo.value == properties.rounds - 1) {
             updateFinalWinner()
         }
         ++_currentRoundNo.value

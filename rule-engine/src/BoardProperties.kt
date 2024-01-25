@@ -12,7 +12,7 @@ data class BoardProperties(
     val keizarTilePos: BoardPos = BoardPos.fromString("d5"),
     val winningCount: Int = 3,
     val startingRole: Role = Role.WHITE,
-    val turns: Int = 2,
+    val rounds: Int = 2,
 
     val piecesStartingPos: Map<Role, List<BoardPos>>,
     val tileArrangement: Map<BoardPos, TileType>,
@@ -24,7 +24,7 @@ data class BoardProperties(
     companion object {
         fun generateRandomSeed(): Int = Random.nextInt().absoluteValue // Use absolute value so easier to share
 
-        fun getStandardProperties(randomSeed: Int? = null, startingRole: Role = Role.WHITE): BoardProperties {
+        fun getStandardProperties(randomSeed: Int? = null): BoardProperties {
             val seed = randomSeed ?: generateRandomSeed()
             val keizarTilePos: BoardPos = BoardPos.fromString("d5")
 
@@ -66,7 +66,7 @@ data class BoardProperties(
                 height = 8,
                 keizarTilePos = keizarTilePos,
                 winningCount = 3,
-                startingRole = startingRole,
+                startingRole = Role.WHITE,
                 piecesStartingPos = piecesStartingPos,
                 tileArrangement = standardTileArrangement,
                 seed = seed,

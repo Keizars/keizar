@@ -1,22 +1,16 @@
 package org.keizar.aiengine
 
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 import org.keizar.game.GameSession
 import org.keizar.game.Player
-import org.keizar.game.Role
-import org.keizar.game.RoundSession
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.assertNotNull
 
 
-class TurnSessionTest {
+class RoundSessionTest {
     @Test
     fun `test generate a AI`() = runTest {
         val game = GameSession.create(100)
