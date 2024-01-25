@@ -10,6 +10,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -44,6 +45,8 @@ fun GameBoard(
         val winner = vm.winner.collectAsState().value
         val finalWinner = vm.finalWinner.collectAsState().value
         val selfRole = vm.selfRole.collectAsState().value
+        var showDialogWhiteWin by remember { mutableStateOf(false) }
+        var showDialogBlackWin by remember { mutableStateOf(false) }
 
         WinningCounter(vm)
 
@@ -58,12 +61,17 @@ fun GameBoard(
 
         CapturedPieces(vm, selfRole.other())
 
-        when (winner) {
-            null -> {
+        LaunchedEffect(winner) {
+            if (winner == null) {
+                // Reset the state at the start of a new round or when there is no winner
+                showDialogWhiteWin = true
+                showDialogBlackWin = true
             }
+        }
 
+        when (winner) {
+            null -> {}
             Role.WHITE -> {
-                var showDialogWhiteWin by remember { mutableStateOf(true) }
                 if (showDialogWhiteWin) {
                     AlertDialog(onDismissRequest = {showDialogWhiteWin = false},
                         title = { Text(text = "This round is over, White wins!") },
@@ -78,7 +86,6 @@ fun GameBoard(
                 }
             }
             Role.BLACK -> {
-                var showDialogBlackWin by remember { mutableStateOf(true) }
                 if (showDialogBlackWin) {
                     AlertDialog(onDismissRequest = {showDialogBlackWin = false},
                         title = { Text(text = "This round is over, Black wins!") },
