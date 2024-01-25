@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 import org.keizar.game.internal.RuleEngineCoreImpl
@@ -117,7 +118,7 @@ class GameSessionImpl(
         currentRound = currentRoundNo.map {
             // prevent IndexOutOfBounds Exception after game ends
             rounds[if (it >= properties.rounds) properties.rounds - 1 else it]
-        }
+        }.distinctUntilChanged()
 
         curRoles = listOf(
             MutableStateFlow(Role.WHITE),

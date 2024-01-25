@@ -38,7 +38,7 @@ fun GameBoard(
 ) {
     val vm = rememberGameBoardViewModel(
         GameSession.create(startConfiguration.createBoard()),
-        selfPlayer = Player.Player1,
+        selfPlayer = if (startConfiguration.playAs == Role.WHITE) Player.Player1 else Player.Player2
     )
     Column(modifier = Modifier) {
         val winner = vm.winner.collectAsState().value
