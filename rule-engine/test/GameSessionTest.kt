@@ -83,6 +83,62 @@ class GameSessionTest {
     }
 
     @Test
+    fun `test playable after next round`() = runTest {
+        val game = GameSession.create(0)
+        val curRound = game.currentRound
+        val round1 = curRound.first()
+
+        assertTrue(round1.move(BoardPos("e2"), BoardPos("e3")))
+        assertTrue(round1.move(BoardPos("d7"), BoardPos("d6")))
+        assertTrue(round1.move(BoardPos("e3"), BoardPos("d5")))
+        assertTrue(round1.move(BoardPos("a7"), BoardPos("a6")))
+        assertTrue(round1.move(BoardPos("a2"), BoardPos("a3")))
+        assertTrue(round1.move(BoardPos("a6"), BoardPos("a5")))
+        assertTrue(round1.move(BoardPos("a3"), BoardPos("a4")))
+        assertTrue(round1.move(BoardPos("d6"), BoardPos("d5")))
+        assertTrue(round1.move(BoardPos("h2"), BoardPos("h3")))
+        assertTrue(round1.move(BoardPos("f7"), BoardPos("f6")))
+        assertTrue(round1.move(BoardPos("h3"), BoardPos("h4")))
+        assertTrue(round1.move(BoardPos("f6"), BoardPos("f5")))
+        assertTrue(round1.move(BoardPos("h4"), BoardPos("h5")))
+        assertEquals(Role.BLACK, round1.winner.value)
+        assertEquals(3, round1.winningCounter.value)
+
+        assertTrue(game.confirmNextRound(Player.Player1))
+        assertTrue(game.confirmNextRound(Player.Player2))
+
+        val round2 = curRound.first()
+
+        assertEquals(1, game.currentRoundNo.value)
+        assertEquals(0, round2.winningCounter.value)
+        assertEquals(0, game.wonRounds(Player.Player1).value)
+        assertEquals(1, game.wonRounds(Player.Player2).value)
+
+        assertTrue(round2.move(BoardPos("e2"), BoardPos("e3")))
+        assertTrue(round2.move(BoardPos("d7"), BoardPos("d6")))
+        assertTrue(round2.move(BoardPos("e3"), BoardPos("d5")))
+        assertTrue(round2.move(BoardPos("a7"), BoardPos("a6")))
+        assertTrue(round2.move(BoardPos("a2"), BoardPos("a3")))
+        assertTrue(round2.move(BoardPos("a6"), BoardPos("a5")))
+        assertTrue(round2.move(BoardPos("a3"), BoardPos("a4")))
+        assertTrue(round2.move(BoardPos("d6"), BoardPos("d5")))
+        assertTrue(round2.move(BoardPos("h2"), BoardPos("h3")))
+        assertTrue(round2.move(BoardPos("f7"), BoardPos("f6")))
+        assertTrue(round2.move(BoardPos("h3"), BoardPos("h4")))
+        assertTrue(round2.move(BoardPos("f6"), BoardPos("f5")))
+        assertTrue(round2.move(BoardPos("h4"), BoardPos("h5")))
+        assertEquals(Role.BLACK, round2.winner.value)
+        assertEquals(3, round2.winningCounter.value)
+
+        assertTrue(game.confirmNextRound(Player.Player1))
+        assertTrue(game.confirmNextRound(Player.Player2))
+
+        assertEquals(2, game.currentRoundNo.value)
+        assertEquals(1, game.wonRounds(Player.Player1).value)
+        assertEquals(1, game.wonRounds(Player.Player2).value)
+    }
+
+    @Test
     fun `test getSnapshot and restore`() = runTest {
         val game = GameSession.create(0)
         val round = game.currentRound.first()
