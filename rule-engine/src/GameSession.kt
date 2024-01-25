@@ -11,29 +11,45 @@ import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
 import org.keizar.game.serialization.GameSnapshot
 
+/***
+ * API for the backend. Representation of a complete game that may contain multiple rounds
+ * on the same random-generated board.
+ */
 interface GameSession {
+    // Game rules configuration
     val properties: BoardProperties
 
+    // Sessions for different rounds
     val rounds: List<RoundSession>
+
+    // Current round in progress.
+    // Emits a new round after both player call confirmNextRound()
     val currentRound: Flow<RoundSession>
+
+    // Round number of current round. starting from 0.
+    // A currentRoundNo equal to properties.rounds indicates the whole game is
+    // completed and finalWinner will emit a non-null GameResult.
     val currentRoundNo: StateFlow<Int>
 
+    // The final winner. Emits a non-null value when the whole game ends.
+    // Values could be GameResult.Winner(Player1/Player2) or GameResult.Draw.
     val finalWinner: Flow<GameResult?>
 
+    // Returns the role (black/white) of the specified player in current round of game.
     fun currentRole(player: Player): StateFlow<Role>
 
-    /**
-     * Accumulated number of rounds this player has won.
-     */
+
+    // Accumulated number of rounds this player has won.
     fun wonRounds(player: Player): StateFlow<Int>
 
-    /**
-     * Accumulated number of pieces this player has captured.
-     */
-    fun capturedPieces(player: Player): Flow<Int>
+    // Accumulated number of pieces this player has lost (been captured by the opponent).
+    fun lostPieces(player: Player): Flow<Int>
 
+    // The game will proceed to the next round only after both players call confirmNextRound().
     fun confirmNextRound(player: Player): Boolean
 
+    // Return a serializable snapshot of the GameSession that can be restored to a GameSession
+    // by GameSession.restore().
     fun getSnapshot(): GameSnapshot = GameSnapshot(
         properties = properties,
         rounds = rounds.map { it.getSnapshot() },
@@ -41,11 +57,13 @@ interface GameSession {
     )
 
     companion object {
+        // Create a standard GameSession using the seed provided.
         fun create(seed: Int? = null): GameSession {
             val properties = BoardProperties.getStandardProperties(seed)
             return create(properties)
         }
 
+        // Create a standard GameSession using the BoardProperties provided.
         fun create(properties: BoardProperties): GameSession {
             return GameSessionImpl(properties) {
                 val ruleEngine = RuleEngineImpl(
@@ -56,6 +74,7 @@ interface GameSession {
             }
         }
 
+        // Restore a GameSession by a snapshot of the game.
         fun restore(snapshot: GameSnapshot): GameSession {
             return GameSessionImpl(
                 properties = snapshot.properties,
@@ -116,8 +135,8 @@ class GameSessionImpl(
             haveWinner,
             wonRounds(Player.Player1),
             wonRounds(Player.Player2),
-            capturedPieces(Player.Player1),
-            capturedPieces(Player.Player2),
+            lostPieces(Player.Player1),
+            lostPieces(Player.Player2),
         ) { haveWinner, player1Wins, player2Wins, player1LostPieces, player2LostPieces ->
             if (!haveWinner) {
                 null
@@ -143,7 +162,7 @@ class GameSessionImpl(
         return wonRounds[player.ordinal]
     }
 
-    override fun capturedPieces(player: Player): Flow<Int> {
+    override fun lostPieces(player: Player): Flow<Int> {
         return combine(rounds.map { it.getLostPiecesCount(currentRole(player).value) }) {
             it.sum()
         }
