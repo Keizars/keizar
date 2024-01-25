@@ -38,12 +38,11 @@ fun GameBoard(
 ) {
     val vm = rememberGameBoardViewModel(
         GameSession.create(startConfiguration.createBoard()),
-        selfPlayer = if (startConfiguration.playAs == Role.WHITE) Player.Player1 else Player.Player2
+        selfPlayer = Player.Player1,
     )
     Column(modifier = Modifier) {
         val winner = vm.winner.collectAsState().value
         val finalWinner = vm.finalWinner.collectAsState().value
-        var showDialogRound by remember { mutableStateOf(true) }
         val selfRole = vm.selfRole.collectAsState().value
 
         WinningCounter(vm)
@@ -59,7 +58,46 @@ fun GameBoard(
 
         CapturedPieces(vm, selfRole.other())
 
+        when (winner) {
+            null -> {
+            }
+
+            Role.WHITE -> {
+                var showDialogWhiteWin by remember { mutableStateOf(true) }
+                if (showDialogWhiteWin) {
+                    AlertDialog(onDismissRequest = {showDialogWhiteWin = false},
+                        title = { Text(text = "This round is over, White wins!") },
+                        confirmButton = {
+                            Button(onClick = {
+                                vm.startNextRound(vm.selfPlayer)
+                                showDialogWhiteWin = false
+                            }) {
+                                Text(text = "Confirm")
+                            }
+                        })
+                }
+            }
+            Role.BLACK -> {
+                var showDialogBlackWin by remember { mutableStateOf(true) }
+                if (showDialogBlackWin) {
+                    AlertDialog(onDismissRequest = {showDialogBlackWin = false},
+                        title = { Text(text = "This round is over, Black wins!") },
+                        confirmButton = {
+                            Button(onClick = {
+                                vm.startNextRound(vm.selfPlayer)
+                                showDialogBlackWin = false
+                            }) {
+                                Text(text = "Confirm")
+                            }
+                        })
+                }
+            }
+        }
+
         when (finalWinner) {
+            null -> {
+                // do nothing
+            }
             is GameResult.Draw -> {
                 AlertDialog(onDismissRequest = {},
                     title = { Text(text = "Game Over, Draw") },
@@ -78,46 +116,6 @@ fun GameBoard(
                             Text(text = "Back to main page")
                         }
                     })
-            }
-
-            null -> {
-                when (winner) {
-                    null -> {
-                        // do nothing
-                    }
-
-                    Role.WHITE -> {
-                        if (showDialogRound) {
-                            AlertDialog(
-                                onDismissRequest = { showDialogRound = false },
-                                title = { Text(text = "Game Over, White wins!") },
-                                confirmButton = {
-                                    Button(onClick = {
-                                        vm.startNextRound(vm.selfPlayer)
-                                        showDialogRound = false
-                                    }) {
-                                        Text(text = "Start the next round")
-                                    }
-                                })
-                        }
-                    }
-
-                    Role.BLACK -> {
-                        if (showDialogRound) {
-                            AlertDialog(
-                                onDismissRequest = { showDialogRound = false },
-                                title = { Text(text = "Game Over, Black wins!") },
-                                confirmButton = {
-                                    Button(onClick = {
-                                        vm.startNextRound(vm.selfPlayer)
-                                        showDialogRound = false
-                                    }) {
-                                        Text(text = "Start the next round")
-                                    }
-                                })
-                        }
-                    }
-                }
             }
         }
     }
