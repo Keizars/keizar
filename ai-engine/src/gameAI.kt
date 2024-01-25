@@ -50,7 +50,7 @@ class RandomGameAIImpl(
                     if (myRole == currentRole) {
                         val bestPos = findBestMove(session, currentRole)
                         if (!test) {
-                            delay(Random.nextLong(1500L..3000L))
+                            delay(Random.nextLong(1000L..2500L))
                         }
                         session.move(bestPos.first, bestPos.second)
                     }
