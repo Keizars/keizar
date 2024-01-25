@@ -112,13 +112,11 @@ class GameSessionImpl(
     private val nextRoundAgreement: MutableList<Boolean>
 
     init {
-        rounds = (0..<properties.rounds).map {
+        rounds = (0..properties.rounds).map {
+            // allocate one more RoundSession as a dummy session after the game ends
             roundSessionConstructor(it)
         }
-        currentRound = currentRoundNo.map {
-            // prevent IndexOutOfBounds Exception after game ends
-            rounds[if (it >= properties.rounds) properties.rounds - 1 else it]
-        }.distinctUntilChanged()
+        currentRound = currentRoundNo.map { rounds[it] }
 
         curRoles = listOf(
             MutableStateFlow(Role.WHITE),
