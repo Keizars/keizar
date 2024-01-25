@@ -38,7 +38,7 @@ fun GameBoard(
 ) {
     val vm = rememberGameBoardViewModel(
         GameSession.create(startConfiguration.createBoard()),
-        selfPlayer = Player.Player1,
+        selfPlayer = if (startConfiguration.playAs == Role.WHITE) Player.Player1 else Player.Player2
     )
     Column(modifier = Modifier) {
         val winner = vm.winner.collectAsState().value
@@ -79,6 +79,7 @@ fun GameBoard(
                         }
                     })
             }
+
             null -> {
                 when (winner) {
                     null -> {
@@ -87,7 +88,8 @@ fun GameBoard(
 
                     Role.WHITE -> {
                         if (showDialogRound) {
-                            AlertDialog(onDismissRequest = {showDialogRound = false},
+                            AlertDialog(
+                                onDismissRequest = { showDialogRound = false },
                                 title = { Text(text = "Game Over, White wins!") },
                                 confirmButton = {
                                     Button(onClick = {
@@ -99,9 +101,11 @@ fun GameBoard(
                                 })
                         }
                     }
+
                     Role.BLACK -> {
                         if (showDialogRound) {
-                            AlertDialog(onDismissRequest = {showDialogRound = false},
+                            AlertDialog(
+                                onDismissRequest = { showDialogRound = false },
                                 title = { Text(text = "Game Over, Black wins!") },
                                 confirmButton = {
                                     Button(onClick = {

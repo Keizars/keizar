@@ -62,7 +62,7 @@ data class GameStartConfiguration(
 }
 
 fun GameStartConfiguration.createBoard(): BoardProperties =
-    BoardProperties.getStandardProperties(layoutSeed, startingRole = playAs)
+    BoardProperties.getStandardProperties(layoutSeed)
 
 private class GameConfigurationViewModelImpl : GameConfigurationViewModel, AbstractViewModel() {
     override val configuration: MutableStateFlow<GameStartConfiguration> =
