@@ -73,7 +73,7 @@ fun GameBoard(
             null -> {}
             Role.WHITE -> {
                 if (showDialogWhiteWin) {
-                    AlertDialog(onDismissRequest = {showDialogWhiteWin = false},
+                    AlertDialog(onDismissRequest = {},
                         title = { Text(text = "This round is over, White wins!") },
                         confirmButton = {
                             Button(onClick = {
@@ -87,7 +87,7 @@ fun GameBoard(
             }
             Role.BLACK -> {
                 if (showDialogBlackWin) {
-                    AlertDialog(onDismissRequest = {showDialogBlackWin = false},
+                    AlertDialog(onDismissRequest = {},
                         title = { Text(text = "This round is over, Black wins!") },
                         confirmButton = {
                             Button(onClick = {
