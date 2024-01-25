@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.serialization.Serializable
@@ -71,16 +72,20 @@ private class GameConfigurationViewModelImpl : GameConfigurationViewModel, Abstr
     private val _configurationSeedText = MutableStateFlow(configuration.value.layoutSeed.toString())
     override val configurationSeedText = merge(_configurationSeedText, configurationSeed).stateInBackground("")
     override val layoutSeed: Flow<Int?> = configuration.map { it.layoutSeed }
-    override val boardProperties: SharedFlow<BoardProperties> =
-        layoutSeed.map { BoardProperties.getStandardProperties(it ?: 0) }
-            .shareInBackground()
-
     override val playAs: Flow<Role?> = configuration.map { it.playAs }
     override fun setPlayAs(role: Role?) {
         updateConfiguration {
             copy(playAs = role ?: Role.WHITE)
         }
     }
+
+    override val boardProperties: SharedFlow<BoardProperties> =
+        combine(layoutSeed, playAs) { layoutSeed, playAs ->
+            BoardProperties.getStandardProperties(
+                layoutSeed ?: 0
+            )
+        }.shareInBackground()
+
 
     override val difficulty: Flow<Difficulty> = configuration.map { it.difficulty }
 
