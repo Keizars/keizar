@@ -32,6 +32,8 @@ dependencies {
 
     implementation(libs.kotlinx.serialization.protobuf)
 
+    implementation(libs.datastore.preferences)
+
     implementation(libs.ktor.client.core)
     implementation(libs.koin.android)
     implementation(projects.aiEngine)

@@ -27,6 +27,12 @@ class MainActivity : BaseComponentActivity() {
 
         // allow drawing to system bars
         WindowCompat.setDecorFitsSystemWindows(window, false)
+//
+//        startKoin {
+//            modules(module {
+//                single<SavedGameRepository> { SavedGameRepositoryImpl(savedGameStore) }
+//            })
+//        }
 
         setContent {
             KeizarApp(currentColorScheme) {
