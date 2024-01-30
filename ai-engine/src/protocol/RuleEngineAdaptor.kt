@@ -4,6 +4,7 @@ import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.Move
 import org.keizar.game.Role
+import org.keizar.game.TileType
 import org.keizar.game.internal.Board
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.serialization.PieceSnapshot
@@ -55,7 +56,21 @@ object RuleEngineAdaptor {
     }
 
     fun encodeBoard(boardProperties: BoardProperties): List<List<Int>> {
-        // TODO: Need additional information on encoding tile arrangement
-        return listOf()
+        return (0..<boardProperties.width).map { row ->
+            (0..<boardProperties.height).map { col ->
+                boardProperties.tileArrangement[BoardPos(row, col)].let {
+                    when (it) {
+                        TileType.PLAIN -> 0
+                        TileType.KING -> 1
+                        TileType.QUEEN -> 2
+                        TileType.BISHOP -> 4
+                        TileType.KNIGHT -> 5
+                        TileType.ROOK -> 3
+                        TileType.KEIZAR -> 7
+                        else -> error("Unexpected TileType")
+                    }
+                }
+            }
+        }
     }
 }
