@@ -16,15 +16,21 @@ fun Application.configureRouting(context: ServerContext) {
             call.respond(RuleEngineAdaptor.encodeBoard(context.boardProperties))
         }
         post("/moves/white") {
-            val boardInput = call.receive<List<List<Int>>>()
-            val moves: List<Move> =
-                RuleEngineAdaptor.getPossibleMoves(context.boardProperties, boardInput, Role.WHITE)
+            val boardInput = call.receive<AIBoardData>()
+            val moves: List<Move> = RuleEngineAdaptor.getPossibleMoves(
+                context.boardProperties,
+                boardInput.board,
+                Role.WHITE
+            )
             call.respond(moves)
         }
         post("/moves/black") {
-            val boardInput = call.receive<List<List<Int>>>()
-            val moves: List<Move> =
-                RuleEngineAdaptor.getPossibleMoves(context.boardProperties, boardInput, Role.BLACK)
+            val boardInput = call.receive<AIBoardData>()
+            val moves: List<Move> = RuleEngineAdaptor.getPossibleMoves(
+                context.boardProperties,
+                boardInput.board,
+                Role.BLACK
+            )
             call.respond(moves)
         }
     }
