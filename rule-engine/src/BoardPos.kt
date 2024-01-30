@@ -1,10 +1,15 @@
 package org.keizar.game
 
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.IntArraySerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 
 @JvmInline
-@Serializable
+@Serializable// (BoardPos.AsArraySerializer::class)
 value class BoardPos private constructor(
     private val value: Long,
 ) {
@@ -44,6 +49,21 @@ value class BoardPos private constructor(
 
         fun range(range: Pair<String, String>): List<BoardPos> {
             return rangeFrom(fromString(range.first) to fromString(range.second))
+        }
+    }
+
+    object AsArraySerializer : KSerializer<BoardPos> {
+        private val delegate = IntArraySerializer()
+        override val descriptor: SerialDescriptor = delegate.descriptor
+
+        override fun deserialize(decoder: Decoder): BoardPos {
+            delegate.deserialize(decoder).run {
+                return BoardPos(row = get(0), col = get(1))
+            }
+        }
+
+        override fun serialize(encoder: Encoder, value: BoardPos) {
+          return  delegate.serialize(encoder, intArrayOf(value.row, value.col))
         }
     }
 }
