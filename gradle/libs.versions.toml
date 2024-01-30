@@ -16,6 +16,8 @@ accompanist = "0.33.2-alpha"
 datastore = "1.0.0"
 libtorrent4j = "2.1.0-31"
 androidx-lifecycle = "2.7.0"
+postgres_version = "42.5.1"
+h2_version = "2.1.214"
 
 [libraries]
 # Build
@@ -48,15 +50,17 @@ ktor-client-websockets = { module = "io.ktor:ktor-client-websockets", version.re
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 
-# Koin
-koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
-koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
-koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koin" }
-
+ktor-server-auth = { module = "io.ktor:ktor-server-auth", version.ref = "ktor" }
 ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor" }
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
+ktor-server-websocket-jvm = { module = "io.ktor:ktor-server-websockets-jvm", version.ref = "ktor" }
+
+# Koin
+koin-core = { module = "io.insert-koin:koin-core", version.ref = "koin" }
+koin-android = { module = "io.insert-koin:koin-android", version.ref = "koin" }
+koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", version.ref = "koin" }
 
 # Yamlkt
 directories = { module = "dev.dirs:directories", version = "26" }
@@ -131,3 +135,8 @@ androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 
 # compose-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "jetpackCompose" }
+
+# databases
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgres_version"}
+h2database = { module = "com.h2database:h2", version.ref = "h2_version"}
+

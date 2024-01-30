@@ -30,5 +30,6 @@ includeProject(":ci-helper", "ci-helper")
 includeProject(":rule-engine", "rule-engine")
 includeProject(":utils:slf4j-kt", "utils/slf4j-kt")
 includeProject(":ai-engine", "ai-engine")
+includeProject(":server", "server")
 
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
