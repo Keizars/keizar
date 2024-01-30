@@ -56,6 +56,7 @@ koin-androidx-compose = { module = "io.insert-koin:koin-androidx-compose", versi
 ktor-server-cio = { module = "io.ktor:ktor-server-cio", version.ref = "ktor" }
 ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor" }
 ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor" }
+ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 
 # Yamlkt
 directories = { module = "dev.dirs:directories", version = "26" }
