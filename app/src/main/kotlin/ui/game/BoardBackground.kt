@@ -186,10 +186,17 @@ private fun tileBackgroundColor(
     properties: BoardProperties,
     row: Int,
     col: Int
-) = when {
-    picked -> if (properties.tileBackgroundColor(row, col)) Color(0xff8bc34a) else Color(0xffc5e1a5)
-    properties.tileBackgroundColor(row, col) -> Color(0xff6d9a4a)
-    else -> Color(0xffe8edc8)
+): Color {
+    return when {
+        picked -> if (properties.tileBackgroundColor(row, col)) Color(0xff8bc34a) else Color(0xffc5e1a5)
+        properties.tileBackgroundColor(row, col) -> Color.DarkGray
+        else -> Color(0xFFefefef) // white
+    }
+//    return when {
+//        picked -> if (properties.tileBackgroundColor(row, col)) Color(0xff8bc34a) else Color(0xffc5e1a5)
+//        properties.tileBackgroundColor(row, col) -> Color(0xff6d9a4a)
+//        else -> Color(0xffe8edc8)
+//    }
 }
 
 @Composable
