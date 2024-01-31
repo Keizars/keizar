@@ -1,5 +1,6 @@
 package org.keizar.android.ui.game
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -35,7 +36,6 @@ import org.keizar.game.GameSession
 import org.keizar.game.Player
 import org.keizar.game.Role
 import org.keizar.game.TileType
-import kotlin.random.Random
 
 @Composable
 fun BoardBackground(
@@ -218,7 +218,10 @@ fun TileImage(
     role: Role?,
     modifier: Modifier = Modifier
 ) {
-    Box(modifier = modifier) {
+    Box(
+        modifier = modifier
+            .then(if (tileType != TileType.PLAIN) Modifier.border(2.dp, color = Color(0xFFa800d4)) else Modifier)
+    ) {
         CompositionLocalProvider(LocalContentColor provides LocalContentColor.current.slightlyWeaken()) {
             when (tileType) {
                 TileType.KING -> Icon(
