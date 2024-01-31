@@ -7,6 +7,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.DpOffset
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,6 +28,7 @@ import org.keizar.game.GameSession
 import org.keizar.game.Piece
 import org.keizar.game.Player
 import org.keizar.game.Role
+import kotlin.time.Duration.Companion.seconds
 
 interface GameBoardViewModel {
     @Stable
@@ -149,7 +151,10 @@ private class SinglePlayerGameBoardViewModel(
         RandomGameAIImpl(game, Player.entries.first { it != selfPlayer }, backgroundScope.coroutineContext)
 
     init {
-        gameAi.start()
+        launchInBackground {
+            delay(5.seconds) // Wait a few seconds before computer starts as white
+            gameAi.start()
+        }
     }
 }
 
