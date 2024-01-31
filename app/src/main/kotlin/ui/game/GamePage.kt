@@ -1,7 +1,8 @@
 package org.keizar.android.ui.game
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -19,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
@@ -61,39 +63,43 @@ fun GamePage(
         )
     }
 
-    Column(modifier) {
-        Scaffold(
-            topBar = {
-                val clipboard = LocalClipboardManager.current
-                TopAppBar(
-                    title = { Text(text = "Game") },
-                    navigationIcon = {
-                        IconButton(onClick = onClickHome) {
+    Scaffold(
+        modifier.fillMaxSize(),
+        topBar = {
+            val clipboard = LocalClipboardManager.current
+            TopAppBar(
+                title = { Text(text = "Game") },
+                navigationIcon = {
+                    IconButton(onClick = onClickHome) {
 //                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
-                            Icon(Icons.Rounded.Home, contentDescription = "Back")
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = {
-                            showGameConfigurationDialog = true
-                            clipboard.setText(AnnotatedString(startConfiguration.encode()))
-                        }) {
-                            Icon(Icons.Outlined.Share, contentDescription = "Share")
-                        }
+                        Icon(Icons.Rounded.Home, contentDescription = "Back")
                     }
-                )
-            }
-        ) { contentPadding ->
-            Column(modifier = Modifier.padding(contentPadding)) {
-                BoxWithConstraints {
-                    GameBoard(
-                        startConfiguration = startConfiguration,
-                        modifier = Modifier
-                            .padding(vertical = 16.dp)
-                            .size(min(maxWidth, maxHeight)),
-                        onClickHome = onClickHome,
-                    )
+                },
+                actions = {
+                    IconButton(onClick = {
+                        showGameConfigurationDialog = true
+                        clipboard.setText(AnnotatedString(startConfiguration.encode()))
+                    }) {
+                        Icon(Icons.Outlined.Share, contentDescription = "Share")
+                    }
                 }
+            )
+        },
+    ) { contentPadding ->
+        Box(
+            modifier = Modifier
+                .padding(contentPadding)
+                .fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            BoxWithConstraints {
+                GameBoard(
+                    startConfiguration = startConfiguration,
+                    modifier = Modifier
+                        .padding(vertical = 16.dp)
+                        .size(min(maxWidth, maxHeight)),
+                    onClickHome = onClickHome,
+                )
             }
         }
     }
