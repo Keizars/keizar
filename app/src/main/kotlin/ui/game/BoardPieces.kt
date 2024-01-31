@@ -132,24 +132,36 @@ fun BoardPieces(
                     .size(tileSize), // placement modifiers
                 contentAlignment = Alignment.Center,
             ) {
-                Box(
-                    modifier = Modifier // size modifiers
-                        .size(tileSize * 0.45f)
-                        .clip(CircleShape)
-                        .then(
-                            // shadow if dragging
-                            if (pick?.piece == piece) {
-                                Modifier.shadow(4.dp, shape = CircleShape)
-                            } else {
-                                Modifier
-                            }
-                        )
-                ) {
-                    val color = piece.role.pieceColor()
-                    PlayerIcon(color = color, Modifier.matchParentSize())
-                }
+                PlayerIconFitted(tileSize, pick?.piece == piece, piece.role.pieceColor())
             }
         }
+    }
+}
+
+/**
+ * Player icon fitted into tile size
+ */
+@Composable
+fun PlayerIconFitted(
+    tileSize: DpSize,
+    isPicked: Boolean,
+    color: Color,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier // size modifiers
+            .size(tileSize * 0.45f)
+            .clip(CircleShape)
+            .then(
+                // shadow if dragging
+                if (isPicked) {
+                    Modifier.shadow(4.dp, shape = CircleShape)
+                } else {
+                    Modifier
+                }
+            )
+    ) {
+        PlayerIcon(color = color, Modifier.matchParentSize())
     }
 }
 
