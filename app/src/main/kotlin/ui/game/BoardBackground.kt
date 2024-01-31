@@ -1,4 +1,4 @@
-package org.keizar.android.ui.game
+    package org.keizar.android.ui.game
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box

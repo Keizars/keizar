@@ -1,5 +1,7 @@
 package org.keizar.android.ui.game
 
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -18,10 +20,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import kotlinx.coroutines.delay
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
 import org.keizar.game.Difficulty
@@ -66,6 +72,8 @@ fun GameBoard(
                 // Reset the state at the start of a new round or when there is no winner
                 showDialogWhiteWin = true
                 showDialogBlackWin = true
+            } else {
+                delay(2000)
             }
         }
 
@@ -165,9 +173,66 @@ fun CapturedPieces(vm: GameBoardViewModel, role: Role) {
 @Composable
 fun WinningCounter(vm: GameBoardViewModel) {
     val winningCounter by vm.winningCounter.collectAsState()
-    Text(text = "Winning Keizar Counter: $winningCounter")
+
+    // A row of tokens
+    Row(
+
+        horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+        // Create a token for each number
+        (1..3).forEach { number ->
+            Token(
+                number = number,
+                isActive = number == winningCounter
+            )
+
+        }
+    }
 }
 
+@Composable
+fun Token(number: Int, isActive: Boolean) {
+    Canvas(modifier = Modifier.size(48.dp).padding(8.dp)) {
+        val circleColor = if (isActive) Color.Gray else Color.LightGray
+        val radius = size.minDimension / 2
+        val center = Offset(radius, radius)
+
+        // Draw the token
+        drawCircle(
+            circleColor,
+            radius,
+            center
+        )
+
+        // Draw the dots
+        if (isActive) {
+           val dotColor = Color.White
+            // Calculate positions for dots based on 'number'
+            val dotPositions = getDotPositions(number, center, radius / 3)
+            dotPositions.forEach { pos ->
+                drawCircle(dotColor, radius / 6, pos)
+            }
+        }
+    }
+}
+
+fun getDotPositions(number: Int, center: Offset, distance: Float): List<Offset> {
+    return when (number) {
+        1 -> listOf(
+            center // One dot in the center
+        )
+        2 -> listOf(
+            Offset(center.x - distance / 2, center.y), // One dot to the left of center
+            Offset(center.x + distance / 2, center.y) // One dot to the right of center
+        )
+        3 -> listOf(
+            Offset(center.x - distance, center.y), // One dot to the left of center
+            center, // One dot in the center
+            Offset(center.x + distance, center.y) // One dot to the right of center
+        )
+        else -> emptyList() // No dots if the number is not 1, 2, or 3
+    }
+}
 
 @Preview(showBackground = true)
 @Composable
