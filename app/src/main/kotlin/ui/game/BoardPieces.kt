@@ -25,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
@@ -41,7 +42,6 @@ import org.keizar.game.BoardProperties
 import org.keizar.game.GameSession
 import org.keizar.game.Player
 import org.keizar.game.Role
-import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -129,20 +129,25 @@ fun BoardPieces(
                         },
                         indication = null
                     ) { vm.onClickPiece(piece) }
-                    .clip(CircleShape)
-                    .size(tileSize)
-                    .padding(10.dp)
-                    .then(
-                        // shadow if dragging
-                        if (pick?.piece == piece) {
-                            Modifier.shadow(4.dp, shape = CircleShape)
-                        } else {
-                            Modifier
-                        }
-                    ),
+                    .size(tileSize), // placement modifiers
+                contentAlignment = Alignment.Center,
             ) {
-                val color = piece.role.pieceColor()
-                PlayerIcon(color = color, Modifier.matchParentSize())
+                Box(
+                    modifier = Modifier // size modifiers
+                        .size(tileSize * 0.45f)
+                        .clip(CircleShape)
+                        .then(
+                            // shadow if dragging
+                            if (pick?.piece == piece) {
+                                Modifier.shadow(4.dp, shape = CircleShape)
+                            } else {
+                                Modifier
+                            }
+                        )
+                ) {
+                    val color = piece.role.pieceColor()
+                    PlayerIcon(color = color, Modifier.matchParentSize())
+                }
             }
         }
     }
