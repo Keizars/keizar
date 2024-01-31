@@ -1,8 +1,9 @@
 package org.keizar.android.ui.game
 
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,6 +33,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -82,14 +84,19 @@ fun BoardPieces(
             val lastMoveIsDrag by vm.lastMoveIsDrag.collectAsStateWithLifecycle(false)
             val shouldAnimateMovement = loaded && !lastMoveIsDrag
 
+            val movementAnimationSpec =
+                when {
+                    shouldAnimateMovement -> spring<Dp>(Spring.DampingRatioNoBouncy, Spring.StiffnessVeryLow)
+                    else -> snap()
+                }
             val offsetX by animateDpAsState(
                 targetValue = targetOffset.x,
-                animationSpec = if (shouldAnimateMovement) tween() else snap(),
+                animationSpec = movementAnimationSpec,
                 label = "offsetX"
             )
             val offsetY by animateDpAsState(
                 targetValue = targetOffset.y,
-                animationSpec = if (shouldAnimateMovement) tween() else snap(),
+                animationSpec = movementAnimationSpec,
                 label = "offsetY"
             )
 
