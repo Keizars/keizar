@@ -1,11 +1,13 @@
 package org.keizar.android.ui.game
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.AlertDialog
@@ -15,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -22,12 +25,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import kotlinx.coroutines.delay
+import androidx.compose.ui.graphics.graphicsLayer
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
 import org.keizar.game.Difficulty
@@ -35,6 +36,7 @@ import org.keizar.game.GameResult
 import org.keizar.game.GameSession
 import org.keizar.game.Player
 import org.keizar.game.Role
+import kotlin.math.sqrt
 
 
 @Composable
@@ -67,18 +69,12 @@ fun GameBoard(
 
         CapturedPieces(vm, selfRole.other())
 
-        LaunchedEffect(winner) {
-            if (winner == null) {
-                // Reset the state at the start of a new round or when there is no winner
-                showDialogWhiteWin = true
-                showDialogBlackWin = true
-            } else {
-                delay(2000)
-            }
-        }
 
         when (winner) {
-            null -> {}
+            null -> {
+                showDialogWhiteWin = true
+                showDialogBlackWin = true
+            }
             Role.WHITE -> {
                 if (showDialogWhiteWin) {
                     AlertDialog(onDismissRequest = {},
@@ -93,6 +89,7 @@ fun GameBoard(
                         })
                 }
             }
+
             Role.BLACK -> {
                 if (showDialogBlackWin) {
                     AlertDialog(onDismissRequest = {},
@@ -113,6 +110,7 @@ fun GameBoard(
             null -> {
                 // do nothing
             }
+
             is GameResult.Draw -> {
                 AlertDialog(onDismissRequest = {},
                     title = { Text(text = "Game Over, Draw") },
@@ -173,17 +171,26 @@ fun CapturedPieces(vm: GameBoardViewModel, role: Role) {
 @Composable
 fun WinningCounter(vm: GameBoardViewModel) {
     val winningCounter by vm.winningCounter.collectAsState()
+    val flippedStates = remember { mutableStateListOf(false, false, false) }
+
+    // Whenever winningCounter updates, set the corresponding token state to flipped
+    LaunchedEffect(winningCounter) {
+        if (winningCounter in 1..3) {
+            flippedStates[winningCounter - 1] = true
+        } else {
+            flippedStates.forEachIndexed { index, _ -> flippedStates[index] = false }
+        }
+    }
 
     // A row of tokens
-    Row(
-
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
+    Row(modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically) {
         // Create a token for each number
         (1..3).forEach { number ->
             Token(
                 number = number,
-                isActive = number == winningCounter
+                isFlipped = flippedStates[number - 1]
             )
 
         }
@@ -191,9 +198,15 @@ fun WinningCounter(vm: GameBoardViewModel) {
 }
 
 @Composable
-fun Token(number: Int, isActive: Boolean) {
-    Canvas(modifier = Modifier.size(48.dp).padding(8.dp)) {
-        val circleColor = if (isActive) Color.Gray else Color.LightGray
+fun Token(number: Int, isFlipped: Boolean) {
+    val rotationDegrees by animateFloatAsState(targetValue = if (isFlipped) 180f else 0f)
+    Canvas(modifier = Modifier
+        .size(48.dp)
+        .padding(8.dp).graphicsLayer {
+            rotationY = rotationDegrees
+            cameraDistance = 12f * density
+        }) {
+        val circleColor = if (rotationDegrees <= 90f) Color.Gray else Color.LightGray
         val radius = size.minDimension / 2
         val center = Offset(radius, radius)
 
@@ -203,12 +216,10 @@ fun Token(number: Int, isActive: Boolean) {
             radius,
             center
         )
-
-        // Draw the dots
-        if (isActive) {
-           val dotColor = Color.White
+        if (rotationDegrees > 90f) {
+            val dotColor = Color.Black
             // Calculate positions for dots based on 'number'
-            val dotPositions = getDotPositions(number, center, radius / 3)
+            val dotPositions = getDotPositions(number, center, radius / 2)
             dotPositions.forEach { pos ->
                 drawCircle(dotColor, radius / 6, pos)
             }
@@ -221,16 +232,23 @@ fun getDotPositions(number: Int, center: Offset, distance: Float): List<Offset> 
         1 -> listOf(
             center // One dot in the center
         )
+
         2 -> listOf(
-            Offset(center.x - distance / 2, center.y), // One dot to the left of center
-            Offset(center.x + distance / 2, center.y) // One dot to the right of center
+            Offset(center.x, center.y - distance / 2),
+            Offset(center.x, center.y + distance / 2)
         )
-        3 -> listOf(
-            Offset(center.x - distance, center.y), // One dot to the left of center
-            center, // One dot in the center
-            Offset(center.x + distance, center.y) // One dot to the right of center
-        )
-        else -> emptyList() // No dots if the number is not 1, 2, or 3
+
+        3 -> {
+            val sideLength = distance * 2 / sqrt(3f)
+            val horizontalDistance = sideLength / 2
+            listOf(
+                Offset(center.x, center.y - distance / 2), // Top vertex
+                Offset(center.x - horizontalDistance, center.y + distance / 2), // Bottom left vertex
+                Offset(center.x + horizontalDistance, center.y + distance / 2)  // Bottom right vertex
+            )
+        }
+
+        else -> emptyList()
     }
 }
 
