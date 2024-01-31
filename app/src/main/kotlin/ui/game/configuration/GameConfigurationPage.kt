@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -42,7 +41,6 @@ import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.get
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.serialization.encodeToHexString
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.keizar.android.ui.external.placeholder.placeholder
@@ -106,8 +104,17 @@ private fun GameConfigurationPage(
                 item { Spacer(modifier = Modifier.height(16.dp)) }
             }
 
-            Row(Modifier.fillMaxWidth().height(50.dp), horizontalArrangement = Arrangement.End) {
-                Button(onClick = { onClickStart(vm.configuration.value) }, Modifier.padding(top = 10.dp).height(45.dp)) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .height(50.dp), horizontalArrangement = Arrangement.End
+            ) {
+                Button(
+                    onClick = { onClickStart(vm.configuration.value) },
+                    Modifier
+                        .padding(top = 10.dp)
+                        .height(45.dp)
+                ) {
                     Text("Start", style = MaterialTheme.typography.bodyLarge)
                     Icon(
                         Icons.AutoMirrored.Default.ArrowForward,
@@ -125,11 +132,19 @@ private fun BoardSeedTextField(
     vm: GameConfigurationViewModel,
 ) {
     val text by vm.configurationSeedText.collectAsStateWithLifecycle()
+    val isError by vm.isConfigurationSeedTextError.collectAsStateWithLifecycle(false)
     OutlinedTextField(
         value = text,
         onValueChange = { vm.setConfigurationSeedText(it) },
         label = { Text(text = "Seed") },
-        supportingText = { Text(text = "Explore new board layouts by changing the seed") },
+        supportingText = {
+            if (isError) {
+                Text(text = "Error: Invalid seed")
+            } else {
+                Text(text = "Explore new board layouts by changing the seed")
+            }
+        },
+        isError = isError,
         trailingIcon = {
             IconButton(onClick = { vm.updateRandomSeed() }) {
                 Icon(Icons.Default.Refresh, contentDescription = "Generate random seed")
@@ -143,7 +158,7 @@ private fun BoardSeedTextField(
 @Composable
 private fun BoardLayoutPreview(vm: GameConfigurationViewModel) {
     BoxWithConstraints {
-        val boardProperties = vm.boardProperties.collectAsStateWithLifecycle(null).value
+        val boardProperties by vm.boardProperties.collectAsStateWithLifecycle(null)
         val boardSize = min(maxWidth, maxHeight)
 
         val sizeFactor = 1f
@@ -157,7 +172,7 @@ private fun BoardLayoutPreview(vm: GameConfigurationViewModel) {
         ) {
             boardProperties?.let { prop ->
                 BoardBackground(
-                    remember(prop, vm) { PieceArranger(prop, vm.playAs.filterNotNull()) },
+                    remember(prop, vm) { PieceArranger(prop, vm.playAs) },
                     properties = prop,
                     currentPick = null,
                     onClickTile = {},
@@ -178,12 +193,13 @@ private fun PlayAsSelector(vm: GameConfigurationViewModel) {
         style = MaterialTheme.typography.labelMedium
     )
 
+    val playAs by vm.playAs.collectAsStateWithLifecycle(null)
     SingleChoiceSegmentedButtonRow(
         Modifier
             .padding(top = 4.dp)
+            .placeholder(playAs == null)
             .fillMaxWidth()
     ) {
-        val playAs by vm.playAs.collectAsStateWithLifecycle(null)
         SegmentedButton(
             selected = playAs == BLACK,
             onClick = { vm.setPlayAs(BLACK) },

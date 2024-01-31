@@ -2,11 +2,12 @@ package org.keizar.android.ui.game.configuration
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.remember
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.serialization.Serializable
@@ -23,9 +24,6 @@ interface GameConfigurationViewModel {
     fun updateRandomSeed()
 
     @Stable
-    val layoutSeed: Flow<Int?>
-
-    @Stable
     val boardProperties: SharedFlow<BoardProperties>
 
     @Stable
@@ -33,8 +31,11 @@ interface GameConfigurationViewModel {
     fun setConfigurationSeedText(value: String)
 
     @Stable
-    val playAs: Flow<Role?>
-    fun setPlayAs(role: Role?)
+    val isConfigurationSeedTextError: Flow<Boolean>
+
+    @Stable
+    val playAs: Flow<Role>
+    fun setPlayAs(role: Role)
 
     @Stable
     val difficulty: Flow<Difficulty>
@@ -42,7 +43,9 @@ interface GameConfigurationViewModel {
 }
 
 @Composable
-fun rememberGameConfigurationViewModel(): GameConfigurationViewModel = GameConfigurationViewModelImpl()
+fun rememberGameConfigurationViewModel(): GameConfigurationViewModel = remember {
+    GameConfigurationViewModelImpl()
+}
 
 @Serializable
 data class GameStartConfiguration(
@@ -64,26 +67,29 @@ data class GameStartConfiguration(
 fun GameStartConfiguration.createBoard(): BoardProperties =
     BoardProperties.getStandardProperties(layoutSeed)
 
-private class GameConfigurationViewModelImpl : GameConfigurationViewModel, AbstractViewModel() {
+private class GameConfigurationViewModelImpl(
+    initialConfiguration: GameStartConfiguration = GameStartConfiguration.random()
+) : GameConfigurationViewModel, AbstractViewModel() {
     override val configuration: MutableStateFlow<GameStartConfiguration> =
-        MutableStateFlow(GameStartConfiguration.random())
+        MutableStateFlow(initialConfiguration)
     override val configurationSeed: Flow<String> = configuration.map { GameStartConfigurationEncoder.encode(it) }
 
-    private val _configurationSeedText = MutableStateFlow(configuration.value.layoutSeed.toString())
-    override val configurationSeedText = merge(_configurationSeedText, configurationSeed).stateInBackground("")
-    override val layoutSeed: Flow<Int?> = configuration.map { it.layoutSeed }
-    override val playAs: Flow<Role?> = configuration.map { it.playAs }
-    override fun setPlayAs(role: Role?) {
+    private val _configurationSeedText = MutableStateFlow(GameStartConfigurationEncoder.encode(initialConfiguration))
+    override val configurationSeedText = merge(_configurationSeedText, configurationSeed).stateInBackground(
+        GameStartConfigurationEncoder.encode(initialConfiguration)
+    )
+
+    private val layoutSeed: Flow<Int> = configuration.map { it.layoutSeed }
+    override val playAs: Flow<Role> = configuration.map { it.playAs }
+    override fun setPlayAs(role: Role) {
         updateConfiguration {
-            copy(playAs = role ?: Role.WHITE)
+            copy(playAs = role)
         }
     }
 
     override val boardProperties: SharedFlow<BoardProperties> =
-        combine(layoutSeed, playAs) { layoutSeed, playAs ->
-            BoardProperties.getStandardProperties(
-                layoutSeed ?: 0
-            )
+        layoutSeed.filterNotNull().map { layoutSeed ->
+            BoardProperties.getStandardProperties(layoutSeed)
         }.shareInBackground()
 
 
@@ -97,16 +103,16 @@ private class GameConfigurationViewModelImpl : GameConfigurationViewModel, Abstr
 
     override fun setConfigurationSeedText(value: String) {
         _configurationSeedText.value = value
-        value.toIntOrNull()?.let { seed ->
-            updateConfiguration {
-                copy(layoutSeed = seed)
-            }
+        GameStartConfigurationEncoder.decode(value)?.let {
+            updateConfiguration { it }
         }
     }
 
+    override val isConfigurationSeedTextError: Flow<Boolean> = configurationSeedText.map {
+        GameStartConfigurationEncoder.decode(it) == null
+    }
+
     override fun updateRandomSeed() {
-        val newSeed = BoardProperties.generateRandomSeed()
-        _configurationSeedText.value = newSeed.toString()
         updateConfiguration {
             GameStartConfiguration.random()
         }
