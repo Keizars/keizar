@@ -11,6 +11,7 @@ import kotlinx.serialization.Serializable
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
 import org.keizar.game.serialization.GameSnapshot
+import java.util.concurrent.atomic.AtomicInteger
 
 /***
  * API for the backend. Representation of a complete game that may contain multiple rounds
@@ -110,6 +111,7 @@ class GameSessionImpl(
     private val wonRounds: List<MutableStateFlow<Int>>
 
     private val nextRoundAgreement: MutableList<Boolean>
+    private val agreementCounter: AtomicInteger = AtomicInteger(0)
 
     init {
         rounds = (0..properties.rounds).map {
@@ -169,10 +171,12 @@ class GameSessionImpl(
 
     override fun confirmNextRound(player: Player): Boolean {
         if (currentRoundNo.value >= properties.rounds) return false
+        if (nextRoundAgreement[player.ordinal]) return false
         nextRoundAgreement[player.ordinal] = true
-        if (nextRoundAgreement.all { it }) {
+        agreementCounter.incrementAndGet()
+        if (agreementCounter.compareAndSet(2, 0)) {
             proceedToNextTurn()
-            nextRoundAgreement.forEachIndexed { index, _ -> nextRoundAgreement[index] = false }
+            nextRoundAgreement.replaceAll { false }
         }
         return true
     }
