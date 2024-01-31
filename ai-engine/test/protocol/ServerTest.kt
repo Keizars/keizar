@@ -11,6 +11,7 @@ import io.ktor.client.request.get
 import io.ktor.server.testing.testApplication
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.keizar.aiengine.protocol.plugins.AIBoardData
 
 class ServerTest {
     @Test
@@ -30,7 +31,7 @@ class ServerTest {
         }
         val response = client.post("/moves/white") {
             contentType(ContentType.Application.Json)
-            setBody(listOf(listOf(0, 0, 0), listOf(0, 0, 0)))
+            setBody(AIBoardData(listOf(listOf(0, 0, 0), listOf(0, 0, 0))))
         }
         assertEquals(HttpStatusCode.OK, response.status)
     }
