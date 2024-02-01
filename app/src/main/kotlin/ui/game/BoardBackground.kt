@@ -1,4 +1,4 @@
-    package org.keizar.android.ui.game
+package org.keizar.android.ui.game
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.map
 import org.keizar.android.R
 import org.keizar.android.ui.theme.slightlyWeaken
 import org.keizar.game.BoardPos
@@ -95,26 +96,35 @@ fun BoardBackground(
                             )
                         }
 
-                        if (col == 0) {
-                            Text(
-                                text = (row + 1).toString(),
-                                modifier = Modifier
-                                    .align(Alignment.TopStart)
-                                    .padding(top = 2.dp, start = 2.dp),
-                                style = TextStyle(fontSize = 10.sp),
-                                color = Color.Black
-                            )
-                        }
+                        CompositionLocalProvider(
+                            LocalContentColor provides
+                                    if (properties.tileBackgroundColor(row, col)) Color.White else Color.Black
+                        ) {
+                            if (col == 0) {
+                                Text(
+                                    text = remember(row) {
+                                        pieceArranger.logicalToView(BoardPos(row = row, col = 0))
+                                            .map { (it.row + 1).toString() }
+                                    }.collectAsStateWithLifecycle(initialValue = "").value,
+                                    modifier = Modifier
+                                        .align(Alignment.TopStart)
+                                        .padding(top = 4.dp, start = 4.dp),
+                                    style = TextStyle(fontSize = 10.sp),
+                                )
+                            }
 
-                        if (row == 0) {
-                            Text(
-                                text = ('a' + col).toString(),
-                                modifier = Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .padding(bottom = 2.dp, end = 2.dp),
-                                style = TextStyle(fontSize = 10.sp),
-                                color = Color.Black
-                            )
+                            if (row == 0) {
+                                Text(
+                                    text = remember(col) {
+                                        pieceArranger.logicalToView(BoardPos(row = 0, col = col))
+                                            .map { ('a' + it.col).toString() }
+                                    }.collectAsStateWithLifecycle(initialValue = "").value,
+                                    modifier = Modifier
+                                        .align(Alignment.BottomEnd)
+                                        .padding(bottom = 4.dp, end = 4.dp),
+                                    style = TextStyle(fontSize = 10.sp),
+                                )
+                            }
                         }
                     }
 
