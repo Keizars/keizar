@@ -54,8 +54,6 @@ fun GameBoard(
         val winner = vm.winner.collectAsState().value
         val finalWinner = vm.finalWinner.collectAsState().value
         val selfRole = vm.selfRole.collectAsState().value
-        var showDialogWhiteWin by remember { mutableStateOf(false) }
-        var showDialogBlackWin by remember { mutableStateOf(false) }
 
         WinningCounter(vm)
 
@@ -70,64 +68,77 @@ fun GameBoard(
 
         CapturedPieces(vm, selfRole.other())
 
+        WinningRoundDialog(winner, vm)
 
-        when (winner) {
-            null -> {
-                showDialogWhiteWin = true
-                showDialogBlackWin = true
-            }
-            Role.WHITE -> {
-                if (showDialogWhiteWin) {
-                    AlertDialog(onDismissRequest = {},
-                        title = { Text(text = "This round is over, White wins!") },
-                        confirmButton = {
-                            Button(onClick = {
-                                vm.startNextRound(vm.selfPlayer)
-                                showDialogWhiteWin = false
-                            }) {
-                                Text(text = "Confirm")
-                            }
-                        })
-                }
-            }
+        GameOverDialog(finalWinner, onClickHome)
+    }
+}
 
-            Role.BLACK -> {
-                if (showDialogBlackWin) {
-                    AlertDialog(onDismissRequest = {},
-                        title = { Text(text = "This round is over, Black wins!") },
-                        confirmButton = {
-                            Button(onClick = {
-                                vm.startNextRound(vm.selfPlayer)
-                                showDialogBlackWin = false
-                            }) {
-                                Text(text = "Confirm")
-                            }
-                        })
-                }
-            }
+@Composable
+fun GameOverDialog(finalWinner: GameResult?, onClickHome: () -> Unit) {
+    when (finalWinner) {
+        null -> {
+            // do nothing
         }
 
-        when (finalWinner) {
-            null -> {
-                // do nothing
-            }
+        is GameResult.Draw -> {
+            AlertDialog(onDismissRequest = {},
+                title = { Text(text = "Game Over, Draw") },
+                confirmButton = {
+                    Button(onClick = onClickHome) {
+                        Text(text = "Back to main page")
+                    }
+                })
+        }
 
-            is GameResult.Draw -> {
+        is GameResult.Winner -> {
+            AlertDialog(onDismissRequest = {},
+                title = { Text(text = "Game Over, ${finalWinner.player} wins!") },
+                confirmButton = {
+                    Button(onClick = onClickHome) {
+                        Text(text = "Back to main page")
+                    }
+                })
+        }
+    }
+}
+
+@Composable
+fun WinningRoundDialog(winner: Role?, vm: GameBoardViewModel) {
+    var showDialogWhiteWin by remember { mutableStateOf(false) }
+    var showDialogBlackWin by remember { mutableStateOf(false) }
+    when (winner) {
+        null -> {
+            showDialogWhiteWin = true
+            showDialogBlackWin = true
+        }
+
+        Role.WHITE -> {
+            if (showDialogWhiteWin) {
                 AlertDialog(onDismissRequest = {},
-                    title = { Text(text = "Game Over, Draw") },
+                    title = { Text(text = "First Round Winner: White") },
+                    text = { Text(text = "White captured: $vm.") },
                     confirmButton = {
-                        Button(onClick = onClickHome) {
-                            Text(text = "Back to main page")
+                        Button(onClick = {
+                            vm.startNextRound(vm.selfPlayer)
+                            showDialogWhiteWin = false
+                        }) {
+                            Text(text = "OK")
                         }
                     })
             }
+        }
 
-            is GameResult.Winner -> {
+        Role.BLACK -> {
+            if (showDialogBlackWin) {
                 AlertDialog(onDismissRequest = {},
-                    title = { Text(text = "Game Over, ${finalWinner.player} wins!") },
+                    title = { Text(text = "This round is over, Black wins!") },
                     confirmButton = {
-                        Button(onClick = onClickHome) {
-                            Text(text = "Back to main page")
+                        Button(onClick = {
+                            vm.startNextRound(vm.selfPlayer)
+                            showDialogBlackWin = false
+                        }) {
+                            Text(text = "OK")
                         }
                     })
             }
@@ -173,21 +184,27 @@ fun CapturedPieces(vm: GameBoardViewModel, role: Role) {
 fun WinningCounter(vm: GameBoardViewModel) {
     val winningCounter by vm.winningCounter.collectAsState()
     val flippedStates = remember { mutableStateListOf(true, true, true) }
+    var firstTimeFlipped by remember { mutableStateOf(false) }
 
     // Whenever winningCounter updates, set the corresponding token state to flipped
     LaunchedEffect(winningCounter) {
         if (winningCounter in 1..3) {
             flippedStates[winningCounter - 1] = true
         } else {
-            delay(1000)
+            if (!firstTimeFlipped) {
+                delay(3000)
+                firstTimeFlipped = true
+            }
             flippedStates.forEachIndexed { index, _ -> flippedStates[index] = false }
         }
     }
 
     // A row of tokens
-    Row(modifier = Modifier.fillMaxWidth(),
+    Row(
+        modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically) {
+        verticalAlignment = Alignment.CenterVertically
+    ) {
         // Create a token for each number
         (1..3).forEach { number ->
             Token(
@@ -237,8 +254,8 @@ fun getDotPositions(number: Int, center: Offset, distance: Float): List<Offset> 
         )
 
         2 -> listOf(
-            Offset(center.x, center.y - distance / 2),
-            Offset(center.x, center.y + distance / 2)
+            Offset(center.x - distance / 3, center.y + distance / 2),
+            Offset(center.x + distance / 3, center.y - distance / 2)
         )
 
         3 -> {
@@ -246,8 +263,14 @@ fun getDotPositions(number: Int, center: Offset, distance: Float): List<Offset> 
             val horizontalDistance = sideLength / 2
             listOf(
                 Offset(center.x, center.y - distance / 2), // Top vertex
-                Offset(center.x - horizontalDistance, center.y + distance / 2), // Bottom left vertex
-                Offset(center.x + horizontalDistance, center.y + distance / 2)  // Bottom right vertex
+                Offset(
+                    center.x - horizontalDistance,
+                    center.y + distance / 2
+                ), // Bottom left vertex
+                Offset(
+                    center.x + horizontalDistance,
+                    center.y + distance / 2
+                )  // Bottom right vertex
             )
         }
 
