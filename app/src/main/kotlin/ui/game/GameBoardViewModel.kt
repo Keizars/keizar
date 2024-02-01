@@ -28,6 +28,7 @@ import org.keizar.game.GameSession
 import org.keizar.game.Piece
 import org.keizar.game.Player
 import org.keizar.game.Role
+import org.keizar.game.RoundSession
 import kotlin.time.Duration.Companion.seconds
 
 interface GameBoardViewModel {
@@ -82,6 +83,9 @@ interface GameBoardViewModel {
     @Stable
     val finalWinner: StateFlow<GameResult?>
 
+    @Stable
+    val currentRound: SharedFlow<RoundSession>
+
     // clicking
 
     /**
@@ -128,6 +132,7 @@ interface GameBoardViewModel {
      * Called when the the first round is finished by the players to start the next one.
      */
     fun startNextRound(selfPlayer: Player)
+
 }
 
 @Composable
@@ -213,6 +218,9 @@ private sealed class BaseGameBoardViewModel(
 
     @Stable
     override val finalWinner: StateFlow<GameResult?> = game.finalWinner.stateInBackground(null)
+
+    @Stable
+    override val currentRound: SharedFlow<RoundSession> = game.currentRound.shareInBackground()
 
     /**
      * Currently available positions where the picked piece can move to. `null` if no piece is picked.
