@@ -29,6 +29,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.delay
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
 import org.keizar.game.Difficulty
@@ -171,13 +172,14 @@ fun CapturedPieces(vm: GameBoardViewModel, role: Role) {
 @Composable
 fun WinningCounter(vm: GameBoardViewModel) {
     val winningCounter by vm.winningCounter.collectAsState()
-    val flippedStates = remember { mutableStateListOf(false, false, false) }
+    val flippedStates = remember { mutableStateListOf(true, true, true) }
 
     // Whenever winningCounter updates, set the corresponding token state to flipped
     LaunchedEffect(winningCounter) {
         if (winningCounter in 1..3) {
             flippedStates[winningCounter - 1] = true
         } else {
+            delay(1000)
             flippedStates.forEachIndexed { index, _ -> flippedStates[index] = false }
         }
     }
@@ -202,7 +204,8 @@ fun Token(number: Int, isFlipped: Boolean) {
     val rotationDegrees by animateFloatAsState(targetValue = if (isFlipped) 180f else 0f)
     Canvas(modifier = Modifier
         .size(48.dp)
-        .padding(8.dp).graphicsLayer {
+        .padding(8.dp)
+        .graphicsLayer {
             rotationY = rotationDegrees
             cameraDistance = 12f * density
         }) {
