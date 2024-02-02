@@ -321,6 +321,15 @@ class GameSessionTest {
         assertTrue(round2.move(BoardPos("f6"), BoardPos("f5")))
         assertTrue(round2.move(BoardPos("h4"), BoardPos("h5")))
 
+        assertTrue(game.confirmNextRound(Player.Player1))
+        assertTrue(game.confirmNextRound(Player.Player2))
+
+        assertEquals(2, game.currentRoundNo.value)
+        assertEquals(1, game.wonRounds(Player.Player1).first())
+        assertEquals(1, game.wonRounds(Player.Player2).first())
+        assertEquals(Player.Player2, game.getRoundWinner(0).first())
+        assertEquals(Player.Player1, game.getRoundWinner(1).first())
+
         assertTrue(game.replayGame())
 
         val round3 = curRound.first()

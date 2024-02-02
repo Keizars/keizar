@@ -119,7 +119,7 @@ class GameSessionImpl(
     private val haveWinner: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     private val curRoles: List<MutableStateFlow<Role>>
-    private val wonRounds: List<MutableStateFlow<MutableList<Int>>>
+    private val wonRounds: List<MutableStateFlow<List<Int>>>
 
     private val nextRoundAgreement: MutableList<Boolean>
     private val agreementCounter: AtomicInteger = AtomicInteger(0)
@@ -197,7 +197,7 @@ class GameSessionImpl(
         val winningPlayer: Player? = winningRole?.let {
             if (currentRole(Player.Player1).value == it) Player.Player1 else Player.Player2
         }
-        winningPlayer?.let { wonRounds[it.ordinal].value.add(currentRoundNo.value) }
+        winningPlayer?.let { wonRounds[it.ordinal].value += currentRoundNo.value }
         if (currentRoundNo.value == properties.rounds - 1) {
             updateFinalWinner()
         }
@@ -230,7 +230,6 @@ class GameSessionImpl(
         wonRounds.forEach { it.value = mutableListOf() }
         _currentRoundNo.value = 0
         haveWinner.value = false
-
     }
 
     override fun getRoundWinner(roundNo: Int): Flow<Player?> {
