@@ -5,8 +5,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.count
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
 import org.keizar.game.internal.RuleEngineCoreImpl
@@ -59,15 +57,16 @@ interface GameSession {
         currentRoundNo = currentRoundNo.value,
     )
 
-    // Replay the first round of the game. Change the currentRoundNo to 0, and reset the round state.
-    fun replayFirstRound(): Unit
-
-    // Replay the second round of the game. Change the currentRoundNo to 1, and reset the round state.
-    fun replaySecondRound(): Unit
+    // Replay current round of the game. Reset the round state.
+    // Can only be called in single player mode.
+    fun replayCurrentRound(): Boolean
 
     // Replay the whole game. Change the currentRoundNo to 0, and reset the game state.
-    fun replayTheGame(): Unit
+    // Can only be called in single player mode.
+    fun replayGame(): Boolean
 
+    fun getPlayer(role: Role, roundNo: Int): Player
+    fun getRole(player: Player, roundNo: Int): Role
     fun getRoundWinner(roundNo: Int): Flow<Player?>
 
     companion object {
@@ -120,7 +119,7 @@ class GameSessionImpl(
     private val haveWinner: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     private val curRoles: List<MutableStateFlow<Role>>
-    private val wonRounds: List<StateFlow<MutableList<Int>>>
+    private val wonRounds: List<MutableStateFlow<MutableList<Int>>>
 
     private val nextRoundAgreement: MutableList<Boolean>
     private val agreementCounter: AtomicInteger = AtomicInteger(0)
@@ -210,25 +209,40 @@ class GameSessionImpl(
         haveWinner.value = true
     }
 
-    override fun replayFirstRound() {
-        /*TODO*/
+    override fun replayCurrentRound(): Boolean {
+        rounds[_currentRoundNo.value].reset()
+        nextRoundAgreement.replaceAll { false }
+        agreementCounter.set(0)
+        return true
     }
 
-    override fun replaySecondRound() {
-        /*TODO*/
+    override fun replayGame(): Boolean {
+        rounds.forEach { it.reset() }
+        nextRoundAgreement.replaceAll { false }
+        agreementCounter.set(0)
+        resetGameStatus()
+        return true
     }
 
-    override fun replayTheGame() {
-        /*TODO*/
+    private fun resetGameStatus() {
+        curRoles[0].value = Role.WHITE
+        curRoles[1].value = Role.BLACK
+        wonRounds.forEach { it.value = mutableListOf() }
+        _currentRoundNo.value = 0
+        haveWinner.value = false
+
     }
 
     override fun getRoundWinner(roundNo: Int): Flow<Player?> {
-        return combine(wonRounds) {
-            it.forEachIndexed { index, rounds ->
-                if (roundNo in rounds) return@combine Player.fromOrdinal(index)
-            }
-            return@combine null
-        }
+        return rounds[roundNo].winner.map { it?.let { role -> getPlayer(role, roundNo) } }
+    }
+
+    override fun getRole(player: Player, roundNo: Int): Role {
+        return if ((player.ordinal + roundNo) % 2 == 0) Role.WHITE else Role.BLACK
+    }
+
+    override fun getPlayer(role: Role, roundNo: Int): Player {
+        return Player.fromOrdinal((role.ordinal + roundNo) % 2)
     }
 }
 

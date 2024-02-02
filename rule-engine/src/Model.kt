@@ -7,8 +7,8 @@ import org.keizar.game.serialization.PieceSnapshot
 
 @Serializable
 enum class Role {
-    BLACK,
-    WHITE;
+    WHITE,
+    BLACK;
 
     fun other(): Role = when (this) {
         BLACK -> WHITE

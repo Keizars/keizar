@@ -57,6 +57,18 @@ class Board(
         }
     }
 
+    fun resetPieces() {
+        tiles.map { it.piece = null }
+        var index = 0
+        for ((_, startingPos) in boardProperties.piecesStartingPos) {
+            for (pos in startingPos) {
+                val piece = _pieces[index++]
+                piece.pos.value = pos
+                tileAt(pos).piece = piece.asPiece()
+            }
+        }
+    }
+
     private fun tileAt(pos: BoardPos): Tile {
         return tiles[pos.index]
     }

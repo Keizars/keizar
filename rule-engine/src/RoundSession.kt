@@ -21,6 +21,7 @@ interface RoundSession {
     fun getAllPiecesPos(role: Role): Flow<List<BoardPos>>
     suspend fun move(from: BoardPos, to: BoardPos): Boolean
     fun getLostPiecesCount(role: Role): StateFlow<Int>
+    fun reset()
     fun getSnapshot(): RoundSnapshot = RoundSnapshot(
         winningCounter = winningCounter.value,
         curRole = curRole.value,
@@ -64,5 +65,9 @@ class RoundSessionImpl(
 
     override fun getLostPiecesCount(role: Role): StateFlow<Int> {
         return ruleEngine.getLostPiecesCount(role)
+    }
+
+    override fun reset() {
+        ruleEngine.reset()
     }
 }
