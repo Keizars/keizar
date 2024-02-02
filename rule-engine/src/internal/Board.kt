@@ -64,6 +64,7 @@ class Board(
             for (pos in startingPos) {
                 val piece = _pieces[index++]
                 piece.pos.value = pos
+                piece.isCaptured.value = false
                 tileAt(pos).piece = piece.asPiece()
             }
         }
