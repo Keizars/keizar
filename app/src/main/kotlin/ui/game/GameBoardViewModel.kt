@@ -86,6 +86,12 @@ interface GameBoardViewModel {
     @Stable
     val currentRound: SharedFlow<RoundSession>
 
+    @Stable
+    val round1Winner: StateFlow<Role?>
+
+    @Stable
+    val round2Winner: StateFlow<Role?>
+
     // clicking
 
     /**
@@ -221,6 +227,12 @@ private sealed class BaseGameBoardViewModel(
 
     @Stable
     override val currentRound: SharedFlow<RoundSession> = game.currentRound.shareInBackground()
+
+    @Stable
+    override val round1Winner: StateFlow<Role?> = game.rounds[0].winner
+
+    @Stable
+    override val round2Winner: StateFlow<Role?> = game.rounds[1].winner
 
     /**
      * Currently available positions where the picked piece can move to. `null` if no piece is picked.

@@ -67,6 +67,8 @@ interface GameSession {
     // Replay the whole game. Change the currentRoundNo to 0, and reset the game state.
     fun replayTheGame(): Unit
 
+    fun getRoundWinner(roundNo: Int): StateFlow<Player?>
+
     companion object {
         // Create a standard GameSession using the seed provided.
         fun create(seed: Int? = null): GameSession {
@@ -217,6 +219,12 @@ class GameSessionImpl(
 
     override fun replayTheGame() {
         /*TODO*/
+    }
+
+    override fun getRoundWinner(roundNo: Int): StateFlow<Player?> {
+        val stateFlow = MutableStateFlow<Player?>(null)
+        /*TODO*/
+        return stateFlow
     }
 }
 
