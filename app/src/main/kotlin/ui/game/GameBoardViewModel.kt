@@ -142,6 +142,11 @@ interface GameBoardViewModel {
      */
     fun startNextRound(selfPlayer: Player)
 
+    /**
+     * Get the count of pieces of the given [role] in [roundNo] round.
+     */
+    fun getRoundPieceCount(roundNo: Int, role: Role): StateFlow<Int>
+
 }
 
 @Composable
@@ -344,6 +349,10 @@ private sealed class BaseGameBoardViewModel(
         launchInBackground(Dispatchers.IO) {
             game.confirmNextRound(selfPlayer)
         }
+    }
+
+    override fun getRoundPieceCount(roundNo: Int, role: Role): StateFlow<Int> {
+        return game.rounds[roundNo].getLostPiecesCount(role)
     }
 
 }

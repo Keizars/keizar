@@ -1,5 +1,6 @@
 package org.keizar.android.ui.game
 
+import android.app.Activity
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -57,7 +59,7 @@ fun GameBoard(
         val winner = vm.winner.collectAsState().value
         val finalWinner = vm.finalWinner.collectAsState().value
         val selfRole = vm.selfRole.collectAsState().value
-        val showRoundOneBottomBar = winner != null
+        val showRoundOneBottomBar = (winner != null && finalWinner == null)
 
         val showRoundTwoBottomBar = finalWinner != null
 
@@ -76,7 +78,7 @@ fun GameBoard(
 
         WinningRoundDialog(winner, vm)
 
-        GameOverDialog(finalWinner, onClickHome)
+        GameOverDialog(vm, finalWinner, onClickHome)
 
         if (showRoundOneBottomBar) {
             RoundOneBottomBar(vm, onClickHome)
@@ -158,8 +160,9 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
         horizontalArrangement = Arrangement.SpaceAround,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        val context = LocalContext.current
         Button(
-            onClick = { /* TODO */ },
+            onClick = {  if (context is Activity) context.finish() },
             modifier = Modifier
                 .width(buttonWidth)
                 .padding(4.dp)
@@ -176,7 +179,9 @@ fun RoundTwoBottomBar(vm: GameBoardViewModel) {
 }
 
 @Composable
-fun GameOverDialog(finalWinner: GameResult?, onClickHome: () -> Unit) {
+fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome: () -> Unit) {
+
+
     when (finalWinner) {
         null -> {
             // do nothing
@@ -185,6 +190,16 @@ fun GameOverDialog(finalWinner: GameResult?, onClickHome: () -> Unit) {
         is GameResult.Draw -> {
             AlertDialog(onDismissRequest = {},
                 title = { Text(text = "Game Over, Draw") },
+                text = {
+                    Text(text = "Round 1:\n" +
+                            "   Winner: ${vm.round1Winner.collectAsState(null)}\n" +
+                            "   White captured: ${vm.getRoundPieceCount(0, Role.WHITE)}\n" +
+                            "   Black captured: ${vm.getRoundPieceCount(0, Role.BLACK)}\n" +
+                            "Round 2 Winner: ${vm.round2Winner.collectAsState(null)}\n" +
+                            "   White captured: ${vm.getRoundPieceCount(1, Role.WHITE)}\n" +
+                            "   Black captured: ${vm.getRoundPieceCount(1, Role.BLACK)}"
+                    )
+                },
                 confirmButton = {
                     Button(onClick = onClickHome) {
                         Text(text = "Back to main page")
