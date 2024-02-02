@@ -115,7 +115,7 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
         }
 
         Button(
-            onClick = {/* TODO */ },
+            onClick = {vm.replayCurrentRound()},
             modifier = Modifier
                 .width(buttonWidth)
                 .padding(4.dp)

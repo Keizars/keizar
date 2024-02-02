@@ -150,6 +150,7 @@ interface GameBoardViewModel {
      */
     fun getRoundPieceCount(roundNo: Int, role: Role): StateFlow<Int>
 
+    fun replayCurrentRound()
 }
 
 @Composable
@@ -359,6 +360,10 @@ private sealed class BaseGameBoardViewModel(
 
     override fun getRoundPieceCount(roundNo: Int, role: Role): StateFlow<Int> {
         return game.rounds[roundNo].getLostPiecesCount(role)
+    }
+
+    override fun replayCurrentRound() {
+        game.replayCurrentRound()
     }
 
 }
