@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
@@ -42,7 +43,7 @@ interface GameSession {
 
 
     // Accumulated number of rounds this player has won.
-    fun wonRounds(player: Player): StateFlow<Int>
+    fun wonRounds(player: Player): Flow<Int>
 
     // Accumulated number of pieces this player has lost (been captured by the opponent).
     fun lostPieces(player: Player): Flow<Int>
@@ -67,7 +68,7 @@ interface GameSession {
     // Replay the whole game. Change the currentRoundNo to 0, and reset the game state.
     fun replayTheGame(): Unit
 
-    fun getRoundWinner(roundNo: Int): StateFlow<Player?>
+    fun getRoundWinner(roundNo: Int): Flow<Player?>
 
     companion object {
         // Create a standard GameSession using the seed provided.
@@ -119,7 +120,7 @@ class GameSessionImpl(
     private val haveWinner: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     private val curRoles: List<MutableStateFlow<Role>>
-    private val wonRounds: List<MutableStateFlow<Int>>
+    private val wonRounds: List<StateFlow<MutableList<Int>>>
 
     private val nextRoundAgreement: MutableList<Boolean>
     private val agreementCounter: AtomicInteger = AtomicInteger(0)
@@ -137,8 +138,8 @@ class GameSessionImpl(
         )
 
         wonRounds = listOf(
-            MutableStateFlow(0),
-            MutableStateFlow(0),
+            MutableStateFlow(mutableListOf()),
+            MutableStateFlow(mutableListOf()),
         )
 
         nextRoundAgreement = mutableListOf(false, false)
@@ -170,8 +171,8 @@ class GameSessionImpl(
         return curRoles[player.ordinal]
     }
 
-    override fun wonRounds(player: Player): StateFlow<Int> {
-        return wonRounds[player.ordinal]
+    override fun wonRounds(player: Player): Flow<Int> {
+        return wonRounds[player.ordinal].map { it.count() }
     }
 
     override fun lostPieces(player: Player): Flow<Int> {
@@ -197,7 +198,7 @@ class GameSessionImpl(
         val winningPlayer: Player? = winningRole?.let {
             if (currentRole(Player.Player1).value == it) Player.Player1 else Player.Player2
         }
-        winningPlayer?.let { ++wonRounds[it.ordinal].value }
+        winningPlayer?.let { wonRounds[it.ordinal].value.add(currentRoundNo.value) }
         if (currentRoundNo.value == properties.rounds - 1) {
             updateFinalWinner()
         }
@@ -221,17 +222,25 @@ class GameSessionImpl(
         /*TODO*/
     }
 
-    override fun getRoundWinner(roundNo: Int): StateFlow<Player?> {
-        val stateFlow = MutableStateFlow<Player?>(null)
-        /*TODO*/
-        return stateFlow
+    override fun getRoundWinner(roundNo: Int): Flow<Player?> {
+        return combine(wonRounds) {
+            it.forEachIndexed { index, rounds ->
+                if (roundNo in rounds) return@combine Player.fromOrdinal(index)
+            }
+            return@combine null
+        }
     }
 }
 
 @Serializable
 enum class Player {
     Player1,
-    Player2,
+    Player2;
+
+    companion object {
+        private val values = entries.toTypedArray()
+        fun fromOrdinal(ordinal: Int): Player = values[ordinal]
+    }
 }
 
 @Serializable

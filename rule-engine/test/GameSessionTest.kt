@@ -43,7 +43,7 @@ class GameSessionTest {
     }
 
     @Test
-    fun `test confirmNextRound and winningCounter`() = runTest {
+    fun `test confirmNextRound, winningCounter, wonRounds and getRoundWinner`() = runTest {
         val game = GameSession.create(0)
         val curRound = game.currentRound
         val round1 = curRound.first()
@@ -73,8 +73,9 @@ class GameSessionTest {
 
         assertEquals(1, game.currentRoundNo.value)
         assertEquals(0, round2.winningCounter.value)
-        assertEquals(0, game.wonRounds(Player.Player1).value)
-        assertEquals(1, game.wonRounds(Player.Player2).value)
+        assertEquals(0, game.wonRounds(Player.Player1).first())
+        assertEquals(1, game.wonRounds(Player.Player2).first())
+        assertEquals(Player.Player2, game.getRoundWinner(0).first())
         assertEquals(null, game.finalWinner.first())
 
         assertTrue(game.confirmNextRound(Player.Player1))
@@ -111,8 +112,8 @@ class GameSessionTest {
 
         assertEquals(1, game.currentRoundNo.value)
         assertEquals(0, round2.winningCounter.value)
-        assertEquals(0, game.wonRounds(Player.Player1).value)
-        assertEquals(1, game.wonRounds(Player.Player2).value)
+        assertEquals(0, game.wonRounds(Player.Player1).first())
+        assertEquals(1, game.wonRounds(Player.Player2).first())
 
         assertTrue(round2.move(BoardPos("e2"), BoardPos("e3")))
         assertTrue(round2.move(BoardPos("d7"), BoardPos("d6")))
@@ -134,8 +135,10 @@ class GameSessionTest {
         assertTrue(game.confirmNextRound(Player.Player2))
 
         assertEquals(2, game.currentRoundNo.value)
-        assertEquals(1, game.wonRounds(Player.Player1).value)
-        assertEquals(1, game.wonRounds(Player.Player2).value)
+        assertEquals(1, game.wonRounds(Player.Player1).first())
+        assertEquals(1, game.wonRounds(Player.Player2).first())
+        assertEquals(Player.Player2, game.getRoundWinner(0).first())
+        assertEquals(Player.Player1, game.getRoundWinner(1).first())
     }
 
     @Test
