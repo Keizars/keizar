@@ -59,9 +59,9 @@ fun GameBoard(
         val winner = vm.winner.collectAsState().value
         val finalWinner = vm.finalWinner.collectAsState().value
         val selfRole = vm.selfRole.collectAsState().value
-        val showRoundOneBottomBar = (winner != null && finalWinner == null)
+        val showRoundOneBottomBar = (winner != null && vm.currentRoundCount.collectAsState().value == 0)
 
-        val showRoundTwoBottomBar = finalWinner != null
+        val showRoundTwoBottomBar = (winner != null && vm.currentRoundCount.collectAsState().value == 1)
 
         WinningCounter(vm)
 
@@ -180,8 +180,6 @@ fun RoundTwoBottomBar(vm: GameBoardViewModel) {
 
 @Composable
 fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome: () -> Unit) {
-
-
     when (finalWinner) {
         null -> {
             // do nothing

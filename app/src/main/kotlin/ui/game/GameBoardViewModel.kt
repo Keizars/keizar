@@ -93,6 +93,9 @@ interface GameBoardViewModel {
     val currentRound: SharedFlow<RoundSession>
 
     @Stable
+    val currentRoundCount: StateFlow<Int>
+
+    @Stable
     val round1Winner: StateFlow<Role?>
 
     @Stable
@@ -243,6 +246,9 @@ private sealed class BaseGameBoardViewModel(
 
     @Stable
     override val currentRound: SharedFlow<RoundSession> = game.currentRound.shareInBackground()
+
+    @Stable
+    override val currentRoundCount: StateFlow<Int> = game.currentRoundNo
 
     @Stable
     override val round1Winner: StateFlow<Role?> = game.rounds[0].winner
