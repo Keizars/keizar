@@ -59,9 +59,11 @@ fun GameBoard(
         val winner = vm.winner.collectAsState().value
         val finalWinner = vm.finalWinner.collectAsState().value
         val selfRole = vm.selfRole.collectAsState().value
-        val showRoundOneBottomBar = (winner != null && vm.currentRoundCount.collectAsState().value == 0)
+        val showRoundOneBottomBar =
+            (winner != null && vm.currentRoundCount.collectAsState().value == 0)
 
-        val showRoundTwoBottomBar = (winner != null && vm.currentRoundCount.collectAsState().value == 1)
+        val showRoundTwoBottomBar =
+            (winner != null && vm.currentRoundCount.collectAsState().value == 1)
 
         WinningCounter(vm)
 
@@ -131,8 +133,10 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
         var showDialog by remember { mutableStateOf(false) }
         val showResults = remember { mutableStateOf(true) }
         Button(
-            onClick = { showDialog = true
-                        showResults.value = true},
+            onClick = {
+                showDialog = true
+                showResults.value = true
+            },
             modifier = Modifier
                 .width(buttonWidth)
                 .padding(4.dp)
@@ -162,7 +166,7 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
     ) {
         val context = LocalContext.current
         Button(
-            onClick = {  if (context is Activity) context.finish() },
+            onClick = { if (context is Activity) context.finish() },
             modifier = Modifier
                 .width(buttonWidth)
                 .padding(4.dp)
@@ -189,13 +193,14 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
             AlertDialog(onDismissRequest = {},
                 title = { Text(text = "Game Over, Draw") },
                 text = {
-                    Text(text = "Round 1:\n" +
-                            "   Winner: ${vm.round1Winner.collectAsState(null)}\n" +
-                            "   White captured: ${vm.getRoundPieceCount(0, Role.WHITE)}\n" +
-                            "   Black captured: ${vm.getRoundPieceCount(0, Role.BLACK)}\n" +
-                            "Round 2 Winner: ${vm.round2Winner.collectAsState(null)}\n" +
-                            "   White captured: ${vm.getRoundPieceCount(1, Role.WHITE)}\n" +
-                            "   Black captured: ${vm.getRoundPieceCount(1, Role.BLACK)}"
+                    Text(
+                        text = "Round 1:\n" +
+                                "   Winner: ${vm.round1Winner.collectAsState(null)}\n" +
+                                "   White captured: ${vm.getRoundPieceCount(0, Role.WHITE)}\n" +
+                                "   Black captured: ${vm.getRoundPieceCount(0, Role.BLACK)}\n" +
+                                "Round 2 Winner: ${vm.round2Winner.collectAsState(null)}\n" +
+                                "   White captured: ${vm.getRoundPieceCount(1, Role.WHITE)}\n" +
+                                "   Black captured: ${vm.getRoundPieceCount(1, Role.BLACK)}"
                     )
                 },
                 confirmButton = {
@@ -218,12 +223,17 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
 }
 
 @Composable
-fun WinningRoundDialog(winner: Role?, vm: GameBoardViewModel, showFlag: MutableState<Boolean> = mutableStateOf(false)) {
+fun WinningRoundDialog(
+    winner: Role?,
+    vm: GameBoardViewModel,
+    showFlag: MutableState<Boolean> = mutableStateOf(false)
+) {
     var showDialogWhiteWin by remember { mutableStateOf(false) }
     var showDialogBlackWin by remember { mutableStateOf(false) }
 
     val whiteCapturedPieces by vm.whiteCapturedPieces.collectAsState()
     val blackCapturedPieces by vm.blackCapturedPieces.collectAsState()
+    val currentRoundCount by vm.currentRoundCount.collectAsState()
 
     if (showFlag.value) {
         if (winner == Role.WHITE) {
@@ -242,7 +252,7 @@ fun WinningRoundDialog(winner: Role?, vm: GameBoardViewModel, showFlag: MutableS
         Role.WHITE -> {
             if (showDialogWhiteWin) {
                 AlertDialog(onDismissRequest = {},
-                    title = { Text(text = "First Round Winner: White") },
+                    title = { Text(text = "This Round Winner: White") },
                     text = {
                         Text(
                             text = "White captured: ${whiteCapturedPieces}\n" +
@@ -251,6 +261,9 @@ fun WinningRoundDialog(winner: Role?, vm: GameBoardViewModel, showFlag: MutableS
                     },
                     confirmButton = {
                         Button(onClick = {
+                            if (currentRoundCount == 1) {
+                                vm.startNextRound(vm.selfPlayer)
+                            }
                             showDialogWhiteWin = false
                             showFlag.value = false
                         }) {
@@ -263,7 +276,7 @@ fun WinningRoundDialog(winner: Role?, vm: GameBoardViewModel, showFlag: MutableS
         Role.BLACK -> {
             if (showDialogBlackWin) {
                 AlertDialog(onDismissRequest = {},
-                    title = { Text(text = "First Round Winner: Black") },
+                    title = { Text(text = "This Round Winner: Black") },
                     text = {
                         Text(
                             text = "White captured: ${whiteCapturedPieces}\n" +
@@ -272,6 +285,9 @@ fun WinningRoundDialog(winner: Role?, vm: GameBoardViewModel, showFlag: MutableS
                     },
                     confirmButton = {
                         Button(onClick = {
+                            if (currentRoundCount == 1) {
+                                vm.startNextRound(vm.selfPlayer)
+                            }
                             showDialogBlackWin = false
                             showFlag.value = false
                         }) {

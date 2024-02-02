@@ -16,8 +16,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -32,10 +34,12 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.GameSession
 import org.keizar.game.Player
 import org.keizar.game.Role
+import org.keizar.game.TileType
 
 
 /**
@@ -117,6 +121,13 @@ fun BoardPieces(
                 contentAlignment = Alignment.Center,
             ) {
                 PlayerIconFitted(tileSize, pick?.piece == piece, piece.role.pieceColor())
+            }
+            val position: BoardPos = piece.pos.collectAsState().value
+            val winner = vm.winner.collectAsState().value
+            LaunchedEffect(Unit) {
+                if (vm.boardProperties.tileArrangement[position] == TileType.KEIZAR && winner != null) {
+                    vm.boardTransitionController.flashWiningPiece()
+                }
             }
         }
     }
