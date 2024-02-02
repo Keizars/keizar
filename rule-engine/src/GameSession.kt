@@ -58,6 +58,15 @@ interface GameSession {
         currentRoundNo = currentRoundNo.value,
     )
 
+    // Replay the first round of the game. Change the currentRoundNo to 0, and reset the round state.
+    fun replayFirstRound(): Unit
+
+    // Replay the second round of the game. Change the currentRoundNo to 1, and reset the round state.
+    fun replaySecondRound(): Unit
+
+    // Replay the whole game. Change the currentRoundNo to 0, and reset the game state.
+    fun replayTheGame(): Unit
+
     companion object {
         // Create a standard GameSession using the seed provided.
         fun create(seed: Int? = null): GameSession {
@@ -196,6 +205,18 @@ class GameSessionImpl(
 
     private fun updateFinalWinner() {
         haveWinner.value = true
+    }
+
+    override fun replayFirstRound() {
+        /*TODO*/
+    }
+
+    override fun replaySecondRound() {
+        /*TODO*/
+    }
+
+    override fun replayTheGame() {
+        /*TODO*/
     }
 }
 
