@@ -44,7 +44,8 @@ import androidx.navigation.get
 import kotlinx.serialization.encodeToHexString
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.keizar.android.ui.external.placeholder.placeholder
-import org.keizar.android.ui.game.BoardBackground
+import org.keizar.android.ui.game.BoardTileLabels
+import org.keizar.android.ui.game.BoardTiles
 import org.keizar.android.ui.game.PieceArranger
 import org.keizar.game.Difficulty
 import org.keizar.game.Role
@@ -160,6 +161,7 @@ private fun BoardLayoutPreview(vm: GameConfigurationViewModel) {
     BoxWithConstraints {
         val boardProperties by vm.boardProperties.collectAsStateWithLifecycle(null)
         val boardSize = min(maxWidth, maxHeight)
+        val playAs by vm.playAs.collectAsStateWithLifecycle(initialValue = null)
 
         val sizeFactor = 1f
         val adjustedBoardSize = boardSize * sizeFactor
@@ -168,15 +170,21 @@ private fun BoardLayoutPreview(vm: GameConfigurationViewModel) {
                 .padding(bottom = 16.dp)
                 .size(adjustedBoardSize)
                 .clip(RoundedCornerShape(ROUND_CORNER_RADIUS))
-                .placeholder(boardProperties == null),
+                .placeholder(boardProperties == null || playAs == null),
         ) {
             boardProperties?.let { prop ->
-                BoardBackground(
-                    remember(prop, vm) { PieceArranger(prop, vm.playAs) },
+                val pieceArranger = remember(prop, vm) { PieceArranger(prop, vm.playAs) }
+                BoardTiles(
+                    rotationDegrees = if (playAs == WHITE) 0f else 180f,
                     properties = prop,
                     currentPick = null,
                     onClickTile = {},
                     Modifier.matchParentSize(),
+                )
+                BoardTileLabels(
+                    properties = prop,
+                    pieceArranger = pieceArranger,
+                    modifier = Modifier.matchParentSize(),
                 )
             }
         }

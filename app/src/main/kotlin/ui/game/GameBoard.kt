@@ -27,11 +27,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.text.style.TextAlign
 import kotlinx.coroutines.delay
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
@@ -67,7 +67,7 @@ fun GameBoard(
 
 
         Box(modifier = modifier) {
-            BoardBackground(vm)
+            BoardBackground(vm, Modifier.matchParentSize())
             BoardPieces(vm)
             PossibleMovesOverlay(vm)
         }
@@ -103,14 +103,18 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
         // All buttons now have a fixed width
         Button(
             onClick = onClickHome,
-            modifier = Modifier.width(buttonWidth).padding(4.dp)
+            modifier = Modifier
+                .width(buttonWidth)
+                .padding(4.dp)
         ) {
             Text(text = "Home", textAlign = TextAlign.Center)
         }
 
         Button(
             onClick = {/* TODO */ },
-            modifier = Modifier.width(buttonWidth).padding(4.dp)
+            modifier = Modifier
+                .width(buttonWidth)
+                .padding(4.dp)
         ) {
             Text(text = "Replay", textAlign = TextAlign.Center)
         }
@@ -127,7 +131,9 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
         Button(
             onClick = { showDialog = true
                         showResults.value = true},
-            modifier = Modifier.width(buttonWidth).padding(4.dp)
+            modifier = Modifier
+                .width(buttonWidth)
+                .padding(4.dp)
         ) {
             Text(text = "Results", textAlign = TextAlign.Center)
         }
@@ -138,7 +144,9 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
 
         Button(
             onClick = { vm.startNextRound(vm.selfPlayer) },
-            modifier = Modifier.width(buttonWidth).padding(4.dp)
+            modifier = Modifier
+                .width(buttonWidth)
+                .padding(4.dp)
         ) {
             Text(text = "Next Round", textAlign = TextAlign.Center)
         }
@@ -152,7 +160,9 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
     ) {
         Button(
             onClick = { /* TODO */ },
-            modifier = Modifier.width(buttonWidth).padding(4.dp)
+            modifier = Modifier
+                .width(buttonWidth)
+                .padding(4.dp)
         ) {
             Text(text = "Exit", textAlign = TextAlign.Center)
         }

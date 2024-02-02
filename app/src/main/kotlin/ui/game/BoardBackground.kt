@@ -1,7 +1,9 @@
 package org.keizar.android.ui.game
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,11 +17,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
@@ -43,22 +44,80 @@ fun BoardBackground(
     vm: GameBoardViewModel,
     modifier: Modifier = Modifier,
 ) {
-    BoardBackground(
-        vm.pieceArranger,
-        properties = vm.boardProperties,
-        currentPick = vm.currentPick.collectAsStateWithLifecycle().value,
-        onClickTile = { vm.onClickTile(it) },
-        modifier,
-    )
+    Box(modifier = modifier) {
+        BoardTiles(
+            rotationDegrees = vm.boardTransitionController.boardBackgroundRotation,
+            properties = vm.boardProperties,
+            currentPick = vm.currentPick.collectAsStateWithLifecycle().value,
+            onClickTile = { logicalPos -> vm.onClickTile(logicalPos) },
+        )
+        BoardTileLabels(
+            properties = vm.boardProperties,
+            pieceArranger = vm.pieceArranger,
+            modifier = Modifier.matchParentSize(),
+        )
+    }
 }
 
 @Composable
-fun BoardBackground(
-    pieceArranger: PieceArranger,
+fun BoardTiles(
+    rotationDegrees: Float,
     properties: BoardProperties,
     currentPick: Pick?,
-    onClickTile: (BoardPos) -> Unit,
+    onClickTile: (logicalPos: BoardPos) -> Unit,
     modifier: Modifier = Modifier,
+) {
+    BasicBoardBackground(
+        properties = properties,
+        modifier = modifier.rotate(rotationDegrees),
+    ) { pos ->
+        val picked = remember(currentPick) {
+            currentPick?.piece?.pos?.value == pos
+        }
+        Tile(
+            onClick = { onClickTile(pos) },
+            backgroundColor = tileBackgroundColor(picked, properties, pos.row, pos.col),
+            Modifier.fillMaxSize(),
+        ) {
+            TileImage(
+                tileType = run {
+//                    val posUpdated by rememberUpdatedState(newValue = pos)
+//                    val viewPos = snapshotFlow { posUpdated }
+//                    val currPos by remember(properties) {
+//                        pieceArranger.viewToLogical(viewPos)
+//                    }.collectAsStateWithLifecycle(BoardPos(0, 0))
+                    properties.tileArrangement[pos] ?: TileType.PLAIN
+                },
+                role = null,
+                Modifier
+                    .fillMaxSize()
+                    .rotate(360 - rotationDegrees), // cancel rotation
+            )
+        }
+    }
+}
+
+@Composable
+fun BoardTileLabels(
+    properties: BoardProperties,
+    pieceArranger: PieceArranger,
+    modifier: Modifier = Modifier,
+) {
+    BasicBoardBackground(properties, modifier.background(Color.Transparent)) { pos ->
+        TileLabel(
+            color = if (properties.tileBackgroundColor(pos.row, pos.col)) Color.White else Color.Black,
+            row = pos.row,
+            col = pos.col,
+            pieceArranger,
+        )
+    }
+}
+
+@Composable
+fun BasicBoardBackground(
+    properties: BoardProperties,
+    modifier: Modifier = Modifier,
+    content: @Composable BoxScope.(pos: BoardPos) -> Unit,
 ) {
     Column(modifier) {
         for (row in properties.height - 1 downTo 0) {
@@ -73,119 +132,48 @@ fun BoardBackground(
                             .weight(1f)
                             .fillMaxSize()
                     ) {
-                        val picked = remember(currentPick) {
-                            currentPick?.viewPos == BoardPos(row, col)
-                        }
-                        Tile(
-                            onClick = { onClickTile(BoardPos(row, col)) },
-                            backgroundColor = tileBackgroundColor(picked, properties, row, col),
-                            Modifier
-                                .fillMaxSize(),
-                        ) {
-                            TileImage(
-                                tileType = kotlin.run {
-                                    val viewPos = snapshotFlow { BoardPos(row, col) }
-                                    val currPos by remember(properties) {
-                                        pieceArranger.viewToLogical(viewPos)
-                                    }.collectAsStateWithLifecycle(BoardPos(0, 0))
-                                    properties.tileArrangement[currPos] ?: TileType.PLAIN
-                                },
-                                role = null,
-                                Modifier
-                                    .fillMaxSize(),
-                            )
-                        }
-
-                        CompositionLocalProvider(
-                            LocalContentColor provides
-                                    if (properties.tileBackgroundColor(row, col)) Color.White else Color.Black
-                        ) {
-                            if (col == 0) {
-                                Text(
-                                    text = remember(row) {
-                                        pieceArranger.logicalToView(BoardPos(row = row, col = 0))
-                                            .map { (it.row + 1).toString() }
-                                    }.collectAsStateWithLifecycle(initialValue = "").value,
-                                    modifier = Modifier
-                                        .align(Alignment.TopStart)
-                                        .padding(top = 4.dp, start = 4.dp),
-                                    style = TextStyle(fontSize = 10.sp),
-                                )
-                            }
-
-                            if (row == 0) {
-                                Text(
-                                    text = remember(col) {
-                                        pieceArranger.logicalToView(BoardPos(row = 0, col = col))
-                                            .map { ('a' + it.col).toString() }
-                                    }.collectAsStateWithLifecycle(initialValue = "").value,
-                                    modifier = Modifier
-                                        .align(Alignment.BottomEnd)
-                                        .padding(bottom = 4.dp, end = 4.dp),
-                                    style = TextStyle(fontSize = 10.sp),
-                                )
-                            }
-                        }
+                        content(BoardPos(row = row, col = col))
                     }
-
-
-//                    val currentPick by vm.currentPick.collectAsState()
-//                    val picked = remember(currentPick) {
-//                        currentPick?.pos == BoardPos(row, col)
-//                    }
-//
-//                    val player by remember(properties) {
-//                        val currPos = BoardPos(row, col)
-//                        vm.pieces[currPos]!!
-//                    }.player.collectAsState(null)
-//
-//                    Box(
-//                        modifier = Modifier
-//                            .weight(1f)
-//                            .fillMaxSize()
-//                    ) {
-//                        Tile(
-//                            backgroundColor = tileBackgroundColor(picked, properties, row, col),
-//                            contentColor = if (player == Player.BLACK) Color.Black else Color.White,
-//                            Modifier
-//                                .fillMaxSize(),
-//                        ) {
-//                            TileImage(
-//                                tileType = remember(properties) {
-//                                    val currPos = BoardPos(row, col)
-//                                    properties.tileArrangement[currPos] ?: PLAIN
-//                                },
-//                                player = player,
-//                                Modifier
-//                                    .clickable { vm.onClick(BoardPos(row, col)) }
-//                                    .fillMaxSize(),
-//                            )
-//                        }
-//
-//                        if (col == 0) {
-//                            Text(
-//                                text = (row + 1).toString(),
-//                                modifier = Modifier
-//                                    .align(Alignment.TopStart)
-//                                    .padding(top = 2.dp, start = 2.dp),
-//                                style = TextStyle(fontSize = 10.sp),
-//                                color = Color.Black
-//                            )
-//                        }
-//
-//                        if (row == 0) {
-//                            Text(
-//                                text = ('a' + col).toString(),
-//                                modifier = Modifier
-//                                    .align(Alignment.BottomEnd)
-//                                    .padding(bottom = 2.dp, end = 2.dp),
-//                                style = TextStyle(fontSize = 10.sp),
-//                                color = Color.Black
-//                            )
-//                        }
-//                    }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun BoxScope.TileLabel(
+    color: Color,
+    row: Int,
+    col: Int,
+    pieceArranger: PieceArranger,
+) {
+    CompositionLocalProvider(
+        LocalContentColor provides color
+    ) {
+        if (col == 0) {
+            Text(
+                text = remember(row) {
+                    pieceArranger.logicalToView(BoardPos(row = row, col = 0))
+                        .map { (it.row + 1).toString() }
+                }.collectAsStateWithLifecycle(initialValue = "").value,
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .padding(top = 4.dp, start = 4.dp),
+                style = TextStyle(fontSize = 10.sp),
+            )
+        }
+
+        if (row == 0) {
+            Text(
+                text = remember(col) {
+                    pieceArranger.logicalToView(BoardPos(row = 0, col = col))
+                        .map { ('a' + it.col).toString() }
+                }.collectAsStateWithLifecycle(initialValue = "").value,
+                modifier = Modifier.Companion
+                    .align(Alignment.BottomEnd)
+                    .padding(bottom = 4.dp, end = 4.dp),
+                style = TextStyle(fontSize = 10.sp),
+            )
         }
     }
 }
