@@ -1,12 +1,11 @@
-package org.keizar.aiengine.protocol
+package org.keizar.server.training
 
-import org.keizar.aiengine.protocol.plugins.*
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.callloging.CallLogging
-import io.ktor.server.request.uri
-import io.ktor.util.logging.KtorSimpleLogger
+import org.keizar.server.training.plugins.configureRouting
+import org.keizar.server.training.plugins.configureSerialization
 
 fun main() {
     embeddedServer(

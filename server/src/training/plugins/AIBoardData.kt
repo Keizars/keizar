@@ -1,4 +1,4 @@
-package org.keizar.aiengine.protocol.plugins
+package org.keizar.server.training.plugins
 
 import kotlinx.serialization.Serializable
 
