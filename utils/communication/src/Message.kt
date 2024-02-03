@@ -1,4 +1,4 @@
-package org.keizar.server.gameroom
+package org.keizar.utils.communication
 
 import kotlinx.serialization.Serializable
 

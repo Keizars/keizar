@@ -6,6 +6,7 @@ plugins {
 dependencies {
     api(libs.kotlinx.serialization.json)
     implementation(project(":rule-engine"))
+    implementation(project(":utils:communication"))
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.server.auth)
     implementation(libs.ktor.server.netty)

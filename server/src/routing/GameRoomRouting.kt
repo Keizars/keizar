@@ -11,8 +11,8 @@ import kotlinx.coroutines.flow.first
 import org.keizar.server.gameroom.GameRoom
 import org.keizar.server.gameroom.GameRoomImpl
 import org.keizar.server.gameroom.PlayerSessionImpl
-import org.keizar.server.gameroom.PlayerSessionState
-import org.keizar.server.gameroom.UserInfo
+import org.keizar.utils.communication.PlayerSessionState
+import org.keizar.utils.communication.UserInfo
 
 fun Application.gameRoomRouting() {
     val logger = log
