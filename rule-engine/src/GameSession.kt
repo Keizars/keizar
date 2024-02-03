@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Serializable
+import org.keizar.game.internal.RuleEngine
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
 import org.keizar.game.serialization.GameSnapshot
@@ -87,19 +88,51 @@ interface GameSession {
             }
         }
 
+        // Create a standard GameSession using the BoardProperties
+        // and a RoundSessionConstructor provided.
+        fun create(
+            properties: BoardProperties,
+            roundSessionConstructor: (ruleEngine: RuleEngine) -> RoundSession,
+        ): GameSession {
+            return GameSessionImpl(properties) {
+                val ruleEngine = RuleEngineImpl(
+                    boardProperties = properties,
+                    ruleEngineCore = RuleEngineCoreImpl(properties),
+                )
+                roundSessionConstructor(ruleEngine)
+            }
+        }
+
         // Restore a GameSession by a snapshot of the game.
         fun restore(snapshot: GameSnapshot): GameSession {
             return GameSessionImpl(
                 properties = snapshot.properties,
                 startFromRoundNo = snapshot.currentRoundNo,
             ) { index ->
-                RoundSessionImpl(
-                    ruleEngine = RuleEngineImpl.restore(
-                        properties = snapshot.properties,
-                        roundSnapshot = snapshot.rounds[index],
-                        ruleEngineCore = RuleEngineCoreImpl(snapshot.properties),
-                    )
+                val ruleEngine = RuleEngineImpl.restore(
+                    properties = snapshot.properties,
+                    roundSnapshot = snapshot.rounds[index],
+                    ruleEngineCore = RuleEngineCoreImpl(snapshot.properties),
                 )
+                RoundSessionImpl(ruleEngine)
+            }
+        }
+
+        // Restore a GameSession by a snapshot of the game and a RoundSessionConstructor provided.
+        fun restore(
+            snapshot: GameSnapshot,
+            roundSessionConstructor: (ruleEngine: RuleEngine) -> RoundSession,
+        ): GameSession {
+            return GameSessionImpl(
+                properties = snapshot.properties,
+                startFromRoundNo = snapshot.currentRoundNo,
+            ) { index ->
+                val ruleEngine = RuleEngineImpl.restore(
+                    properties = snapshot.properties,
+                    roundSnapshot = snapshot.rounds[index],
+                    ruleEngineCore = RuleEngineCoreImpl(snapshot.properties),
+                )
+                roundSessionConstructor(ruleEngine)
             }
         }
     }

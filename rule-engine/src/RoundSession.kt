@@ -28,6 +28,8 @@ interface RoundSession {
         winner = winner.value,
         pieces = pieces.map { it.getSnapShot() }
     )
+
+    fun pieceAt(pos: BoardPos): Role?
 }
 
 class RoundSessionImpl(
@@ -57,6 +59,10 @@ class RoundSessionImpl(
 
     override fun getAllPiecesPos(role: Role): Flow<List<BoardPos>> {
         return flowOf(ruleEngine.getAllPiecesPos(role))
+    }
+
+    override fun pieceAt(pos: BoardPos): Role? {
+        return ruleEngine.pieceAt(pos)
     }
 
     override suspend fun move(from: BoardPos, to: BoardPos): Boolean {
