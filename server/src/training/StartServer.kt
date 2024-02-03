@@ -1,16 +1,16 @@
-package org.keizar.server
+package org.keizar.server.training
 
 import io.ktor.server.application.*
-import io.ktor.server.netty.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.Netty
-import org.keizar.server.plugins.*
-import org.keizar.server.training.module
+import io.ktor.server.plugins.callloging.CallLogging
+import org.keizar.server.training.plugins.configureRouting
+import org.keizar.server.training.plugins.configureSerialization
 
 fun main() {
     embeddedServer(
         Netty,
-        port = 80,
+        port = 49152,
         host = "0.0.0.0",
         module = Application::module,
         configure = {
@@ -22,10 +22,16 @@ fun main() {
     ).start(wait = true)
 }
 
+
 fun Application.module() {
-    configureSecurity()
+    val context = setupServerContext()
+
+    install(CallLogging)
+
     configureSerialization()
-    configureDatabases()
-    configureSockets()
-    configureRouting()
+    configureRouting(context)
+}
+
+fun setupServerContext(): ServerContext {
+    return ServerContext()
 }

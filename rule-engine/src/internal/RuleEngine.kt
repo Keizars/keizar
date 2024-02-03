@@ -20,6 +20,7 @@ interface RuleEngine {
     fun pieceAt(pos: BoardPos): Role?
     fun getLostPiecesCount(role: Role): StateFlow<Int>
     fun getAllPiecesPos(role: Role): List<BoardPos>
+    fun reset()
 }
 
 class RuleEngineImpl private constructor(
@@ -87,6 +88,15 @@ class RuleEngineImpl private constructor(
 
     override fun getAllPiecesPos(role: Role): List<BoardPos> {
         return board.getAllPiecesPos(role)
+    }
+
+    override fun reset() {
+        board.resetPieces()
+        movesLog.clear()
+        winningCounter.value = 0
+        curRole.value = boardProperties.startingRole
+        winner.value = null
+        lostPiecesCount.forEach { (_, flow) -> flow.value = 0 }
     }
 
     private fun isValidMove(piece: Piece, dest: BoardPos): Boolean {

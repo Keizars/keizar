@@ -7,7 +7,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.DpOffset
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +23,7 @@ import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground
+import org.keizar.android.ui.game.transition.BoardTransitionController
 import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.GameResult
@@ -28,6 +31,7 @@ import org.keizar.game.GameSession
 import org.keizar.game.Piece
 import org.keizar.game.Player
 import org.keizar.game.Role
+import org.keizar.game.RoundSession
 import kotlin.time.Duration.Companion.seconds
 
 interface GameBoardViewModel {
@@ -36,6 +40,9 @@ interface GameBoardViewModel {
 
     @Stable
     val pieceArranger: PieceArranger
+
+    @Stable
+    val boardTransitionController: BoardTransitionController
 
     @Stable
     val selfRole: StateFlow<Role>
@@ -82,6 +89,18 @@ interface GameBoardViewModel {
     @Stable
     val finalWinner: StateFlow<GameResult?>
 
+    @Stable
+    val currentRound: SharedFlow<RoundSession>
+
+    @Stable
+    val currentRoundCount: StateFlow<Int>
+
+    @Stable
+    val round1Winner: StateFlow<Role?>
+
+    @Stable
+    val round2Winner: StateFlow<Role?>
+
     // clicking
 
     /**
@@ -91,11 +110,8 @@ interface GameBoardViewModel {
 
     /**
      * Called when the player single-clicks the empty tile.
-     *
-     * @param viewPos the position of the tile, relative to the top-left corner of the board.
-     * It may be different from the logical position if the player is viewing the board as [Role.BLACK].
      */
-    fun onClickTile(viewPos: BoardPos)
+    fun onClickTile(logicalPos: BoardPos)
 
 
     // dragging
@@ -128,6 +144,13 @@ interface GameBoardViewModel {
      * Called when the the first round is finished by the players to start the next one.
      */
     fun startNextRound(selfPlayer: Player)
+
+    /**
+     * Get the count of pieces of the given [role] in [roundNo] round.
+     */
+    fun getRoundPieceCount(roundNo: Int, role: Role): StateFlow<Int>
+
+    fun replayCurrentRound()
 }
 
 @Composable
@@ -175,12 +198,20 @@ private sealed class BaseGameBoardViewModel(
     )
 
     @Stable
+    override val boardTransitionController = BoardTransitionController(
+        initialPlayAs = selfRole.value,
+//        playAs,
+//        playAs = selfRole,
+        backgroundScope,
+    )
+
+    @Stable
     override val pieces: StateFlow<List<UiPiece>> = game.currentRound.map { it.pieces }.map { list ->
         list.map {
             UiPiece(
                 enginePiece = it,
-                offsetInBoard = pieceArranger.offsetFor(it.pos).shareInBackground(),
-                backgroundScope
+                offsetInBoard = boardTransitionController.pieceOffset(pieceArranger.offsetFor(it.pos)),
+                backgroundScope,
             )
         }
     }.stateInBackground(emptyList())
@@ -214,9 +245,18 @@ private sealed class BaseGameBoardViewModel(
     @Stable
     override val finalWinner: StateFlow<GameResult?> = game.finalWinner.stateInBackground(null)
 
-    /**
-     * Currently available positions where the picked piece can move to. `null` if no piece is picked.
-     */
+    @Stable
+    override val currentRound: SharedFlow<RoundSession> = game.currentRound.shareInBackground()
+
+    @Stable
+    override val currentRoundCount: StateFlow<Int> = game.currentRoundNo
+
+    @Stable
+    override val round1Winner: StateFlow<Role?> = game.rounds[0].winner
+
+    @Stable
+    override val round2Winner: StateFlow<Role?> = game.rounds[1].winner
+
     @Stable
     override val availablePositions: SharedFlow<List<BoardPos>?> = game.currentRound.flatMapLatest { turn ->
         currentPick.flatMapLatest { pick ->
@@ -243,17 +283,17 @@ private sealed class BaseGameBoardViewModel(
             // Pick another piece
             completePick(isDrag = false)
             launchInBackground(start = CoroutineStart.UNDISPATCHED) {
-                movePiece(currentPick.piece.pos.value, piece.pos.value)
+                movePiece(currentPick.logicalPos, piece.pos.value)
             }
             return
         }
     }
 
-    override fun onClickTile(viewPos: BoardPos) {
+    override fun onClickTile(logicalPos: BoardPos) {
         val pick = currentPick.value ?: return
         completePick(isDrag = false)
         launchInBackground(start = CoroutineStart.UNDISPATCHED) {
-            movePiece(pick.piece.pos.value, pieceArranger.viewToLogical(viewPos).first())
+            movePiece(pick.logicalPos, logicalPos)
         }
     }
 
@@ -310,7 +350,20 @@ private sealed class BaseGameBoardViewModel(
     }
 
     override fun startNextRound(selfPlayer: Player) {
-        game.confirmNextRound(selfPlayer)
+        launchInBackground(Dispatchers.Main.immediate, start = CoroutineStart.UNDISPATCHED) {
+            boardTransitionController.turnBoard()
+        }
+        launchInBackground(Dispatchers.IO) {
+            game.confirmNextRound(selfPlayer)
+        }
+    }
+
+    override fun getRoundPieceCount(roundNo: Int, role: Role): StateFlow<Int> {
+        return game.rounds[roundNo].getLostPiecesCount(role)
+    }
+
+    override fun replayCurrentRound() {
+        game.replayCurrentRound()
     }
 
 }
@@ -320,6 +373,9 @@ class Pick(
     val piece: UiPiece,
     val viewPos: BoardPos
 )
+
+val Pick.logicalPos: BoardPos
+    get() = piece.pos.value
 
 
 /**
@@ -331,7 +387,7 @@ class UiPiece internal constructor(
     /**
      * The offset of the piece on the board, starting from the top-left corner.
      */
-    val offsetInBoard: SharedFlow<DpOffset>,
+    val offsetInBoard: Flow<DpOffset>,
     override val backgroundScope: CoroutineScope,
 ) : Piece by enginePiece, HasBackgroundScope {
 

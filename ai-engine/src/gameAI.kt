@@ -38,11 +38,11 @@ class RandomGameAIImpl(
     private val test: Boolean = false
 ) : GameAI {
 
-    private val myCoroutione: CoroutineScope =
+    private val myCoroutine: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
     override fun start() {
-        myCoroutione.launch {
+        myCoroutine.launch {
             combine(game.currentRole(myPlayer), game.currentRound) { myRole, session ->
                 myRole to session
             }.collectLatest { (myRole, session) ->
@@ -58,7 +58,7 @@ class RandomGameAIImpl(
             }
         }
 
-        myCoroutione.launch {
+        myCoroutine.launch {
             game.currentRound.flatMapLatest { it.winner }.collect {
                 if (it != null) {
                     game.confirmNextRound(myPlayer)
@@ -81,7 +81,7 @@ class RandomGameAIImpl(
     }
 
     override suspend fun end() {
-        myCoroutione.cancel()
+        myCoroutine.cancel()
     }
 
 

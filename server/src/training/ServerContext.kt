@@ -1,4 +1,4 @@
-package org.keizar.aiengine.protocol
+package org.keizar.server.training
 
 import org.keizar.game.BoardProperties
 

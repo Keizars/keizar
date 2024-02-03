@@ -1,8 +1,6 @@
 package org.keizar.android.ui.game
 
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.snap
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -21,10 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,18 +34,18 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.delay
+import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.GameSession
 import org.keizar.game.Player
 import org.keizar.game.Role
-import kotlin.time.Duration.Companion.seconds
+import org.keizar.game.TileType
 
 
 /**
  * Composes pieces on the board.
  *
- * @see BoardBackground
+ * @see BoardTiles
  */
 @Composable
 fun BoardPieces(
@@ -62,13 +59,6 @@ fun BoardPieces(
             pieceArranger.setDimensions(maxWidth, maxHeight)
         }
 
-        // Animate position after initialization
-        var loaded by remember { mutableStateOf(false) }
-        LaunchedEffect(true) {
-            delay(2.seconds)
-            loaded = true
-        }
-
         val tileSize by pieceArranger.tileSize.collectAsStateWithLifecycle(DpSize.Zero)
 
         val pieces by vm.pieces.collectAsStateWithLifecycle()
@@ -79,17 +69,15 @@ fun BoardPieces(
             }
 
             val targetOffset by piece.offsetInBoard.collectAsStateWithLifecycle(DpOffset.Zero)
-            val lastMoveIsDrag by vm.lastMoveIsDrag.collectAsStateWithLifecycle(false)
-            val shouldAnimateMovement = loaded && !lastMoveIsDrag
 
             val offsetX by animateDpAsState(
                 targetValue = targetOffset.x,
-                animationSpec = if (shouldAnimateMovement) tween() else snap(),
+                animationSpec = vm.boardTransitionController.pieceMovementAnimationSpec,
                 label = "offsetX"
             )
             val offsetY by animateDpAsState(
                 targetValue = targetOffset.y,
-                animationSpec = if (shouldAnimateMovement) tween() else snap(),
+                animationSpec = vm.boardTransitionController.pieceMovementAnimationSpec,
                 label = "offsetY"
             )
 
@@ -133,6 +121,13 @@ fun BoardPieces(
                 contentAlignment = Alignment.Center,
             ) {
                 PlayerIconFitted(tileSize, pick?.piece == piece, piece.role.pieceColor())
+            }
+            val position: BoardPos = piece.pos.collectAsState().value
+            val winner = vm.winner.collectAsState().value
+            LaunchedEffect(Unit) {
+                if (vm.boardProperties.tileArrangement[position] == TileType.KEIZAR && winner != null) {
+                    vm.boardTransitionController.flashWiningPiece()
+                }
             }
         }
     }

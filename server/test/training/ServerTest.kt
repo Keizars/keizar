@@ -1,4 +1,4 @@
-package org.keizar.aiengine.protocol
+package org.keizar.server.training
 
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -11,7 +11,7 @@ import io.ktor.client.request.get
 import io.ktor.server.testing.testApplication
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-import org.keizar.aiengine.protocol.plugins.AIBoardData
+import org.keizar.server.training.plugins.AIBoardData
 
 class ServerTest {
     @Test

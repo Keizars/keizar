@@ -1,5 +1,6 @@
 package org.keizar.android.ui.game
 
+import android.app.Activity
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
@@ -10,11 +11,13 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -25,10 +28,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
-import androidx.compose.ui.graphics.graphicsLayer
 import kotlinx.coroutines.delay
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
@@ -54,6 +59,11 @@ fun GameBoard(
         val winner = vm.winner.collectAsState().value
         val finalWinner = vm.finalWinner.collectAsState().value
         val selfRole = vm.selfRole.collectAsState().value
+        val showRoundOneBottomBar =
+            (winner != null && vm.currentRoundCount.collectAsState().value == 0)
+
+        val showRoundTwoBottomBar =
+            (winner != null && vm.currentRoundCount.collectAsState().value == 1)
 
         WinningCounter(vm)
 
@@ -61,7 +71,7 @@ fun GameBoard(
 
 
         Box(modifier = modifier) {
-            BoardBackground(vm)
+            BoardBackground(vm, Modifier.matchParentSize())
             BoardPieces(vm)
             PossibleMovesOverlay(vm)
         }
@@ -70,12 +80,110 @@ fun GameBoard(
 
         WinningRoundDialog(winner, vm)
 
-        GameOverDialog(finalWinner, onClickHome)
+        GameOverDialog(vm, finalWinner, onClickHome)
+
+        if (showRoundOneBottomBar) {
+            RoundOneBottomBar(vm, onClickHome)
+        }
+
+        if (showRoundTwoBottomBar) {
+            RoundTwoBottomBar(vm)
+        }
     }
 }
 
 @Composable
-fun GameOverDialog(finalWinner: GameResult?, onClickHome: () -> Unit) {
+fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
+    // Calculate the minimum width for a button based on the longest text
+    // This is just an example, you may want to adjust it based on your UI needs
+    val buttonWidth = 160.dp
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // All buttons now have a fixed width
+        Button(
+            onClick = onClickHome,
+            modifier = Modifier
+                .width(buttonWidth)
+                .padding(4.dp)
+        ) {
+            Text(text = "Home", textAlign = TextAlign.Center)
+        }
+
+        Button(
+            onClick = {vm.replayCurrentRound()},
+            modifier = Modifier
+                .width(buttonWidth)
+                .padding(4.dp)
+        ) {
+            Text(text = "Replay", textAlign = TextAlign.Center)
+        }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        var showDialog by remember { mutableStateOf(false) }
+        val showResults = remember { mutableStateOf(true) }
+        Button(
+            onClick = {
+                showDialog = true
+                showResults.value = true
+            },
+            modifier = Modifier
+                .width(buttonWidth)
+                .padding(4.dp)
+        ) {
+            Text(text = "Results", textAlign = TextAlign.Center)
+        }
+
+        if (showDialog) {
+            WinningRoundDialog(winner = vm.winner.collectAsState().value, vm, showResults)
+        }
+
+        Button(
+            onClick = { vm.startNextRound(vm.selfPlayer) },
+            modifier = Modifier
+                .width(buttonWidth)
+                .padding(4.dp)
+        ) {
+            Text(text = "Next Round", textAlign = TextAlign.Center)
+        }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val context = LocalContext.current
+        Button(
+            onClick = { if (context is Activity) context.finish() },
+            modifier = Modifier
+                .width(buttonWidth)
+                .padding(4.dp)
+        ) {
+            Text(text = "Exit", textAlign = TextAlign.Center)
+        }
+    }
+}
+
+
+@Composable
+fun RoundTwoBottomBar(vm: GameBoardViewModel) {
+
+}
+
+@Composable
+fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome: () -> Unit) {
     when (finalWinner) {
         null -> {
             // do nothing
@@ -84,6 +192,17 @@ fun GameOverDialog(finalWinner: GameResult?, onClickHome: () -> Unit) {
         is GameResult.Draw -> {
             AlertDialog(onDismissRequest = {},
                 title = { Text(text = "Game Over, Draw") },
+                text = {
+                    Text(
+                        text = "Round 1:\n" +
+                                "   Winner: ${vm.round1Winner.collectAsState(null)}\n" +
+                                "   White captured: ${vm.getRoundPieceCount(0, Role.WHITE)}\n" +
+                                "   Black captured: ${vm.getRoundPieceCount(0, Role.BLACK)}\n" +
+                                "Round 2 Winner: ${vm.round2Winner.collectAsState(null)}\n" +
+                                "   White captured: ${vm.getRoundPieceCount(1, Role.WHITE)}\n" +
+                                "   Black captured: ${vm.getRoundPieceCount(1, Role.BLACK)}"
+                    )
+                },
                 confirmButton = {
                     Button(onClick = onClickHome) {
                         Text(text = "Back to main page")
@@ -104,9 +223,26 @@ fun GameOverDialog(finalWinner: GameResult?, onClickHome: () -> Unit) {
 }
 
 @Composable
-fun WinningRoundDialog(winner: Role?, vm: GameBoardViewModel) {
+fun WinningRoundDialog(
+    winner: Role?,
+    vm: GameBoardViewModel,
+    showFlag: MutableState<Boolean> = mutableStateOf(false)
+) {
     var showDialogWhiteWin by remember { mutableStateOf(false) }
     var showDialogBlackWin by remember { mutableStateOf(false) }
+
+    val whiteCapturedPieces by vm.whiteCapturedPieces.collectAsState()
+    val blackCapturedPieces by vm.blackCapturedPieces.collectAsState()
+    val currentRoundCount by vm.currentRoundCount.collectAsState()
+
+    if (showFlag.value) {
+        if (winner == Role.WHITE) {
+            showDialogWhiteWin = true
+        } else if (winner == Role.BLACK) {
+            showDialogBlackWin = true
+        }
+    }
+
     when (winner) {
         null -> {
             showDialogWhiteWin = true
@@ -116,12 +252,20 @@ fun WinningRoundDialog(winner: Role?, vm: GameBoardViewModel) {
         Role.WHITE -> {
             if (showDialogWhiteWin) {
                 AlertDialog(onDismissRequest = {},
-                    title = { Text(text = "First Round Winner: White") },
-                    text = { Text(text = "White captured: $vm.") },
+                    title = { Text(text = "This Round Winner: White") },
+                    text = {
+                        Text(
+                            text = "White captured: ${whiteCapturedPieces}\n" +
+                                    "Black captured: ${blackCapturedPieces}\n"
+                        )
+                    },
                     confirmButton = {
                         Button(onClick = {
-                            vm.startNextRound(vm.selfPlayer)
+                            if (currentRoundCount == 1) {
+                                vm.startNextRound(vm.selfPlayer)
+                            }
                             showDialogWhiteWin = false
+                            showFlag.value = false
                         }) {
                             Text(text = "OK")
                         }
@@ -132,11 +276,20 @@ fun WinningRoundDialog(winner: Role?, vm: GameBoardViewModel) {
         Role.BLACK -> {
             if (showDialogBlackWin) {
                 AlertDialog(onDismissRequest = {},
-                    title = { Text(text = "This round is over, Black wins!") },
+                    title = { Text(text = "This Round Winner: Black") },
+                    text = {
+                        Text(
+                            text = "White captured: ${whiteCapturedPieces}\n" +
+                                    "Black captured: ${blackCapturedPieces}\n"
+                        )
+                    },
                     confirmButton = {
                         Button(onClick = {
-                            vm.startNextRound(vm.selfPlayer)
+                            if (currentRoundCount == 1) {
+                                vm.startNextRound(vm.selfPlayer)
+                            }
                             showDialogBlackWin = false
+                            showFlag.value = false
                         }) {
                             Text(text = "OK")
                         }

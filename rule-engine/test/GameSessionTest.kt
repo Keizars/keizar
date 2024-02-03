@@ -43,7 +43,7 @@ class GameSessionTest {
     }
 
     @Test
-    fun `test confirmNextRound and winningCounter`() = runTest {
+    fun `test confirmNextRound, winningCounter, wonRounds and getRoundWinner`() = runTest {
         val game = GameSession.create(0)
         val curRound = game.currentRound
         val round1 = curRound.first()
@@ -73,8 +73,9 @@ class GameSessionTest {
 
         assertEquals(1, game.currentRoundNo.value)
         assertEquals(0, round2.winningCounter.value)
-        assertEquals(0, game.wonRounds(Player.Player1).value)
-        assertEquals(1, game.wonRounds(Player.Player2).value)
+        assertEquals(0, game.wonRounds(Player.Player1).first())
+        assertEquals(1, game.wonRounds(Player.Player2).first())
+        assertEquals(Player.Player2, game.getRoundWinner(0).first())
         assertEquals(null, game.finalWinner.first())
 
         assertTrue(game.confirmNextRound(Player.Player1))
@@ -111,8 +112,8 @@ class GameSessionTest {
 
         assertEquals(1, game.currentRoundNo.value)
         assertEquals(0, round2.winningCounter.value)
-        assertEquals(0, game.wonRounds(Player.Player1).value)
-        assertEquals(1, game.wonRounds(Player.Player2).value)
+        assertEquals(0, game.wonRounds(Player.Player1).first())
+        assertEquals(1, game.wonRounds(Player.Player2).first())
 
         assertTrue(round2.move(BoardPos("e2"), BoardPos("e3")))
         assertTrue(round2.move(BoardPos("d7"), BoardPos("d6")))
@@ -134,8 +135,10 @@ class GameSessionTest {
         assertTrue(game.confirmNextRound(Player.Player2))
 
         assertEquals(2, game.currentRoundNo.value)
-        assertEquals(1, game.wonRounds(Player.Player1).value)
-        assertEquals(1, game.wonRounds(Player.Player2).value)
+        assertEquals(1, game.wonRounds(Player.Player1).first())
+        assertEquals(1, game.wonRounds(Player.Player2).first())
+        assertEquals(Player.Player2, game.getRoundWinner(0).first())
+        assertEquals(Player.Player1, game.getRoundWinner(1).first())
     }
 
     @Test
@@ -193,5 +196,191 @@ class GameSessionTest {
 
         assertEquals(1, newRound.getLostPiecesCount(Role.WHITE).value)
         assertEquals(2, newRound.getLostPiecesCount(Role.BLACK).value)
+    }
+
+    @Test
+    fun `test getRole and getPlayer`() = runTest {
+        val game = GameSession.create(0)
+        val player1Role = game.currentRole(Player.Player1)
+        assertEquals(Role.WHITE, player1Role.value)
+        assertEquals(player1Role.value, game.getRole(Player.Player1, 0))
+        assertEquals(player1Role.value.other(), game.getRole(Player.Player2, 0))
+        assertEquals(player1Role.value.other(), game.getRole(Player.Player1, 1))
+        assertEquals(player1Role.value, game.getRole(Player.Player2, 1))
+
+        for (roundNo in 0..1) {
+            for (player in Player.entries) {
+                assertEquals(player, game.getPlayer(game.getRole(player, roundNo), roundNo))
+            }
+        }
+    }
+
+    @Test
+    fun `test replayCurrentRound`() = runTest {
+        val game = GameSession.create(0)
+        val curRound = game.currentRound
+        val round1 = curRound.first()
+
+        assertEquals(0, game.currentRoundNo.value)
+
+        assertTrue(round1.move(BoardPos("e2"), BoardPos("e3")))
+        assertTrue(round1.move(BoardPos("d7"), BoardPos("d6")))
+        assertTrue(round1.move(BoardPos("e3"), BoardPos("d5")))
+        assertTrue(round1.move(BoardPos("a7"), BoardPos("a6")))
+        assertTrue(round1.move(BoardPos("a2"), BoardPos("a3")))
+        assertTrue(round1.move(BoardPos("a6"), BoardPos("a5")))
+        assertTrue(round1.move(BoardPos("a3"), BoardPos("a4")))
+        assertTrue(round1.move(BoardPos("d6"), BoardPos("d5")))
+        assertTrue(round1.move(BoardPos("h2"), BoardPos("h3")))
+        assertTrue(round1.move(BoardPos("f7"), BoardPos("f6")))
+        assertTrue(round1.move(BoardPos("h3"), BoardPos("h4")))
+        assertTrue(round1.move(BoardPos("f6"), BoardPos("f5")))
+        assertTrue(round1.move(BoardPos("h4"), BoardPos("h5")))
+
+        assertTrue(game.replayCurrentRound())
+
+        val round2 = curRound.first()
+
+        assertEquals(0, game.currentRoundNo.value)
+
+        assertTrue(round2.move(BoardPos("e2"), BoardPos("e3")))
+        assertTrue(round2.move(BoardPos("d7"), BoardPos("d6")))
+        assertTrue(round2.move(BoardPos("e3"), BoardPos("d5")))
+        assertTrue(round2.move(BoardPos("a7"), BoardPos("a6")))
+        assertTrue(round2.move(BoardPos("a2"), BoardPos("a3")))
+        assertTrue(round2.move(BoardPos("a6"), BoardPos("a5")))
+        assertTrue(round2.move(BoardPos("a3"), BoardPos("a4")))
+        assertTrue(round2.move(BoardPos("d6"), BoardPos("d5")))
+        assertTrue(round2.move(BoardPos("h2"), BoardPos("h3")))
+        assertTrue(round2.move(BoardPos("f7"), BoardPos("f6")))
+        assertTrue(round2.move(BoardPos("h3"), BoardPos("h4")))
+        assertTrue(round2.move(BoardPos("f6"), BoardPos("f5")))
+        assertTrue(round2.move(BoardPos("h4"), BoardPos("h5")))
+
+        assertTrue(game.confirmNextRound(Player.Player1))
+        assertTrue(game.confirmNextRound(Player.Player2))
+
+        val round3 = curRound.first()
+
+        assertEquals(1, game.currentRoundNo.value)
+
+        assertEquals(0, round3.winningCounter.value)
+        assertEquals(0, game.wonRounds(Player.Player1).first())
+        assertEquals(1, game.wonRounds(Player.Player2).first())
+        assertEquals(Player.Player2, game.getRoundWinner(0).first())
+        assertEquals(null, game.finalWinner.first())
+
+        assertTrue(game.confirmNextRound(Player.Player1))
+        assertTrue(game.confirmNextRound(Player.Player2))
+        assertEquals(GameResult.Winner(Player.Player2), game.finalWinner.first())
+    }
+
+    @Test
+    fun `test replayGame`() = runTest {
+        val game = GameSession.create(0)
+        val curRound = game.currentRound
+        val round1 = curRound.first()
+
+        assertEquals(0, game.currentRoundNo.value)
+
+        assertTrue(round1.move(BoardPos("e2"), BoardPos("e3")))
+        assertTrue(round1.move(BoardPos("d7"), BoardPos("d6")))
+        assertTrue(round1.move(BoardPos("e3"), BoardPos("d5")))
+        assertTrue(round1.move(BoardPos("a7"), BoardPos("a6")))
+        assertTrue(round1.move(BoardPos("a2"), BoardPos("a3")))
+        assertTrue(round1.move(BoardPos("a6"), BoardPos("a5")))
+        assertTrue(round1.move(BoardPos("a3"), BoardPos("a4")))
+        assertTrue(round1.move(BoardPos("d6"), BoardPos("d5")))
+        assertTrue(round1.move(BoardPos("h2"), BoardPos("h3")))
+        assertTrue(round1.move(BoardPos("f7"), BoardPos("f6")))
+        assertTrue(round1.move(BoardPos("h3"), BoardPos("h4")))
+        assertTrue(round1.move(BoardPos("f6"), BoardPos("f5")))
+        assertTrue(round1.move(BoardPos("h4"), BoardPos("h5")))
+
+        assertTrue(game.confirmNextRound(Player.Player1))
+        assertTrue(game.confirmNextRound(Player.Player2))
+
+        val round2 = curRound.first()
+
+        assertEquals(1, game.currentRoundNo.value)
+        assertEquals(0, round2.winningCounter.value)
+        assertEquals(0, game.wonRounds(Player.Player1).first())
+        assertEquals(1, game.wonRounds(Player.Player2).first())
+
+        assertTrue(round2.move(BoardPos("e2"), BoardPos("e3")))
+        assertTrue(round2.move(BoardPos("d7"), BoardPos("d6")))
+        assertTrue(round2.move(BoardPos("e3"), BoardPos("d5")))
+        assertTrue(round2.move(BoardPos("a7"), BoardPos("a6")))
+        assertTrue(round2.move(BoardPos("a2"), BoardPos("a3")))
+        assertTrue(round2.move(BoardPos("a6"), BoardPos("a5")))
+        assertTrue(round2.move(BoardPos("a3"), BoardPos("a4")))
+        assertTrue(round2.move(BoardPos("d6"), BoardPos("d5")))
+        assertTrue(round2.move(BoardPos("h2"), BoardPos("h3")))
+        assertTrue(round2.move(BoardPos("f7"), BoardPos("f6")))
+        assertTrue(round2.move(BoardPos("h3"), BoardPos("h4")))
+        assertTrue(round2.move(BoardPos("f6"), BoardPos("f5")))
+        assertTrue(round2.move(BoardPos("h4"), BoardPos("h5")))
+
+        assertTrue(game.confirmNextRound(Player.Player1))
+        assertTrue(game.confirmNextRound(Player.Player2))
+
+        assertEquals(2, game.currentRoundNo.value)
+        assertEquals(1, game.wonRounds(Player.Player1).first())
+        assertEquals(1, game.wonRounds(Player.Player2).first())
+        assertEquals(Player.Player2, game.getRoundWinner(0).first())
+        assertEquals(Player.Player1, game.getRoundWinner(1).first())
+
+        assertTrue(game.replayGame())
+
+        val round3 = curRound.first()
+
+        assertEquals(0, game.currentRoundNo.value)
+
+        assertTrue(round3.move(BoardPos("e2"), BoardPos("e3")))
+        assertTrue(round3.move(BoardPos("d7"), BoardPos("d6")))
+        assertTrue(round3.move(BoardPos("e3"), BoardPos("d5")))
+        assertTrue(round3.move(BoardPos("a7"), BoardPos("a6")))
+        assertTrue(round3.move(BoardPos("a2"), BoardPos("a3")))
+        assertTrue(round3.move(BoardPos("a6"), BoardPos("a5")))
+        assertTrue(round3.move(BoardPos("a3"), BoardPos("a4")))
+        assertTrue(round3.move(BoardPos("d6"), BoardPos("d5")))
+        assertTrue(round3.move(BoardPos("h2"), BoardPos("h3")))
+        assertTrue(round3.move(BoardPos("f7"), BoardPos("f6")))
+        assertTrue(round3.move(BoardPos("h3"), BoardPos("h4")))
+        assertTrue(round3.move(BoardPos("f6"), BoardPos("f5")))
+        assertTrue(round3.move(BoardPos("h4"), BoardPos("h5")))
+
+        assertTrue(game.confirmNextRound(Player.Player1))
+        assertTrue(game.confirmNextRound(Player.Player2))
+
+        val round4 = curRound.first()
+
+        assertEquals(1, game.currentRoundNo.value)
+        assertEquals(0, round4.winningCounter.value)
+        assertEquals(0, game.wonRounds(Player.Player1).first())
+        assertEquals(1, game.wonRounds(Player.Player2).first())
+
+        assertTrue(round4.move(BoardPos("e2"), BoardPos("e3")))
+        assertTrue(round4.move(BoardPos("d7"), BoardPos("d6")))
+        assertTrue(round4.move(BoardPos("e3"), BoardPos("d5")))
+        assertTrue(round4.move(BoardPos("a7"), BoardPos("a6")))
+        assertTrue(round4.move(BoardPos("a2"), BoardPos("a3")))
+        assertTrue(round4.move(BoardPos("a6"), BoardPos("a5")))
+        assertTrue(round4.move(BoardPos("a3"), BoardPos("a4")))
+        assertTrue(round4.move(BoardPos("d6"), BoardPos("d5")))
+        assertTrue(round4.move(BoardPos("h2"), BoardPos("h3")))
+        assertTrue(round4.move(BoardPos("f7"), BoardPos("f6")))
+        assertTrue(round4.move(BoardPos("h3"), BoardPos("h4")))
+        assertTrue(round4.move(BoardPos("f6"), BoardPos("f5")))
+        assertTrue(round4.move(BoardPos("h4"), BoardPos("h5")))
+
+        assertTrue(game.confirmNextRound(Player.Player1))
+        assertTrue(game.confirmNextRound(Player.Player2))
+
+        assertEquals(2, game.currentRoundNo.value)
+        assertEquals(1, game.wonRounds(Player.Player1).first())
+        assertEquals(1, game.wonRounds(Player.Player2).first())
+        assertEquals(Player.Player2, game.getRoundWinner(0).first())
+        assertEquals(Player.Player1, game.getRoundWinner(1).first())
     }
 }
