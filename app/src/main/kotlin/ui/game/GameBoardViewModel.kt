@@ -101,6 +101,12 @@ interface GameBoardViewModel {
     @Stable
     val round2Winner: StateFlow<Role?>
 
+    @Stable
+    val flashFlag: StateFlow<Boolean>
+
+    @Stable
+    val endRoundAnnounced: MutableStateFlow<Boolean>
+
     // clicking
 
     /**
@@ -151,6 +157,10 @@ interface GameBoardViewModel {
     fun getRoundPieceCount(roundNo: Int, role: Role): StateFlow<Int>
 
     fun replayCurrentRound()
+
+    fun setFlashFlag(flag: Boolean)
+
+    fun setEndRoundAnnouncement(flag: Boolean)
 }
 
 @Composable
@@ -256,6 +266,14 @@ private sealed class BaseGameBoardViewModel(
 
     @Stable
     override val round2Winner: StateFlow<Role?> = game.rounds[1].winner
+
+    private val _flashFlag = MutableStateFlow(false)
+    @Stable
+    override val flashFlag: StateFlow<Boolean> = _flashFlag
+
+    private val _endRoundAnnounced = MutableStateFlow(false)
+    @Stable
+    override val endRoundAnnounced = _endRoundAnnounced
 
     @Stable
     override val availablePositions: SharedFlow<List<BoardPos>?> = game.currentRound.flatMapLatest { turn ->
@@ -363,7 +381,17 @@ private sealed class BaseGameBoardViewModel(
     }
 
     override fun replayCurrentRound() {
+        setFlashFlag(false)
+        setEndRoundAnnouncement(false)
         game.replayCurrentRound()
+    }
+
+    override fun setFlashFlag(flag: Boolean) {
+        _flashFlag.value = flag
+    }
+
+    override fun setEndRoundAnnouncement(flag: Boolean) {
+        _endRoundAnnounced.value = flag
     }
 
 }
