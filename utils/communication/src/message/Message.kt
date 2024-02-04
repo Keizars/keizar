@@ -2,6 +2,7 @@ package org.keizar.utils.communication.message
 
 import kotlinx.serialization.Serializable
 import org.keizar.utils.communication.PlayerSessionState
+import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
 
 @Serializable
@@ -30,3 +31,12 @@ data class PlayerAllocation(
 
 @Serializable
 data object Exit : Request
+
+@Serializable
+data object ConfirmNextRound: Request, Respond
+
+@Serializable
+data class Move(
+    val from: BoardPos,
+    val to: BoardPos,
+): Request, Respond

@@ -14,13 +14,20 @@ import io.ktor.client.plugins.websocket.*
 import io.ktor.http.*
 import io.ktor.serialization.WebsocketDeserializeException
 import io.ktor.websocket.*
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
+import org.keizar.utils.communication.message.ConfirmNextRound
+import org.keizar.utils.communication.message.Exit
+import org.keizar.utils.communication.message.Move
 import org.keizar.utils.communication.message.PlayerAllocation
+import org.keizar.utils.communication.message.Request
 import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.StateChange
+import org.keizar.utils.communication.message.UserInfo
 
 interface GameRoomClient {
     fun getCurrentRole(): StateFlow<Role>
@@ -44,6 +51,8 @@ class GameRoomClientImpl(
     private lateinit var gameSession: GameSession
     private lateinit var playerAllocation: Player
     private val currentRole: MutableStateFlow<Role> = MutableStateFlow(Role.WHITE)
+
+    private val outflowChannel: Channel<Request> = Channel()
 
     init {
         myCoroutineScope.launch {
@@ -79,22 +88,28 @@ class GameRoomClientImpl(
     }
 
     private suspend fun DefaultClientWebSocketSession.messageOutflow() {
-        try {
-            for (message in incoming) {
-                message as? Frame.Text ?: continue
-                println(message.readText())
+        while (true) {
+            try {
+                when (val request = outflowChannel.receive()) {
+                    ConfirmNextRound -> TODO()
+                    Exit -> TODO()
+                    is Move -> TODO()
+                    is UserInfo -> TODO()
+                }
+            } catch (e: CancellationException) {
+                // ignore
             }
-        } catch (e: Exception) {
-            println("Error while receiving: " + e.localizedMessage)
         }
     }
 
     private suspend fun DefaultClientWebSocketSession.messageInflow() {
         while (true) {
             try {
-                when (val message = receiveDeserialized<Respond>()) {
-                    is StateChange -> playerState.value = message.newState
-                    is PlayerAllocation -> playerAllocation = message.who
+                when (val respond = receiveDeserialized<Respond>()) {
+                    is StateChange -> playerState.value = respond.newState
+                    is PlayerAllocation -> playerAllocation = respond.who
+                    ConfirmNextRound -> TODO()
+                    is Move -> TODO()
                 }
             } catch (e: WebsocketDeserializeException) {
                 // ignore
@@ -121,10 +136,14 @@ class GameRoomClientImpl(
     }
 
     override fun sendConfirmNextRound() {
-        TODO("Not yet implemented")
+        myCoroutineScope.launch {
+            outflowChannel.send(ConfirmNextRound)
+        }
     }
 
     override fun sendMove(from: BoardPos, to: BoardPos) {
-        TODO("Not yet implemented")
+        myCoroutineScope.launch {
+            outflowChannel.send(Move(from, to))
+        }
     }
 }
