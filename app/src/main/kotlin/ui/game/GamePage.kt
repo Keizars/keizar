@@ -39,13 +39,15 @@ fun GameScene(
     startConfiguration: GameStartConfiguration,
     navController: NavController,
 ) {
-    GamePage(startConfiguration, onClickHome = { navController.popBackStack("home", false) })
+    GamePage(startConfiguration, onClickHome = { navController.popBackStack("home", false) },
+        onClickGameConfig = { navController.popBackStack("single player game", false) })
 }
 
 @Composable
 fun GamePage(
     startConfiguration: GameStartConfiguration,
     onClickHome: () -> Unit,
+    onClickGameConfig : () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showGameConfigurationDialog by remember { mutableStateOf(false) }
@@ -99,6 +101,7 @@ fun GamePage(
                         .padding(vertical = 16.dp)
                         .size(min(maxWidth, maxHeight)),
                     onClickHome = onClickHome,
+                    onClickGameConfig = onClickGameConfig
                 )
             }
         }
@@ -116,6 +119,7 @@ private fun PreviewGamePage() {
                 playAs = Role.WHITE,
             ),
             onClickHome = {},
+            onClickGameConfig = {}
         )
     }
 }

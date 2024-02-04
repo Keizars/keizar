@@ -50,6 +50,7 @@ fun GameBoard(
     startConfiguration: GameStartConfiguration,
     modifier: Modifier = Modifier,
     onClickHome: () -> Unit,
+    onClickGameConfig: () -> Unit
 ) {
     val vm = rememberGameBoardViewModel(
         GameSession.create(startConfiguration.createBoard()),
@@ -92,7 +93,7 @@ fun GameBoard(
             }
 
             if (showRoundTwoBottomBar) {
-                RoundTwoBottomBar(vm)
+                RoundTwoBottomBar(vm, onClickHome, onClickGameConfig)
             }
         }
     }
@@ -100,8 +101,6 @@ fun GameBoard(
 
 @Composable
 fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
-    // Calculate the minimum width for a button based on the longest text
-    // This is just an example, you may want to adjust it based on your UI needs
     val buttonWidth = 160.dp
 
     Row(
@@ -122,7 +121,6 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
 
         Button(
             onClick = {
-                vm.setFlashFlag(false)
                 vm.replayCurrentRound()
             },
             modifier = Modifier
@@ -191,46 +189,139 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
 
 
 @Composable
-fun RoundTwoBottomBar(vm: GameBoardViewModel) {
+fun RoundTwoBottomBar(
+    vm: GameBoardViewModel,
+    onClickHome: () -> Unit,
+    onClickGameConfig: () -> Unit
+) {
+    val buttonWidth = 160.dp
 
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Button(
+            onClick = onClickHome,
+            modifier = Modifier
+                .width(buttonWidth)
+                .padding(4.dp)
+        ) {
+            Text(text = "Home", textAlign = TextAlign.Center)
+        }
+
+        Button(
+            onClick = {
+                vm.replayGame()
+                vm.setGameOverAnnouncement(false)
+            },
+            modifier = Modifier
+                .width(buttonWidth)
+                .padding(4.dp)
+        ) {
+            Text(text = "Replay Game", textAlign = TextAlign.Center)
+        }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+
+        Button(
+            onClick = {
+                vm.replayCurrentRound()
+                vm.setGameOverAnnouncement(false)
+            },
+            modifier = Modifier
+                .width(buttonWidth)
+                .padding(4.dp)
+        ) {
+            Text(text = "Replay Second Round", textAlign = TextAlign.Center)
+        }
+
+        Button(
+            onClick = {/*TODO*/ },
+            modifier = Modifier
+                .width(buttonWidth)
+                .padding(4.dp)
+        ) {
+            Text(text = "Save Game", textAlign = TextAlign.Center)
+        }
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceAround,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Button(
+            onClick = { onClickGameConfig() },
+            modifier = Modifier
+                .width(buttonWidth)
+                .padding(4.dp)
+        ) {
+            Text(text = "New Game", textAlign = TextAlign.Center)
+        }
+
+
+        val context = LocalContext.current
+        Button(
+            onClick = { if (context is Activity) context.finish() },
+            modifier = Modifier
+                .width(buttonWidth)
+                .padding(4.dp)
+        ) {
+            Text(text = "Exit", textAlign = TextAlign.Center)
+        }
+    }
 }
 
 @Composable
 fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome: () -> Unit) {
-    when (finalWinner) {
-        null -> {
-            // do nothing
-        }
+    val gameOverAnnounced by vm.gameOverAnnounced.collectAsState()
+    if (!gameOverAnnounced) {
+        when (finalWinner) {
+            null -> {
+                // do nothing
+            }
 
-        is GameResult.Draw -> {
-            AlertDialog(onDismissRequest = {},
-                title = { Text(text = "Game Over, Draw") },
-                text = {
-                    Text(
-                        text = "Round 1:\n" +
-                                "   Winner: ${vm.round1Winner.collectAsState(null)}\n" +
-                                "   White captured: ${vm.getRoundPieceCount(0, Role.WHITE)}\n" +
-                                "   Black captured: ${vm.getRoundPieceCount(0, Role.BLACK)}\n" +
-                                "Round 2 Winner: ${vm.round2Winner.collectAsState(null)}\n" +
-                                "   White captured: ${vm.getRoundPieceCount(1, Role.WHITE)}\n" +
-                                "   Black captured: ${vm.getRoundPieceCount(1, Role.BLACK)}"
-                    )
-                },
-                confirmButton = {
-                    Button(onClick = onClickHome) {
-                        Text(text = "Back to main page")
-                    }
-                })
-        }
+            is GameResult.Draw -> {
+                AlertDialog(onDismissRequest = {},
+                    title = { Text(text = "Game Over, Draw") },
+                    text = {
+                        Text(
+                            text = "Round 1:\n" +
+                                    "   Winner: ${vm.round1Winner.collectAsState(null)}\n" +
+                                    "   White captured: ${vm.getRoundPieceCount(0, Role.WHITE)}\n" +
+                                    "   Black captured: ${vm.getRoundPieceCount(0, Role.BLACK)}\n" +
+                                    "Round 2 Winner: ${vm.round2Winner.collectAsState(null)}\n" +
+                                    "   White captured: ${vm.getRoundPieceCount(1, Role.WHITE)}\n" +
+                                    "   Black captured: ${vm.getRoundPieceCount(1, Role.BLACK)}"
+                        )
+                    },
+                    confirmButton = {
+                        Button(onClick = {vm.setGameOverAnnouncement(true)}) {
+                            Text(text = "OK")
+                        }
+                    })
+            }
 
-        is GameResult.Winner -> {
-            AlertDialog(onDismissRequest = {},
-                title = { Text(text = "Game Over, ${finalWinner.player} wins!") },
-                confirmButton = {
-                    Button(onClick = onClickHome) {
-                        Text(text = "Back to main page")
-                    }
-                })
+
+            is GameResult.Winner -> {
+                AlertDialog(onDismissRequest = {},
+                    title = { Text(text = "Game Over, ${finalWinner.player} wins!") },
+                    confirmButton = {
+                        Button(onClick = {vm.setGameOverAnnouncement(true)}) {
+                            Text(text = "Ok")
+                        }
+                    })
+
+            }
         }
     }
 }
@@ -241,15 +332,13 @@ fun WinningRoundDialog(
     vm: GameBoardViewModel,
     showFlag: MutableState<Boolean> = mutableStateOf(false)
 ) {
-
     val whiteCapturedPieces by vm.whiteCapturedPieces.collectAsState()
     val blackCapturedPieces by vm.blackCapturedPieces.collectAsState()
     val currentRoundCount by vm.currentRoundCount.collectAsState()
     val endRoundAnnounced by vm.endRoundAnnounced.collectAsState()
 
     when (winner) {
-        null -> {
-        }
+        null -> {}
 
         else -> {
             if (showFlag.value || !endRoundAnnounced) {
@@ -424,6 +513,7 @@ private fun PreviewGameBoard() {
             },
             Modifier.size(min(maxWidth, maxHeight)),
             onClickHome = { /* Navigate to home page*/ },
+            onClickGameConfig = { /* Navigate to game configuration page*/ }
         )
     }
 }

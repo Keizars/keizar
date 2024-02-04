@@ -107,6 +107,9 @@ interface GameBoardViewModel {
     @Stable
     val endRoundAnnounced: MutableStateFlow<Boolean>
 
+    @Stable
+    val gameOverAnnounced: MutableStateFlow<Boolean>
+
     // clicking
 
     /**
@@ -158,9 +161,13 @@ interface GameBoardViewModel {
 
     fun replayCurrentRound()
 
+    fun replayGame()
+
     fun setFlashFlag(flag: Boolean)
 
     fun setEndRoundAnnouncement(flag: Boolean)
+
+    fun setGameOverAnnouncement(flag: Boolean)
 }
 
 @Composable
@@ -275,6 +282,10 @@ private sealed class BaseGameBoardViewModel(
     @Stable
     override val endRoundAnnounced = _endRoundAnnounced
 
+    private val _gameOverAnnounced = MutableStateFlow(false)
+    @Stable
+    override val gameOverAnnounced = _gameOverAnnounced
+
     @Stable
     override val availablePositions: SharedFlow<List<BoardPos>?> = game.currentRound.flatMapLatest { turn ->
         currentPick.flatMapLatest { pick ->
@@ -386,12 +397,22 @@ private sealed class BaseGameBoardViewModel(
         game.replayCurrentRound()
     }
 
+    override fun replayGame() {
+        setFlashFlag(false)
+        setEndRoundAnnouncement(false)
+        game.replayGame()
+    }
+
     override fun setFlashFlag(flag: Boolean) {
         _flashFlag.value = flag
     }
 
     override fun setEndRoundAnnouncement(flag: Boolean) {
         _endRoundAnnounced.value = flag
+    }
+
+    override fun setGameOverAnnouncement(flag: Boolean) {
+        _gameOverAnnounced.value = flag
     }
 
 }
