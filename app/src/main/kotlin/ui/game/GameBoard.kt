@@ -38,10 +38,10 @@ import kotlinx.coroutines.delay
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
 import org.keizar.game.Difficulty
-import org.keizar.game.GameResult
 import org.keizar.game.GameSession
-import org.keizar.game.Player
 import org.keizar.game.Role
+import org.keizar.utils.communication.game.GameResult
+import org.keizar.utils.communication.game.Player
 import kotlin.math.sqrt
 
 
@@ -53,7 +53,11 @@ fun GameBoard(
 ) {
     val vm = rememberGameBoardViewModel(
         GameSession.create(startConfiguration.createBoard()),
-        selfPlayer = if (startConfiguration.playAs == Role.WHITE) Player.Player1 else Player.Player2
+        selfPlayer = if (startConfiguration.playAs == Role.WHITE) {
+            Player.FirstWhitePlayer
+        } else {
+            Player.FirstBlackPlayer
+        }
     )
     Column(modifier = Modifier) {
         val winner = vm.winner.collectAsState().value

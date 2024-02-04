@@ -6,10 +6,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import kotlinx.serialization.Serializable
+import org.keizar.game.internal.RuleEngine
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
 import org.keizar.game.serialization.GameSnapshot
+import org.keizar.utils.communication.game.GameResult
+import org.keizar.utils.communication.game.Player
 import java.util.concurrent.atomic.AtomicInteger
 
 /***
@@ -87,19 +89,51 @@ interface GameSession {
             }
         }
 
+        // Create a standard GameSession using the BoardProperties
+        // and a RoundSessionConstructor provided.
+        fun create(
+            properties: BoardProperties,
+            roundSessionConstructor: (ruleEngine: RuleEngine) -> RoundSession,
+        ): GameSession {
+            return GameSessionImpl(properties) {
+                val ruleEngine = RuleEngineImpl(
+                    boardProperties = properties,
+                    ruleEngineCore = RuleEngineCoreImpl(properties),
+                )
+                roundSessionConstructor(ruleEngine)
+            }
+        }
+
         // Restore a GameSession by a snapshot of the game.
         fun restore(snapshot: GameSnapshot): GameSession {
             return GameSessionImpl(
                 properties = snapshot.properties,
                 startFromRoundNo = snapshot.currentRoundNo,
             ) { index ->
-                RoundSessionImpl(
-                    ruleEngine = RuleEngineImpl.restore(
-                        properties = snapshot.properties,
-                        roundSnapshot = snapshot.rounds[index],
-                        ruleEngineCore = RuleEngineCoreImpl(snapshot.properties),
-                    )
+                val ruleEngine = RuleEngineImpl.restore(
+                    properties = snapshot.properties,
+                    roundSnapshot = snapshot.rounds[index],
+                    ruleEngineCore = RuleEngineCoreImpl(snapshot.properties),
                 )
+                RoundSessionImpl(ruleEngine)
+            }
+        }
+
+        // Restore a GameSession by a snapshot of the game and a RoundSessionConstructor provided.
+        fun restore(
+            snapshot: GameSnapshot,
+            roundSessionConstructor: (ruleEngine: RuleEngine) -> RoundSession,
+        ): GameSession {
+            return GameSessionImpl(
+                properties = snapshot.properties,
+                startFromRoundNo = snapshot.currentRoundNo,
+            ) { index ->
+                val ruleEngine = RuleEngineImpl.restore(
+                    properties = snapshot.properties,
+                    roundSnapshot = snapshot.rounds[index],
+                    ruleEngineCore = RuleEngineCoreImpl(snapshot.properties),
+                )
+                roundSessionConstructor(ruleEngine)
             }
         }
     }
@@ -145,21 +179,21 @@ class GameSessionImpl(
 
         finalWinner = combine(
             haveWinner,
-            wonRounds(Player.Player1),
-            wonRounds(Player.Player2),
-            lostPieces(Player.Player1),
-            lostPieces(Player.Player2),
+            wonRounds(Player.FirstWhitePlayer),
+            wonRounds(Player.FirstBlackPlayer),
+            lostPieces(Player.FirstWhitePlayer),
+            lostPieces(Player.FirstBlackPlayer),
         ) { haveWinner, player1Wins, player2Wins, player1LostPieces, player2LostPieces ->
             if (!haveWinner) {
                 null
             } else if (player1Wins > player2Wins) {
-                GameResult.Winner(Player.Player1)
+                GameResult.Winner(Player.FirstWhitePlayer)
             } else if (player1Wins < player2Wins) {
-                GameResult.Winner(Player.Player2)
+                GameResult.Winner(Player.FirstBlackPlayer)
             } else if (player1LostPieces < player2LostPieces) {
-                GameResult.Winner(Player.Player1)
+                GameResult.Winner(Player.FirstWhitePlayer)
             } else if (player1LostPieces > player2LostPieces) {
-                GameResult.Winner(Player.Player2)
+                GameResult.Winner(Player.FirstBlackPlayer)
             } else {
                 GameResult.Draw
             }
@@ -195,7 +229,11 @@ class GameSessionImpl(
     private fun proceedToNextTurn() {
         val winningRole: Role? = rounds[currentRoundNo.value].winner.value
         val winningPlayer: Player? = winningRole?.let {
-            if (currentRole(Player.Player1).value == it) Player.Player1 else Player.Player2
+            if (currentRole(Player.FirstWhitePlayer).value == it) {
+                Player.FirstWhitePlayer
+            } else {
+                Player.FirstBlackPlayer
+            }
         }
         winningPlayer?.let { wonRounds[it.ordinal].value += currentRoundNo.value }
         if (currentRoundNo.value == properties.rounds - 1) {
@@ -245,36 +283,3 @@ class GameSessionImpl(
     }
 }
 
-@Serializable
-enum class Player {
-    Player1,
-    Player2;
-
-    companion object {
-        private val values = entries.toTypedArray()
-        fun fromOrdinal(ordinal: Int): Player = values[ordinal]
-    }
-}
-
-@Serializable
-sealed class GameResult {
-    @Serializable
-    data object Draw : GameResult()
-
-    @Serializable
-    data class Winner(val player: Player) : GameResult()
-    companion object {
-        fun values(): Array<GameResult> {
-            return arrayOf(Draw, Winner(Player.Player1), Winner(Player.Player2))
-        }
-
-        fun valueOf(value: String): GameResult {
-            return when (value) {
-                "DRAW" -> Draw
-                "WINNER1" -> Winner(Player.Player1)
-                "WINNER2" -> Winner(Player.Player2)
-                else -> throw IllegalArgumentException("No object org.keizar.game.GameResult.$value")
-            }
-        }
-    }
-}

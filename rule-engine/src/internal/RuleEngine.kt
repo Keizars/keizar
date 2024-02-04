@@ -2,12 +2,12 @@ package org.keizar.game.internal
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.Move
 import org.keizar.game.Piece
 import org.keizar.game.Role
 import org.keizar.game.serialization.RoundSnapshot
+import org.keizar.utils.communication.game.BoardPos
 
 interface RuleEngine {
     val winningCounter: StateFlow<Int>

@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
+import org.keizar.utils.communication.game.BoardPos
+import org.keizar.utils.communication.game.TileColor
 
 class RuleEngineTest {
     @Test

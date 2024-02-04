@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.Serializable
 import org.keizar.game.serialization.PieceSnapshot
+import org.keizar.utils.communication.game.BoardPos
 
 @Serializable
 enum class Role {
@@ -25,12 +26,6 @@ enum class TileType {
     ROOK,
     KEIZAR,
     PLAIN,
-}
-
-@Serializable
-enum class TileColor {
-    BLACK,
-    WHITE
 }
 
 @Serializable

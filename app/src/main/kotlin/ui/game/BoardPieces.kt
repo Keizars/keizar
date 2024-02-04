@@ -35,12 +35,12 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.GameSession
-import org.keizar.game.Player
 import org.keizar.game.Role
 import org.keizar.game.TileType
+import org.keizar.utils.communication.game.BoardPos
+import org.keizar.utils.communication.game.Player
 
 
 /**
@@ -200,7 +200,7 @@ private fun PreviewBoardPiecesWithBackground() {
         }
         val vm = rememberGameBoardViewModel(
             game = GameSession.create(prop),
-            selfPlayer = Player.Player1,
+            selfPlayer = Player.FirstWhitePlayer,
         )
         BoardBackground(
             vm,

@@ -10,11 +10,11 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
-import org.keizar.game.BoardPos
 import org.keizar.game.GameSession
-import org.keizar.game.Player
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
+import org.keizar.utils.communication.game.BoardPos
+import org.keizar.utils.communication.game.Player
 import kotlin.coroutines.CoroutineContext
 import kotlin.random.Random
 import kotlin.random.nextLong

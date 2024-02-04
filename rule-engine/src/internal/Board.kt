@@ -1,7 +1,6 @@
 package org.keizar.game.internal
 
 import kotlinx.coroutines.flow.MutableStateFlow
-import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.Move
 import org.keizar.game.MutablePiece
@@ -10,6 +9,7 @@ import org.keizar.game.Role
 import org.keizar.game.TileType
 import org.keizar.game.asPiece
 import org.keizar.game.serialization.PieceSnapshot
+import org.keizar.utils.communication.game.BoardPos
 
 class Tile(val type: TileType) {
     var piece: Piece? = null

@@ -26,8 +26,10 @@ fun includeProject(projectPath: String, dir: String? = null) {
 }
 
 includeProject(":app", "app")
-includeProject(":ci-helper", "ci-helper") 
+includeProject(":ci-helper", "ci-helper")
+includeProject(":client", "client")
 includeProject(":rule-engine", "rule-engine")
+includeProject(":utils:communication", "utils/communication")
 includeProject(":utils:slf4j-kt", "utils/slf4j-kt")
 includeProject(":ai-engine", "ai-engine")
 includeProject(":server", "server")

@@ -1,6 +1,5 @@
 package org.keizar.server.training
 
-import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.Move
 import org.keizar.game.Role
@@ -8,6 +7,7 @@ import org.keizar.game.TileType
 import org.keizar.game.internal.Board
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.serialization.PieceSnapshot
+import org.keizar.utils.communication.game.BoardPos
 
 /***
  * A class object highly coupled with keizar.game.internal.Board used for AI training

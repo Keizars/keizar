@@ -32,12 +32,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.map
 import org.keizar.android.R
 import org.keizar.android.ui.theme.slightlyWeaken
-import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.GameSession
-import org.keizar.game.Player
 import org.keizar.game.Role
 import org.keizar.game.TileType
+import org.keizar.utils.communication.game.BoardPos
+import org.keizar.utils.communication.game.Player
 
 @Composable
 fun BoardBackground(
@@ -288,7 +288,7 @@ private fun PreviewBoardBackground() {
         BoardBackground(
             rememberGameBoardViewModel(
                 game = GameSession.create(prop),
-                selfPlayer = Player.Player1,
+                selfPlayer = Player.FirstWhitePlayer,
             ),
 
             Modifier.size(min(maxWidth, maxHeight))

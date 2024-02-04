@@ -1,10 +1,9 @@
 package org.keizar.game.serialization
 
 import kotlinx.serialization.Serializable
-import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
-import org.keizar.game.GameResult
 import org.keizar.game.Role
+import org.keizar.utils.communication.game.BoardPos
 
 @Serializable
 data class GameSnapshot(
