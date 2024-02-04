@@ -8,7 +8,18 @@ import org.keizar.server.plugins.*
 import org.keizar.server.training.module
 
 fun main() {
-    embeddedServer(
+    getServer().start(wait = true)
+}
+
+suspend fun runServer(block: suspend () -> Unit) {
+    val server = getServer()
+    server.start(wait = false)
+    block()
+    server.stop()
+}
+
+private fun getServer(): NettyApplicationEngine {
+    return embeddedServer(
         Netty,
         port = 80,
         host = "0.0.0.0",
@@ -19,7 +30,7 @@ fun main() {
             this.workerGroupSize = 40
             this.callGroupSize = 40
         }
-    ).start(wait = true)
+    )
 }
 
 fun Application.module() {

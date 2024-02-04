@@ -1,6 +1,7 @@
 package org.keizar.client
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import org.keizar.game.BoardProperties
 import org.keizar.game.GameSession
 import org.keizar.game.RoundSessionImpl
@@ -14,6 +15,8 @@ interface RemoteGameSession : GameSession {
     val state: Flow<PlayerSessionState>
 
     val player: Player
+
+    suspend fun waitUntilOpponentFound()
 
     fun close()
 
@@ -73,6 +76,10 @@ class RemoteGameSessionImpl(
 
     // Note: Only call this when state has changed to PLAYING
     override val player: Player = gameRoomClient.getPlayer()
+
+    override suspend fun waitUntilOpponentFound() {
+        state.first { it == PlayerSessionState.PLAYING }
+    }
 
     override fun close() {
         gameRoomClient.close()

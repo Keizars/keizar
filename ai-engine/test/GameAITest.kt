@@ -4,10 +4,12 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import org.junit.jupiter.api.Test
+import org.keizar.client.RemoteGameSession
 import org.keizar.game.GameSession
 import org.keizar.utils.communication.game.Player
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.assertNotNull
+import org.keizar.server.runServer
 
 
 class RoundSessionTest {
@@ -23,4 +25,31 @@ class RoundSessionTest {
         assertNotNull(winner)
         println(winner)
     }
+
+//    @Test
+//    fun `test remote AI combat`() = runTest {
+//        runServer {
+//            val context = EmptyCoroutineContext
+//            val gameClient1 = RemoteGameSession.create(
+//                roomNumber = 5462u,
+//                parentCoroutineContext = EmptyCoroutineContext,
+//                seed = 100
+//            )
+//            val gameClient2 = RemoteGameSession.create(
+//                roomNumber = 5462u,
+//                parentCoroutineContext = EmptyCoroutineContext,
+//                seed = 100
+//            )
+//            gameClient1.waitUntilOpponentFound()
+//            gameClient2.waitUntilOpponentFound()
+//
+//            val ai1 = RandomGameAIImpl(gameClient1, Player.FirstWhitePlayer, context, true)
+//            val ai2 = RandomGameAIImpl(gameClient2, Player.FirstBlackPlayer, context, true)
+//            ai1.start()
+//            ai2.start()
+//            val winner = gameClient1.finalWinner.filterNotNull().first()
+//            assertNotNull(winner)
+//            println(winner)
+//        }
+//    }
 }
