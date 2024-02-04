@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.Tile
+import org.keizar.utils.communication.game.BoardPos
 
 class RuleEngineCoreTest {
     private val BoardPos.index get() = row * 8 + col

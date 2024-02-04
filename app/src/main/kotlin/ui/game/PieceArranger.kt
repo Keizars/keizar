@@ -8,9 +8,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
-import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.Role
+import org.keizar.utils.communication.game.BoardPos
 
 
 /**

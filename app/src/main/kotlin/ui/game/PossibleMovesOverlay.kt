@@ -21,8 +21,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.first
 import org.keizar.game.BoardProperties
 import org.keizar.game.GameSession
-import org.keizar.game.Player
 import org.keizar.game.Role
+import org.keizar.utils.communication.game.Player
 
 @Composable
 fun PossibleMovesOverlay(
@@ -60,7 +60,7 @@ private fun PreviewPossibleMovesOverlay() {
     BoxWithConstraints {
         val vm = rememberGameBoardViewModel(
             game = GameSession.create(BoardProperties.getStandardProperties(0)),
-            selfPlayer = Player.Player1,
+            selfPlayer = Player.FirstWhitePlayer,
         )
         LaunchedEffect(true) {
             vm.onClickPiece(vm.pieces.first().first { it.role == Role.WHITE })

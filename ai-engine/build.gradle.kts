@@ -5,5 +5,6 @@ plugins {
 
 dependencies {
     implementation(project(":rule-engine"))
+    implementation(project(":utils:communication"))
     runtimeOnly(libs.slf4j.simple)
 }

@@ -2,6 +2,8 @@ package org.keizar.game
 
 import kotlinx.serialization.Serializable
 import org.keizar.game.tilearrangement.StandardTileArrangementFactory
+import org.keizar.utils.communication.game.BoardPos
+import org.keizar.utils.communication.game.TileColor
 import kotlin.math.absoluteValue
 import kotlin.random.Random
 

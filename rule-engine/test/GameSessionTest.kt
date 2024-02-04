@@ -6,40 +6,43 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.keizar.utils.communication.game.BoardPos
+import org.keizar.utils.communication.game.GameResult
+import org.keizar.utils.communication.game.Player
 
 class GameSessionTest {
     @Test
     fun `test currentRole`() = runTest {
         val game = GameSession.create(0)
-        assertEquals(Role.WHITE, game.currentRole(Player.Player1).value)
-        assertEquals(Role.BLACK, game.currentRole(Player.Player2).value)
+        assertEquals(Role.WHITE, game.currentRole(Player.FirstWhitePlayer).value)
+        assertEquals(Role.BLACK, game.currentRole(Player.FirstBlackPlayer).value)
     }
 
     @Test
     fun `test currentRole, currentRoundNo and confirmNextRound`() = runTest {
         val game = GameSession.create(0)
         assertEquals(0, game.currentRoundNo.value)
-        assertEquals(Role.WHITE, game.currentRole(Player.Player1).value)
-        assertEquals(Role.BLACK, game.currentRole(Player.Player2).value)
-        assertTrue(game.confirmNextRound(Player.Player1))
-        assertTrue(game.confirmNextRound(Player.Player2))
+        assertEquals(Role.WHITE, game.currentRole(Player.FirstWhitePlayer).value)
+        assertEquals(Role.BLACK, game.currentRole(Player.FirstBlackPlayer).value)
+        assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
+        assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
 
         assertEquals(1, game.currentRoundNo.value)
-        assertEquals(Role.BLACK, game.currentRole(Player.Player1).value)
-        assertEquals(Role.WHITE, game.currentRole(Player.Player2).value)
+        assertEquals(Role.BLACK, game.currentRole(Player.FirstWhitePlayer).value)
+        assertEquals(Role.WHITE, game.currentRole(Player.FirstBlackPlayer).value)
     }
 
     @Test
     fun `test confirmNextRound and finalWinner`() = runTest {
         val game = GameSession.create(0)
-        assertTrue(game.confirmNextRound(Player.Player1))
-        assertTrue(game.confirmNextRound(Player.Player2))
-        assertTrue(game.confirmNextRound(Player.Player1))
-        assertTrue(game.confirmNextRound(Player.Player2))
+        assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
+        assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
+        assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
+        assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
         assertEquals(2, game.currentRoundNo.value)
         assertEquals(GameResult.Draw, game.finalWinner.first())
-        assertFalse(game.confirmNextRound(Player.Player1))
-        assertFalse(game.confirmNextRound(Player.Player2))
+        assertFalse(game.confirmNextRound(Player.FirstWhitePlayer))
+        assertFalse(game.confirmNextRound(Player.FirstBlackPlayer))
     }
 
     @Test
@@ -66,21 +69,21 @@ class GameSessionTest {
         assertEquals(Role.BLACK, round1.winner.value)
         assertEquals(3, round1.winningCounter.value)
 
-        assertTrue(game.confirmNextRound(Player.Player1))
-        assertTrue(game.confirmNextRound(Player.Player2))
+        assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
+        assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
 
         val round2 = curRound.first()
 
         assertEquals(1, game.currentRoundNo.value)
         assertEquals(0, round2.winningCounter.value)
-        assertEquals(0, game.wonRounds(Player.Player1).first())
-        assertEquals(1, game.wonRounds(Player.Player2).first())
-        assertEquals(Player.Player2, game.getRoundWinner(0).first())
+        assertEquals(0, game.wonRounds(Player.FirstWhitePlayer).first())
+        assertEquals(1, game.wonRounds(Player.FirstBlackPlayer).first())
+        assertEquals(Player.FirstBlackPlayer, game.getRoundWinner(0).first())
         assertEquals(null, game.finalWinner.first())
 
-        assertTrue(game.confirmNextRound(Player.Player1))
-        assertTrue(game.confirmNextRound(Player.Player2))
-        assertEquals(GameResult.Winner(Player.Player2), game.finalWinner.first())
+        assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
+        assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
+        assertEquals(GameResult.Winner(Player.FirstBlackPlayer), game.finalWinner.first())
     }
 
     @Test
@@ -105,15 +108,15 @@ class GameSessionTest {
         assertEquals(Role.BLACK, round1.winner.value)
         assertEquals(3, round1.winningCounter.value)
 
-        assertTrue(game.confirmNextRound(Player.Player1))
-        assertTrue(game.confirmNextRound(Player.Player2))
+        assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
+        assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
 
         val round2 = curRound.first()
 
         assertEquals(1, game.currentRoundNo.value)
         assertEquals(0, round2.winningCounter.value)
-        assertEquals(0, game.wonRounds(Player.Player1).first())
-        assertEquals(1, game.wonRounds(Player.Player2).first())
+        assertEquals(0, game.wonRounds(Player.FirstWhitePlayer).first())
+        assertEquals(1, game.wonRounds(Player.FirstBlackPlayer).first())
 
         assertTrue(round2.move(BoardPos("e2"), BoardPos("e3")))
         assertTrue(round2.move(BoardPos("d7"), BoardPos("d6")))
@@ -131,14 +134,14 @@ class GameSessionTest {
         assertEquals(Role.BLACK, round2.winner.value)
         assertEquals(3, round2.winningCounter.value)
 
-        assertTrue(game.confirmNextRound(Player.Player1))
-        assertTrue(game.confirmNextRound(Player.Player2))
+        assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
+        assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
 
         assertEquals(2, game.currentRoundNo.value)
-        assertEquals(1, game.wonRounds(Player.Player1).first())
-        assertEquals(1, game.wonRounds(Player.Player2).first())
-        assertEquals(Player.Player2, game.getRoundWinner(0).first())
-        assertEquals(Player.Player1, game.getRoundWinner(1).first())
+        assertEquals(1, game.wonRounds(Player.FirstWhitePlayer).first())
+        assertEquals(1, game.wonRounds(Player.FirstBlackPlayer).first())
+        assertEquals(Player.FirstBlackPlayer, game.getRoundWinner(0).first())
+        assertEquals(Player.FirstWhitePlayer, game.getRoundWinner(1).first())
     }
 
     @Test
@@ -201,12 +204,12 @@ class GameSessionTest {
     @Test
     fun `test getRole and getPlayer`() = runTest {
         val game = GameSession.create(0)
-        val player1Role = game.currentRole(Player.Player1)
-        assertEquals(Role.WHITE, player1Role.value)
-        assertEquals(player1Role.value, game.getRole(Player.Player1, 0))
-        assertEquals(player1Role.value.other(), game.getRole(Player.Player2, 0))
-        assertEquals(player1Role.value.other(), game.getRole(Player.Player1, 1))
-        assertEquals(player1Role.value, game.getRole(Player.Player2, 1))
+        val FirstWhitePlayerRole = game.currentRole(Player.FirstWhitePlayer)
+        assertEquals(Role.WHITE, FirstWhitePlayerRole.value)
+        assertEquals(FirstWhitePlayerRole.value, game.getRole(Player.FirstWhitePlayer, 0))
+        assertEquals(FirstWhitePlayerRole.value.other(), game.getRole(Player.FirstBlackPlayer, 0))
+        assertEquals(FirstWhitePlayerRole.value.other(), game.getRole(Player.FirstWhitePlayer, 1))
+        assertEquals(FirstWhitePlayerRole.value, game.getRole(Player.FirstBlackPlayer, 1))
 
         for (roundNo in 0..1) {
             for (player in Player.entries) {
@@ -257,22 +260,22 @@ class GameSessionTest {
         assertTrue(round2.move(BoardPos("f6"), BoardPos("f5")))
         assertTrue(round2.move(BoardPos("h4"), BoardPos("h5")))
 
-        assertTrue(game.confirmNextRound(Player.Player1))
-        assertTrue(game.confirmNextRound(Player.Player2))
+        assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
+        assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
 
         val round3 = curRound.first()
 
         assertEquals(1, game.currentRoundNo.value)
 
         assertEquals(0, round3.winningCounter.value)
-        assertEquals(0, game.wonRounds(Player.Player1).first())
-        assertEquals(1, game.wonRounds(Player.Player2).first())
-        assertEquals(Player.Player2, game.getRoundWinner(0).first())
+        assertEquals(0, game.wonRounds(Player.FirstWhitePlayer).first())
+        assertEquals(1, game.wonRounds(Player.FirstBlackPlayer).first())
+        assertEquals(Player.FirstBlackPlayer, game.getRoundWinner(0).first())
         assertEquals(null, game.finalWinner.first())
 
-        assertTrue(game.confirmNextRound(Player.Player1))
-        assertTrue(game.confirmNextRound(Player.Player2))
-        assertEquals(GameResult.Winner(Player.Player2), game.finalWinner.first())
+        assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
+        assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
+        assertEquals(GameResult.Winner(Player.FirstBlackPlayer), game.finalWinner.first())
     }
 
     @Test
@@ -297,15 +300,15 @@ class GameSessionTest {
         assertTrue(round1.move(BoardPos("f6"), BoardPos("f5")))
         assertTrue(round1.move(BoardPos("h4"), BoardPos("h5")))
 
-        assertTrue(game.confirmNextRound(Player.Player1))
-        assertTrue(game.confirmNextRound(Player.Player2))
+        assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
+        assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
 
         val round2 = curRound.first()
 
         assertEquals(1, game.currentRoundNo.value)
         assertEquals(0, round2.winningCounter.value)
-        assertEquals(0, game.wonRounds(Player.Player1).first())
-        assertEquals(1, game.wonRounds(Player.Player2).first())
+        assertEquals(0, game.wonRounds(Player.FirstWhitePlayer).first())
+        assertEquals(1, game.wonRounds(Player.FirstBlackPlayer).first())
 
         assertTrue(round2.move(BoardPos("e2"), BoardPos("e3")))
         assertTrue(round2.move(BoardPos("d7"), BoardPos("d6")))
@@ -321,14 +324,14 @@ class GameSessionTest {
         assertTrue(round2.move(BoardPos("f6"), BoardPos("f5")))
         assertTrue(round2.move(BoardPos("h4"), BoardPos("h5")))
 
-        assertTrue(game.confirmNextRound(Player.Player1))
-        assertTrue(game.confirmNextRound(Player.Player2))
+        assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
+        assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
 
         assertEquals(2, game.currentRoundNo.value)
-        assertEquals(1, game.wonRounds(Player.Player1).first())
-        assertEquals(1, game.wonRounds(Player.Player2).first())
-        assertEquals(Player.Player2, game.getRoundWinner(0).first())
-        assertEquals(Player.Player1, game.getRoundWinner(1).first())
+        assertEquals(1, game.wonRounds(Player.FirstWhitePlayer).first())
+        assertEquals(1, game.wonRounds(Player.FirstBlackPlayer).first())
+        assertEquals(Player.FirstBlackPlayer, game.getRoundWinner(0).first())
+        assertEquals(Player.FirstWhitePlayer, game.getRoundWinner(1).first())
 
         assertTrue(game.replayGame())
 
@@ -350,15 +353,15 @@ class GameSessionTest {
         assertTrue(round3.move(BoardPos("f6"), BoardPos("f5")))
         assertTrue(round3.move(BoardPos("h4"), BoardPos("h5")))
 
-        assertTrue(game.confirmNextRound(Player.Player1))
-        assertTrue(game.confirmNextRound(Player.Player2))
+        assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
+        assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
 
         val round4 = curRound.first()
 
         assertEquals(1, game.currentRoundNo.value)
         assertEquals(0, round4.winningCounter.value)
-        assertEquals(0, game.wonRounds(Player.Player1).first())
-        assertEquals(1, game.wonRounds(Player.Player2).first())
+        assertEquals(0, game.wonRounds(Player.FirstWhitePlayer).first())
+        assertEquals(1, game.wonRounds(Player.FirstBlackPlayer).first())
 
         assertTrue(round4.move(BoardPos("e2"), BoardPos("e3")))
         assertTrue(round4.move(BoardPos("d7"), BoardPos("d6")))
@@ -374,13 +377,13 @@ class GameSessionTest {
         assertTrue(round4.move(BoardPos("f6"), BoardPos("f5")))
         assertTrue(round4.move(BoardPos("h4"), BoardPos("h5")))
 
-        assertTrue(game.confirmNextRound(Player.Player1))
-        assertTrue(game.confirmNextRound(Player.Player2))
+        assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
+        assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
 
         assertEquals(2, game.currentRoundNo.value)
-        assertEquals(1, game.wonRounds(Player.Player1).first())
-        assertEquals(1, game.wonRounds(Player.Player2).first())
-        assertEquals(Player.Player2, game.getRoundWinner(0).first())
-        assertEquals(Player.Player1, game.getRoundWinner(1).first())
+        assertEquals(1, game.wonRounds(Player.FirstWhitePlayer).first())
+        assertEquals(1, game.wonRounds(Player.FirstBlackPlayer).first())
+        assertEquals(Player.FirstBlackPlayer, game.getRoundWinner(0).first())
+        assertEquals(Player.FirstWhitePlayer, game.getRoundWinner(1).first())
     }
 }

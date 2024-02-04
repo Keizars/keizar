@@ -12,10 +12,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import org.keizar.utils.communication.Exit
+import org.keizar.utils.communication.message.Exit
 import org.keizar.utils.communication.PlayerSessionState
-import org.keizar.utils.communication.Request
-import org.keizar.utils.communication.StateChange
+import org.keizar.utils.communication.game.Player
+import org.keizar.utils.communication.message.PlayerAllocation
+import org.keizar.utils.communication.message.Request
+import org.keizar.utils.communication.message.StateChange
 import kotlin.coroutines.CoroutineContext
 
 interface GameRoom {
@@ -66,6 +68,10 @@ class GameRoomImpl(
     }
 
     private suspend fun startGame(player1: PlayerSession, player2: PlayerSession) {
+        val playerAllocation = Player.entries.shuffled()
+        notifyPlayerAllocation(player1, playerAllocation[0])
+        notifyPlayerAllocation(player2, playerAllocation[1])
+
         player1.setState(PlayerSessionState.PLAYING)
         player2.setState(PlayerSessionState.PLAYING)
 
@@ -73,6 +79,10 @@ class GameRoomImpl(
         myCoroutineScope.launch { forwardMessages(player2, player1) }
         myCoroutineScope.launch { notifyStateChange(player1) }
         myCoroutineScope.launch { notifyStateChange(player2) }
+    }
+
+    private suspend fun notifyPlayerAllocation(player: PlayerSession, allocation: Player) {
+        player.session.sendSerialized(PlayerAllocation(allocation))
     }
 
     private suspend fun forwardMessages(from: PlayerSession, to: PlayerSession) {

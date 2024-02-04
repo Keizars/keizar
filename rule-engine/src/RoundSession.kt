@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.flowOf
 import org.keizar.game.internal.RuleEngine
 import org.keizar.game.serialization.PieceSnapshot
 import org.keizar.game.serialization.RoundSnapshot
+import org.keizar.utils.communication.game.BoardPos
 
 interface RoundSession {
     val pieces: List<Piece>

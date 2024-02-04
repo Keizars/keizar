@@ -12,7 +12,7 @@ import org.keizar.server.gameroom.GameRoom
 import org.keizar.server.gameroom.GameRoomImpl
 import org.keizar.server.gameroom.PlayerSessionImpl
 import org.keizar.utils.communication.PlayerSessionState
-import org.keizar.utils.communication.UserInfo
+import org.keizar.utils.communication.message.UserInfo
 
 fun Application.gameRoomRouting() {
     val logger = log

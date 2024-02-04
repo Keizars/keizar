@@ -24,14 +24,14 @@ import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.transition.BoardTransitionController
-import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
-import org.keizar.game.GameResult
 import org.keizar.game.GameSession
 import org.keizar.game.Piece
-import org.keizar.game.Player
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
+import org.keizar.utils.communication.game.BoardPos
+import org.keizar.utils.communication.game.GameResult
+import org.keizar.utils.communication.game.Player
 import kotlin.time.Duration.Companion.seconds
 
 interface GameBoardViewModel {

@@ -1,6 +1,8 @@
-package org.keizar.utils.communication
+package org.keizar.utils.communication.message
 
 import kotlinx.serialization.Serializable
+import org.keizar.utils.communication.PlayerSessionState
+import org.keizar.utils.communication.game.Player
 
 @Serializable
 sealed interface Message
@@ -19,6 +21,11 @@ data class UserInfo(
 @Serializable
 data class StateChange(
     val newState: PlayerSessionState
+): Respond
+
+@Serializable
+data class PlayerAllocation(
+    val who: Player
 ): Respond
 
 @Serializable

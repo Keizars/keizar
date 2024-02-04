@@ -1,7 +1,7 @@
 package org.keizar.game.tilearrangement
 
-import org.keizar.game.BoardPos
 import org.keizar.game.TileType
+import org.keizar.utils.communication.game.BoardPos
 import kotlin.random.Random
 
 class StandardTileArrangementFactory(

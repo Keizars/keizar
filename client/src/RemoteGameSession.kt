@@ -3,10 +3,10 @@ package org.keizar.client
 import kotlinx.coroutines.flow.Flow
 import org.keizar.game.BoardProperties
 import org.keizar.game.GameSession
-import org.keizar.game.Player
 import org.keizar.game.RoundSessionImpl
 import org.keizar.game.serialization.GameSnapshot
 import org.keizar.utils.communication.PlayerSessionState
+import org.keizar.utils.communication.game.Player
 
 interface RemoteGameSession : GameSession {
 
@@ -49,16 +49,20 @@ interface RemoteGameSession : GameSession {
 
 class RemoteGameSessionImpl(
     private val game: GameSession,
-    gameRoomClient: GameRoomClient,
+    private val gameRoomClient: GameRoomClient,
 ) : GameSession by game, RemoteGameSession {
 
     override val state: Flow<PlayerSessionState> = gameRoomClient.getPlayerState()
+    // Note: Only call this when state has changed to PLAYING
     override val player: Player = gameRoomClient.getPlayer()
     override val rounds: List<RemoteRoundSession> = game.rounds.map { it as RemoteRoundSession }
 
+    // Note: Only call this when state has changed to PLAYING
     override fun confirmNextRound(player: Player): Boolean {
         if (player != this.player) return false
-        return game.confirmNextRound(player)
+        return game.confirmNextRound(player).also {
+            if (it) gameRoomClient.sendConfirmNextRound()
+        }
     }
 
     // Replaying is not allowed in online multiplayer mode

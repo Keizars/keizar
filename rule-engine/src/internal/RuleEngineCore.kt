@@ -1,6 +1,5 @@
 package org.keizar.game.internal
 
-import org.keizar.game.BoardPos
 import org.keizar.game.BoardProperties
 import org.keizar.game.Piece
 import org.keizar.game.Role
@@ -21,6 +20,7 @@ import org.keizar.game.internal.RuleEngineCoreImpl.Route.Direction.KRB
 import org.keizar.game.internal.RuleEngineCoreImpl.Route.Direction.KRF
 import org.keizar.game.internal.RuleEngineCoreImpl.Route.Direction.L
 import org.keizar.game.internal.RuleEngineCoreImpl.Route.Direction.R
+import org.keizar.utils.communication.game.BoardPos
 
 interface RuleEngineCore {
     fun showValidMoves(tiles: List<Tile>, piece: Piece, index: BoardPos.() -> Int): List<BoardPos>

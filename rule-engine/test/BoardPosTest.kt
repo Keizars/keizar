@@ -2,6 +2,7 @@ package org.keizar.game
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.keizar.utils.communication.game.BoardPos
 
 class BoardPosTest {
     @Test
