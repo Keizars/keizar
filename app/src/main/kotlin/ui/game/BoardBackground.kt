@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.map
 import org.keizar.android.R
+import org.keizar.android.ui.game.transition.PieceArranger
 import org.keizar.android.ui.theme.slightlyWeaken
 import org.keizar.game.BoardProperties
 import org.keizar.game.GameSession

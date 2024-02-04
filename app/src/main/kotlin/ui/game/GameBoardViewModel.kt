@@ -24,6 +24,7 @@ import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.transition.BoardTransitionController
+import org.keizar.android.ui.game.transition.PieceArranger
 import org.keizar.game.BoardProperties
 import org.keizar.game.GameSession
 import org.keizar.game.Piece
@@ -268,10 +269,12 @@ private sealed class BaseGameBoardViewModel(
     override val round2Winner: StateFlow<Role?> = game.rounds[1].winner
 
     private val _flashFlag = MutableStateFlow(false)
+
     @Stable
     override val flashFlag: StateFlow<Boolean> = _flashFlag
 
     private val _endRoundAnnounced = MutableStateFlow(false)
+
     @Stable
     override val endRoundAnnounced = _endRoundAnnounced
 

@@ -46,7 +46,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import org.keizar.android.ui.external.placeholder.placeholder
 import org.keizar.android.ui.game.BoardTileLabels
 import org.keizar.android.ui.game.BoardTiles
-import org.keizar.android.ui.game.PieceArranger
+import org.keizar.android.ui.game.transition.PieceArranger
 import org.keizar.game.Difficulty
 import org.keizar.game.Role
 import org.keizar.game.Role.BLACK
