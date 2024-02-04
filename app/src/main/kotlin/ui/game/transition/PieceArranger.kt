@@ -1,4 +1,4 @@
-package org.keizar.android.ui.game
+package org.keizar.android.ui.game.transition
 
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
