@@ -229,7 +229,11 @@ class GameSessionImpl(
     private fun proceedToNextTurn() {
         val winningRole: Role? = rounds[currentRoundNo.value].winner.value
         val winningPlayer: Player? = winningRole?.let {
-            if (currentRole(Player.FirstWhitePlayer).value == it) Player.FirstWhitePlayer else Player.FirstBlackPlayer
+            if (currentRole(Player.FirstWhitePlayer).value == it) {
+                Player.FirstWhitePlayer
+            } else {
+                Player.FirstBlackPlayer
+            }
         }
         winningPlayer?.let { wonRounds[it.ordinal].value += currentRoundNo.value }
         if (currentRoundNo.value == properties.rounds - 1) {

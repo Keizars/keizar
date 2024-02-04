@@ -13,11 +13,12 @@ import io.ktor.client.*
 import io.ktor.client.plugins.websocket.*
 import io.ktor.http.*
 import io.ktor.serialization.WebsocketDeserializeException
-import io.ktor.websocket.*
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.message.ConfirmNextRound
@@ -36,6 +37,7 @@ interface GameRoomClient {
     fun bind(session: GameSession)
     fun sendConfirmNextRound()
     fun sendMove(from: BoardPos, to: BoardPos)
+    fun close()
 }
 
 class GameRoomClientImpl(
@@ -45,11 +47,15 @@ class GameRoomClientImpl(
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
+    private val client = HttpClient {
+        install(WebSockets)
+    }
+
     private val playerState: MutableStateFlow<PlayerSessionState> =
         MutableStateFlow(PlayerSessionState.STARTED)
 
     private lateinit var gameSession: GameSession
-    private lateinit var playerAllocation: Player
+    private lateinit var player: Player
     private val currentRole: MutableStateFlow<Role> = MutableStateFlow(Role.WHITE)
 
     private val outflowChannel: Channel<Request> = Channel()
@@ -61,6 +67,11 @@ class GameRoomClientImpl(
         }
     }
 
+    override fun close() {
+        client.close()
+        myCoroutineScope.cancel()
+    }
+
     private suspend fun startUpdateCurRole() {
         val player = getPlayer()
         gameSession.currentRoundNo.collect { curRoundNo ->
@@ -69,33 +80,22 @@ class GameRoomClientImpl(
     }
 
     private suspend fun serverConnection() {
-        val client = HttpClient {
-            install(WebSockets)
-        }
         client.webSocket(
             method = HttpMethod.Get,
             host = "127.0.0.1",
             port = 80,
             path = "/room/$roomNumber"
         ) {
-            val messageInflowRoutine = myCoroutineScope.launch { messageInflow() }
-            val messageOutflowRoutine = myCoroutineScope.launch { messageOutflow() }
-
-            messageOutflowRoutine.join()
-            messageInflowRoutine.cancelAndJoin()
+            myCoroutineScope.launch { messageInflow() }
+            myCoroutineScope.launch { messageOutflow() }
         }
-        client.close()
     }
 
     private suspend fun DefaultClientWebSocketSession.messageOutflow() {
         while (true) {
             try {
-                when (val request = outflowChannel.receive()) {
-                    ConfirmNextRound -> TODO()
-                    Exit -> TODO()
-                    is Move -> TODO()
-                    is UserInfo -> TODO()
-                }
+                val request = outflowChannel.receive()
+                sendSerialized(request)
             } catch (e: CancellationException) {
                 // ignore
             }
@@ -107,9 +107,11 @@ class GameRoomClientImpl(
             try {
                 when (val respond = receiveDeserialized<Respond>()) {
                     is StateChange -> playerState.value = respond.newState
-                    is PlayerAllocation -> playerAllocation = respond.who
-                    ConfirmNextRound -> TODO()
-                    is Move -> TODO()
+                    is PlayerAllocation -> player = respond.who
+                    ConfirmNextRound -> gameSession.confirmNextRound(player.opponent())
+                    is Move -> {
+                        gameSession.currentRound.first().move(respond.from, respond.to)
+                    }
                 }
             } catch (e: WebsocketDeserializeException) {
                 // ignore
@@ -128,7 +130,7 @@ class GameRoomClientImpl(
     // Note: initialization of Player's value is only guaranteed after playerState becomes PLAYING.
     // TODO: improve this
     override fun getPlayer(): Player {
-        return playerAllocation
+        return player
     }
 
     override fun bind(session: GameSession) {
