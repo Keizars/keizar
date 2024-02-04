@@ -65,6 +65,8 @@ fun GameBoard(
         val showRoundTwoBottomBar =
             (winner != null && vm.currentRoundCount.collectAsState().value == 1)
 
+        val flashFlag = vm.flashFlag.collectAsState().value
+
         WinningCounter(vm)
 
         CapturedPieces(vm, selfRole)
@@ -77,17 +79,17 @@ fun GameBoard(
         }
 
         CapturedPieces(vm, selfRole.other())
-
         WinningRoundDialog(winner, vm)
+        if (flashFlag) {
+            GameOverDialog(vm, finalWinner, onClickHome)
 
-        GameOverDialog(vm, finalWinner, onClickHome)
+            if (showRoundOneBottomBar) {
+                RoundOneBottomBar(vm, onClickHome)
+            }
 
-        if (showRoundOneBottomBar) {
-            RoundOneBottomBar(vm, onClickHome)
-        }
-
-        if (showRoundTwoBottomBar) {
-            RoundTwoBottomBar(vm)
+            if (showRoundTwoBottomBar) {
+                RoundTwoBottomBar(vm)
+            }
         }
     }
 }
@@ -115,7 +117,9 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
         }
 
         Button(
-            onClick = {vm.replayCurrentRound()},
+            onClick = {
+                vm.setFlashFlag(false)
+                vm.replayCurrentRound() },
             modifier = Modifier
                 .width(buttonWidth)
                 .padding(4.dp)
@@ -149,7 +153,9 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
         }
 
         Button(
-            onClick = { vm.startNextRound(vm.selfPlayer) },
+            onClick = {
+                vm.startNextRound(vm.selfPlayer)
+                vm.setFlashFlag(false)},
             modifier = Modifier
                 .width(buttonWidth)
                 .padding(4.dp)
@@ -228,12 +234,13 @@ fun WinningRoundDialog(
     vm: GameBoardViewModel,
     showFlag: MutableState<Boolean> = mutableStateOf(false)
 ) {
-    var showDialogWhiteWin by remember { mutableStateOf(false) }
-    var showDialogBlackWin by remember { mutableStateOf(false) }
+    var showDialogWhiteWin by remember { mutableStateOf(true) }
+    var showDialogBlackWin by remember { mutableStateOf(true) }
 
     val whiteCapturedPieces by vm.whiteCapturedPieces.collectAsState()
     val blackCapturedPieces by vm.blackCapturedPieces.collectAsState()
     val currentRoundCount by vm.currentRoundCount.collectAsState()
+    val flashFlag = vm.flashFlag.collectAsState().value
 
     if (showFlag.value) {
         if (winner == Role.WHITE) {
@@ -243,57 +250,64 @@ fun WinningRoundDialog(
         }
     }
 
-    when (winner) {
-        null -> {
-            showDialogWhiteWin = true
-            showDialogBlackWin = true
-        }
+    if (winner == null) {
+        showDialogWhiteWin = true
+        showDialogBlackWin = true
+    }
 
-        Role.WHITE -> {
-            if (showDialogWhiteWin) {
-                AlertDialog(onDismissRequest = {},
-                    title = { Text(text = "This Round Winner: White") },
-                    text = {
-                        Text(
-                            text = "White captured: ${whiteCapturedPieces}\n" +
-                                    "Black captured: ${blackCapturedPieces}\n"
-                        )
-                    },
-                    confirmButton = {
-                        Button(onClick = {
-                            if (currentRoundCount == 1) {
-                                vm.startNextRound(vm.selfPlayer)
-                            }
-                            showDialogWhiteWin = false
-                            showFlag.value = false
-                        }) {
-                            Text(text = "OK")
-                        }
-                    })
+    if (flashFlag) {
+        when (winner) {
+            null -> {
+                showDialogWhiteWin = true
+                showDialogBlackWin = true
             }
-        }
 
-        Role.BLACK -> {
-            if (showDialogBlackWin) {
-                AlertDialog(onDismissRequest = {},
-                    title = { Text(text = "This Round Winner: Black") },
-                    text = {
-                        Text(
-                            text = "White captured: ${whiteCapturedPieces}\n" +
-                                    "Black captured: ${blackCapturedPieces}\n"
-                        )
-                    },
-                    confirmButton = {
-                        Button(onClick = {
-                            if (currentRoundCount == 1) {
-                                vm.startNextRound(vm.selfPlayer)
+            Role.WHITE -> {
+                if (showDialogWhiteWin) {
+                    AlertDialog(onDismissRequest = {},
+                        title = { Text(text = "This Round Winner: White") },
+                        text = {
+                            Text(
+                                text = "White captured: ${whiteCapturedPieces}\n" +
+                                        "Black captured: ${blackCapturedPieces}\n"
+                            )
+                        },
+                        confirmButton = {
+                            Button(onClick = {
+                                if (currentRoundCount == 1) {
+                                    vm.startNextRound(vm.selfPlayer)
+                                }
+                                showDialogWhiteWin = false
+                                showFlag.value = false
+                            }) {
+                                Text(text = "OK")
                             }
-                            showDialogBlackWin = false
-                            showFlag.value = false
-                        }) {
-                            Text(text = "OK")
-                        }
-                    })
+                        })
+                }
+            }
+
+            Role.BLACK -> {
+                if (showDialogBlackWin) {
+                    AlertDialog(onDismissRequest = {},
+                        title = { Text(text = "This Round Winner: Black") },
+                        text = {
+                            Text(
+                                text = "White captured: ${whiteCapturedPieces}\n" +
+                                        "Black captured: ${blackCapturedPieces}\n"
+                            )
+                        },
+                        confirmButton = {
+                            Button(onClick = {
+                                if (currentRoundCount == 1) {
+                                    vm.startNextRound(vm.selfPlayer)
+                                }
+                                showDialogBlackWin = false
+                                showFlag.value = false
+                            }) {
+                                Text(text = "OK")
+                            }
+                        })
+                }
             }
         }
     }

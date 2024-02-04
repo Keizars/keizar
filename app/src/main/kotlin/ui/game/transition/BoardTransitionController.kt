@@ -172,7 +172,7 @@ private class BoardTransitionControllerImpl(
         _winningPieceAlpha.floatValue = 0f
         awaitFrame()
         _winningPieceAlpha.floatValue = 1f
-        delay(3.seconds)
+        delay(5.seconds)
     }
 
 //    init {

@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
@@ -95,6 +96,7 @@ fun BoardPieces(
                 Modifier
                     .background(Color.Transparent)
                     .offset(offsetX, offsetY)
+                    .alpha(vm.boardTransitionController.winningPieceAlpha)
                     .then(
                         if (pick?.piece == piece) {
                             Modifier.absoluteOffset(draggingOffset.x, draggingOffset.y)
@@ -124,9 +126,10 @@ fun BoardPieces(
             }
             val position: BoardPos = piece.pos.collectAsState().value
             val winner = vm.winner.collectAsState().value
-            LaunchedEffect(Unit) {
+            LaunchedEffect(winner) {
                 if (vm.boardProperties.tileArrangement[position] == TileType.KEIZAR && winner != null) {
                     vm.boardTransitionController.flashWiningPiece()
+                    vm.setFlashFlag(true)
                 }
             }
         }
