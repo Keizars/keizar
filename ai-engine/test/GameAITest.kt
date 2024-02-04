@@ -4,12 +4,10 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import org.junit.jupiter.api.Test
-import org.keizar.client.RemoteGameSession
 import org.keizar.game.GameSession
 import org.keizar.utils.communication.game.Player
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.test.assertNotNull
-import org.keizar.server.runServer
 
 
 class RoundSessionTest {
