@@ -14,9 +14,9 @@ class RuleEngineCoreTest {
 
     /***
      *   8 p _ _ _ _ _ P _
-     *   7 _ p _ p _ _ _ P
-     *   6 _ _ p _ _ _ _ _
-     *   5 _ _ _ * p p p p
+     *   7 _ p p p p _ _ P
+     *   6 _ _ _ _ _ _ _ _
+     *   5 _ _ _ k _ p p p
      *   4 _ _ _ _ * _ P _
      *   3 _ _ P _ _ * _ *
      *   2 _ P _ P * P _ _
@@ -36,14 +36,14 @@ class RuleEngineCoreTest {
         Pair(Role.WHITE, BoardPos("h1")),
         Pair(Role.BLACK, BoardPos("a8")),
         Pair(Role.BLACK, BoardPos("b7")),
-        Pair(Role.BLACK, BoardPos("c6")),
+        Pair(Role.BLACK, BoardPos("c7")),
         Pair(Role.BLACK, BoardPos("d7")),
         Pair(Role.BLACK, BoardPos("f5")),
         Pair(Role.BLACK, BoardPos("g5")),
         Pair(Role.BLACK, BoardPos("h5")),
         Pair(Role.WHITE, BoardPos("h7")),
         Pair(Role.WHITE, BoardPos("g8")),
-        Pair(Role.BLACK, BoardPos("e5")),
+        Pair(Role.BLACK, BoardPos("e7")),
     ).map {(player, pos) ->
         MutablePiece(index1++, player, MutableStateFlow(pos))
     }
@@ -73,14 +73,14 @@ class RuleEngineCoreTest {
         setOf(BoardPos("h2"), BoardPos("h3")),
         setOf(BoardPos("a6"), BoardPos("a7")),
         setOf(BoardPos("b5"), BoardPos("b6")),
-        setOf(BoardPos("c5")),
+        setOf(BoardPos("c6")),
         setOf(BoardPos("d6")),
         setOf(BoardPos("f4"), BoardPos("g4")),
         setOf(),
         setOf(BoardPos("g4"), BoardPos("h4")),
         setOf(BoardPos("h8")),
         setOf(),
-        setOf(BoardPos("e4")),
+        setOf(BoardPos("e6")),
     )
 
     @TestFactory

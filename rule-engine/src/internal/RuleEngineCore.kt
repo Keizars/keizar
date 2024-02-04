@@ -21,6 +21,7 @@ import org.keizar.game.internal.RuleEngineCoreImpl.Route.Direction.KRB
 import org.keizar.game.internal.RuleEngineCoreImpl.Route.Direction.KRF
 import org.keizar.game.internal.RuleEngineCoreImpl.Route.Direction.L
 import org.keizar.game.internal.RuleEngineCoreImpl.Route.Direction.R
+import kotlin.math.abs
 
 interface RuleEngineCore {
     fun showValidMoves(tiles: List<Tile>, piece: Piece, index: BoardPos.() -> Int): List<BoardPos>
@@ -171,6 +172,13 @@ class RuleEngineCoreImpl(
 
         // If it is a black piece in the KEIZAR column, it can't move 2 steps
         if (piece.role == Role.BLACK && piece.pos.value.col == boardProperties.keizarTilePos.col) {
+            return false
+        }
+
+        // If it is a black piece that is the first 2 piece on a column next to the KEIZAR column,
+        // it can't move 2 steps
+        if (piece.role == Role.BLACK && abs(piece.pos.value.col - boardProperties.keizarTilePos.col)
+            == 1 && piece.pos.value.row == 6) {
             return false
         }
 
