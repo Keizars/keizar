@@ -220,13 +220,13 @@ class GameSessionImpl(
         nextRoundAgreement[player.ordinal] = true
         agreementCounter.incrementAndGet()
         if (agreementCounter.compareAndSet(2, 0)) {
-            proceedToNextTurn()
+            proceedToNextRound()
             nextRoundAgreement.replaceAll { false }
         }
         return true
     }
 
-    private fun proceedToNextTurn() {
+    private fun proceedToNextRound() {
         val winningRole: Role? = rounds[currentRoundNo.value].winner.value
         val winningPlayer: Player? = winningRole?.let {
             if (currentRole(Player.FirstWhitePlayer).value == it) {
@@ -238,8 +238,9 @@ class GameSessionImpl(
         winningPlayer?.let { wonRounds[it.ordinal].value += currentRoundNo.value }
         if (currentRoundNo.value == properties.rounds - 1) {
             updateFinalWinner()
+        } else {
+            ++_currentRoundNo.value
         }
-        ++_currentRoundNo.value
         curRoles.forEach { role -> role.value = role.value.other() }
     }
 
