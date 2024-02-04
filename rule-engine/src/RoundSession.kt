@@ -52,7 +52,11 @@ class RoundSessionImpl(
     }
 
     override fun getAvailableTargets(from: BoardPos): Flow<List<BoardPos>> {
-        return flowOf(ruleEngine.showPossibleMoves(from))
+        return if (winner.value != null) {
+            flowOf(listOf())
+        } else {
+            flowOf(ruleEngine.showPossibleMoves(from))
+        }
     }
 
     override fun getAllPiecesPos(role: Role): Flow<List<BoardPos>> {
@@ -60,7 +64,11 @@ class RoundSessionImpl(
     }
 
     override suspend fun move(from: BoardPos, to: BoardPos): Boolean {
-        return ruleEngine.move(from, to)
+        return if (winner.value != null) {
+            false
+        } else {
+            ruleEngine.move(from, to)
+        }
     }
 
     override fun getLostPiecesCount(role: Role): StateFlow<Int> {
