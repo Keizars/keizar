@@ -154,7 +154,7 @@ class GameSessionImpl(
     private val haveWinner: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     private val curRoles: List<MutableStateFlow<Role>>
-    private val wonRounds: List<MutableStateFlow<List<Int>>>
+    private val wonRounds: List<Flow<List<Int>>>
 
     private val nextRoundAgreement: MutableList<Boolean>
     private val agreementCounter: AtomicInteger = AtomicInteger(0)
@@ -171,10 +171,13 @@ class GameSessionImpl(
             MutableStateFlow(Role.BLACK),
         )
 
-        wonRounds = listOf(
-            MutableStateFlow(mutableListOf()),
-            MutableStateFlow(mutableListOf()),
-        )
+        wonRounds = Player.entries.map { player ->
+            combine(rounds.map { it.winner }) { winners ->
+                winners.mapIndexed { roundNo, role -> Pair(roundNo, role) }
+                    .filter { (roundNo, role) -> role == getRole(player, roundNo) }
+                    .map { (roundNo, _) -> roundNo }
+            }
+        }
 
         nextRoundAgreement = mutableListOf(false, false)
 
@@ -228,15 +231,6 @@ class GameSessionImpl(
     }
 
     private fun proceedToNextRound() {
-        val winningRole: Role? = rounds[currentRoundNo.value].winner.value
-        val winningPlayer: Player? = winningRole?.let {
-            if (currentRole(Player.FirstWhitePlayer).value == it) {
-                Player.FirstWhitePlayer
-            } else {
-                Player.FirstBlackPlayer
-            }
-        }
-        winningPlayer?.let { wonRounds[it.ordinal].value += currentRoundNo.value }
         if (currentRoundNo.value == properties.rounds - 1) {
             updateFinalWinner()
         } else {
@@ -267,7 +261,6 @@ class GameSessionImpl(
     private fun resetGameStatus() {
         curRoles[0].value = Role.WHITE
         curRoles[1].value = Role.BLACK
-        wonRounds.forEach { it.value = mutableListOf() }
         _currentRoundNo.value = 0
         haveWinner.value = false
     }
