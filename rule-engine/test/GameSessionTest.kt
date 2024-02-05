@@ -39,7 +39,7 @@ class GameSessionTest {
         assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
         assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
         assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
-        assertEquals(2, game.currentRoundNo.value)
+        assertEquals(1, game.currentRoundNo.value)
         assertEquals(GameResult.Draw, game.finalWinner.first())
         assertFalse(game.confirmNextRound(Player.FirstWhitePlayer))
         assertFalse(game.confirmNextRound(Player.FirstBlackPlayer))
@@ -137,7 +137,7 @@ class GameSessionTest {
         assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
         assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
 
-        assertEquals(2, game.currentRoundNo.value)
+        assertEquals(1, game.currentRoundNo.value)
         assertEquals(1, game.wonRounds(Player.FirstWhitePlayer).first())
         assertEquals(1, game.wonRounds(Player.FirstBlackPlayer).first())
         assertEquals(Player.FirstBlackPlayer, game.getRoundWinner(0).first())
@@ -327,7 +327,7 @@ class GameSessionTest {
         assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
         assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
 
-        assertEquals(2, game.currentRoundNo.value)
+        assertEquals(1, game.currentRoundNo.value)
         assertEquals(1, game.wonRounds(Player.FirstWhitePlayer).first())
         assertEquals(1, game.wonRounds(Player.FirstBlackPlayer).first())
         assertEquals(Player.FirstBlackPlayer, game.getRoundWinner(0).first())
@@ -380,7 +380,7 @@ class GameSessionTest {
         assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
         assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
 
-        assertEquals(2, game.currentRoundNo.value)
+        assertEquals(1, game.currentRoundNo.value)
         assertEquals(1, game.wonRounds(Player.FirstWhitePlayer).first())
         assertEquals(1, game.wonRounds(Player.FirstBlackPlayer).first())
         assertEquals(Player.FirstBlackPlayer, game.getRoundWinner(0).first())
