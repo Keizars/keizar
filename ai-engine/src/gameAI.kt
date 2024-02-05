@@ -14,6 +14,7 @@ import org.keizar.game.GameSession
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import org.keizar.utils.communication.game.BoardPos
+import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
 import kotlin.coroutines.CoroutineContext
 import kotlin.random.Random
@@ -43,16 +44,18 @@ class RandomGameAIImpl(
 
     override fun start() {
         myCoroutine.launch {
-            combine(game.currentRole(myPlayer), game.currentRound) { myRole, session ->
-                myRole to session
-            }.collectLatest { (myRole, session) ->
-                session.curRole.collect { currentRole ->
-                    if (myRole == currentRole) {
-                        val bestPos = findBestMove(session, currentRole)
-                        if (!test) {
-                            delay(Random.nextLong(1000L..2500L))
+            game.currentRound.flatMapLatest { it.winner }.collect {
+                combine(game.currentRole(myPlayer), game.currentRound) { myRole, session ->
+                    myRole to session
+                }.collectLatest { (myRole, session) ->
+                    session.curRole.collect { currentRole ->
+                        if (myRole == currentRole) {
+                            val bestPos = findBestMove(session, currentRole)
+                            if (!test) {
+                                delay(Random.nextLong(1000L..1500L))
+                            }
+                            session.move(bestPos.first, bestPos.second)
                         }
-                        session.move(bestPos.first, bestPos.second)
                     }
                 }
             }
@@ -64,7 +67,7 @@ class RandomGameAIImpl(
                     game.confirmNextRound(myPlayer)
                 }
                 if (!test) {
-                    delay(Random.nextLong(1000L..2500L))
+                    delay(Random.nextLong(1000L..1500L))
                 }
             }
         }
@@ -74,10 +77,12 @@ class RandomGameAIImpl(
         val allPieces = round.getAllPiecesPos(role).first()
         var randomPiece = allPieces.random()
         var validTargets = round.getAvailableTargets(randomPiece).first()
+
         do {
             randomPiece = allPieces.random()
             validTargets = round.getAvailableTargets(randomPiece).first()
-        } while (validTargets.isEmpty() && allPieces.isNotEmpty())
+            delay(1000L)
+        } while (validTargets.isEmpty() && allPieces.isNotEmpty() && round.winner.first() == null)
 
         val randomTarget = validTargets.random()
         return Pair(randomPiece, randomTarget)

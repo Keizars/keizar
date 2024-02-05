@@ -89,4 +89,10 @@ class RuleEngineTest {
             ruleEngine.showPossibleMoves(BoardPos("d3")).toSet(),
         )
     }
+
+    @Test
+    fun `test noValidMoves` () {
+        val BP = BoardProperties.getStandardProperties(100)
+
+    }
 }

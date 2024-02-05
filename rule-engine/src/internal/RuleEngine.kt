@@ -66,10 +66,9 @@ class RuleEngineImpl private constructor(
         movesLog.add(move)
         updateLostPieces(move)
         updateWinningCounter(move)
-        updateWinnerWhenNoMove()
         curRole.value = curRole.value.other()
         updateWinner()
-
+        updateWinnerWhenNoMove()
         return true
     }
 
