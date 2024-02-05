@@ -214,7 +214,7 @@ fun RoundTwoBottomBar(
         Button(
             onClick = {
                 vm.replayGame()
-                vm.setGameOverAnnouncement(false)
+                vm.setGameOverReadyToBeAnnouncement(false)
             },
             modifier = Modifier
                 .width(buttonWidth)
@@ -234,7 +234,7 @@ fun RoundTwoBottomBar(
         Button(
             onClick = {
                 vm.replayCurrentRound()
-                vm.setGameOverAnnouncement(false)
+                vm.setGameOverReadyToBeAnnouncement(false)
             },
             modifier = Modifier
                 .width(buttonWidth)
@@ -283,8 +283,8 @@ fun RoundTwoBottomBar(
 
 @Composable
 fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome: () -> Unit) {
-    val gameOverAnnounced by vm.gameOverAnnounced.collectAsState()
-    if (!gameOverAnnounced) {
+    val gameOverReadyToBeAnnounced by vm.gameOverReadyToBeAnnounced.collectAsState()
+    if (gameOverReadyToBeAnnounced) {
         when (finalWinner) {
             null -> {
                 // do nothing
@@ -305,7 +305,7 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                         )
                     },
                     confirmButton = {
-                        Button(onClick = {vm.setGameOverAnnouncement(true)}) {
+                        Button(onClick = {vm.setGameOverReadyToBeAnnouncement(false)}) {
                             Text(text = "OK")
                         }
                     })
@@ -316,7 +316,7 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                 AlertDialog(onDismissRequest = {},
                     title = { Text(text = "Game Over, ${finalWinner.player} wins!") },
                     confirmButton = {
-                        Button(onClick = {vm.setGameOverAnnouncement(true)}) {
+                        Button(onClick = {vm.setGameOverReadyToBeAnnouncement(false)}) {
                             Text(text = "Ok")
                         }
                     })
@@ -354,6 +354,7 @@ fun WinningRoundDialog(
                         Button(onClick = {
                             if (currentRoundCount == 1) {
                                 vm.startNextRound(vm.selfPlayer)
+                                vm.setGameOverReadyToBeAnnouncement(true)
                             }
                             vm.setEndRoundAnnouncement(true)
                             showFlag.value = false
