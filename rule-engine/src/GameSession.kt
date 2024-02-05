@@ -240,8 +240,8 @@ class GameSessionImpl(
             updateFinalWinner()
         } else {
             ++_currentRoundNo.value
+            curRoles.forEach { role -> role.value = role.value.other() }
         }
-        curRoles.forEach { role -> role.value = role.value.other() }
     }
 
     private fun updateFinalWinner() {
