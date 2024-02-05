@@ -66,6 +66,7 @@ class RuleEngineImpl private constructor(
         movesLog.add(move)
         updateLostPieces(move)
         updateWinningCounter(move)
+        updateWinnerWhenNoMove()
         curRole.value = curRole.value.other()
         updateWinner()
 
@@ -115,6 +116,9 @@ class RuleEngineImpl private constructor(
         if (winningCounter.value == boardProperties.winningCount) {
             winner.value = curRole.value
         }
+    }
+
+    private fun updateWinnerWhenNoMove() {
         if (board.noValidMoves(curRole.value)) {
             winner.value = if (board.havePieceInKeizar(curRole.value)) {
                 curRole.value

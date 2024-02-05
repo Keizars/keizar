@@ -63,6 +63,9 @@ class RandomGameAIImpl(
                 if (it != null) {
                     game.confirmNextRound(myPlayer)
                 }
+                if (!test) {
+                    delay(Random.nextLong(1000L..2500L))
+                }
             }
         }
     }

@@ -99,8 +99,10 @@ class Board(
     }
 
     fun noValidMoves(role: Role): Boolean {
-        for (piece in _pieces.filter { it.role == role }) {
-            if (showValidMoves(piece.asPiece()).isNotEmpty()) return false
+        for (piece in _pieces.filter { it.role == role && !it.isCaptured.value }) {
+            if (showValidMoves(piece.asPiece()).isNotEmpty()) {
+                return false
+            }
         }
         return true
     }
