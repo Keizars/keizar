@@ -30,8 +30,9 @@ interface GameSession {
     val currentRound: Flow<RoundSession>
 
     // Round number of current round. starting from 0.
-    // A currentRoundNo equal to properties.rounds indicates the whole game is
-    // completed and finalWinner will emit a non-null GameResult.
+    // The currentRoundNo starts from 0 and will never exceed properties.rounds.
+    // At the last round, after both player calls confirmNextRound() and finalIWinner is
+    // updated, the value remains to be properties.rounds - 1.
     val currentRoundNo: StateFlow<Int>
 
     // The final winner. Emits a non-null value when the whole game ends.
