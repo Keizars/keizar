@@ -29,6 +29,6 @@ fun SinglePlayerGameScene(
             },
         ),
         onClickHome = { navController.popBackStack("home", false) },
-        onClickGameConfig = { navController.popBackStack("game/single-player", false) }
+        onClickGameConfig = { navController.popBackStack("game/configuration", false) }
     )
 }
