@@ -132,15 +132,14 @@ private fun DialogsAndBottomBar(
         GameOverDialog(vm, finalWinner, onClickHome)
 
         if (showRoundOneBottomBar) {
-            Column(modifier = Modifier.weight(0.1f)) {
-                    RoundOneBottomBar(vm, onClickHome)
-                }
+            Column {
+                RoundOneBottomBar(vm, onClickHome)
             }
+        }
 
-            if (showRoundTwoBottomBar) {
-                Column(modifier = Modifier.weight(0.2f)) {
-                    RoundTwoBottomBar(vm, onClickHome, onClickGameConfig)
-                }
+        if (showRoundTwoBottomBar) {
+            Column {
+                RoundTwoBottomBar(vm, onClickHome, onClickGameConfig)
             }
         }
     }
@@ -252,21 +251,25 @@ fun RoundTwoBottomBar(
             verticalAlignment = Alignment.Top
         ) {
             val context = LocalContext.current
-            Button(onClick = { if (context is Activity) context.finish() },
-                colors = ButtonDefaults.buttonColors(Color.Transparent,
-                    contentColor = Color.Black)) {
+            Button(
+                onClick = { if (context is Activity) context.finish() },
+                colors = ButtonDefaults.buttonColors(
+                    Color.Transparent,
+                    contentColor = Color.Black
+                )
+            ) {
                 Text(text = "Exit", textAlign = TextAlign.Center)
             }
 
-               Button(onClick = { onClickGameConfig() },
-               ){
-                    Text(text = "New Game", textAlign = TextAlign.Center)
-                }
+            Button(
+                onClick = { onClickGameConfig() },
+            ) {
+                Text(text = "New Game", textAlign = TextAlign.Center)
+            }
 
         }
     }
 }
-
 
 
 @Composable
@@ -475,7 +478,7 @@ private fun ActionButton(
     icon: @Composable () -> Unit,
     text: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    backgroundColor : Color = MaterialTheme.colorScheme.background,
+    backgroundColor: Color = MaterialTheme.colorScheme.background,
     isLoading: Boolean = false
 ) {
     Column(
