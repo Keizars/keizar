@@ -18,11 +18,16 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMap
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import org.keizar.game.GameSession
+import org.keizar.game.Move
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import org.keizar.utils.communication.game.BoardPos
@@ -153,13 +158,38 @@ class Q_table_AI(
     }
 
     override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos> {
-//        val allPieces = round.getAllPiecesPos(role).first()
-        //TODO: 向server发送请求，获取当前的最佳move
-        val resp = client.post("http://localhost:5000/AI/") {
+        val moves = round.getAllPiecesPos(role).first().flatMap { source ->
+            round.getAvailableTargets(source).first().map { dest ->
+                Move(source, dest, round.pieceAt(dest) != null)
+            }
+        }
+
+        val blackPiece = round.getAllPiecesPos(Role.BLACK).first()
+        val whitePiece = round.getAllPiecesPos(Role.WHITE).first()
+        val resp = client.post("http://localhost:5000/AI/" + if (role == Role.BLACK) "black" else "white") {
             contentType(Application.Json)
             setBody(buildJsonObject {
-                put("state", "")
-                put("move", "")
+                put("move", buildJsonArray { for (m in moves) {
+                    add(buildJsonArray {
+                        add(m.source.row)
+                        add(m.source.col)
+                        add(m.dest.row)
+                        add(m.dest.col)
+                        add(m.isCapture)
+                    })
+                } })
+                put("black_pieces", buildJsonArray { for (p in blackPiece) {
+                    add(buildJsonArray {
+                        add(p.row)
+                        add(p.col)
+                    })
+                } })
+                put("white_pieces", buildJsonArray { for (p in whitePiece) {
+                    add(buildJsonArray {
+                        add(p.row)
+                        add(p.col)
+                    })
+                } })
             })
         }
         val move = resp.body<List<Int>>()
