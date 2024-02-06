@@ -15,11 +15,11 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -35,12 +35,13 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
 import org.keizar.game.BoardProperties
 import org.keizar.game.GameSession
 import org.keizar.game.Role
 import org.keizar.game.TileType
-import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
+import kotlin.time.Duration.Companion.seconds
 
 
 /**
@@ -92,11 +93,16 @@ fun BoardPieces(
             val pick by vm.currentPick.collectAsStateWithLifecycle()
             val draggingOffset by vm.draggingOffset.collectAsStateWithLifecycle(DpOffset.Zero)
 
+            val pos by piece.pos.collectAsStateWithLifecycle()
             Box(
                 Modifier
                     .background(Color.Transparent)
                     .offset(offsetX, offsetY)
-                    .alpha(vm.boardTransitionController.winningPieceAlpha)
+                    .then(
+                        if (vm.boardProperties.tileArrangement[pos] == TileType.KEIZAR) {
+                            Modifier.alpha(vm.boardTransitionController.winningPieceAlpha)
+                        } else Modifier
+                    )
                     .then(
                         if (pick?.piece == piece) {
                             Modifier.absoluteOffset(draggingOffset.x, draggingOffset.y)
@@ -123,14 +129,6 @@ fun BoardPieces(
                 contentAlignment = Alignment.Center,
             ) {
                 PlayerIconFitted(tileSize, pick?.piece == piece, piece.role.pieceColor())
-            }
-            val position: BoardPos = piece.pos.collectAsState().value
-            val winner = vm.winner.collectAsState().value
-            LaunchedEffect(winner) {
-                if (vm.boardProperties.tileArrangement[position] == TileType.KEIZAR && winner != null) {
-                    vm.boardTransitionController.flashWiningPiece()
-                    vm.setFlashFlag(true)
-                }
             }
         }
     }
@@ -210,5 +208,32 @@ private fun PreviewBoardPiecesWithBackground() {
             vm = vm,
             Modifier.size(min(maxWidth, maxHeight))
         )
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewFlashKeizar() {
+    val prop = remember {
+        BoardProperties.getStandardProperties(0)
+    }
+    val vm = remember {
+        SinglePlayerGameBoardViewModel(GameSession.create(prop), Player.FirstWhitePlayer)
+    }
+
+    Box(modifier = Modifier.alpha(vm.boardTransitionController.winningPieceAlpha)) {
+        PlayerIconFitted(
+            tileSize = DpSize(320.dp, 320.dp),
+            isPicked = false,
+            color = MaterialTheme.colorScheme.primary,
+        )
+    }
+    LaunchedEffect(true) {
+        while (true) {
+            println("set")
+            vm.boardTransitionController.flashWiningPiece()
+            println("done")
+            delay(3.seconds)
+        }
     }
 }

@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import me.him188.ani.utils.logging.info
 import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.ui.foundation.AbstractViewModel
@@ -115,9 +116,6 @@ interface GameBoardViewModel {
     val round2Winner: StateFlow<Role?>
 
     @Stable
-    val flashFlag: StateFlow<Boolean>
-
-    @Stable
     val endRoundAnnounced: MutableStateFlow<Boolean>
 
     @Stable
@@ -176,8 +174,6 @@ interface GameBoardViewModel {
 
     fun replayGame()
 
-    fun setFlashFlag(flag: Boolean)
-
     fun setEndRoundAnnouncement(flag: Boolean)
 
     fun setGameOverReadyToBeAnnouncement(flag: Boolean)
@@ -193,7 +189,7 @@ fun rememberGameBoardViewModel(
     }
 }
 
-private class SinglePlayerGameBoardViewModel(
+class SinglePlayerGameBoardViewModel(
     game: GameSession,
     selfPlayer: Player,
 ) : BaseGameBoardViewModel(
@@ -219,7 +215,7 @@ private class SinglePlayerGameBoardViewModel(
 }
 
 @Suppress("LeakingThis")
-private sealed class BaseGameBoardViewModel(
+sealed class BaseGameBoardViewModel(
     private val game: GameSession,
     @Stable override val selfPlayer: Player,
 ) : AbstractViewModel(), GameBoardViewModel {
@@ -302,11 +298,6 @@ private sealed class BaseGameBoardViewModel(
     @Stable
     override val round2Winner: StateFlow<Role?> = game.rounds[1].winner
 
-    private val _flashFlag = MutableStateFlow(false)
-
-    @Stable
-    override val flashFlag: StateFlow<Boolean> = _flashFlag
-
     private val _endRoundAnnounced = MutableStateFlow(false)
 
     @Stable
@@ -331,6 +322,16 @@ private sealed class BaseGameBoardViewModel(
     }.shareInBackground()
 
     override val lastMoveIsDrag: MutableStateFlow<Boolean> = MutableStateFlow(false)
+
+    init {
+        backgroundScope.launch {
+            winner.collect { winner ->
+                if (winner != null) {
+                    boardTransitionController.flashWiningPiece()
+                }
+            }
+        }
+    }
 
     override fun onClickPiece(piece: UiPiece) {
         val currentPick = currentPick.value
@@ -425,19 +426,13 @@ private sealed class BaseGameBoardViewModel(
     }
 
     override fun replayCurrentRound() {
-        setFlashFlag(false)
         setEndRoundAnnouncement(false)
         game.replayCurrentRound()
     }
 
     override fun replayGame() {
-        setFlashFlag(false)
         setEndRoundAnnouncement(false)
         game.replayGame()
-    }
-
-    override fun setFlashFlag(flag: Boolean) {
-        _flashFlag.value = flag
     }
 
     override fun setEndRoundAnnouncement(flag: Boolean) {

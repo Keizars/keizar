@@ -2,14 +2,15 @@ package org.keizar.android.ui.game.transition
 
 import androidx.annotation.UiThread
 import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.repeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.unit.Dp
@@ -19,13 +20,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.mapLatest
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.game.Piece
 import org.keizar.game.Role
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Controls the transition of the board, including:
@@ -60,6 +62,8 @@ interface BoardTransitionController {
      * Maps the piece offset to support delayed transition when turning the board.
      */
     fun pieceOffset(piece: Piece, arrangedPos: Flow<DpOffset>): Flow<DpOffset>
+
+    val isPlayingTransition: StateFlow<Boolean>
 
     /**
      * Flash the winning piece.
@@ -134,15 +138,16 @@ private class BoardTransitionControllerImpl(
 //        }
 
     @Stable
-    private val _winningPieceAlpha = mutableFloatStateOf(1f)
+    private val _flashingWinningPiece = mutableStateOf(true)
 
     override val winningPieceAlpha: Float
         @Composable get() {
-            return animateFloatAsState(
-                targetValue = _winningPieceAlpha.floatValue,
-                animationSpec = repeatable(3, tween(1000)),
+            val alpha by animateFloatAsState(
+                targetValue = if (_flashingWinningPiece.value) 1f else 0f,
+                animationSpec = tween(500, easing = LinearEasing),
                 label = "winningPieceAlpha",
-            ).value
+            )
+            return alpha
         }
 
     @Stable
@@ -188,16 +193,29 @@ private class BoardTransitionControllerImpl(
         }
     }
 
+    override val isPlayingTransition: MutableStateFlow<Boolean> = MutableStateFlow(false)
+
     private fun getCapturedPieceHostState(pieceBeingCaptured: Role, myRole: Role): CapturedPieceHostState {
         if (pieceBeingCaptured == myRole) return theirCapturedPieceHostState
         return myCapturedPieceHostState
     }
 
-    override suspend fun flashWiningPiece() {
-        _winningPieceAlpha.floatValue = 0f
-        awaitFrame()
-        _winningPieceAlpha.floatValue = 1f
-        delay(5.seconds)
+    private inline fun <R> playTransition(block: () -> R): R {
+        try {
+            isPlayingTransition.value = true
+            return block()
+        } finally {
+            isPlayingTransition.value = false
+        }
+    }
+
+    override suspend fun flashWiningPiece() = playTransition {
+        repeat(3) {
+            this._flashingWinningPiece.value = false
+            delay(600)
+            this._flashingWinningPiece.value = true
+            delay(600)
+        }
     }
 
 //    init {
@@ -207,7 +225,7 @@ private class BoardTransitionControllerImpl(
 //        }.flowOn(Dispatchers.Main).launchIn(backgroundScope)
 //    }
 
-    override suspend fun turnBoard() {
+    override suspend fun turnBoard() = playTransition {
         _isTurningBoard.value = true
         boardBackgroundRotationFinished = CompletableDeferred()
         _pieceMovementAnimationSpec.value = MOVEMENT_SLOW

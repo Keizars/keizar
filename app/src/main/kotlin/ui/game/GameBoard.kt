@@ -125,9 +125,9 @@ private fun DialogsAndBottomBar(
     val showRoundTwoBottomBar =
         (winner != null && vm.currentRoundCount.collectAsState().value == 1)
 
-    val flashFlag = vm.flashFlag.collectAsState().value
+    val playingTransition = vm.boardTransitionController.isPlayingTransition.collectAsState().value
 
-    if (flashFlag) {
+    if (!playingTransition) {
         WinningRoundDialog(winner, vm)
         GameOverDialog(vm, finalWinner, onClickHome)
 
@@ -187,7 +187,6 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
         ActionButton(
             onClick = {
                 vm.startNextRound(vm.selfPlayer)
-                vm.setFlashFlag(false)
                 vm.setEndRoundAnnouncement(false)
             },
             icon = { Icon(Icons.Default.SkipNext, null) },
