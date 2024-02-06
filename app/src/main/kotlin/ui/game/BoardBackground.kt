@@ -225,8 +225,7 @@ fun TileImage(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier
-            .then(if (tileType != TileType.PLAIN) Modifier.border(2.dp, color = Color(0xFFa800d4)) else Modifier)
+        modifier = modifier.border(2.dp, color = Color(0xFFa800d4))
     ) {
         CompositionLocalProvider(LocalContentColor provides LocalContentColor.current.slightlyWeaken()) {
             when (tileType) {
