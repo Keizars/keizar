@@ -5,6 +5,7 @@ import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType.Application
@@ -114,6 +115,7 @@ class Q_table_AI(
         install(ContentNegotiation) {
             json()
         }
+        Logging()
     }
 
     private val myCoroutine: CoroutineScope =
