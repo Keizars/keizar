@@ -35,9 +35,9 @@ object RuleEngineAdaptor {
         return boardInput.flatMapIndexed { rowIndex, row ->
             row.mapIndexedNotNull { colIndex, piece ->
                 when {
-                    piece == 0 -> null
+                    piece < 10 -> null
 
-                    piece > 0 -> PieceSnapshot(
+                    piece < 20 -> PieceSnapshot(
                         index = index++,
                         role = Role.WHITE,
                         pos = BoardPos(rowIndex, colIndex),
