@@ -28,7 +28,7 @@ import org.keizar.utils.communication.message.Request
 import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.StateChange
 
-interface GameSessionClient {
+internal interface GameSessionClient {
     fun getCurrentRole(): StateFlow<Role>
     fun getPlayerState(): Flow<PlayerSessionState>
     fun getPlayer(): Player
@@ -39,7 +39,7 @@ interface GameSessionClient {
     suspend fun connect()
 }
 
-class GameSessionClientImpl(
+internal class GameSessionClientImpl(
     private val roomNumber: UInt,
     parentCoroutineContext: CoroutineContext,
 ) : GameSessionClient {
