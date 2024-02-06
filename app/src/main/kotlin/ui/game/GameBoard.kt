@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -85,7 +86,7 @@ fun GameBoard(
             Player.FirstBlackPlayer
         }
     )
-    Column(modifier = Modifier) {
+    Column(modifier = Modifier.fillMaxSize()) {
         val winner by vm.winner.collectAsState()
         val finalWinner by vm.finalWinner.collectAsState()
         val showRoundOneBottomBar =
@@ -95,43 +96,49 @@ fun GameBoard(
             (winner != null && vm.currentRoundCount.collectAsState().value == 1)
 
         val flashFlag = vm.flashFlag.collectAsState().value
+        Column(modifier = Modifier.weight(0.9f)) {
 
-        WinningCounter(vm)
+            WinningCounter(vm)
 
-        var boardGlobalCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
+            var boardGlobalCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
 
-        val tileSize by vm.pieceArranger.tileSize.collectAsStateWithLifecycle(DpSize.Zero)
+            val tileSize by vm.pieceArranger.tileSize.collectAsStateWithLifecycle(DpSize.Zero)
 
-        CapturedPiecesHost(
-            capturedPieceHostState = vm.theirCapturedPieceHostState,
-            slotSize = tileSize,
-            sourceCoordinates = boardGlobalCoordinates,
-            Modifier.fillMaxWidth()
-        )
+            CapturedPiecesHost(
+                capturedPieceHostState = vm.theirCapturedPieceHostState,
+                slotSize = tileSize,
+                sourceCoordinates = boardGlobalCoordinates,
+                Modifier.fillMaxWidth()
+            )
 
-        Box(modifier = modifier.onGloballyPositioned { boardGlobalCoordinates = it }) {
-            BoardBackground(vm, Modifier.matchParentSize())
-            BoardPieces(vm)
-            PossibleMovesOverlay(vm)
+            Box(modifier = modifier.onGloballyPositioned { boardGlobalCoordinates = it }) {
+                BoardBackground(vm, Modifier.matchParentSize())
+                BoardPieces(vm)
+                PossibleMovesOverlay(vm)
+            }
+
+            CapturedPiecesHost(
+                capturedPieceHostState = vm.myCapturedPieceHostState,
+                slotSize = tileSize,
+                sourceCoordinates = boardGlobalCoordinates,
+                Modifier.fillMaxWidth()
+            )
         }
-
-        CapturedPiecesHost(
-            capturedPieceHostState = vm.myCapturedPieceHostState,
-            slotSize = tileSize,
-            sourceCoordinates = boardGlobalCoordinates,
-            Modifier.fillMaxWidth()
-        )
 
         if (flashFlag) {
             WinningRoundDialog(winner, vm)
             GameOverDialog(vm, finalWinner, onClickHome)
 
             if (showRoundOneBottomBar) {
-                RoundOneBottomBar(vm, onClickHome)
+                Column(modifier = Modifier.weight(0.1f)) {
+                    RoundOneBottomBar(vm, onClickHome)
+                }
             }
 
             if (showRoundTwoBottomBar) {
-                RoundTwoBottomBar(vm, onClickHome, onClickGameConfig)
+                Column(modifier = Modifier.weight(0.2f)) {
+                    RoundTwoBottomBar(vm, onClickHome, onClickGameConfig)
+                }
             }
         }
     }
@@ -194,12 +201,12 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
 fun RoundTwoBottomBar(
     vm: GameBoardViewModel,
     onClickHome: () -> Unit,
-    onClickGameConfig: () -> Unit
+    onClickGameConfig: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column {
-
         Row(
-            Modifier
+            modifier
                 .padding(horizontal = 16.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly,
@@ -236,7 +243,7 @@ fun RoundTwoBottomBar(
         }
 
         Row(
-            Modifier
+            modifier
                 .padding(horizontal = 16.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.End,
