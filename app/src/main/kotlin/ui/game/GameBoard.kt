@@ -224,7 +224,7 @@ fun RoundTwoBottomBar(
                     vm.setGameOverReadyToBeAnnouncement(false)
                 },
 
-                icon = { Icon(Icons.Default.Replay10, null) },
+                icon = { Icon(Icons.Default.Replay, null) },
                 text = { Text(text = "Replay Round") })
 
             ActionButton(

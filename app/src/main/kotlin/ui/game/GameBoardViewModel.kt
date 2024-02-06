@@ -411,7 +411,9 @@ private sealed class BaseGameBoardViewModel(
 
     override fun startNextRound(selfPlayer: Player) {
         launchInBackground(Dispatchers.Main.immediate, start = CoroutineStart.UNDISPATCHED) {
-            boardTransitionController.turnBoard()
+            if (currentRoundCount.value != 1) {
+                boardTransitionController.turnBoard()
+            }
         }
         launchInBackground(Dispatchers.IO) {
             game.confirmNextRound(selfPlayer)
