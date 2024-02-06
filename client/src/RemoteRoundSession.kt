@@ -11,10 +11,10 @@ interface RemoteRoundSession: RoundSession
 
 class RemoteRoundSessionImpl(
     private val round: RoundSession,
-    private val gameRoomClient: GameRoomClient,
+    private val gameSessionClient: GameSessionClient,
 ): RoundSession by round, RemoteRoundSession {
     // Note: Only call this when state has changed to PLAYING
-    override val curRole: StateFlow<Role> = gameRoomClient.getCurrentRole()
+    override val curRole: StateFlow<Role> = gameSessionClient.getCurrentRole()
 
     // Note: Only call this when state has changed to PLAYING
     override fun getAvailableTargets(from: BoardPos): Flow<List<BoardPos>> {
@@ -26,7 +26,7 @@ class RemoteRoundSessionImpl(
     override suspend fun move(from: BoardPos, to: BoardPos): Boolean {
         if (round.pieceAt(from) != curRole.value) return false
         return round.move(from, to).also {
-            if (it) gameRoomClient.sendMove(from, to)
+            if (it) gameSessionClient.sendMove(from, to)
         }
     }
 }

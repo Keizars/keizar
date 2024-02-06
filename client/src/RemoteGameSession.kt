@@ -22,22 +22,22 @@ interface RemoteGameSession : GameSession {
 
     companion object {
         // Create a standard RemoteGameSession using the seed provided.
-        fun create(
+        suspend fun create(
             roomNumber: UInt,
             parentCoroutineContext: CoroutineContext,
-            seed: Int? = null
+            seed: Int? = null,
         ): RemoteGameSession {
             val properties = BoardProperties.getStandardProperties(seed)
             return create(roomNumber, parentCoroutineContext, properties)
         }
 
         // Create a standard RemoteGameSession using the BoardProperties provided.
-        fun create(
+        suspend fun create(
             roomNumber: UInt,
             parentCoroutineContext: CoroutineContext,
-            properties: BoardProperties
+            properties: BoardProperties,
         ): RemoteGameSession {
-            val gameRoomClient = GameRoomClientImpl(roomNumber, parentCoroutineContext)
+            val gameRoomClient = GameSessionClientImpl(roomNumber, parentCoroutineContext)
             val game = GameSession.create(properties) { ruleEngine ->
                 RemoteRoundSessionImpl(
                     RoundSessionImpl(ruleEngine),
@@ -45,16 +45,17 @@ interface RemoteGameSession : GameSession {
                 )
             }
             gameRoomClient.bind(game)
+            gameRoomClient.connect()
             return RemoteGameSessionImpl(game, gameRoomClient)
         }
 
         // Restore a RemoteGameSession by a snapshot of the game.
-        fun restore(
+        suspend fun restore(
             roomNumber: UInt,
             parentCoroutineContext: CoroutineContext,
-            snapshot: GameSnapshot
+            snapshot: GameSnapshot,
         ): RemoteGameSession {
-            val gameRoomClient = GameRoomClientImpl(roomNumber, parentCoroutineContext)
+            val gameRoomClient = GameSessionClientImpl(roomNumber, parentCoroutineContext)
             val game = GameSession.restore(snapshot) { ruleEngine ->
                 RemoteRoundSessionImpl(
                     RoundSessionImpl(ruleEngine),
@@ -62,6 +63,7 @@ interface RemoteGameSession : GameSession {
                 )
             }
             gameRoomClient.bind(game)
+            gameRoomClient.connect()
             return RemoteGameSessionImpl(game, gameRoomClient)
         }
     }
@@ -69,20 +71,20 @@ interface RemoteGameSession : GameSession {
 
 class RemoteGameSessionImpl(
     private val game: GameSession,
-    private val gameRoomClient: GameRoomClient,
+    private val gameSessionClient: GameSessionClient,
 ) : GameSession by game, RemoteGameSession {
 
-    override val state: Flow<PlayerSessionState> = gameRoomClient.getPlayerState()
+    override val state: Flow<PlayerSessionState> = gameSessionClient.getPlayerState()
 
     // Note: Only call this when state has changed to PLAYING
-    override val player: Player = gameRoomClient.getPlayer()
+    override val player: Player = gameSessionClient.getPlayer()
 
     override suspend fun waitUntilOpponentFound() {
         state.first { it == PlayerSessionState.PLAYING }
     }
 
     override fun close() {
-        gameRoomClient.close()
+        gameSessionClient.close()
     }
 
     override val rounds: List<RemoteRoundSession> = game.rounds.map { it as RemoteRoundSession }
@@ -91,7 +93,7 @@ class RemoteGameSessionImpl(
     override fun confirmNextRound(player: Player): Boolean {
         if (player != this.player) return false
         return game.confirmNextRound(player).also {
-            if (it) gameRoomClient.sendConfirmNextRound()
+            if (it) gameSessionClient.sendConfirmNextRound()
         }
     }
 

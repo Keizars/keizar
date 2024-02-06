@@ -15,22 +15,20 @@ import io.ktor.http.*
 import io.ktor.serialization.WebsocketDeserializeException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import org.keizar.client.exception.NetworkFailureException
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.message.ConfirmNextRound
-import org.keizar.utils.communication.message.Exit
 import org.keizar.utils.communication.message.Move
 import org.keizar.utils.communication.message.PlayerAllocation
 import org.keizar.utils.communication.message.Request
 import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.StateChange
-import org.keizar.utils.communication.message.UserInfo
 
-interface GameRoomClient {
+interface GameSessionClient {
     fun getCurrentRole(): StateFlow<Role>
     fun getPlayerState(): Flow<PlayerSessionState>
     fun getPlayer(): Player
@@ -38,12 +36,13 @@ interface GameRoomClient {
     fun sendConfirmNextRound()
     fun sendMove(from: BoardPos, to: BoardPos)
     fun close()
+    suspend fun connect()
 }
 
-class GameRoomClientImpl(
+class GameSessionClientImpl(
     private val roomNumber: UInt,
     parentCoroutineContext: CoroutineContext,
-) : GameRoomClient {
+) : GameSessionClient {
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
@@ -60,10 +59,14 @@ class GameRoomClientImpl(
 
     private val outflowChannel: Channel<Request> = Channel()
 
-    init {
-        myCoroutineScope.launch {
+    override suspend fun connect() {
+        try {
             serverConnection()
             startUpdateCurRole()
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            throw NetworkFailureException(cause = e)
         }
     }
 
@@ -73,9 +76,11 @@ class GameRoomClientImpl(
     }
 
     private suspend fun startUpdateCurRole() {
-        val player = getPlayer()
-        gameSession.currentRoundNo.collect { curRoundNo ->
-            currentRole.value = gameSession.getRole(player, curRoundNo)
+        myCoroutineScope.launch {
+            val player = getPlayer()
+            gameSession.currentRoundNo.collect { curRoundNo ->
+                currentRole.value = gameSession.getRole(player, curRoundNo)
+            }
         }
     }
 
