@@ -60,7 +60,7 @@ fun GameConfigurationScene(
         onClickGoBack = { navController.popBackStack() },
         onClickStart = {
             val configuration = ProtoBuf.Default.encodeToHexString(GameStartConfiguration.serializer(), it)
-            navController.navigate(navController.graph["game"].id, Bundle().apply {
+            navController.navigate(navController.graph["game/single-player"].id, Bundle().apply {
                 putString("configuration", configuration)
             })
         },

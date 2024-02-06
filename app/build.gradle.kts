@@ -37,6 +37,7 @@ dependencies {
     implementation(libs.koin.android)
     implementation(projects.aiEngine)
     implementation(projects.ruleEngine)
+    implementation(projects.client)
 }
 
 android {

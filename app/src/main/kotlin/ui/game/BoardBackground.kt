@@ -287,7 +287,7 @@ private fun PreviewBoardBackground() {
         }
         BoardBackground(
             rememberGameBoardViewModel(
-                game = GameSession.create(prop),
+                session = GameSession.create(prop),
                 selfPlayer = Player.FirstWhitePlayer,
             ),
 

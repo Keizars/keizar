@@ -23,10 +23,12 @@ import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground
+import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.transition.BoardTransitionController
 import org.keizar.android.ui.game.transition.CapturedPieceHostState
 import org.keizar.android.ui.game.transition.PieceArranger
 import org.keizar.game.BoardProperties
+import org.keizar.game.Difficulty
 import org.keizar.game.GameSession
 import org.keizar.game.Piece
 import org.keizar.game.Role
@@ -37,6 +39,9 @@ import org.keizar.utils.communication.game.Player
 import kotlin.time.Duration.Companion.seconds
 
 interface GameBoardViewModel {
+    @Stable
+    val startConfiguration: GameStartConfiguration
+
     @Stable
     val boardProperties: BoardProperties
 
@@ -180,11 +185,11 @@ interface GameBoardViewModel {
 
 @Composable
 fun rememberGameBoardViewModel(
-    game: GameSession,
+    session: GameSession,
     selfPlayer: Player,
 ): GameBoardViewModel {
-    return remember {
-        SinglePlayerGameBoardViewModel(game, selfPlayer)
+    return remember(session, selfPlayer) {
+        SinglePlayerGameBoardViewModel(session, selfPlayer)
     }
 }
 
@@ -204,6 +209,13 @@ private class SinglePlayerGameBoardViewModel(
             gameAi.start()
         }
     }
+
+    override val startConfiguration: GameStartConfiguration
+        get() = GameStartConfiguration(
+            playAs = selfRole.value,
+            difficulty = Difficulty.EASY,
+            layoutSeed = boardProperties.seed ?: 0,
+        )
 }
 
 @Suppress("LeakingThis")
@@ -301,6 +313,7 @@ private sealed class BaseGameBoardViewModel(
     override val endRoundAnnounced = _endRoundAnnounced
 
     private val _gameOverReadyToBeAnnounced = MutableStateFlow(false)
+
     @Stable
     override val gameOverReadyToBeAnnounced = _gameOverReadyToBeAnnounced
 

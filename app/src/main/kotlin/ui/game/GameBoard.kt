@@ -73,31 +73,13 @@ import kotlin.math.sqrt
 
 @Composable
 fun GameBoard(
-    startConfiguration: GameStartConfiguration,
+    vm: GameBoardViewModel,
     modifier: Modifier = Modifier,
     onClickHome: () -> Unit,
-    onClickGameConfig: () -> Unit
+    onClickGameConfig: () -> Unit,
 ) {
-    val vm = rememberGameBoardViewModel(
-        GameSession.create(startConfiguration.createBoard()),
-        selfPlayer = if (startConfiguration.playAs == Role.WHITE) {
-            Player.FirstWhitePlayer
-        } else {
-            Player.FirstBlackPlayer
-        }
-    )
     Column(modifier = Modifier.fillMaxSize()) {
-        val winner by vm.winner.collectAsState()
-        val finalWinner by vm.finalWinner.collectAsState()
-        val showRoundOneBottomBar =
-            (winner != null && vm.currentRoundCount.collectAsState().value == 0)
-
-        val showRoundTwoBottomBar =
-            (winner != null && vm.currentRoundCount.collectAsState().value == 1)
-
-        val flashFlag = vm.flashFlag.collectAsState().value
         Column(modifier = Modifier.weight(0.9f)) {
-
             WinningCounter(vm)
 
             var boardGlobalCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
@@ -125,12 +107,32 @@ fun GameBoard(
             )
         }
 
-        if (flashFlag) {
-            WinningRoundDialog(winner, vm)
-            GameOverDialog(vm, finalWinner, onClickHome)
+        DialogsAndBottomBar(vm, onClickHome, onClickGameConfig)
+    }
+}
 
-            if (showRoundOneBottomBar) {
-                Column(modifier = Modifier.weight(0.1f)) {
+@Composable
+private fun DialogsAndBottomBar(
+    vm: GameBoardViewModel,
+    onClickHome: () -> Unit,
+    onClickGameConfig: () -> Unit
+) {
+    val winner by vm.winner.collectAsState()
+    val finalWinner by vm.finalWinner.collectAsState()
+    val showRoundOneBottomBar =
+        (winner != null && vm.currentRoundCount.collectAsState().value == 0)
+
+    val showRoundTwoBottomBar =
+        (winner != null && vm.currentRoundCount.collectAsState().value == 1)
+
+    val flashFlag = vm.flashFlag.collectAsState().value
+
+    if (flashFlag) {
+        WinningRoundDialog(winner, vm)
+        GameOverDialog(vm, finalWinner, onClickHome)
+
+        if (showRoundOneBottomBar) {
+            Column(modifier = Modifier.weight(0.1f)) {
                     RoundOneBottomBar(vm, onClickHome)
                 }
             }
@@ -514,15 +516,19 @@ private fun ActionButton(
 @Composable
 private fun PreviewGameBoard() {
     BoxWithConstraints {
-        GameBoard(
-            remember {
+        val vm = rememberGameBoardViewModel(
+            GameSession.create(remember {
                 GameStartConfiguration(
                     layoutSeed = 0,
                     playAs = Role.WHITE,
                     difficulty = Difficulty.EASY,
                 )
-            },
-            Modifier.size(min(maxWidth, maxHeight)),
+            }.createBoard()),
+            Player.FirstWhitePlayer
+        )
+        GameBoard(
+            vm,
+            modifier = Modifier.size(min(maxWidth, maxHeight)),
             onClickHome = { /* Navigate to home page*/ },
             onClickGameConfig = { /* Navigate to game configuration page*/ }
         )
