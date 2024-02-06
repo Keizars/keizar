@@ -110,7 +110,7 @@ class RandomGameAIImpl(
 }
 
 class Q_table_AI(
-    override val game: GameSession,
+    override val game: GameSession = GameSession.create(0),
     override val myPlayer: Player,
     private val parentCoroutineContext: CoroutineContext,
     private val test: Boolean = false
@@ -166,7 +166,7 @@ class Q_table_AI(
 
         val blackPiece = round.getAllPiecesPos(Role.BLACK).first()
         val whitePiece = round.getAllPiecesPos(Role.WHITE).first()
-        val resp = client.post("http://localhost:5000/AI/" + if (role == Role.BLACK) "black" else "white") {
+        val resp = client.post("http://146.169.142.53:10202/AI/" + if (role == Role.BLACK) "black" else "white") {
             contentType(Application.Json)
             setBody(buildJsonObject {
                 put("move", buildJsonArray { for (m in moves) {

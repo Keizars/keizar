@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import me.him188.ani.utils.logging.info
-import org.keizar.aiengine.RandomGameAIImpl
+import org.keizar.aiengine.Q_table_AI
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground
@@ -196,7 +196,7 @@ private class SinglePlayerGameBoardViewModel(
     selfPlayer,
 ) {
     private val gameAi =
-        RandomGameAIImpl(game, Player.entries.first { it != selfPlayer }, backgroundScope.coroutineContext)
+        Q_table_AI(game, Player.entries.first { it != selfPlayer }, backgroundScope.coroutineContext)
 
     init {
         launchInBackground {
