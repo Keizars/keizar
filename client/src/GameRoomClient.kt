@@ -13,6 +13,7 @@ data class GameRoom(
 interface GameRoomClient {
     suspend fun createRoom(roomNumber: UInt? = null, seed: Int? = null): GameRoom
     suspend fun createRoom(roomNumber: UInt? = null, boardProperties: BoardProperties): GameRoom
+    suspend fun getRoom(roomNumber: UInt?): GameRoom
 
     companion object {
         fun create(): GameRoomClient {
@@ -35,5 +36,9 @@ class GameRoomClientImpl: GameRoomClient {
         val actualRoomNumber = roomNumber ?: Random.nextUInt()
         // TODO: client post
         return GameRoom(actualRoomNumber, boardProperties)
+    }
+
+    override suspend fun getRoom(roomNumber: UInt?): GameRoom {
+        TODO("client get")
     }
 }
