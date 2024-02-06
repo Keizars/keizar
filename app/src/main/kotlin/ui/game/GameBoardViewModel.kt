@@ -24,6 +24,7 @@ import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.transition.BoardTransitionController
+import org.keizar.android.ui.game.transition.CapturedPieceHostState
 import org.keizar.android.ui.game.transition.PieceArranger
 import org.keizar.game.BoardProperties
 import org.keizar.game.GameSession
@@ -41,6 +42,12 @@ interface GameBoardViewModel {
 
     @Stable
     val pieceArranger: PieceArranger
+
+    @Stable
+    val myCapturedPieceHostState: CapturedPieceHostState
+
+    @Stable
+    val theirCapturedPieceHostState: CapturedPieceHostState
 
     @Stable
     val boardTransitionController: BoardTransitionController
@@ -215,12 +222,20 @@ private sealed class BaseGameBoardViewModel(
         viewedAs = selfRole
     )
 
+    override val myCapturedPieceHostState: CapturedPieceHostState = CapturedPieceHostState()
+    override val theirCapturedPieceHostState: CapturedPieceHostState = CapturedPieceHostState()
+
     @Stable
     override val boardTransitionController = BoardTransitionController(
         initialPlayAs = selfRole.value,
-//        playAs,
-//        playAs = selfRole,
-        backgroundScope,
+        playAs = selfRole,
+        backgroundScope = backgroundScope,
+        myCapturedPieceHostState = myCapturedPieceHostState,
+        theirCapturedPieceHostState = theirCapturedPieceHostState,
+        onTransitionFinished = {
+            myCapturedPieceHostState.clear()
+            theirCapturedPieceHostState.clear()
+        }
     )
 
     @Stable
@@ -228,7 +243,7 @@ private sealed class BaseGameBoardViewModel(
         list.map {
             UiPiece(
                 enginePiece = it,
-                offsetInBoard = boardTransitionController.pieceOffset(pieceArranger.offsetFor(it.pos)),
+                offsetInBoard = boardTransitionController.pieceOffset(it, pieceArranger.offsetFor(it.pos)),
                 backgroundScope,
             )
         }
@@ -445,7 +460,7 @@ class UiPiece internal constructor(
 
     private val _overrideVisible = MutableStateFlow<Boolean?>(null)
     val isVisible = combine(_overrideVisible, isCaptured) { override, isCaptured ->
-        override ?: !isCaptured
+        override ?: true //!isCaptured
     }.shareInBackground()
 
     fun hide() {

@@ -7,6 +7,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.repeatable
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisallowComposableCalls
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableFloatStateOf
@@ -18,8 +19,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.android.awaitFrame
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.mapLatest
 import org.keizar.android.ui.foundation.HasBackgroundScope
+import org.keizar.game.Piece
 import org.keizar.game.Role
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
@@ -56,7 +59,7 @@ interface BoardTransitionController {
     /**
      * Maps the piece offset to support delayed transition when turning the board.
      */
-    fun pieceOffset(original: Flow<DpOffset>): Flow<DpOffset>
+    fun pieceOffset(piece: Piece, arrangedPos: Flow<DpOffset>): Flow<DpOffset>
 
     /**
      * Flash the winning piece.
@@ -79,17 +82,27 @@ interface BoardTransitionController {
 
 fun BoardTransitionController(
     initialPlayAs: Role,
-//    playAs: Flow<Role>,
+    playAs: Flow<Role>,
     backgroundScope: CoroutineScope,
+    theirCapturedPieceHostState: CapturedPieceHostState,
+    myCapturedPieceHostState: CapturedPieceHostState,
+    onTransitionFinished: @DisallowComposableCalls () -> Unit = {},
 ): BoardTransitionController = BoardTransitionControllerImpl(
     initialPlayAs,
+    playAs,
     backgroundScope,
+    theirCapturedPieceHostState,
+    myCapturedPieceHostState,
+    onTransitionFinished
 )
 
 private class BoardTransitionControllerImpl(
     initialPlayAs: Role,
-//    playAs: Flow<Role>,
+    private val playAs: Flow<Role>,
     override val backgroundScope: CoroutineScope,
+    private val theirCapturedPieceHostState: CapturedPieceHostState,
+    private val myCapturedPieceHostState: CapturedPieceHostState,
+    private val onTransitionFinished: @DisallowComposableCalls () -> Unit,
 ) : BoardTransitionController, HasBackgroundScope {
     companion object {
         private const val TILES_ANIMATION_DURATION = 1000
@@ -159,13 +172,25 @@ private class BoardTransitionControllerImpl(
     @Stable
     private val _isTurningBoard = mutableStateOf(false)
 
-    override fun pieceOffset(original: Flow<DpOffset>): Flow<DpOffset> {
-        return original.mapLatest {
+    override fun pieceOffset(piece: Piece, arrangedPos: Flow<DpOffset>): Flow<DpOffset> {
+        return combine(arrangedPos, piece.isCaptured, playAs) { pos, isCaptured, playAs ->
+            if (isCaptured) {
+                getCapturedPieceHostState(piece.role, playAs).capture(piece.index)
+                    .offsetFromBoard
+            } else {
+                pos
+            }
+        }.mapLatest {
             if (_isTurningBoard.value) {
                 boardBackgroundRotationFinished.runCatching { await() }
             }
             it
         }
+    }
+
+    private fun getCapturedPieceHostState(pieceBeingCaptured: Role, myRole: Role): CapturedPieceHostState {
+        if (pieceBeingCaptured == myRole) return theirCapturedPieceHostState
+        return myCapturedPieceHostState
     }
 
     override suspend fun flashWiningPiece() {
@@ -194,5 +219,6 @@ private class BoardTransitionControllerImpl(
         )
         _isTurningBoard.value = false
         _pieceMovementAnimationSpec.value = MOVEMENT_FAST
+        onTransitionFinished()
     }
 }

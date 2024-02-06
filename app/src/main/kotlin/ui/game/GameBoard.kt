@@ -29,14 +29,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
+import org.keizar.android.ui.game.transition.CapturedPiecesHost
 import org.keizar.game.Difficulty
 import org.keizar.game.GameSession
 import org.keizar.game.Role
@@ -61,9 +66,8 @@ fun GameBoard(
         }
     )
     Column(modifier = Modifier) {
-        val winner = vm.winner.collectAsState().value
-        val finalWinner = vm.finalWinner.collectAsState().value
-        val selfRole = vm.selfRole.collectAsState().value
+        val winner by vm.winner.collectAsState()
+        val finalWinner by vm.finalWinner.collectAsState()
         val showRoundOneBottomBar =
             (winner != null && vm.currentRoundCount.collectAsState().value == 0)
 
@@ -74,16 +78,30 @@ fun GameBoard(
 
         WinningCounter(vm)
 
-        CapturedPieces(vm, selfRole)
+        var boardGlobalCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
 
+        val tileSize by vm.pieceArranger.tileSize.collectAsStateWithLifecycle(DpSize.Zero)
 
-        Box(modifier = modifier) {
+        CapturedPiecesHost(
+            capturedPieceHostState = vm.theirCapturedPieceHostState,
+            slotSize = tileSize,
+            sourceCoordinates = boardGlobalCoordinates,
+            Modifier.fillMaxWidth()
+        )
+
+        Box(modifier = modifier.onGloballyPositioned { boardGlobalCoordinates = it }) {
             BoardBackground(vm, Modifier.matchParentSize())
             BoardPieces(vm)
             PossibleMovesOverlay(vm)
         }
 
-        CapturedPieces(vm, selfRole.other())
+        CapturedPiecesHost(
+            capturedPieceHostState = vm.myCapturedPieceHostState,
+            slotSize = tileSize,
+            sourceCoordinates = boardGlobalCoordinates,
+            Modifier.fillMaxWidth()
+        )
+
         if (flashFlag) {
             WinningRoundDialog(winner, vm)
             GameOverDialog(vm, finalWinner, onClickHome)
@@ -365,40 +383,6 @@ fun WinningRoundDialog(
             }
         }
 
-    }
-}
-
-@Composable
-fun CapturedPieces(vm: GameBoardViewModel, role: Role) {
-    val capturedPieces by if (role == Role.WHITE) {
-        vm.whiteCapturedPieces.collectAsState()
-    } else {
-        vm.blackCapturedPieces.collectAsState()
-    }
-    if (role == Role.WHITE) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "Captured White Pieces:")
-            for (i in 0 until capturedPieces) {
-                PlayerIcon(
-                    color = Color.White,
-                    modifier = Modifier
-                        .padding(start = 8.dp)
-                        .align(Alignment.CenterVertically)
-                )
-            }
-        }
-    } else {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = "Captured Black Pieces:")
-            for (i in 0 until capturedPieces) {
-                PlayerIcon(
-                    color = Color.Black,
-                    modifier = Modifier
-                        .padding(start = 8.dp)
-                        .align(Alignment.CenterVertically)
-                )
-            }
-        }
     }
 }
 
