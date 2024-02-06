@@ -30,6 +30,7 @@ import org.keizar.android.R
 import org.keizar.android.ui.game.GameScene
 import org.keizar.android.ui.game.configuration.GameConfigurationScene
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
+import org.keizar.android.ui.game.mp.MatchPage
 
 @Composable
 @Preview(showBackground = true)
@@ -57,7 +58,9 @@ fun MainScreen() {
                 )
             }
         }
-        composable("multiplayer game") { /* TODO: multiplayer game page*/ }
+        composable("multiplayer game") {
+            MatchPage({ navController.navigate("home") }, Modifier.fillMaxSize())
+        }
         composable("saved games") { /* TODO: saved games page*/ }
         composable("tutorial") { /* TODO: tutorial page*/ }
     }
@@ -93,8 +96,8 @@ fun HomePage(navController: NavController) {
             }
 
             // Multiplayer Button
-            Button(onClick = { /* TODO: Handle Multiplayer click */ }, modifier = Modifier.width(170.dp)) {
-                Text("2 players")
+            Button(onClick = { navController.navigate("multiplayer game") }, modifier = Modifier.width(170.dp)) {
+                Text("Multiplayer")
             }
 
             // Saved game Button
