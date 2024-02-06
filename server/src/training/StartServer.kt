@@ -11,7 +11,7 @@ fun main() {
     embeddedServer(
         Netty,
         port = 49152,
-        host = "0.0.0.0",
+        host = "127.0.0.1",
         module = Application::module,
         configure = {
             this.tcpKeepAlive = true

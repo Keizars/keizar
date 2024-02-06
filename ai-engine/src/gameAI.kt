@@ -91,7 +91,58 @@ class RandomGameAIImpl(
     override suspend fun end() {
         myCoroutine.cancel()
     }
+}
 
+class Q_table_AI(
+    override val game: GameSession,
+    override val myPlayer: Player,
+    private val parentCoroutineContext: CoroutineContext,
+    private val test: Boolean = false
+) : GameAI {
 
+    private val myCoroutine: CoroutineScope =
+        CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
+
+    override fun start() {
+        myCoroutine.launch {
+            game.currentRound.flatMapLatest { it.winner }.collect {
+                combine(game.currentRole(myPlayer), game.currentRound) { myRole, session ->
+                    myRole to session
+                }.collectLatest { (myRole, session) ->
+                    session.curRole.collect { currentRole ->
+                        if (myRole == currentRole) {
+                            val bestPos = findBestMove(session, currentRole)
+                            if (!test) {
+                                delay(Random.nextLong(1000L..1500L))
+                            }
+                            session.move(bestPos.first, bestPos.second)
+                        }
+                    }
+                }
+            }
+        }
+
+        myCoroutine.launch {
+            game.currentRound.flatMapLatest { it.winner }.collect {
+                if (it != null) {
+                    game.confirmNextRound(myPlayer)
+                }
+                if (!test) {
+                    delay(Random.nextLong(1000L..1500L))
+                }
+            }
+        }
+    }
+
+    override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos> {
+        val allPieces = round.getAllPiecesPos(role).first()
+        //TODO: 向server发送请求，获取当前的最佳move
+        val move = null
+        return Pair(allPieces[0], allPieces[1])
+    }
+
+    override suspend fun end() {
+        myCoroutine.cancel()
+    }
 }
 
