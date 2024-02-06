@@ -58,16 +58,6 @@ fun GameBoard(
     onClickGameConfig: () -> Unit,
 ) {
     Column(modifier = Modifier) {
-        val winner by vm.winner.collectAsState()
-        val finalWinner by vm.finalWinner.collectAsState()
-        val showRoundOneBottomBar =
-            (winner != null && vm.currentRoundCount.collectAsState().value == 0)
-
-        val showRoundTwoBottomBar =
-            (winner != null && vm.currentRoundCount.collectAsState().value == 1)
-
-        val flashFlag = vm.flashFlag.collectAsState().value
-
         WinningCounter(vm)
 
         var boardGlobalCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
@@ -94,17 +84,36 @@ fun GameBoard(
             Modifier.fillMaxWidth()
         )
 
-        if (flashFlag) {
-            WinningRoundDialog(winner, vm)
-            GameOverDialog(vm, finalWinner, onClickHome)
+        DialogsAndBottomBar(vm, onClickHome, onClickGameConfig)
+    }
+}
 
-            if (showRoundOneBottomBar) {
-                RoundOneBottomBar(vm, onClickHome)
-            }
+@Composable
+private fun DialogsAndBottomBar(
+    vm: GameBoardViewModel,
+    onClickHome: () -> Unit,
+    onClickGameConfig: () -> Unit
+) {
+    val winner by vm.winner.collectAsState()
+    val finalWinner by vm.finalWinner.collectAsState()
+    val showRoundOneBottomBar =
+        (winner != null && vm.currentRoundCount.collectAsState().value == 0)
 
-            if (showRoundTwoBottomBar) {
-                RoundTwoBottomBar(vm, onClickHome, onClickGameConfig)
-            }
+    val showRoundTwoBottomBar =
+        (winner != null && vm.currentRoundCount.collectAsState().value == 1)
+
+    val flashFlag = vm.flashFlag.collectAsState().value
+
+    if (flashFlag) {
+        WinningRoundDialog(winner, vm)
+        GameOverDialog(vm, finalWinner, onClickHome)
+
+        if (showRoundOneBottomBar) {
+            RoundOneBottomBar(vm, onClickHome)
+        }
+
+        if (showRoundTwoBottomBar) {
+            RoundTwoBottomBar(vm, onClickHome, onClickGameConfig)
         }
     }
 }
