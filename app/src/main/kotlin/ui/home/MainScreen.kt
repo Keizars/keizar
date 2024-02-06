@@ -1,6 +1,7 @@
 package org.keizar.android.ui.home
 
 import android.app.Activity
+import android.os.Bundle
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,14 +24,16 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.get
 import androidx.navigation.navArgument
 import kotlinx.serialization.decodeFromHexString
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.keizar.android.R
-import org.keizar.android.ui.game.GameScene
 import org.keizar.android.ui.game.configuration.GameConfigurationScene
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
-import org.keizar.android.ui.game.mp.MatchPage
+import org.keizar.android.ui.game.mp.MultiplayerGamePage
+import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
+import org.keizar.android.ui.game.sp.SinglePlayerGameScene
 
 @Composable
 @Preview(showBackground = true)
@@ -39,12 +42,12 @@ fun MainScreen() {
     NavHost(navController, startDestination = "home") {
         composable("home") { HomePage(navController) }
         composable(
-            "single player game",
+            "game/configuration",
         ) {
             GameConfigurationScene(navController)
         }
         composable(
-            "game",
+            "game/single-player",
             listOf(navArgument("configuration") {
                 nullable = false
                 type = NavType.StringType
@@ -52,14 +55,33 @@ fun MainScreen() {
         ) { entry ->
             entry.arguments?.getString("configuration")?.let {
                 val configuration = ProtoBuf.decodeFromHexString(GameStartConfiguration.serializer(), it)
-                GameScene(
+                SinglePlayerGameScene(
                     startConfiguration = configuration,
                     navController = navController,
                 )
             }
         }
-        composable("multiplayer game") {
-            MatchPage({ navController.navigate("home") }, Modifier.fillMaxSize())
+        composable("game/lobby") {
+            MultiplayerLobbyScene(
+                onClickHome = { navController.navigate("home") },
+                onJoinGame = { roomId ->
+                    navController.navigate(navController.graph["game/multiplayer"].id, Bundle().apply {
+                        putString("roomId", roomId)
+                    })
+                },
+                Modifier.fillMaxSize()
+            )
+        }
+        composable("game/multiplayer") { backStackEntry ->
+            MultiplayerGamePage(
+                roomId = backStackEntry.arguments!!.getString("roomId")!!.toUInt(),
+                onClickHome = {
+                    navController.navigate("home") {
+                        launchSingleTop = true
+                    }
+                },
+                Modifier.fillMaxSize()
+            )
         }
         composable("saved games") { /* TODO: saved games page*/ }
         composable("tutorial") { /* TODO: tutorial page*/ }
@@ -91,12 +113,12 @@ fun HomePage(navController: NavController) {
             verticalArrangement = Arrangement.SpaceEvenly,
         ) {
             // Single Player Button
-            Button(onClick = { navController.navigate("single player game") }, modifier = Modifier.width(170.dp)) {
+            Button(onClick = { navController.navigate("game/configuration") }, modifier = Modifier.width(170.dp)) {
                 Text("Play vs Computer")
             }
 
             // Multiplayer Button
-            Button(onClick = { navController.navigate("multiplayer game") }, modifier = Modifier.width(170.dp)) {
+            Button(onClick = { navController.navigate("game/lobby") }, modifier = Modifier.width(170.dp)) {
                 Text("Multiplayer")
             }
 

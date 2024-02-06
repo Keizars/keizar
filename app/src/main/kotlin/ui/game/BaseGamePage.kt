@@ -27,27 +27,20 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
-import androidx.navigation.NavController
 import org.keizar.android.encode
 import org.keizar.android.ui.KeizarApp
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
+import org.keizar.android.ui.game.configuration.createBoard
 import org.keizar.game.Difficulty
+import org.keizar.game.GameSession
 import org.keizar.game.Role
+import org.keizar.utils.communication.game.Player
 
 @Composable
-fun GameScene(
-    startConfiguration: GameStartConfiguration,
-    navController: NavController,
-) {
-    GamePage(startConfiguration, onClickHome = { navController.popBackStack("home", false) },
-        onClickGameConfig = { navController.popBackStack("single player game", false) })
-}
-
-@Composable
-fun GamePage(
-    startConfiguration: GameStartConfiguration,
+fun BaseGamePage(
+    vm: GameBoardViewModel,
     onClickHome: () -> Unit,
-    onClickGameConfig : () -> Unit,
+    onClickGameConfig: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var showGameConfigurationDialog by remember { mutableStateOf(false) }
@@ -80,7 +73,7 @@ fun GamePage(
                 actions = {
                     IconButton(onClick = {
                         showGameConfigurationDialog = true
-                        clipboard.setText(AnnotatedString(startConfiguration.encode()))
+                        clipboard.setText(AnnotatedString(vm.startConfiguration.encode()))
                     }) {
                         Icon(Icons.Outlined.Share, contentDescription = "Share")
                     }
@@ -96,12 +89,12 @@ fun GamePage(
         ) {
             BoxWithConstraints {
                 GameBoard(
-                    startConfiguration = startConfiguration,
+                    vm,
                     modifier = Modifier
                         .padding(vertical = 16.dp)
                         .size(min(maxWidth, maxHeight)),
                     onClickHome = onClickHome,
-                    onClickGameConfig = onClickGameConfig
+                    onClickGameConfig = onClickGameConfig,
                 )
             }
         }
@@ -112,11 +105,18 @@ fun GamePage(
 @Composable
 private fun PreviewGamePage() {
     KeizarApp {
-        GamePage(
-            startConfiguration = GameStartConfiguration(
-                difficulty = Difficulty.EASY,
-                layoutSeed = 0,
-                playAs = Role.WHITE,
+        BaseGamePage(
+            vm = rememberGameBoardViewModel(
+                session = remember {
+                    GameSession.create(
+                        GameStartConfiguration(
+                            difficulty = Difficulty.EASY,
+                            layoutSeed = 0,
+                            playAs = Role.WHITE,
+                        ).createBoard()
+                    )
+                },
+                selfPlayer = Player.FirstWhitePlayer,
             ),
             onClickHome = {},
             onClickGameConfig = {}

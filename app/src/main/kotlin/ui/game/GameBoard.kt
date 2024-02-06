@@ -52,19 +52,11 @@ import kotlin.math.sqrt
 
 @Composable
 fun GameBoard(
-    startConfiguration: GameStartConfiguration,
+    vm: GameBoardViewModel,
     modifier: Modifier = Modifier,
     onClickHome: () -> Unit,
-    onClickGameConfig: () -> Unit
+    onClickGameConfig: () -> Unit,
 ) {
-    val vm = rememberGameBoardViewModel(
-        GameSession.create(startConfiguration.createBoard()),
-        selfPlayer = if (startConfiguration.playAs == Role.WHITE) {
-            Player.FirstWhitePlayer
-        } else {
-            Player.FirstBlackPlayer
-        }
-    )
     Column(modifier = Modifier) {
         val winner by vm.winner.collectAsState()
         val finalWinner by vm.finalWinner.collectAsState()
@@ -323,7 +315,7 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                         )
                     },
                     confirmButton = {
-                        Button(onClick = {vm.setGameOverReadyToBeAnnouncement(false)}) {
+                        Button(onClick = { vm.setGameOverReadyToBeAnnouncement(false) }) {
                             Text(text = "OK")
                         }
                     })
@@ -334,7 +326,7 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                 AlertDialog(onDismissRequest = {},
                     title = { Text(text = "Game Over, ${finalWinner.player} wins!") },
                     confirmButton = {
-                        Button(onClick = {vm.setGameOverReadyToBeAnnouncement(false)}) {
+                        Button(onClick = { vm.setGameOverReadyToBeAnnouncement(false) }) {
                             Text(text = "Ok")
                         }
                     })
@@ -488,15 +480,19 @@ fun getDotPositions(number: Int, center: Offset, distance: Float): List<Offset> 
 @Composable
 private fun PreviewGameBoard() {
     BoxWithConstraints {
-        GameBoard(
-            remember {
+        val vm = rememberGameBoardViewModel(
+            GameSession.create(remember {
                 GameStartConfiguration(
                     layoutSeed = 0,
                     playAs = Role.WHITE,
                     difficulty = Difficulty.EASY,
                 )
-            },
-            Modifier.size(min(maxWidth, maxHeight)),
+            }.createBoard()),
+            Player.FirstWhitePlayer
+        )
+        GameBoard(
+            vm,
+            modifier = Modifier.size(min(maxWidth, maxHeight)),
             onClickHome = { /* Navigate to home page*/ },
             onClickGameConfig = { /* Navigate to game configuration page*/ }
         )

@@ -199,7 +199,7 @@ private fun PreviewBoardPiecesWithBackground() {
             BoardProperties.getStandardProperties(0)
         }
         val vm = rememberGameBoardViewModel(
-            game = GameSession.create(prop),
+            session = GameSession.create(prop),
             selfPlayer = Player.FirstWhitePlayer,
         )
         BoardBackground(

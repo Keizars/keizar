@@ -10,7 +10,6 @@ interface MatchViewModel {
     val joinRoomIdEditing: StateFlow<String>
 
     fun setJoinRoomId(roomId: String)
-    fun joinRoom()
 
 
     @Stable
@@ -25,10 +24,7 @@ internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel() {
     override val joinRoomIdEditing: MutableStateFlow<String> = MutableStateFlow("")
 
     override fun setJoinRoomId(roomId: String) {
-        this.joinRoomIdEditing.value = roomId.takeWhile { it.isDigit() }
-    }
-
-    override fun joinRoom() {
+        this.joinRoomIdEditing.value = roomId.filter { it.isDigit() }
     }
 
     override val selfRoomId: MutableStateFlow<String?> = MutableStateFlow(null)

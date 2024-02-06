@@ -43,8 +43,9 @@ import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameter
 import androidx.compose.ui.unit.dp
 
 @Composable
-fun MatchPage(
+fun MultiplayerLobbyScene(
     onClickHome: () -> Unit,
+    onJoinGame: (roomId: String) -> Unit,
     modifier: Modifier = Modifier,
     vm: MatchViewModel = remember {
         MatchViewModel()
@@ -94,7 +95,7 @@ fun MatchPage(
             Column(Modifier.padding(16.dp)) {
                 OnlineMatchingSection(Modifier.weight(1f))
 
-                PlayWithFriendsSection(vm)
+                PlayWithFriendsSection(vm, onJoinGame)
             }
         }
     }
@@ -116,7 +117,11 @@ private fun OnlineMatchingSection(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun PlayWithFriendsSection(vm: MatchViewModel, modifier: Modifier = Modifier) {
+private fun PlayWithFriendsSection(
+    vm: MatchViewModel,
+    onJoinRoom: (roomId: String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(modifier) {
         Text(
             text = "Private Rooms",
@@ -139,7 +144,7 @@ private fun PlayWithFriendsSection(vm: MatchViewModel, modifier: Modifier = Modi
                 label = { Text("Join Their Room") },
                 shape = RoundedCornerShape(12.dp),
                 keyboardActions = KeyboardActions {
-                    vm.joinRoom()
+                    onJoinRoom(roomId)
                 },
                 trailingIcon = {
                     val clipboard = LocalClipboardManager.current
@@ -158,7 +163,9 @@ private fun PlayWithFriendsSection(vm: MatchViewModel, modifier: Modifier = Modi
             )
 
             Button(
-                onClick = { vm.joinRoom() },
+                onClick = {
+                    onJoinRoom(roomId)
+                },
                 Modifier.padding(start = 8.dp, top = 8.dp),
                 enabled = roomId.isNotBlank(),
             ) {
@@ -194,9 +201,6 @@ private fun PlayWithFriendsSection(vm: MatchViewModel, modifier: Modifier = Modi
                         onValueChange = { },
                         label = { Text("Your Room ID") },
                         shape = RoundedCornerShape(12.dp),
-                        keyboardActions = KeyboardActions {
-                            vm.joinRoom()
-                        },
                         readOnly = true,
                         trailingIcon = {
                             val clipboard = LocalClipboardManager.current
@@ -235,14 +239,18 @@ private fun PlayWithFriendsSection(vm: MatchViewModel, modifier: Modifier = Modi
 private fun PreviewMatchPage(
     @PreviewParameter(BooleanProvider::class) roomCreated: Boolean
 ) {
-    MatchPage({}, vm = remember {
-        MatchViewModel().apply {
-            if (roomCreated) {
-                this.createSelfRoom()
+    MultiplayerLobbyScene(
+        {},
+        {},
+        vm = remember {
+            MatchViewModel().apply {
+                if (roomCreated) {
+                    this.createSelfRoom()
+                }
+                setJoinRoomId("123456")
             }
-            setJoinRoomId("123456")
         }
-    })
+    )
 }
 
 private open class BooleanProvider : CollectionPreviewParameterProvider<Boolean>(listOf(false, true))
@@ -252,13 +260,16 @@ private open class BooleanProvider : CollectionPreviewParameterProvider<Boolean>
 private fun PreviewRoomsForJoin(
     @PreviewParameter(BooleanProvider::class) hasJoin: Boolean
 ) {
-    PlayWithFriendsSection(vm = remember {
-        MatchViewModel().apply {
-            if (hasJoin) {
-                setJoinRoomId("123456")
+    PlayWithFriendsSection(
+        vm = remember {
+            MatchViewModel().apply {
+                if (hasJoin) {
+                    setJoinRoomId("123456")
+                }
             }
-        }
-    })
+        },
+        {}
+    )
 }
 
 @Preview(showBackground = true)
@@ -266,11 +277,14 @@ private fun PreviewRoomsForJoin(
 private fun PreviewRoomsForHostingRoom(
     @PreviewParameter(BooleanProvider::class) roomCreated: Boolean
 ) {
-    PlayWithFriendsSection(vm = remember {
-        MatchViewModel().apply {
-            if (roomCreated) {
-                this.createSelfRoom()
+    PlayWithFriendsSection(
+        vm = remember {
+            MatchViewModel().apply {
+                if (roomCreated) {
+                    this.createSelfRoom()
+                }
             }
-        }
-    })
+        },
+        {}
+    )
 }
