@@ -1,19 +1,38 @@
 package org.keizar.android.ui.game
 
 import android.app.Activity
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Assessment
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Replay
+import androidx.compose.material.icons.filled.Replay10
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.SkipNext
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -26,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
@@ -119,92 +139,56 @@ fun GameBoard(
 
 @Composable
 fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
-    val buttonWidth = 160.dp
-
     Row(
-        modifier = Modifier
+        Modifier
+            .padding(horizontal = 16.dp)
             .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.Top,
     ) {
-        // All buttons now have a fixed width
-        Button(
+        ActionButton(
             onClick = onClickHome,
-            modifier = Modifier
-                .width(buttonWidth)
-                .padding(4.dp)
-        ) {
-            Text(text = "Home", textAlign = TextAlign.Center)
-        }
+            icon = { Icon(Icons.Default.Home, null) },
+            text = { Text("Home") })
 
-        Button(
-            onClick = {
-                vm.replayCurrentRound()
-            },
-            modifier = Modifier
-                .width(buttonWidth)
-                .padding(4.dp)
-        ) {
-            Text(text = "Replay", textAlign = TextAlign.Center)
-        }
-    }
+        ActionButton(
+            onClick = { vm.replayCurrentRound() },
+            icon = { Icon(Icons.Default.Replay, null) },
+            text = { Text(text = "Replay") })
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
         var showDialog by remember { mutableStateOf(false) }
         val showResults = remember { mutableStateOf(true) }
-        Button(
+        ActionButton(
             onClick = {
                 showDialog = true
                 showResults.value = true
             },
-            modifier = Modifier
-                .width(buttonWidth)
-                .padding(4.dp)
-        ) {
-            Text(text = "Results", textAlign = TextAlign.Center)
-        }
+            icon = { Icon(Icons.Default.Assessment, null) },
+            text = { Text(text = "Results") })
 
         if (showDialog) {
             WinningRoundDialog(winner = vm.winner.collectAsState().value, vm, showResults)
         }
 
-        Button(
+        val context = LocalContext.current
+        ActionButton(
+            onClick = { if (context is Activity) context.finish() },
+            icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, null) },
+            text = { Text("Exit") })
+
+        ActionButton(
             onClick = {
                 vm.startNextRound(vm.selfPlayer)
                 vm.setFlashFlag(false)
                 vm.setEndRoundAnnouncement(false)
             },
-            modifier = Modifier
-                .width(buttonWidth)
-                .padding(4.dp)
-        ) {
-            Text(text = "Next Round", textAlign = TextAlign.Center)
-        }
+            icon = { Icon(Icons.Default.SkipNext, null) },
+            text = { Text("Next Round") }
+        )
+
     }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        val context = LocalContext.current
-        Button(
-            onClick = { if (context is Activity) context.finish() },
-            modifier = Modifier
-                .width(buttonWidth)
-                .padding(4.dp)
-        ) {
-            Text(text = "Exit", textAlign = TextAlign.Center)
-        }
-    }
 }
-
 
 @Composable
 fun RoundTwoBottomBar(
@@ -212,92 +196,69 @@ fun RoundTwoBottomBar(
     onClickHome: () -> Unit,
     onClickGameConfig: () -> Unit
 ) {
-    val buttonWidth = 160.dp
+    Column {
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Button(
-            onClick = onClickHome,
-            modifier = Modifier
-                .width(buttonWidth)
-                .padding(4.dp)
+        Row(
+            Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.Top
         ) {
-            Text(text = "Home", textAlign = TextAlign.Center)
+            ActionButton(
+                onClick = onClickHome,
+                icon = { Icon(Icons.Default.Home, null) },
+                text = { Text("Home") })
+
+            ActionButton(
+                onClick = {
+                    vm.replayCurrentRound()
+                    vm.setGameOverReadyToBeAnnouncement(false)
+                },
+
+                icon = { Icon(Icons.Default.Replay10, null) },
+                text = { Text(text = "Replay Round") })
+
+            ActionButton(
+                onClick = {
+                    vm.replayGame()
+                    vm.setGameOverReadyToBeAnnouncement(false)
+                },
+
+                icon = { Icon(Icons.Default.Replay10, null) },
+                text = { Text(text = "Replay Game") })
+
+
+            ActionButton(
+                onClick = { /*TODO*/ },
+                icon = { Icon(Icons.Default.Save, null) },
+                text = { Text("Save Game") })
         }
 
-        Button(
-            onClick = {
-                vm.replayGame()
-                vm.setGameOverReadyToBeAnnouncement(false)
-            },
-            modifier = Modifier
-                .width(buttonWidth)
-                .padding(4.dp)
+        Row(
+            Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.Top
         ) {
-            Text(text = "Replay Game", textAlign = TextAlign.Center)
-        }
-    }
+            val context = LocalContext.current
+            Button(onClick = { if (context is Activity) context.finish() },
+                colors = ButtonDefaults.buttonColors(Color.Transparent,
+                    contentColor = Color.Black)) {
+                Text(text = "Exit", textAlign = TextAlign.Center)
+            }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
+               Button(onClick = { onClickGameConfig() },
+               ){
+                    Text(text = "New Game", textAlign = TextAlign.Center)
+                }
 
-        Button(
-            onClick = {
-                vm.replayCurrentRound()
-                vm.setGameOverReadyToBeAnnouncement(false)
-            },
-            modifier = Modifier
-                .width(buttonWidth)
-                .padding(4.dp)
-        ) {
-            Text(text = "Replay Second Round", textAlign = TextAlign.Center)
-        }
-
-        Button(
-            onClick = {/*TODO*/ },
-            modifier = Modifier
-                .width(buttonWidth)
-                .padding(4.dp)
-        ) {
-            Text(text = "Save Game", textAlign = TextAlign.Center)
-        }
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceAround,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Button(
-            onClick = { onClickGameConfig() },
-            modifier = Modifier
-                .width(buttonWidth)
-                .padding(4.dp)
-        ) {
-            Text(text = "New Game", textAlign = TextAlign.Center)
-        }
-
-
-        val context = LocalContext.current
-        Button(
-            onClick = { if (context is Activity) context.finish() },
-            modifier = Modifier
-                .width(buttonWidth)
-                .padding(4.dp)
-        ) {
-            Text(text = "Exit", textAlign = TextAlign.Center)
         }
     }
 }
+
+
 
 @Composable
 fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome: () -> Unit) {
@@ -315,15 +276,30 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                         Text(
                             text = "Round 1:\n" +
                                     "   Winner: ${vm.round1Winner.collectAsState(null)}\n" +
-                                    "   White captured: ${vm.getRoundPieceCount(0, Role.WHITE)}\n" +
-                                    "   Black captured: ${vm.getRoundPieceCount(0, Role.BLACK)}\n" +
+                                    "   White captured: ${
+                                        vm.getRoundPieceCount(
+                                            0,
+                                            Role.WHITE
+                                        )
+                                    }\n" +
+                                    "   Black captured: ${
+                                        vm.getRoundPieceCount(
+                                            0,
+                                            Role.BLACK
+                                        )
+                                    }\n" +
                                     "Round 2 Winner: ${vm.round2Winner.collectAsState(null)}\n" +
-                                    "   White captured: ${vm.getRoundPieceCount(1, Role.WHITE)}\n" +
+                                    "   White captured: ${
+                                        vm.getRoundPieceCount(
+                                            1,
+                                            Role.WHITE
+                                        )
+                                    }\n" +
                                     "   Black captured: ${vm.getRoundPieceCount(1, Role.BLACK)}"
                         )
                     },
                     confirmButton = {
-                        Button(onClick = {vm.setGameOverReadyToBeAnnouncement(false)}) {
+                        Button(onClick = { vm.setGameOverReadyToBeAnnouncement(false) }) {
                             Text(text = "OK")
                         }
                     })
@@ -334,7 +310,7 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                 AlertDialog(onDismissRequest = {},
                     title = { Text(text = "Game Over, ${finalWinner.player} wins!") },
                     confirmButton = {
-                        Button(onClick = {vm.setGameOverReadyToBeAnnouncement(false)}) {
+                        Button(onClick = { vm.setGameOverReadyToBeAnnouncement(false) }) {
                             Text(text = "Ok")
                         }
                     })
@@ -484,6 +460,49 @@ fun getDotPositions(number: Int, center: Offset, distance: Float): List<Offset> 
     }
 }
 
+@Composable
+private fun ActionButton(
+    onClick: () -> Unit,
+    icon: @Composable () -> Unit,
+    text: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    backgroundColor : Color = MaterialTheme.colorScheme.background,
+    isLoading: Boolean = false
+) {
+    Column(
+        modifier
+            .clip(RoundedCornerShape(8.dp))
+            .background(backgroundColor)
+            .clickable(
+                remember { MutableInteractionSource() },
+                indication = rememberRipple(bounded = false),
+                onClick = onClick
+            )
+            .height(64.dp)
+            .padding(horizontal = 4.dp)
+            .padding(all = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceEvenly
+    ) {
+        icon()
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            ProvideTextStyle(MaterialTheme.typography.labelMedium) {
+                text()
+            }
+
+            AnimatedVisibility(isLoading) {
+                Box(
+                    Modifier
+                        .padding(start = 8.dp)
+                        .height(12.dp), contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(Modifier.size(12.dp), strokeWidth = 2.dp)
+                }
+            }
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun PreviewGameBoard() {
@@ -501,4 +520,41 @@ private fun PreviewGameBoard() {
             onClickGameConfig = { /* Navigate to game configuration page*/ }
         )
     }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewRoundOneBottomBar() {
+    RoundOneBottomBar(
+        rememberGameBoardViewModel(
+            GameSession.create(
+                GameStartConfiguration(
+                    layoutSeed = 0,
+                    playAs = Role.WHITE,
+                    difficulty = Difficulty.EASY
+                ).createBoard()
+            ),
+            selfPlayer = Player.FirstWhitePlayer
+        ),
+        onClickHome = { /* Navigate to home page*/ }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewRoundTwoBottomBar() {
+    RoundTwoBottomBar(
+        rememberGameBoardViewModel(
+            GameSession.create(
+                GameStartConfiguration(
+                    layoutSeed = 0,
+                    playAs = Role.WHITE,
+                    difficulty = Difficulty.EASY
+                ).createBoard()
+            ),
+            selfPlayer = Player.FirstWhitePlayer
+        ),
+        onClickHome = { /* Navigate to home page*/ },
+        onClickGameConfig = { /* Navigate to game configuration page*/ }
+    )
 }
