@@ -1,6 +1,15 @@
 package org.keizar.aiengine
 
 
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType.Application
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
@@ -10,11 +19,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.keizar.game.GameSession
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import org.keizar.utils.communication.game.BoardPos
-import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
 import kotlin.coroutines.CoroutineContext
 import kotlin.random.Random
@@ -100,6 +110,12 @@ class Q_table_AI(
     private val test: Boolean = false
 ) : GameAI {
 
+    private val client = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json()
+        }
+    }
+
     private val myCoroutine: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
@@ -135,10 +151,17 @@ class Q_table_AI(
     }
 
     override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos> {
-        val allPieces = round.getAllPiecesPos(role).first()
+//        val allPieces = round.getAllPiecesPos(role).first()
         //TODO: 向server发送请求，获取当前的最佳move
-        val move = null
-        return Pair(allPieces[0], allPieces[1])
+        val resp = client.post("http://localhost:5000/AI/") {
+            contentType(Application.Json)
+            setBody(buildJsonObject {
+                put("state", "")
+                put("move", "")
+            })
+        }
+        val move = resp.body<List<Int>>()
+        return BoardPos(move[0], move[1]) to BoardPos(move[2], move[3])
     }
 
     override suspend fun end() {
