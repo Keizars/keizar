@@ -151,7 +151,6 @@ class GameSessionImpl(
     private val _currentRoundNo: MutableStateFlow<Int> = MutableStateFlow(startFromRoundNo)
     override val currentRoundNo: StateFlow<Int> = _currentRoundNo.asStateFlow()
     override val finalWinner: Flow<GameResult?>
-    private val haveWinner: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     private val curRoles: List<MutableStateFlow<Role>>
     private val wonRounds: List<Flow<List<Int>>>
@@ -182,13 +181,13 @@ class GameSessionImpl(
         nextRoundAgreement = mutableListOf(false, false)
 
         finalWinner = combine(
-            haveWinner,
+            rounds[properties.rounds - 1].winner,
             wonRounds(Player.FirstWhitePlayer),
             wonRounds(Player.FirstBlackPlayer),
             lostPieces(Player.FirstWhitePlayer),
             lostPieces(Player.FirstBlackPlayer),
-        ) { haveWinner, player1Wins, player2Wins, player1LostPieces, player2LostPieces ->
-            if (!haveWinner) {
+        ) { finalRoundWinner, player1Wins, player2Wins, player1LostPieces, player2LostPieces ->
+            if (finalRoundWinner == null) {
                 null
             } else if (player1Wins > player2Wins) {
                 GameResult.Winner(Player.FirstWhitePlayer)
@@ -231,16 +230,10 @@ class GameSessionImpl(
     }
 
     private fun proceedToNextRound() {
-        if (currentRoundNo.value == properties.rounds - 1) {
-            updateFinalWinner()
-        } else {
+        if (currentRoundNo.value != properties.rounds - 1) {
             ++_currentRoundNo.value
             curRoles.forEach { role -> role.value = role.value.other() }
         }
-    }
-
-    private fun updateFinalWinner() {
-        haveWinner.value = true
     }
 
     override fun replayCurrentRound(): Boolean {
@@ -262,7 +255,6 @@ class GameSessionImpl(
         curRoles[0].value = Role.WHITE
         curRoles[1].value = Role.BLACK
         _currentRoundNo.value = 0
-        haveWinner.value = false
     }
 
     override fun getRoundWinner(roundNo: Int): Flow<Player?> {
