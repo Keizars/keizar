@@ -16,7 +16,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.keizar.android.ui.external.placeholder.placeholder
 import org.keizar.android.ui.game.BaseGamePage
 import org.keizar.android.ui.game.rememberGameBoardViewModel
+import org.keizar.client.GameRoom
 import org.keizar.client.RemoteGameSession
+import org.keizar.game.BoardProperties
 
 @Composable
 fun MultiplayerGamePage(
@@ -35,7 +37,15 @@ fun MultiplayerGamePage(
     }
 
     LaunchedEffect(roomId) {
-        sessionFlow.emit(RemoteGameSession.create(roomId, backgroundScope.scope.coroutineContext))
+        sessionFlow.emit(
+            RemoteGameSession.createAndConnect(
+                // TODO: pass compilation
+                GameRoom(
+                    roomId,
+                    BoardProperties.getStandardProperties(0)
+                ), backgroundScope.scope.coroutineContext
+            )
+        )
     }
 
     session?.let {

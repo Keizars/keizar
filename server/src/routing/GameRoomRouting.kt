@@ -3,11 +3,13 @@ package org.keizar.server.routing
 import io.ktor.serialization.WebsocketDeserializeException
 import io.ktor.server.application.*
 import io.ktor.server.plugins.BadRequestException
+import io.ktor.server.request.receive
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.receiveDeserialized
 import io.ktor.server.websocket.webSocket
 import io.ktor.util.collections.ConcurrentMap
 import kotlinx.coroutines.flow.first
+import org.keizar.game.BoardProperties
 import org.keizar.server.gameroom.GameRoom
 import org.keizar.server.gameroom.GameRoomImpl
 import org.keizar.server.gameroom.PlayerSessionImpl
@@ -16,6 +18,7 @@ import org.keizar.utils.communication.message.UserInfo
 
 fun Application.gameRoomRouting() {
     val logger = log
+    val coroutineContext = this.coroutineContext
     routing {
         val gameRooms: ConcurrentMap<UInt, GameRoom> = ConcurrentMap()
         webSocket("/room/{roomNumber}") {
@@ -31,7 +34,7 @@ fun Application.gameRoomRouting() {
 
             val room = gameRooms.getOrPut(roomNumber) {
                 logger.info("Creating room $roomNumber")
-                GameRoomImpl(roomNumber, this.coroutineContext)
+                GameRoomImpl(roomNumber, coroutineContext)
             }
             val player = PlayerSessionImpl(this)
             if (!room.addPlayer(player)) {
@@ -49,6 +52,15 @@ fun Application.gameRoomRouting() {
                 logger.info("Destroying room $roomNumber")
                 room.close()
             }
+        }
+
+        post("/room/create/{roomNumber}") {
+            val roomNumber: UInt = call.parameters["roomNumber"]?.toUIntOrNull()
+                ?: throw BadRequestException("Invalid room number")
+
+            val properties = call.receive<BoardProperties>()
+            val room = GameRoomImpl(roomNumber, coroutineContext)
+            gameRooms.putIfAbsent(roomNumber, room)
         }
     }
 }

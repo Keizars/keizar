@@ -9,7 +9,7 @@ import org.keizar.utils.communication.game.BoardPos
 
 interface RemoteRoundSession: RoundSession
 
-class RemoteRoundSessionImpl(
+class RemoteRoundSessionImpl internal constructor(
     private val round: RoundSession,
     private val gameSessionClient: GameSessionClient,
 ): RoundSession by round, RemoteRoundSession {
