@@ -12,6 +12,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,6 +32,7 @@ import kotlinx.serialization.protobuf.ProtoBuf
 import org.keizar.android.R
 import org.keizar.android.ui.game.configuration.GameConfigurationScene
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
+import org.keizar.android.ui.game.mp.MatchViewModel
 import org.keizar.android.ui.game.mp.MultiplayerGamePage
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
 import org.keizar.android.ui.game.sp.SinglePlayerGameScene
@@ -39,6 +41,10 @@ import org.keizar.android.ui.game.sp.SinglePlayerGameScene
 @Preview(showBackground = true)
 fun MainScreen() {
     val navController = rememberNavController()
+
+    val matchViewModel = remember {
+        MatchViewModel()
+    }
     NavHost(navController, startDestination = "home") {
         composable("home") { HomePage(navController) }
         composable(
@@ -69,12 +75,16 @@ fun MainScreen() {
                         putString("roomId", roomId)
                     })
                 },
-                Modifier.fillMaxSize()
+                Modifier.fillMaxSize(),
+                vm = matchViewModel,
             )
         }
         composable("game/multiplayer") { backStackEntry ->
             MultiplayerGamePage(
                 roomId = backStackEntry.arguments!!.getString("roomId")!!.toUInt(),
+                goBack = {
+                    navController.popBackStack()
+                },
                 onClickHome = {
                     navController.navigate("home") {
                         launchSingleTop = true

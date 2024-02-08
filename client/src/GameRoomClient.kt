@@ -1,7 +1,7 @@
 package org.keizar.client
 
+import io.ktor.client.HttpClient
 import org.keizar.game.BoardProperties
-import io.ktor.client.*
 import kotlin.random.Random
 import kotlin.random.nextUInt
 
@@ -10,7 +10,7 @@ data class GameRoom(
     val gameProperties: BoardProperties,
 )
 
-interface GameRoomClient {
+interface GameRoomClient : AutoCloseable {
     suspend fun createRoom(roomNumber: UInt? = null, seed: Int? = null): GameRoom
     suspend fun createRoom(roomNumber: UInt? = null, boardProperties: BoardProperties): GameRoom
     suspend fun getRoom(roomNumber: UInt?): GameRoom
@@ -40,5 +40,9 @@ class GameRoomClientImpl: GameRoomClient {
 
     override suspend fun getRoom(roomNumber: UInt?): GameRoom {
         TODO("client get")
+    }
+
+    override fun close() {
+        client.close()
     }
 }

@@ -41,6 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import org.keizar.android.ui.foundation.launchInBackground
 
 @Composable
 fun MultiplayerLobbyScene(
@@ -187,7 +188,10 @@ private fun PlayWithFriendsSection(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(text = "You can also", style = MaterialTheme.typography.bodyMedium)
 
-                    OutlinedButton(onClick = { vm.createSelfRoom() }, Modifier.padding(horizontal = 8.dp)) {
+                    OutlinedButton(
+                        onClick = { vm.launchInBackground { createSelfRoom() } },
+                        Modifier.padding(horizontal = 8.dp)
+                    ) {
                         Text(text = "Create a Room")
                     }
 
@@ -245,7 +249,7 @@ private fun PreviewMatchPage(
         vm = remember {
             MatchViewModel().apply {
                 if (roomCreated) {
-                    this.createSelfRoom()
+                    launchInBackground { createSelfRoom() }
                 }
                 setJoinRoomId("123456")
             }
@@ -281,7 +285,7 @@ private fun PreviewRoomsForHostingRoom(
         vm = remember {
             MatchViewModel().apply {
                 if (roomCreated) {
-                    this.createSelfRoom()
+                    launchInBackground { createSelfRoom() }
                 }
             }
         },

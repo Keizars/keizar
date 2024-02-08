@@ -3,9 +3,13 @@ package org.keizar.android.ui.game.mp
 import androidx.compose.runtime.Stable
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.keizar.android.ui.foundation.AbstractViewModel
+import org.keizar.android.ui.foundation.HasBackgroundScope
+import org.keizar.client.GameRoomClient
 
-interface MatchViewModel {
+interface MatchViewModel : HasBackgroundScope {
     @Stable
     val joinRoomIdEditing: StateFlow<String>
 
@@ -15,12 +19,17 @@ interface MatchViewModel {
     @Stable
     val selfRoomId: StateFlow<String?>
 
-    fun createSelfRoom()
+    @Stable
+    val creatingRoom: MutableStateFlow<Boolean>
+
+    suspend fun createSelfRoom()
 }
 
 fun MatchViewModel(): MatchViewModel = MatchViewModelImpl()
 
 internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel() {
+    private val client = GameRoomClient.create()
+
     override val joinRoomIdEditing: MutableStateFlow<String> = MutableStateFlow("")
 
     override fun setJoinRoomId(roomId: String) {
@@ -29,7 +38,19 @@ internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel() {
 
     override val selfRoomId: MutableStateFlow<String?> = MutableStateFlow(null)
 
-    override fun createSelfRoom() {
-        selfRoomId.value = "123456"
+    private val creatingRoomLock = Mutex()
+    override val creatingRoom: MutableStateFlow<Boolean> = MutableStateFlow(false)
+
+    override suspend fun createSelfRoom() {
+        if (creatingRoomLock.isLocked || creatingRoom.value) return
+        creatingRoomLock.withLock {
+            if (creatingRoom.value) return
+            creatingRoom.value = true
+            try {
+                selfRoomId.value = client.createRoom().roomNumber.toString()
+            } finally {
+                creatingRoom.value = false
+            }
+        }
     }
 }
