@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 import org.keizar.android.ui.external.placeholder.placeholder
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.game.BaseGamePage
-import org.keizar.android.ui.game.rememberGameBoardViewModel
+import org.keizar.android.ui.game.MultiplayerGameBoardViewModel
 import org.keizar.client.GameRoomClient
 import org.keizar.client.RemoteGameSession
 import org.keizar.client.exception.NetworkFailureException
@@ -84,7 +84,9 @@ fun MultiplayerGamePage(
 
     session?.getOrNull()?.let {
         BaseGamePage(
-            rememberGameBoardViewModel(session = it, selfPlayer = it.player),
+            remember {
+                MultiplayerGameBoardViewModel(it, it.player)
+            },
             onClickHome = onClickHome,
             onClickGameConfig = { },
             modifier

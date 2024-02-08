@@ -6,7 +6,7 @@ import androidx.navigation.NavController
 import org.keizar.android.ui.game.BaseGamePage
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
-import org.keizar.android.ui.game.rememberGameBoardViewModel
+import org.keizar.android.ui.game.rememberSinglePlayerGameBoardViewModel
 import org.keizar.game.GameSession
 import org.keizar.game.Role
 import org.keizar.utils.communication.game.Player
@@ -18,7 +18,7 @@ fun SinglePlayerGameScene(
     navController: NavController,
 ) {
     BaseGamePage(
-        rememberGameBoardViewModel(
+        rememberSinglePlayerGameBoardViewModel(
             session = remember(startConfiguration) {
                 GameSession.create(startConfiguration.createBoard())
             },

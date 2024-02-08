@@ -34,11 +34,9 @@ import org.keizar.android.R
 import org.keizar.android.ui.game.transition.PieceArranger
 import org.keizar.android.ui.theme.slightlyWeaken
 import org.keizar.game.BoardProperties
-import org.keizar.game.GameSession
 import org.keizar.game.Role
 import org.keizar.game.TileType
 import org.keizar.utils.communication.game.BoardPos
-import org.keizar.utils.communication.game.Player
 
 @Composable
 fun BoardBackground(
@@ -282,15 +280,8 @@ fun TileImage(
 @Composable
 private fun PreviewBoardBackground() {
     BoxWithConstraints {
-        val prop = remember {
-            BoardProperties.getStandardProperties(0)
-        }
         BoardBackground(
-            rememberGameBoardViewModel(
-                session = GameSession.create(prop),
-                selfPlayer = Player.FirstWhitePlayer,
-            ),
-
+            rememberSinglePlayerGameBoardForPreview(),
             Modifier.size(min(maxWidth, maxHeight))
         )
     }

@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import me.him188.ani.utils.logging.info
+import org.keizar.aiengine.QTableAI
 import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
@@ -185,24 +186,34 @@ interface GameBoardViewModel {
 }
 
 @Composable
-fun rememberGameBoardViewModel(
+fun rememberSinglePlayerGameBoardViewModel(
     session: GameSession,
     selfPlayer: Player,
+    difficulty: Difficulty = Difficulty.EASY,
 ): GameBoardViewModel {
     return remember(session, selfPlayer) {
-        SinglePlayerGameBoardViewModel(session, selfPlayer)
+        SinglePlayerGameBoardViewModel(session, selfPlayer, difficulty)
     }
 }
 
 class SinglePlayerGameBoardViewModel(
     game: GameSession,
     selfPlayer: Player,
+    private val difficulty: Difficulty,
 ) : BaseGameBoardViewModel(
     game,
     selfPlayer,
 ) {
     private val gameAi =
-        RandomGameAIImpl(game, Player.entries.first { it != selfPlayer }, backgroundScope.coroutineContext)
+        when (difficulty) {
+            Difficulty.EASY -> RandomGameAIImpl(
+                game,
+                Player.entries.first { it != selfPlayer },
+                backgroundScope.coroutineContext
+            )
+
+            else -> QTableAI(game, Player.entries.first { it != selfPlayer }, backgroundScope.coroutineContext)
+        }
 
     init {
         launchInBackground {
@@ -211,6 +222,18 @@ class SinglePlayerGameBoardViewModel(
         }
     }
 
+    override val startConfiguration: GameStartConfiguration
+        get() = GameStartConfiguration(
+            playAs = selfRole.value,
+            difficulty = difficulty,
+            layoutSeed = boardProperties.seed ?: 0,
+        )
+}
+
+class MultiplayerGameBoardViewModel(
+    game: GameSession,
+    selfPlayer: Player,
+) : BaseGameBoardViewModel(game, selfPlayer) {
     override val startConfiguration: GameStartConfiguration
         get() = GameStartConfiguration(
             playAs = selfRole.value,

@@ -106,20 +106,23 @@ fun BaseGamePage(
 private fun PreviewGamePage() {
     KeizarApp {
         BaseGamePage(
-            vm = rememberGameBoardViewModel(
-                session = remember {
-                    GameSession.create(
-                        GameStartConfiguration(
-                            difficulty = Difficulty.EASY,
-                            layoutSeed = 0,
-                            playAs = Role.WHITE,
-                        ).createBoard()
-                    )
-                },
-                selfPlayer = Player.FirstWhitePlayer,
-            ),
+            vm = rememberSinglePlayerGameBoardForPreview(),
             onClickHome = {},
             onClickGameConfig = {}
         )
     }
 }
+
+@Composable
+fun rememberSinglePlayerGameBoardForPreview() = rememberSinglePlayerGameBoardViewModel(
+    session = remember {
+        GameSession.create(
+            GameStartConfiguration(
+                difficulty = Difficulty.EASY,
+                layoutSeed = 0,
+                playAs = Role.WHITE,
+            ).createBoard()
+        )
+    },
+    selfPlayer = Player.FirstWhitePlayer,
+)

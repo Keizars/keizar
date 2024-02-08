@@ -14,7 +14,6 @@ import org.keizar.game.GameSession
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import org.keizar.utils.communication.game.BoardPos
-import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
 import kotlin.coroutines.CoroutineContext
 import kotlin.random.Random
@@ -93,7 +92,7 @@ class RandomGameAIImpl(
     }
 }
 
-class Q_table_AI(
+class QTableAI(
     override val game: GameSession,
     override val myPlayer: Player,
     private val parentCoroutineContext: CoroutineContext,

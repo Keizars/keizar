@@ -58,7 +58,7 @@ fun PossibleMovesOverlay(
 @Composable
 private fun PreviewPossibleMovesOverlay() {
     BoxWithConstraints {
-        val vm = rememberGameBoardViewModel(
+        val vm = rememberSinglePlayerGameBoardViewModel(
             session = GameSession.create(BoardProperties.getStandardProperties(0)),
             selfPlayer = Player.FirstWhitePlayer,
         )

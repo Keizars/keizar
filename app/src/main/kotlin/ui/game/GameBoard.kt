@@ -60,14 +60,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
-import org.keizar.android.ui.game.configuration.GameStartConfiguration
-import org.keizar.android.ui.game.configuration.createBoard
 import org.keizar.android.ui.game.transition.CapturedPiecesHost
-import org.keizar.game.Difficulty
-import org.keizar.game.GameSession
 import org.keizar.game.Role
 import org.keizar.utils.communication.game.GameResult
-import org.keizar.utils.communication.game.Player
 import kotlin.math.sqrt
 
 
@@ -520,16 +515,7 @@ private fun ActionButton(
 @Composable
 private fun PreviewGameBoard() {
     BoxWithConstraints {
-        val vm = rememberGameBoardViewModel(
-            GameSession.create(remember {
-                GameStartConfiguration(
-                    layoutSeed = 0,
-                    playAs = Role.WHITE,
-                    difficulty = Difficulty.EASY,
-                )
-            }.createBoard()),
-            Player.FirstWhitePlayer
-        )
+        val vm = rememberSinglePlayerGameBoardForPreview()
         GameBoard(
             vm,
             modifier = Modifier.size(min(maxWidth, maxHeight)),
@@ -570,16 +556,7 @@ fun UndoButton(vm: GameBoardViewModel) {
 @Composable
 private fun PreviewRoundOneBottomBar() {
     RoundOneBottomBar(
-        rememberGameBoardViewModel(
-            GameSession.create(
-                GameStartConfiguration(
-                    layoutSeed = 0,
-                    playAs = Role.WHITE,
-                    difficulty = Difficulty.EASY
-                ).createBoard()
-            ),
-            selfPlayer = Player.FirstWhitePlayer
-        ),
+        rememberSinglePlayerGameBoardForPreview(),
         onClickHome = { /* Navigate to home page*/ }
     )
 }
@@ -588,16 +565,7 @@ private fun PreviewRoundOneBottomBar() {
 @Composable
 private fun PreviewRoundTwoBottomBar() {
     RoundTwoBottomBar(
-        rememberGameBoardViewModel(
-            GameSession.create(
-                GameStartConfiguration(
-                    layoutSeed = 0,
-                    playAs = Role.WHITE,
-                    difficulty = Difficulty.EASY
-                ).createBoard()
-            ),
-            selfPlayer = Player.FirstWhitePlayer
-        ),
+        rememberSinglePlayerGameBoardForPreview(),
         onClickHome = { /* Navigate to home page*/ },
         onClickGameConfig = { /* Navigate to game configuration page*/ }
     )
@@ -607,15 +575,6 @@ private fun PreviewRoundTwoBottomBar() {
 @Composable
 private fun PreviewUndoButton() {
     UndoButton(
-        rememberGameBoardViewModel(
-            GameSession.create(
-                GameStartConfiguration(
-                    layoutSeed = 0,
-                    playAs = Role.WHITE,
-                    difficulty = Difficulty.EASY
-                ).createBoard()
-            ),
-            selfPlayer = Player.FirstWhitePlayer
-        )
+        rememberSinglePlayerGameBoardForPreview()
     )
 }

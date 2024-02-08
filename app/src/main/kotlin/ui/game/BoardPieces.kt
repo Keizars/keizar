@@ -36,11 +36,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
-import org.keizar.game.BoardProperties
-import org.keizar.game.GameSession
 import org.keizar.game.Role
 import org.keizar.game.TileType
-import org.keizar.utils.communication.game.Player
 import kotlin.time.Duration.Companion.seconds
 
 
@@ -193,13 +190,7 @@ internal fun PlayerIcon(
 @Composable
 private fun PreviewBoardPiecesWithBackground() {
     BoxWithConstraints {
-        val prop = remember {
-            BoardProperties.getStandardProperties(0)
-        }
-        val vm = rememberGameBoardViewModel(
-            session = GameSession.create(prop),
-            selfPlayer = Player.FirstWhitePlayer,
-        )
+        val vm = rememberSinglePlayerGameBoardForPreview()
         BoardBackground(
             vm,
             Modifier.size(min(maxWidth, maxHeight))
@@ -214,13 +205,7 @@ private fun PreviewBoardPiecesWithBackground() {
 @Preview
 @Composable
 private fun PreviewFlashKeizar() {
-    val prop = remember {
-        BoardProperties.getStandardProperties(0)
-    }
-    val vm = remember {
-        SinglePlayerGameBoardViewModel(GameSession.create(prop), Player.FirstWhitePlayer)
-    }
-
+    val vm = rememberSinglePlayerGameBoardForPreview()
     Box(modifier = Modifier.alpha(vm.boardTransitionController.winningPieceAlpha)) {
         PlayerIconFitted(
             tileSize = DpSize(320.dp, 320.dp),
