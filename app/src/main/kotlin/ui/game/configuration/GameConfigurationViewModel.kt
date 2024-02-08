@@ -97,7 +97,11 @@ private class GameConfigurationViewModelImpl(
 
     override fun setDifficulty(difficulty: Difficulty) {
         updateConfiguration {
-            copy(difficulty = difficulty)
+            if (difficulty == Difficulty.MEDIUM) {
+                copy(difficulty = Difficulty.MEDIUM, layoutSeed = 0, playAs = Role.WHITE)
+            } else {
+                copy(difficulty = difficulty)
+            }
         }
     }
 
