@@ -105,6 +105,8 @@ fun GameBoard(
                 sourceCoordinates = boardGlobalCoordinates,
                 Modifier.fillMaxWidth()
             )
+
+            UndoButton(vm)
         }
 
         DialogsAndBottomBar(vm, onClickHome, onClickGameConfig)
@@ -537,6 +539,27 @@ private fun PreviewGameBoard() {
     }
 }
 
+@Composable
+fun UndoButton(vm: GameBoardViewModel) {
+    val canUndo by vm.canUndo.collectAsState()
+    val winner by vm.winner.collectAsState()
+
+    Row (modifier = Modifier.padding(16.dp),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically) {
+        Button(
+            onClick = { vm.undo() },
+            enabled = canUndo,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (canUndo && winner != null) MaterialTheme.colorScheme.primary else Color.LightGray,
+                contentColor = if (canUndo && winner != null) MaterialTheme.colorScheme.onPrimary else Color.Gray
+            )
+        ) {
+            Text("Undo")
+        }
+    }
+}
+
 @Preview(showBackground = true)
 @Composable
 private fun PreviewRoundOneBottomBar() {
@@ -571,5 +594,22 @@ private fun PreviewRoundTwoBottomBar() {
         ),
         onClickHome = { /* Navigate to home page*/ },
         onClickGameConfig = { /* Navigate to game configuration page*/ }
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewUndoButton() {
+    UndoButton(
+        rememberGameBoardViewModel(
+            GameSession.create(
+                GameStartConfiguration(
+                    layoutSeed = 0,
+                    playAs = Role.WHITE,
+                    difficulty = Difficulty.EASY
+                ).createBoard()
+            ),
+            selfPlayer = Player.FirstWhitePlayer
+        )
     )
 }

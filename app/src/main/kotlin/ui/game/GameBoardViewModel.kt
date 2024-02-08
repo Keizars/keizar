@@ -121,6 +121,9 @@ interface GameBoardViewModel {
     @Stable
     val gameOverReadyToBeAnnounced: MutableStateFlow<Boolean>
 
+    @Stable
+    val canUndo: StateFlow<Boolean>
+
     // clicking
 
     /**
@@ -177,6 +180,8 @@ interface GameBoardViewModel {
     fun setEndRoundAnnouncement(flag: Boolean)
 
     fun setGameOverReadyToBeAnnouncement(flag: Boolean)
+
+    fun undo()
 }
 
 @Composable
@@ -323,6 +328,9 @@ sealed class BaseGameBoardViewModel(
 
     override val lastMoveIsDrag: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
+    // TODO game.canUndo
+    override val canUndo: StateFlow<Boolean> = MutableStateFlow(false)
+
     init {
         backgroundScope.launch {
             winner.collect { winner ->
@@ -441,6 +449,10 @@ sealed class BaseGameBoardViewModel(
 
     override fun setGameOverReadyToBeAnnouncement(flag: Boolean) {
         _gameOverReadyToBeAnnounced.value = flag
+    }
+
+    override fun undo() {
+        // game.undo() TODO
     }
 
 }
