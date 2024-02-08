@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization")
+    application
 }
 
 dependencies {
@@ -19,4 +20,8 @@ dependencies {
     implementation(libs.h2database)
     implementation(libs.ktor.server.call.logging)
     runtimeOnly(libs.slf4j.simple)
+}
+
+application {
+    mainClass.set("org.keizar.server.ApplicationKt")
 }

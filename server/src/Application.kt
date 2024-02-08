@@ -1,10 +1,16 @@
+@file:JvmName("ApplicationKt")
+
 package org.keizar.server
 
-import io.ktor.server.application.*
-import io.ktor.server.netty.*
-import io.ktor.server.engine.*
+import io.ktor.server.application.Application
+import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import org.keizar.server.plugins.*
+import io.ktor.server.netty.NettyApplicationEngine
+import org.keizar.server.plugins.configureDatabases
+import org.keizar.server.plugins.configureRouting
+import org.keizar.server.plugins.configureSecurity
+import org.keizar.server.plugins.configureSerialization
+import org.keizar.server.plugins.configureSockets
 import org.keizar.server.training.module
 
 fun main() {
