@@ -27,6 +27,7 @@ fun SinglePlayerGameScene(
             } else {
                 Player.FirstBlackPlayer
             },
+            difficulty = startConfiguration.difficulty,
         ),
         onClickHome = { navController.popBackStack("home", false) },
         onClickGameConfig = { navController.popBackStack("game/configuration", false) }

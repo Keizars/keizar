@@ -24,6 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -101,7 +102,10 @@ private fun GameConfigurationPage(
                 item { BoardLayoutPreview(vm) }
                 item { BoardSeedTextField(vm) }
                 item { PlayAsSelector(vm) }
-                item { DifficultySelector(vm) }
+                item {
+                    val selected by vm.difficulty.collectAsStateWithLifecycle(Difficulty.EASY)
+                    DifficultySelector(selected, setDifficulty = { vm.setDifficulty(it) })
+                }
                 item { Spacer(modifier = Modifier.height(16.dp)) }
             }
 
@@ -233,7 +237,10 @@ private fun PlayAsSelector(vm: GameConfigurationViewModel) {
 }
 
 @Composable
-private fun DifficultySelector(vm: GameConfigurationViewModel) {
+private fun DifficultySelector(
+    selected: Difficulty,
+    setDifficulty: (Difficulty) -> Unit,
+) {
     Text(
         text = "Difficulty",
         Modifier
@@ -247,31 +254,39 @@ private fun DifficultySelector(vm: GameConfigurationViewModel) {
             .padding(top = 4.dp)
             .fillMaxWidth()
     ) {
-        val selected by vm.difficulty.collectAsStateWithLifecycle(Difficulty.EASY)
         SegmentedButton(
             selected = selected == Difficulty.EASY,
-            onClick = { vm.setDifficulty(Difficulty.EASY) },
+            onClick = { setDifficulty(Difficulty.EASY) },
             shape = RoundedCornerShape(topStart = ROUND_CORNER_RADIUS, bottomStart = ROUND_CORNER_RADIUS),
         ) {
             Text("Easy")
         }
         SegmentedButton(
             selected = selected == Difficulty.MEDIUM,
-            onClick = { vm.setDifficulty(Difficulty.MEDIUM) },
+            onClick = { setDifficulty(Difficulty.MEDIUM) },
             shape = RectangleShape,
-            enabled = false,
+            enabled = true,
         ) {
             Text("Medium")
         }
         SegmentedButton(
             selected = selected == Difficulty.HARD,
-            onClick = { vm.setDifficulty(Difficulty.HARD) },
+            onClick = { setDifficulty(Difficulty.HARD) },
             shape = RoundedCornerShape(topEnd = ROUND_CORNER_RADIUS, bottomEnd = ROUND_CORNER_RADIUS),
             enabled = false,
+            colors = SegmentedButtonDefaults.colors(
+                disabledInactiveContentColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.38f),
+            )
         ) {
             Text("Hard")
         }
     }
+}
+
+@Preview
+@Composable
+private fun PreviewDifficultySelector() {
+    DifficultySelector(Difficulty.EASY) {}
 }
 
 @Stable
