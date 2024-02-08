@@ -16,13 +16,17 @@ interface GameRoomClient : AutoCloseable {
     suspend fun getRoom(roomNumber: UInt?): GameRoom
 
     companion object {
-        fun create(): GameRoomClient {
-            return GameRoomClientImpl()
+        fun create(
+            endpoint: String
+        ): GameRoomClient {
+            return GameRoomClientImpl(endpoint)
         }
     }
 }
 
-class GameRoomClientImpl: GameRoomClient {
+class GameRoomClientImpl(
+    private val endpoint: String
+) : GameRoomClient {
     private val client = HttpClient()
 
     override suspend fun createRoom(roomNumber: UInt?, seed: Int?): GameRoom {

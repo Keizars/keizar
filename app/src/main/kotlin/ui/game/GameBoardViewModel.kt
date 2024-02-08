@@ -212,7 +212,11 @@ class SinglePlayerGameBoardViewModel(
                 backgroundScope.coroutineContext
             )
 
-            else -> QTableAI(game, Player.entries.first { it != selfPlayer }, backgroundScope.coroutineContext)
+            else -> QTableAI(
+                game,
+                Player.entries.first { it != selfPlayer },
+                backgroundScope.coroutineContext,
+            )
         }
 
     init {

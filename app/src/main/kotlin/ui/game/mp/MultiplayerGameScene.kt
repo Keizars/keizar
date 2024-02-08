@@ -18,9 +18,12 @@ import org.keizar.android.ui.external.placeholder.placeholder
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.game.BaseGamePage
 import org.keizar.android.ui.game.MultiplayerGameBoardViewModel
-import org.keizar.client.GameRoomClient
+import org.keizar.client.KeizarClientFacade
 import org.keizar.client.RemoteGameSession
 import org.keizar.client.exception.NetworkFailureException
+import org.koin.mp.KoinPlatform
+
+private val clientFacade by KoinPlatform.getKoin().inject<KeizarClientFacade>()
 
 @Composable
 fun MultiplayerGamePage(
@@ -42,16 +45,14 @@ fun MultiplayerGamePage(
     DisposableEffect(roomId) {
         val job = backgroundScope.scope.launch {
             try {
-                GameRoomClient.create().use { client ->
-                    sessionFlow.emit(
-                        Result.success(
-                            RemoteGameSession.createAndConnect(
-                                client.getRoom(roomId),
-                                backgroundScope.scope.coroutineContext
-                            )
+                sessionFlow.emit(
+                    Result.success(
+                        clientFacade.createGameSession(
+                            roomId,
+                            backgroundScope.scope.coroutineContext
                         )
                     )
-                }
+                )
             } catch (e: Throwable) {
                 sessionFlow.emit(Result.failure(e))
                 throw e

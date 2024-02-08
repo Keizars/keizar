@@ -23,8 +23,9 @@ interface RemoteGameSession : GameSession {
         suspend fun createAndConnect(
             room: GameRoom,
             parentCoroutineContext: CoroutineContext,
+            endpoint: String,
         ): RemoteGameSession {
-            val gameRoomClient = GameSessionClientImpl(room.roomNumber, parentCoroutineContext)
+            val gameRoomClient = GameSessionClientImpl(room.roomNumber, parentCoroutineContext, endpoint)
             val game = GameSession.create(room.gameProperties) { ruleEngine ->
                 RemoteRoundSessionImpl(
                     RoundSessionImpl(ruleEngine),
@@ -41,8 +42,9 @@ interface RemoteGameSession : GameSession {
             room: GameRoom,
             parentCoroutineContext: CoroutineContext,
             snapshot: GameSnapshot,
+            endpoint: String,
         ): RemoteGameSession {
-            val gameRoomClient = GameSessionClientImpl(room.roomNumber, parentCoroutineContext)
+            val gameRoomClient = GameSessionClientImpl(room.roomNumber, parentCoroutineContext, endpoint)
             val game = GameSession.restore(snapshot) { ruleEngine ->
                 RemoteRoundSessionImpl(
                     RoundSessionImpl(ruleEngine),

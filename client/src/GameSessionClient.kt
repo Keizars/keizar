@@ -1,24 +1,26 @@
 package org.keizar.client
 
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
+import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.plugins.websocket.receiveDeserialized
+import io.ktor.client.plugins.websocket.sendSerialized
+import io.ktor.client.plugins.websocket.webSocket
+import io.ktor.serialization.WebsocketDeserializeException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import org.keizar.client.exception.NetworkFailureException
 import org.keizar.game.GameSession
 import org.keizar.game.Role
 import org.keizar.utils.communication.PlayerSessionState
-import kotlin.coroutines.CoroutineContext
-import io.ktor.client.*
-import io.ktor.client.plugins.websocket.*
-import io.ktor.http.*
-import io.ktor.serialization.WebsocketDeserializeException
-import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
-import org.keizar.client.exception.NetworkFailureException
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.message.ConfirmNextRound
@@ -27,6 +29,7 @@ import org.keizar.utils.communication.message.PlayerAllocation
 import org.keizar.utils.communication.message.Request
 import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.StateChange
+import kotlin.coroutines.CoroutineContext
 
 internal interface GameSessionClient {
     fun getCurrentRole(): StateFlow<Role>
@@ -42,6 +45,7 @@ internal interface GameSessionClient {
 internal class GameSessionClientImpl(
     private val roomNumber: UInt,
     parentCoroutineContext: CoroutineContext,
+    private val endpoint: String,
 ) : GameSessionClient {
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
@@ -86,10 +90,7 @@ internal class GameSessionClientImpl(
 
     private suspend fun serverConnection() {
         client.webSocket(
-            method = HttpMethod.Get,
-            host = "127.0.0.1",
-            port = 80,
-            path = "/room/$roomNumber"
+            urlString = "$endpoint/room/$roomNumber",
         ) {
             myCoroutineScope.launch { messageInflow() }
             myCoroutineScope.launch { messageOutflow() }

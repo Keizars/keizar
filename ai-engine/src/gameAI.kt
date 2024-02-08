@@ -9,6 +9,7 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType.Application
+import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
@@ -18,14 +19,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMap
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
 import org.keizar.game.GameSession
 import org.keizar.game.Move
 import org.keizar.game.Role
@@ -113,7 +111,8 @@ class QTableAI(
     override val game: GameSession = GameSession.create(0),
     override val myPlayer: Player,
     private val parentCoroutineContext: CoroutineContext,
-    private val test: Boolean = false
+    private val test: Boolean = false,
+    private val endpoint: String = "http://home.him188.moe:4393"
 ) : GameAI {
 
     private val client = HttpClient(CIO) {
@@ -166,30 +165,40 @@ class QTableAI(
 
         val blackPiece = round.getAllPiecesPos(Role.BLACK).first()
         val whitePiece = round.getAllPiecesPos(Role.WHITE).first()
-        val resp = client.post("http://192.168.1.130:10202/AI/" + if (role == Role.BLACK) "black" else "white") {
+        val resp = client.post {
+            url {
+                host = endpoint
+                appendPathSegments("AI", if (role == Role.BLACK) "black" else "white")
+            }
             contentType(Application.Json)
             setBody(buildJsonObject {
-                put("move", buildJsonArray { for (m in moves) {
-                    add(buildJsonArray {
-                        add(m.source.row)
-                        add(m.source.col)
-                        add(m.dest.row)
-                        add(m.dest.col)
-                        add(m.isCapture)
-                    })
-                } })
-                put("black_pieces", buildJsonArray { for (p in blackPiece) {
-                    add(buildJsonArray {
-                        add(p.row)
-                        add(p.col)
-                    })
-                } })
-                put("white_pieces", buildJsonArray { for (p in whitePiece) {
-                    add(buildJsonArray {
-                        add(p.row)
-                        add(p.col)
-                    })
-                } })
+                put("move", buildJsonArray {
+                    for (m in moves) {
+                        add(buildJsonArray {
+                            add(m.source.row)
+                            add(m.source.col)
+                            add(m.dest.row)
+                            add(m.dest.col)
+                            add(m.isCapture)
+                        })
+                    }
+                })
+                put("black_pieces", buildJsonArray {
+                    for (p in blackPiece) {
+                        add(buildJsonArray {
+                            add(p.row)
+                            add(p.col)
+                        })
+                    }
+                })
+                put("white_pieces", buildJsonArray {
+                    for (p in whitePiece) {
+                        add(buildJsonArray {
+                            add(p.row)
+                            add(p.col)
+                        })
+                    }
+                })
             })
         }
         val move = resp.body<List<Int>>()

@@ -7,7 +7,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
-import org.keizar.client.GameRoomClient
+import org.keizar.client.KeizarClientFacade
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 interface MatchViewModel : HasBackgroundScope {
     @Stable
@@ -27,8 +29,9 @@ interface MatchViewModel : HasBackgroundScope {
 
 fun MatchViewModel(): MatchViewModel = MatchViewModelImpl()
 
-internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel() {
-    private val client = GameRoomClient.create()
+internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinComponent {
+    private val keizarClientFacade by inject<KeizarClientFacade>()
+    private val client = keizarClientFacade.createRoomClient()
 
     override val joinRoomIdEditing: MutableStateFlow<String> = MutableStateFlow("")
 
