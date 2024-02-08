@@ -9,7 +9,7 @@ import org.keizar.server.routing.gameRoomRouting
 
 fun Application.configureRouting() {
     routing {
-        get("/") {
+        get("/status") {
             call.respondText("Server is running")
         }
     }
