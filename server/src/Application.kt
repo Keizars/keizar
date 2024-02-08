@@ -27,7 +27,7 @@ suspend fun runServer(block: suspend () -> Unit) {
 private fun getServer(): NettyApplicationEngine {
     return embeddedServer(
         Netty,
-        port = 80,
+        port = System.getenv("PORT")?.toInt() ?: 4392,
         host = "0.0.0.0",
         module = Application::module,
         configure = {
