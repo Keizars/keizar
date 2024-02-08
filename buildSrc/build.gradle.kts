@@ -8,6 +8,10 @@ repositories {
     gradlePluginPortal()
 }
 
+kotlin {
+    jvmToolchain(11)
+}
+
 kotlin.sourceSets.all {
     languageSettings {
         enableLanguageFeature("ContextReceivers")
