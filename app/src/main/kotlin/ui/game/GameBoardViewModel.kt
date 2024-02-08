@@ -329,7 +329,7 @@ sealed class BaseGameBoardViewModel(
     override val lastMoveIsDrag: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     // TODO game.canUndo
-    override val canUndo: StateFlow<Boolean> = MutableStateFlow(false)
+    override val canUndo: StateFlow<Boolean> = MutableStateFlow(true)
 
     init {
         backgroundScope.launch {

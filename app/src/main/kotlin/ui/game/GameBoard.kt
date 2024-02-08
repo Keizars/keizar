@@ -544,18 +544,24 @@ fun UndoButton(vm: GameBoardViewModel) {
     val canUndo by vm.canUndo.collectAsState()
     val winner by vm.winner.collectAsState()
 
-    Row (modifier = Modifier.padding(16.dp),
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically) {
-        Button(
-            onClick = { vm.undo() },
-            enabled = canUndo,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = if (canUndo && winner != null) MaterialTheme.colorScheme.primary else Color.LightGray,
-                contentColor = if (canUndo && winner != null) MaterialTheme.colorScheme.onPrimary else Color.Gray
-            )
+    if (winner == null) {
+        Row(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Undo")
+            Button(
+                onClick = { vm.undo() },
+                enabled = canUndo,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (canUndo) MaterialTheme.colorScheme.primary else Color.LightGray,
+                    contentColor = if (canUndo) MaterialTheme.colorScheme.onPrimary else Color.Gray
+                )
+            ) {
+                Text("Undo")
+            }
         }
     }
 }
