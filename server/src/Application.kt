@@ -11,7 +11,6 @@ import org.keizar.server.plugins.configureRouting
 import org.keizar.server.plugins.configureSecurity
 import org.keizar.server.plugins.configureSerialization
 import org.keizar.server.plugins.configureSockets
-import org.keizar.server.training.module
 
 fun main() {
     getServer().start(wait = true)
