@@ -1,6 +1,16 @@
 package org.keizar.aiengine
 
 
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.engine.cio.CIO
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.Logging
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.http.ContentType.Application
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
@@ -8,9 +18,16 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMap
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.add
+import kotlinx.serialization.json.buildJsonArray
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.keizar.game.GameSession
+import org.keizar.game.Move
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import org.keizar.utils.communication.game.BoardPos
@@ -93,11 +110,18 @@ class RandomGameAIImpl(
 }
 
 class QTableAI(
-    override val game: GameSession,
+    override val game: GameSession = GameSession.create(0),
     override val myPlayer: Player,
     private val parentCoroutineContext: CoroutineContext,
     private val test: Boolean = false
 ) : GameAI {
+
+    private val client = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json()
+        }
+        Logging()
+    }
 
     private val myCoroutine: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
@@ -134,10 +158,42 @@ class QTableAI(
     }
 
     override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos> {
-        val allPieces = round.getAllPiecesPos(role).first()
-        //TODO: 向server发送请求，获取当前的最佳move
-        val move = null
-        return Pair(allPieces[0], allPieces[1])
+        val moves = round.getAllPiecesPos(role).first().flatMap { source ->
+            round.getAvailableTargets(source).first().map { dest ->
+                Move(source, dest, round.pieceAt(dest) != null)
+            }
+        }
+
+        val blackPiece = round.getAllPiecesPos(Role.BLACK).first()
+        val whitePiece = round.getAllPiecesPos(Role.WHITE).first()
+        val resp = client.post("http://192.168.1.130:10202/AI/" + if (role == Role.BLACK) "black" else "white") {
+            contentType(Application.Json)
+            setBody(buildJsonObject {
+                put("move", buildJsonArray { for (m in moves) {
+                    add(buildJsonArray {
+                        add(m.source.row)
+                        add(m.source.col)
+                        add(m.dest.row)
+                        add(m.dest.col)
+                        add(m.isCapture)
+                    })
+                } })
+                put("black_pieces", buildJsonArray { for (p in blackPiece) {
+                    add(buildJsonArray {
+                        add(p.row)
+                        add(p.col)
+                    })
+                } })
+                put("white_pieces", buildJsonArray { for (p in whitePiece) {
+                    add(buildJsonArray {
+                        add(p.row)
+                        add(p.col)
+                    })
+                } })
+            })
+        }
+        val move = resp.body<List<Int>>()
+        return BoardPos(move[0], move[1]) to BoardPos(move[2], move[3])
     }
 
     override suspend fun end() {
