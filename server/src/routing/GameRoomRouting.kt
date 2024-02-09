@@ -51,6 +51,7 @@ fun Application.gameRoomRouting() {
 
             if (room.finished.value) {
                 logger.info("Destroying room $roomNumber")
+                gameRooms.remove(roomNumber)
                 room.close()
             }
         }
