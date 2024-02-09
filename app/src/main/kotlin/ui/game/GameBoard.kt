@@ -290,22 +290,22 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                                         vm.getRoundPieceCount(
                                             0,
                                             Role.WHITE
-                                        )
+                                        ).collectAsState().value
                                     }\n" +
                                     "   Black captured: ${
                                         vm.getRoundPieceCount(
                                             0,
                                             Role.BLACK
-                                        )
+                                        ).collectAsState().value
                                     }\n" +
                                     "Round 2 Winner: ${vm.round2Winner.collectAsState(null).value}\n" +
                                     "   White captured: ${
                                         vm.getRoundPieceCount(
                                             1,
                                             Role.WHITE
-                                        )
+                                        ).collectAsState().value
                                     }\n" +
-                                    "   Black captured: ${vm.getRoundPieceCount(1, Role.BLACK)}"
+                                    "   Black captured: ${vm.getRoundPieceCount(1, Role.BLACK).collectAsState().value}"
                         )
                     },
                     confirmButton = {
