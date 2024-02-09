@@ -8,6 +8,7 @@ import io.ktor.client.plugins.websocket.receiveDeserialized
 import io.ktor.client.plugins.websocket.sendSerialized
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.serialization.WebsocketDeserializeException
+import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 import org.keizar.client.exception.NetworkFailureException
 import org.keizar.game.GameSession
 import org.keizar.game.Role
@@ -57,7 +59,9 @@ internal class GameSessionClientImpl(
         install(ContentNegotiation) {
             json()
         }
-        install(WebSockets)
+        install(WebSockets) {
+            contentConverter = KotlinxWebsocketSerializationConverter(Json)
+        }
     }
 
     private val playerState: MutableStateFlow<PlayerSessionState> =
@@ -96,7 +100,7 @@ internal class GameSessionClientImpl(
 
     private suspend fun serverConnection() {
         client.webSocket(
-            urlString = "$endpoint/room/$roomNumber",
+            urlString = "ws:${endpoint.substringAfter(':')}/room/$roomNumber",
         ) {
             sendSerialized(UserInfo(username = "temp-username"))
             val inflow = myCoroutineScope.launch { messageInflow() }

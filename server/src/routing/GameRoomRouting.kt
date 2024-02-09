@@ -7,6 +7,7 @@ import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.*
+import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.receiveDeserialized
 import io.ktor.server.websocket.webSocket
 import kotlinx.coroutines.flow.first
