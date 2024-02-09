@@ -9,7 +9,6 @@ import org.keizar.game.Piece
 import org.keizar.game.Role
 import org.keizar.game.serialization.RoundSnapshot
 import org.keizar.utils.communication.game.BoardPos
-import java.rmi.UnexpectedException
 
 interface RuleEngine {
     val winningCounter: StateFlow<Int>
@@ -128,7 +127,7 @@ class RuleEngineImpl private constructor(
         for (repeat in 0..1) {
             val lastMove = movesLog.last()
             movesLog.removeLast()
-            if (!board.undo(lastMove.move)) throw UnexpectedException("Undo unexpectedly failed")
+            if (!board.undo(lastMove.move)) throw IllegalStateException("Undo unexpectedly failed")
             winningCounter.value = lastMove.counterValue
             redoBuffer.add(lastMove.move)
         }
