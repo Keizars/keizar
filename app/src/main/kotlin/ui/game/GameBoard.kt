@@ -315,8 +315,9 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
 
 
             is GameResult.Winner -> {
+                val winnerText = if (finalWinner.player == vm.selfPlayer) "win!" else "lose."
                 AlertDialog(onDismissRequest = {},
-                    title = { Text(text = "Game Over, ${finalWinner.player} wins!") },
+                    title = { Text(text = "Game Over, you $winnerText") },
                     confirmButton = {
                         Button(onClick = { vm.setGameOverReadyToBeAnnouncement(false) }) {
                             Text(text = "Ok")
