@@ -35,6 +35,8 @@ import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.StateChange
 import org.keizar.utils.communication.message.UserInfo
 import kotlin.coroutines.CoroutineContext
+import kotlin.random.Random
+import kotlin.random.nextUInt
 
 internal interface GameSessionClient {
     fun getCurrentRole(): StateFlow<Role>
@@ -102,7 +104,7 @@ internal class GameSessionClientImpl(
         client.webSocket(
             urlString = "ws:${endpoint.substringAfter(':')}/room/$roomNumber",
         ) {
-            sendSerialized(UserInfo(username = "temp-username"))
+            sendSerialized(UserInfo(username = "temp-username-${(Random.nextUInt() % 10000u).toInt()}"))
             val inflow = myCoroutineScope.launch { messageInflow() }
             val outflow = myCoroutineScope.launch { messageOutflow() }
             inflow.join()
