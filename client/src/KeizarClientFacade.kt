@@ -1,6 +1,5 @@
 package org.keizar.client
 
-import org.keizar.game.BoardProperties
 import kotlin.coroutines.CoroutineContext
 
 class KeizarClientFacade(
@@ -11,7 +10,7 @@ class KeizarClientFacade(
     }
 
     suspend fun createGameSession(roomNumber: UInt, parentCoroutineContext: CoroutineContext): RemoteGameSession {
-        val room = GameRoom(roomNumber, BoardProperties.getStandardProperties())
+        val room = GameRoomClient.create(endpoint).getRoom(roomNumber)
         return RemoteGameSession.createAndConnect(room, parentCoroutineContext = parentCoroutineContext, endpoint)
     }
 }

@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import org.keizar.game.BoardProperties
 import org.keizar.utils.communication.message.Exit
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.game.Player
@@ -26,10 +27,12 @@ interface GameRoom {
 
     val roomNumber: UInt
     val finished: StateFlow<Boolean>
+    val properties: BoardProperties
 }
 
 class GameRoomImpl(
     override val roomNumber: UInt,
+    override val properties: BoardProperties,
     parentCoroutineContext: CoroutineContext,
 ) : GameRoom {
     private val myCoroutineScope: CoroutineScope =

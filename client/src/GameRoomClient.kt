@@ -1,6 +1,16 @@
 package org.keizar.client
 
 import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
+import io.ktor.client.request.post
+import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.http.ContentType
+import io.ktor.http.HttpStatusCode
+import io.ktor.http.contentType
+import io.ktor.serialization.kotlinx.json.json
 import org.keizar.game.BoardProperties
 import kotlin.random.Random
 import kotlin.random.nextUInt
@@ -27,23 +37,37 @@ interface GameRoomClient : AutoCloseable {
 class GameRoomClientImpl(
     private val endpoint: String
 ) : GameRoomClient {
-    private val client = HttpClient()
+    private val client = HttpClient {
+        install(ContentNegotiation) {
+            json()
+        }
+    }
 
     override suspend fun createRoom(roomNumber: UInt?, seed: Int?): GameRoom {
-        val actualRoomNumber = roomNumber ?: Random.nextUInt()
         val actualSeed = seed ?: Random.nextInt()
-        // TODO: client post
-        return GameRoom(actualRoomNumber, BoardProperties.getStandardProperties(actualSeed))
+        val properties = BoardProperties.getStandardProperties(actualSeed)
+        return createRoom(roomNumber, properties)
     }
 
     override suspend fun createRoom(roomNumber: UInt?, boardProperties: BoardProperties): GameRoom {
         val actualRoomNumber = roomNumber ?: Random.nextUInt()
-        // TODO: client post
+        val respond: HttpResponse = client.post(urlString = "$endpoint/create/$actualRoomNumber") {
+            contentType(ContentType.Application.Json)
+            setBody(boardProperties)
+        }
+        if (respond.status != HttpStatusCode.OK) {
+            TODO("Handle exception")
+        }
         return GameRoom(actualRoomNumber, boardProperties)
     }
 
     override suspend fun getRoom(roomNumber: UInt?): GameRoom {
-        TODO("client get")
+        val actualRoomNumber = roomNumber ?: Random.nextUInt()
+        val respond: HttpResponse = client.get(urlString = "$endpoint/get/$actualRoomNumber")
+        if (respond.status != HttpStatusCode.OK) {
+            TODO("Handle exception")
+        }
+        return GameRoom(actualRoomNumber, respond.body())
     }
 
     override fun close() {
