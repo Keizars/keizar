@@ -25,6 +25,8 @@ interface MatchViewModel : HasBackgroundScope {
     val creatingRoom: MutableStateFlow<Boolean>
 
     suspend fun createSelfRoom()
+
+    fun removeSelfRoom()
 }
 
 fun MatchViewModel(): MatchViewModel = MatchViewModelImpl()
@@ -55,5 +57,9 @@ internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinCom
                 creatingRoom.value = false
             }
         }
+    }
+
+    override fun removeSelfRoom() {
+        selfRoomId.value = null
     }
 }

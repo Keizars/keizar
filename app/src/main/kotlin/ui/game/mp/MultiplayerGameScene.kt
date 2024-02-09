@@ -30,6 +30,7 @@ fun MultiplayerGamePage(
     roomId: UInt,
     goBack: () -> Unit,
     onClickHome: () -> Unit,
+    onClickGameConfig: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val backgroundScope = remember { CoroutineScopeOwner() }
@@ -91,7 +92,7 @@ fun MultiplayerGamePage(
                     MultiplayerGameBoardViewModel(it, p)
                 },
                 onClickHome = onClickHome,
-                onClickGameConfig = { },
+                onClickGameConfig = onClickGameConfig,
                 modifier
             )
         }

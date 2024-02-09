@@ -90,6 +90,10 @@ fun MainScreen() {
                         launchSingleTop = true
                     }
                 },
+                onClickGameConfig = {
+                    navController.navigate("game/lobby")
+                    matchViewModel.creatingRoom
+                },
                 Modifier.fillMaxSize()
             )
         }
