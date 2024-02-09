@@ -50,7 +50,7 @@ class GameRoomClientImpl(
     }
 
     override suspend fun createRoom(roomNumber: UInt?, boardProperties: BoardProperties): GameRoom {
-        val actualRoomNumber = roomNumber ?: Random.nextUInt()
+        val actualRoomNumber = roomNumber ?: Random.nextUInt(10000u, 99999u)
         val respond: HttpResponse = client.post(urlString = "$endpoint/room/create/$actualRoomNumber") {
             contentType(ContentType.Application.Json)
             setBody(boardProperties)
