@@ -7,10 +7,12 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
 import org.keizar.server.plugins.configureDatabases
-import org.keizar.server.plugins.configureRouting
+import org.keizar.server.plugins.configureMultiplayerRouting
 import org.keizar.server.plugins.configureSecurity
 import org.keizar.server.plugins.configureSerialization
 import org.keizar.server.plugins.configureSockets
+import org.keizar.server.training.plugins.configureTrainingRouting
+import org.keizar.server.training.setupServerContext
 
 fun main() {
     getServer().start(wait = true)
@@ -43,5 +45,7 @@ fun Application.module() {
     configureSerialization()
     configureDatabases()
     configureSockets()
-    configureRouting()
+    configureMultiplayerRouting()
+    val context = setupServerContext()
+    configureTrainingRouting(context)
 }

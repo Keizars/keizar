@@ -1,17 +1,20 @@
 package org.keizar.server.training.plugins
 
-import io.ktor.server.application.*
+import io.ktor.server.application.Application
+import io.ktor.server.application.call
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
+import io.ktor.server.response.respond
+import io.ktor.server.routing.post
+import io.ktor.server.routing.put
+import io.ktor.server.routing.routing
 import org.keizar.game.BoardProperties
-import org.keizar.server.training.RuleEngineAdaptor
-import org.keizar.server.training.ServerContext
 import org.keizar.game.Move
 import org.keizar.game.Role
+import org.keizar.server.training.RuleEngineAdaptor
+import org.keizar.server.training.ServerContext
 
-fun Application.configureRouting(context: ServerContext) {
+fun Application.configureTrainingRouting(context: ServerContext) {
     routing {
         put("/board/{seed}") {
             val seed = call.parameters["seed"]?.toIntOrNull()

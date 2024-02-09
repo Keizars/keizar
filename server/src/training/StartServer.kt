@@ -1,11 +1,12 @@
 package org.keizar.server.training
 
-import io.ktor.server.application.*
-import io.ktor.server.engine.*
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
+import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.callloging.CallLogging
-import org.keizar.server.training.plugins.configureRouting
 import org.keizar.server.training.plugins.configureSerialization
+import org.keizar.server.training.plugins.configureTrainingRouting
 
 fun main() {
     embeddedServer(
@@ -29,7 +30,7 @@ fun Application.module() {
     install(CallLogging)
 
     configureSerialization()
-    configureRouting(context)
+    configureTrainingRouting(context)
 }
 
 fun setupServerContext(): ServerContext {
