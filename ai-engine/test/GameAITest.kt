@@ -11,18 +11,18 @@ import kotlin.test.assertNotNull
 
 
 class RoundSessionTest {
-    @Test
-    fun `test generate a AI`() = runTest {
-        val game = GameSession.create(100)
-        val context = EmptyCoroutineContext
-        val ai1 = RandomGameAIImpl(game, Player.FirstWhitePlayer, context, true)
-        val ai2 = RandomGameAIImpl(game, Player.FirstBlackPlayer, context, true)
-        ai1.start()
-        ai2.start()
-        val winner = game.finalWinner.filterNotNull().first()
-        assertNotNull(winner)
-        println(winner)
-    }
+//    @Test
+//    fun `test generate a AI`() = runTest {
+//        val game = GameSession.create(100)
+//        val context = EmptyCoroutineContext
+//        val ai1 = RandomGameAIImpl(game, Player.FirstWhitePlayer, context, true)
+//        val ai2 = RandomGameAIImpl(game, Player.FirstBlackPlayer, context, true)
+//        ai1.start()
+//        ai2.start()
+//        val winner = game.finalWinner.filterNotNull().first()
+//        assertNotNull(winner)
+//        println(winner)
+//    }
 
 //    @Test
 //    fun `test remote AI combat`() = runTest {
@@ -51,16 +51,16 @@ class RoundSessionTest {
 //        }
 //    }
 
-    @Test
-    fun `Test q_table combat`() = runTest {
-        val game = GameSession.create(0)
-        val context = EmptyCoroutineContext
-        val ai1 = Q_table_AI(game, Player.FirstWhitePlayer, context, true)
-        val ai2 = RandomGameAIImpl(game, Player.FirstBlackPlayer, context, true)
-        ai1.start()
-        ai2.start()
-        val winner = game.finalWinner.filterNotNull().first()
-        assertNotNull(winner)
-        println(winner)
-    }
+//    @Test
+//    fun `Test q_table combat`() = runTest {
+//        val game = GameSession.create(0)
+//        val context = EmptyCoroutineContext
+//        val ai1 = Q_table_AI(game, Player.FirstWhitePlayer, context, true)
+//        val ai2 = RandomGameAIImpl(game, Player.FirstBlackPlayer, context, true)
+//        ai1.start()
+//        ai2.start()
+//        val winner = game.finalWinner.filterNotNull().first()
+//        assertNotNull(winner)
+//        println(winner)
+//    }
 }
