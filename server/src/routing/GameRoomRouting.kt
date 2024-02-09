@@ -83,7 +83,7 @@ fun Application.gameRoomRouting() {
                 throw NotFoundException("Room not found")
             }
             logger.info("Room $roomNumber fetch succeed")
-            call.respond(room.properties)
+            call.respond(Pair(room.properties, room.numPlayer))
         }
     }
 }

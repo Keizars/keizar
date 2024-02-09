@@ -31,6 +31,7 @@ interface GameRoom {
     val roomNumber: UInt
     val finished: StateFlow<Boolean>
     val properties: BoardProperties
+    val numPlayer: Int
 }
 
 class GameRoomImpl(
@@ -46,6 +47,8 @@ class GameRoomImpl(
 
     private val _finished: MutableStateFlow<Boolean> = MutableStateFlow(false)
     override val finished: StateFlow<Boolean> = _finished.asStateFlow()
+    override var numPlayer: Int = 0
+        private set
 
     init {
         myCoroutineScope.launch { waitForPlayers() }
@@ -62,7 +65,9 @@ class GameRoomImpl(
     private suspend fun waitForPlayers() {
         val player1 = players.receive()
         player1.setState(PlayerSessionState.WAITING)
+        ++numPlayer
         val player2 = players.receive()
+        ++numPlayer
         players.cancel()
         startGame(player1, player2)
         updateFinished(player1, player2)
