@@ -285,7 +285,7 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                     text = {
                         Text(
                             text = "Round 1:\n" +
-                                    "   Winner: ${vm.round1Winner.collectAsState(null)}\n" +
+                                    "   Winner: ${vm.round1Winner.collectAsState(null).value}\n" +
                                     "   White captured: ${
                                         vm.getRoundPieceCount(
                                             0,
@@ -298,7 +298,7 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                                             Role.BLACK
                                         )
                                     }\n" +
-                                    "Round 2 Winner: ${vm.round2Winner.collectAsState(null)}\n" +
+                                    "Round 2 Winner: ${vm.round2Winner.collectAsState(null).value}\n" +
                                     "   White captured: ${
                                         vm.getRoundPieceCount(
                                             1,
