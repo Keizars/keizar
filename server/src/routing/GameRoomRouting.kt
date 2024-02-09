@@ -1,5 +1,6 @@
 package org.keizar.server.routing
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.WebsocketDeserializeException
 import io.ktor.server.application.*
 import io.ktor.server.plugins.BadRequestException
@@ -60,12 +61,13 @@ fun Application.gameRoomRouting() {
             val properties = call.receive<BoardProperties>()
             logger.info("Creating room $roomNumber")
             val room = GameRoomImpl(roomNumber, properties, coroutineContext)
-            if (room != gameRooms.putIfAbsent(roomNumber, room)) {
+            if (gameRooms.putIfAbsent(roomNumber, room) != null) {
                 // Room already created
                 logger.info("Failure: room $roomNumber already created")
                 throw BadRequestException("Room already created")
             }
             logger.info("Room $roomNumber created")
+            call.respond(HttpStatusCode.OK)
         }
 
         get("/room/get/{roomNumber}") {
@@ -79,8 +81,8 @@ fun Application.gameRoomRouting() {
                 logger.info("Failure: room $roomNumber not found")
                 throw BadRequestException("Room not found")
             }
-            call.respond(room.properties)
             logger.info("Room $roomNumber fetch succeed")
+            call.respond(room.properties)
         }
     }
 }

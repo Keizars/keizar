@@ -1,12 +1,14 @@
 package org.keizar.client
 
 import io.ktor.client.HttpClient
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.receiveDeserialized
 import io.ktor.client.plugins.websocket.sendSerialized
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.serialization.WebsocketDeserializeException
+import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -29,6 +31,7 @@ import org.keizar.utils.communication.message.PlayerAllocation
 import org.keizar.utils.communication.message.Request
 import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.StateChange
+import org.keizar.utils.communication.message.UserInfo
 import kotlin.coroutines.CoroutineContext
 
 internal interface GameSessionClient {
@@ -51,6 +54,9 @@ internal class GameSessionClientImpl(
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
     private val client = HttpClient {
+        install(ContentNegotiation) {
+            json()
+        }
         install(WebSockets)
     }
 
@@ -92,8 +98,11 @@ internal class GameSessionClientImpl(
         client.webSocket(
             urlString = "$endpoint/room/$roomNumber",
         ) {
-            myCoroutineScope.launch { messageInflow() }
-            myCoroutineScope.launch { messageOutflow() }
+            sendSerialized(UserInfo(username = "temp-username"))
+            val inflow = myCoroutineScope.launch { messageInflow() }
+            val outflow = myCoroutineScope.launch { messageOutflow() }
+            inflow.join()
+            outflow.join()
         }
     }
 

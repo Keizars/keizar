@@ -51,7 +51,7 @@ class GameRoomClientImpl(
 
     override suspend fun createRoom(roomNumber: UInt?, boardProperties: BoardProperties): GameRoom {
         val actualRoomNumber = roomNumber ?: Random.nextUInt()
-        val respond: HttpResponse = client.post(urlString = "$endpoint/create/$actualRoomNumber") {
+        val respond: HttpResponse = client.post(urlString = "$endpoint/room/create/$actualRoomNumber") {
             contentType(ContentType.Application.Json)
             setBody(boardProperties)
         }
@@ -63,7 +63,7 @@ class GameRoomClientImpl(
 
     override suspend fun getRoom(roomNumber: UInt?): GameRoom {
         val actualRoomNumber = roomNumber ?: Random.nextUInt()
-        val respond: HttpResponse = client.get(urlString = "$endpoint/get/$actualRoomNumber")
+        val respond: HttpResponse = client.get(urlString = "$endpoint/room/get/$actualRoomNumber")
         if (respond.status != HttpStatusCode.OK) {
             TODO("Handle exception")
         }
