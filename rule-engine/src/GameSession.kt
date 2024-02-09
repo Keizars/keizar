@@ -50,7 +50,7 @@ interface GameSession {
     fun lostPieces(player: Player): Flow<Int>
 
     // The game will proceed to the next round only after both players call confirmNextRound().
-    fun confirmNextRound(player: Player): Boolean
+    suspend fun confirmNextRound(player: Player): Boolean
 
     // Return a serializable snapshot of the GameSession that can be restored to a GameSession
     // by GameSession.restore().
@@ -217,7 +217,7 @@ class GameSessionImpl(
         }
     }
 
-    override fun confirmNextRound(player: Player): Boolean {
+    override suspend fun confirmNextRound(player: Player): Boolean {
         if (currentRoundNo.value >= properties.rounds) return false
         if (nextRoundAgreement[player.ordinal]) return false
         nextRoundAgreement[player.ordinal] = true

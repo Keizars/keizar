@@ -84,14 +84,17 @@ fun MultiplayerGamePage(
     }
 
     session?.getOrNull()?.let {
-        BaseGamePage(
-            remember {
-                MultiplayerGameBoardViewModel(it, it.player)
-            },
-            onClickHome = onClickHome,
-            onClickGameConfig = { },
-            modifier
-        )
+        val player by it.player.collectAsStateWithLifecycle(initialValue = null)
+        player?.let { p ->
+            BaseGamePage(
+                remember {
+                    MultiplayerGameBoardViewModel(it, p)
+                },
+                onClickHome = onClickHome,
+                onClickGameConfig = { },
+                modifier
+            )
+        }
     } ?: run {
         Box(
             modifier = Modifier

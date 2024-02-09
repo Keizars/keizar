@@ -2,15 +2,17 @@ package org.keizar.client
 
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.receiveDeserialized
 import io.ktor.client.plugins.websocket.sendSerialized
-import io.ktor.client.plugins.websocket.webSocket
+import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.serialization.WebsocketDeserializeException
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
@@ -42,7 +44,7 @@ import kotlin.random.nextUInt
 internal interface GameSessionClient {
     fun getCurrentRole(): StateFlow<Role>
     fun getPlayerState(): Flow<PlayerSessionState>
-    fun getPlayer(): Player
+    suspend fun getPlayer(): Player
     fun bind(session: GameSession)
     fun sendConfirmNextRound()
     fun sendMove(from: BoardPos, to: BoardPos)
@@ -70,13 +72,14 @@ internal class GameSessionClientImpl(
         install(WebSockets) {
             contentConverter = KotlinxWebsocketSerializationConverter(ClientJson)
         }
+        Logging()
     }
 
     private val playerState: MutableStateFlow<PlayerSessionState> =
         MutableStateFlow(PlayerSessionState.STARTED)
 
     private lateinit var gameSession: GameSession
-    private lateinit var player: Player
+    private val player: CompletableDeferred<Player> = CompletableDeferred()
     private val currentRole: MutableStateFlow<Role> = MutableStateFlow(Role.WHITE)
 
     private val outflowChannel: Channel<Request> = Channel()
@@ -107,14 +110,14 @@ internal class GameSessionClientImpl(
     }
 
     private suspend fun serverConnection() {
-        client.webSocket(
+        val session = client.webSocketSession(
             urlString = "ws:${endpoint.substringAfter(':')}/room/$roomNumber",
-        ) {
-            sendSerialized(UserInfo(username = "temp-username-${(Random.nextUInt() % 10000u).toInt()}"))
-            val inflow = myCoroutineScope.launch { messageInflow() }
-            val outflow = myCoroutineScope.launch { messageOutflow() }
-            inflow.join()
-            outflow.join()
+        )
+
+        myCoroutineScope.launch {
+            session.sendSerialized(UserInfo(username = "temp-username-${(Random.nextUInt() % 10000u).toInt()}"))
+            session.messageInflow()
+            session.messageOutflow()
         }
     }
 
@@ -136,8 +139,8 @@ internal class GameSessionClientImpl(
 //                    .let { ClientJson.decodeFromString(Respond.serializer(), it) }
                 when (val respond = receiveDeserialized<Respond>()) {
                     is StateChange -> playerState.value = respond.newState
-                    is PlayerAllocation -> player = respond.who
-                    ConfirmNextRound -> gameSession.confirmNextRound(player.opponent())
+                    is PlayerAllocation -> player.complete(respond.who)
+                    ConfirmNextRound -> gameSession.confirmNextRound(player.await().opponent())
                     is Move -> {
                         gameSession.currentRound.first().move(respond.from, respond.to)
                     }
@@ -158,8 +161,8 @@ internal class GameSessionClientImpl(
 
     // Note: initialization of Player's value is only guaranteed after playerState becomes PLAYING.
     // TODO: improve this
-    override fun getPlayer(): Player {
-        return player
+    override suspend fun getPlayer(): Player {
+        return player.await()
     }
 
     override fun bind(session: GameSession) {

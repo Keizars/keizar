@@ -3,6 +3,7 @@ package org.keizar.client
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
@@ -41,6 +42,7 @@ class GameRoomClientImpl(
         install(ContentNegotiation) {
             json()
         }
+        Logging()
     }
 
     override suspend fun createRoom(roomNumber: UInt?, seed: Int?): GameRoom {
