@@ -101,7 +101,7 @@ fun GameBoard(
                 Modifier.fillMaxWidth()
             )
 
-            UndoButton(vm)
+            // UndoButton(vm)
         }
 
         DialogsAndBottomBar(vm, onClickHome, onClickGameConfig)
