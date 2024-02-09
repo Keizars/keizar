@@ -115,7 +115,8 @@ internal class GameSessionClientImpl(
         )
 
         myCoroutineScope.launch {
-            session.sendRequest(UserInfo(username = "temp-username-${(Random.nextUInt() % 10000u).toInt()}"))
+            // don't use sendRequest
+            session.sendSerialized(UserInfo(username = "temp-username-${(Random.nextUInt() % 10000u).toInt()}"))
             session.messageInflow()
             session.messageOutflow()
         }
