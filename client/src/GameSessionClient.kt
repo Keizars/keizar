@@ -114,10 +114,13 @@ internal class GameSessionClientImpl(
             urlString = "ws:${endpoint.substringAfter(':')}/room/$roomNumber",
         )
 
+        // don't use sendRequest
+        session.sendSerialized(UserInfo(username = "temp-username-${(Random.nextUInt() % 10000u).toInt()}"))
+
         myCoroutineScope.launch {
-            // don't use sendRequest
-            session.sendSerialized(UserInfo(username = "temp-username-${(Random.nextUInt() % 10000u).toInt()}"))
             session.messageInflow()
+        }
+        myCoroutineScope.launch {
             session.messageOutflow()
         }
     }

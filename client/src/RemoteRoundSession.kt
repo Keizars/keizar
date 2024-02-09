@@ -24,7 +24,7 @@ class RemoteRoundSessionImpl internal constructor(
 
     // Note: Only call this when state has changed to PLAYING
     override suspend fun move(from: BoardPos, to: BoardPos): Boolean {
-        if (round.pieceAt(from) != curRole.value) return false
+//        if (round.pieceAt(from) != curRole.value) return false
         return round.move(from, to).also {
             if (it) gameSessionClient.sendMove(from, to)
         }
