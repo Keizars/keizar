@@ -10,7 +10,7 @@ import org.keizar.server.routing.gameRoomRouting
 fun Application.configureMultiplayerRouting() {
     routing {
         get("/status") {
-            call.respondText("Server is running")
+            call.respondText("Server is running 2")
         }
     }
     gameRoomRouting()
