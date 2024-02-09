@@ -92,7 +92,7 @@ fun MainScreen() {
                 },
                 onClickGameConfig = {
                     navController.navigate("game/lobby")
-                    matchViewModel.creatingRoom
+                    matchViewModel.removeSelfRoom()
                 },
                 Modifier.fillMaxSize()
             )
