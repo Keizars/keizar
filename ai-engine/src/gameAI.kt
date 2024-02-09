@@ -9,7 +9,6 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType.Application
-import io.ktor.http.appendPathSegments
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
@@ -165,11 +164,9 @@ class QTableAI(
 
         val blackPiece = round.getAllPiecesPos(Role.BLACK).first()
         val whitePiece = round.getAllPiecesPos(Role.WHITE).first()
-        val resp = client.post {
-            url {
-                host = endpoint
-                appendPathSegments("AI", if (role == Role.BLACK) "black" else "white")
-            }
+        val resp = client.post(
+            endpoint + "/AI/" + if (role == Role.BLACK) "black" else "white"
+        ) {
             contentType(Application.Json)
             setBody(buildJsonObject {
                 put("move", buildJsonArray {
