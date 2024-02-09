@@ -12,11 +12,14 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.serialization.Serializable
 import org.keizar.game.BoardProperties
 import kotlin.random.Random
 import kotlin.random.nextUInt
 
+data class GameRoom(
+    val roomNumber: UInt,
+    val gameProperties: BoardProperties,
+)
 
 interface GameRoomClient : AutoCloseable {
     suspend fun createRoom(roomNumber: UInt? = null, seed: Int? = null): GameRoom
@@ -57,7 +60,7 @@ class GameRoomClientImpl(
         if (respond.status != HttpStatusCode.OK) {
             TODO("Handle exception")
         }
-        return GameRoom(actualRoomNumber, boardProperties, 0)
+        return GameRoom(actualRoomNumber, boardProperties)
     }
 
     override suspend fun getRoom(roomNumber: UInt): GameRoom {
@@ -65,8 +68,7 @@ class GameRoomClientImpl(
         if (respond.status != HttpStatusCode.OK) {
             TODO("Handle exception")
         }
-        val body = respond.body<Pair<BoardProperties, Int>>()
-        return GameRoom(roomNumber, body.first, body.second)
+        return GameRoom(roomNumber, respond.body())
     }
 
     override fun close() {
