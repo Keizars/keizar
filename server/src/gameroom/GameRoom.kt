@@ -1,6 +1,7 @@
 package org.keizar.server.gameroom
 
 import io.ktor.serialization.WebsocketDeserializeException
+import io.ktor.server.websocket.DefaultWebSocketServerSession
 import io.ktor.server.websocket.receiveDeserialized
 import io.ktor.server.websocket.sendSerialized
 import kotlinx.coroutines.CoroutineScope
@@ -13,11 +14,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.keizar.game.BoardProperties
-import org.keizar.utils.communication.message.Exit
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.game.Player
+import org.keizar.utils.communication.message.Exit
 import org.keizar.utils.communication.message.PlayerAllocation
 import org.keizar.utils.communication.message.Request
+import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.StateChange
 import kotlin.coroutines.CoroutineContext
 
@@ -85,7 +87,7 @@ class GameRoomImpl(
     }
 
     private suspend fun notifyPlayerAllocation(player: PlayerSession, allocation: Player) {
-        player.session.sendSerialized(PlayerAllocation(allocation))
+        player.session.sendRespond(PlayerAllocation(allocation))
     }
 
     private suspend fun forwardMessages(from: PlayerSession, to: PlayerSession) {
@@ -96,7 +98,7 @@ class GameRoomImpl(
                     from.setState(PlayerSessionState.TERMINATING)
                     return
                 }
-                to.session.sendSerialized(message)
+                to.session.sendRequest(message)
             } catch (e: WebsocketDeserializeException) {
                 // ignore
             }
@@ -105,7 +107,15 @@ class GameRoomImpl(
 
     private suspend fun notifyStateChange(player: PlayerSession) {
         player.state.collect { newState ->
-            player.session.sendSerialized(StateChange(newState))
+            player.session.sendRespond(StateChange(newState))
         }
     }
+}
+
+suspend inline fun DefaultWebSocketServerSession.sendRespond(message: Respond) {
+    sendSerialized(message)
+}
+
+suspend inline fun DefaultWebSocketServerSession.sendRequest(message: Request) {
+    sendSerialized(message)
 }

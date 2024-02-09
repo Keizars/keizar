@@ -24,6 +24,7 @@ import kotlinx.serialization.json.Json
 import org.keizar.client.exception.NetworkFailureException
 import org.keizar.game.GameSession
 import org.keizar.game.Role
+import org.keizar.utils.communication.CommunicationModule
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
@@ -49,6 +50,11 @@ internal interface GameSessionClient {
     suspend fun connect()
 }
 
+val ClientJson = Json {
+    ignoreUnknownKeys = true
+    serializersModule = CommunicationModule
+}
+
 internal class GameSessionClientImpl(
     private val roomNumber: UInt,
     parentCoroutineContext: CoroutineContext,
@@ -59,10 +65,10 @@ internal class GameSessionClientImpl(
 
     private val client = HttpClient {
         install(ContentNegotiation) {
-            json()
+            json(ClientJson)
         }
         install(WebSockets) {
-            contentConverter = KotlinxWebsocketSerializationConverter(Json)
+            contentConverter = KotlinxWebsocketSerializationConverter(ClientJson)
         }
     }
 
@@ -126,6 +132,8 @@ internal class GameSessionClientImpl(
     private suspend fun DefaultClientWebSocketSession.messageInflow() {
         while (true) {
             try {
+//                val respond = incoming.receive().readBytes().decodeToString()
+//                    .let { ClientJson.decodeFromString(Respond.serializer(), it) }
                 when (val respond = receiveDeserialized<Respond>()) {
                     is StateChange -> playerState.value = respond.newState
                     is PlayerAllocation -> player = respond.who
