@@ -61,7 +61,7 @@ fun Application.gameRoomRouting() {
 
             val properties = call.receive<BoardProperties>()
             logger.info("Creating room $roomNumber")
-            val room = GameRoomImpl(roomNumber, properties, coroutineContext)
+            val room = GameRoomImpl(roomNumber, properties, coroutineContext, logger)
             if (gameRooms.putIfAbsent(roomNumber, room) != null) {
                 // Room already created
                 logger.info("Failure: room $roomNumber already created")

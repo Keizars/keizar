@@ -21,6 +21,7 @@ import org.keizar.utils.communication.message.PlayerAllocation
 import org.keizar.utils.communication.message.Request
 import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.StateChange
+import org.slf4j.Logger
 import kotlin.coroutines.CoroutineContext
 
 interface GameRoom {
@@ -36,6 +37,7 @@ class GameRoomImpl(
     override val roomNumber: UInt,
     override val properties: BoardProperties,
     parentCoroutineContext: CoroutineContext,
+    private val logger: Logger,
 ) : GameRoom {
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
@@ -94,11 +96,14 @@ class GameRoomImpl(
         while (true) {
             try {
                 val message = from.session.receiveDeserialized<Request>()
+                logger.info("Received request $message from $from")
                 if (message == Exit) {
                     from.setState(PlayerSessionState.TERMINATING)
+                    logger.info("$from exiting")
                     return
                 }
                 to.session.sendRequest(message)
+                logger.info("Forwarded request $message to $to")
             } catch (e: WebsocketDeserializeException) {
                 // ignore
             }
