@@ -101,7 +101,7 @@ fun GameBoard(
                 Modifier.fillMaxWidth()
             )
 
-            // UndoButton(vm)
+            UndoButton(vm)
         }
 
         DialogsAndBottomBar(vm, onClickHome, onClickGameConfig)
@@ -539,7 +539,7 @@ fun UndoButton(vm: GameBoardViewModel) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(
-                onClick = { vm.undo() },
+                onClick = {vm.undo()},
                 enabled = canUndo,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (canUndo) MaterialTheme.colorScheme.primary else Color.LightGray,

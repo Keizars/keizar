@@ -5,6 +5,7 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.DpOffset
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
@@ -355,8 +356,7 @@ sealed class BaseGameBoardViewModel(
 
     override val lastMoveIsDrag: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
-    // TODO game.canUndo
-    override val canUndo: StateFlow<Boolean> = MutableStateFlow(true)
+    override val canUndo: StateFlow<Boolean> = game.currentRound.flatMapLatest { it.canUndo }.stateInBackground(false)
 
     init {
         backgroundScope.launch {
@@ -479,7 +479,11 @@ sealed class BaseGameBoardViewModel(
     }
 
     override fun undo() {
-        // game.undo() TODO
+        viewModelScope.launch {
+            currentRound.collect { roundSession ->
+                roundSession.undo(selfRole.value)
+            }
+        }
     }
 
 }
