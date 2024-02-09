@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.keizar.game.BoardProperties
 import org.keizar.game.Move
+import org.keizar.game.MoveCountered
 import org.keizar.game.Piece
 import org.keizar.game.Role
 import org.keizar.game.serialization.RoundSnapshot
@@ -32,7 +33,7 @@ class RuleEngineImpl private constructor(
     private val boardProperties: BoardProperties,
     private val board: Board,
 
-    private val movesLog: MutableList<Move>,
+    private val movesLog: MutableList<MoveCountered>,
     override val winningCounter: MutableStateFlow<Int>,
     override val curRole: MutableStateFlow<Role>,
     override val winner: MutableStateFlow<Role?>,
@@ -46,7 +47,7 @@ class RuleEngineImpl private constructor(
         board = Board(
             boardProperties, ruleEngineCore
         ),
-        movesLog = mutableListOf<Move>(),
+        movesLog = mutableListOf<MoveCountered>(),
         winningCounter = MutableStateFlow(0),
         curRole = MutableStateFlow(boardProperties.startingRole),
         winner = MutableStateFlow(null),
@@ -76,7 +77,7 @@ class RuleEngineImpl private constructor(
         }
 
         val move = board.move(source, dest)
-        movesLog.add(move)
+        movesLog.add(MoveCountered(move, winningCounter.value))
         canUndo.value = movesLog.size >= 2
         updateLostPieces(move)
         updateWinningCounter(move)
@@ -122,13 +123,14 @@ class RuleEngineImpl private constructor(
     override fun undo(role: Role): Boolean {
         if (movesLog.size < 2) return false
         // only allow undo if the last move is made by opponent
-        if (pieceAt(movesLog.last().dest) != role.other()) return false
+        if (pieceAt(movesLog.last().move.dest) != role.other()) return false
 
         for (repeat in 0..1) {
             val lastMove = movesLog.last()
             movesLog.removeLast()
-            if (!board.undo(lastMove)) throw UnexpectedException("Undo unexpectedly failed")
-            redoBuffer.add(lastMove)
+            if (!board.undo(lastMove.move)) throw UnexpectedException("Undo unexpectedly failed")
+            winningCounter.value = lastMove.counterValue
+            redoBuffer.add(lastMove.move)
         }
         canUndo.value = movesLog.size >= 2
         canRedo.value = redoBuffer.size >= 2

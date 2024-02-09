@@ -39,6 +39,12 @@ class Move(
     }
 }
 
+@Serializable
+data class MoveCountered(
+    val move: Move,
+    val counterValue: Int, // the value of the winning counter *before* the move
+)
+
 interface Piece {
     val index: Int
     val role: Role
