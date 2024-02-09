@@ -115,7 +115,7 @@ internal class GameSessionClientImpl(
         )
 
         myCoroutineScope.launch {
-            session.sendSerialized(UserInfo(username = "temp-username-${(Random.nextUInt() % 10000u).toInt()}"))
+            session.sendRequest(UserInfo(username = "temp-username-${(Random.nextUInt() % 10000u).toInt()}"))
             session.messageInflow()
             session.messageOutflow()
         }
@@ -180,4 +180,12 @@ internal class GameSessionClientImpl(
             outflowChannel.send(Move(from, to))
         }
     }
+}
+
+suspend inline fun DefaultClientWebSocketSession.sendRespond(message: Respond) {
+    sendSerialized(message)
+}
+
+suspend inline fun DefaultClientWebSocketSession.sendRequest(message: Request) {
+    sendSerialized(message)
 }
