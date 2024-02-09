@@ -43,8 +43,13 @@ private fun getServer(): NettyApplicationEngine {
 }
 
 fun Application.module() {
-    install(CallLogging)
-    
+    install(CallLogging) {
+        mdc("requestId") {
+            it.request.queryParameters["requestId"]
+        }
+        level = org.slf4j.event.Level.INFO
+    }
+
     configureSecurity()
     configureSerialization()
     configureDatabases()
