@@ -55,7 +55,7 @@ class RoundSessionTest {
 //    fun `Test q_table combat`() = runTest {
 //        val game = GameSession.create(0)
 //        val context = EmptyCoroutineContext
-//        val ai1 = Q_table_AI(game, Player.FirstWhitePlayer, context, true)
+//        val ai1 = QTableAI(game, Player.FirstWhitePlayer, context, true)
 //        val ai2 = RandomGameAIImpl(game, Player.FirstBlackPlayer, context, true)
 //        ai1.start()
 //        ai2.start()

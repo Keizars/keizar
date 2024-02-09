@@ -14,6 +14,8 @@ interface RoundSession {
     val winner: StateFlow<Role?>
     val winningCounter: StateFlow<Int>
     val curRole: StateFlow<Role>
+    val canUndo: StateFlow<Boolean>
+    val canRedo: StateFlow<Boolean>
 
     // undo/redo: only available when playing against computer.
     // Players can only undo in their own turn before they make a move.
@@ -50,6 +52,10 @@ class RoundSessionImpl(
     override val winningCounter: StateFlow<Int> = ruleEngine.winningCounter
 
     override val curRole: StateFlow<Role> = ruleEngine.curRole
+
+    override val canUndo: StateFlow<Boolean> = ruleEngine.canUndo
+
+    override val canRedo: StateFlow<Boolean> = ruleEngine.canRedo
 
     override suspend fun undo(role: Role): Boolean {
         return ruleEngine.undo(role)

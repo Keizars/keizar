@@ -15,6 +15,8 @@ interface RuleEngine {
     val curRole: StateFlow<Role>
     val winner: StateFlow<Role?>
     val pieces: List<Piece>
+    val canRedo: StateFlow<Boolean>
+    val canUndo: StateFlow<Boolean>
 
     fun showPossibleMoves(pos: BoardPos): List<BoardPos>
     fun move(source: BoardPos, dest: BoardPos): Boolean
@@ -55,6 +57,8 @@ class RuleEngineImpl private constructor(
     )
 
     override val pieces: List<Piece> = board.pieces
+    override val canRedo: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    override val canUndo: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     override fun showPossibleMoves(pos: BoardPos): List<BoardPos> {
         return board.pieceAt(pos)?.let { board.showValidMoves(it) } ?: listOf()
@@ -66,10 +70,14 @@ class RuleEngineImpl private constructor(
             return false
         }
 
-        if (clearRedoBuffer) redoBuffer.clear()
+        if (clearRedoBuffer) {
+            redoBuffer.clear()
+            canRedo.value = false
+        }
 
         val move = board.move(source, dest)
         movesLog.add(move)
+        canUndo.value = movesLog.size >= 2
         updateLostPieces(move)
         updateWinningCounter(move)
         curRole.value = curRole.value.other()
@@ -102,6 +110,9 @@ class RuleEngineImpl private constructor(
     override fun reset() {
         board.resetPieces()
         movesLog.clear()
+        redoBuffer.clear()
+        canUndo.value = false
+        canRedo.value = false
         winningCounter.value = 0
         curRole.value = boardProperties.startingRole
         winner.value = null
@@ -119,6 +130,8 @@ class RuleEngineImpl private constructor(
             if (!board.undo(lastMove)) throw UnexpectedException("Undo unexpectedly failed")
             redoBuffer.add(lastMove)
         }
+        canUndo.value = movesLog.size >= 2
+        canRedo.value = redoBuffer.size >= 2
         return true
     }
 
@@ -132,6 +145,7 @@ class RuleEngineImpl private constructor(
             redoBuffer.removeLast()
             move(nextMove.source, nextMove.dest, clearRedoBuffer = false)
         }
+        canRedo.value = redoBuffer.size >= 2
         return true
     }
 
