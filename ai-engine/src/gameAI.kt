@@ -164,6 +164,7 @@ class QTableAI(
 
         val blackPiece = round.getAllPiecesPos(Role.BLACK).first()
         val whitePiece = round.getAllPiecesPos(Role.WHITE).first()
+        val seed = game.properties.seed
         val resp = client.post(
             endpoint + "/AI/" + if (role == Role.BLACK) "black" else "white"
         ) {
@@ -196,6 +197,7 @@ class QTableAI(
                         })
                     }
                 })
+                put("seed", buildJsonArray { add(seed) })
             })
         }
         val move = resp.body<List<Int>>()
