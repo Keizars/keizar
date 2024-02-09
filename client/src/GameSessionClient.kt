@@ -126,7 +126,7 @@ internal class GameSessionClientImpl(
         while (true) {
             try {
                 val request = outflowChannel.receive()
-                println("Sending request $request to server")
+                println("Client sending: $request")
                 sendSerialized(request)
             } catch (e: CancellationException) {
                 // ignore
@@ -140,7 +140,7 @@ internal class GameSessionClientImpl(
 //                val respond = incoming.receive().readBytes().decodeToString()
 //                    .let { ClientJson.decodeFromString(Respond.serializer(), it) }
                 val respond = receiveDeserialized<Respond>()
-                println("Receiving respond $respond from server")
+                println("Client received: $respond")
                 when (respond) {
                     is StateChange -> playerState.value = respond.newState
                     is PlayerAllocation -> player.complete(respond.who)

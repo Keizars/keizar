@@ -112,6 +112,7 @@ class GameRoomImpl(
 
     private suspend fun notifyStateChange(player: PlayerSession) {
         player.state.collect { newState ->
+            println("notifyStateChange: $newState")
             player.session.sendRespond(StateChange(newState))
         }
     }
