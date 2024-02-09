@@ -4,10 +4,10 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.WebsocketDeserializeException
 import io.ktor.server.application.*
 import io.ktor.server.plugins.BadRequestException
+import io.ktor.server.plugins.NotFoundException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.*
-import io.ktor.server.websocket.WebSockets
 import io.ktor.server.websocket.receiveDeserialized
 import io.ktor.server.websocket.webSocket
 import kotlinx.coroutines.flow.first
@@ -22,7 +22,6 @@ import java.util.concurrent.ConcurrentMap
 
 fun Application.gameRoomRouting() {
     val logger = log
-    val coroutineContext = this.coroutineContext
     routing {
         val gameRooms: ConcurrentMap<UInt, GameRoom> = ConcurrentHashMap()
         webSocket("/room/{roomNumber}") {
@@ -36,7 +35,7 @@ fun Application.gameRoomRouting() {
 
             logger.info("$username connecting to room $roomNumber")
 
-            val room = gameRooms[roomNumber] ?: throw BadRequestException("Room $roomNumber not found")
+            val room = gameRooms[roomNumber] ?: throw NotFoundException("Room $roomNumber not found")
             val player = PlayerSessionImpl(this)
             if (!room.addPlayer(player)) {
                 throw BadRequestException("Room $roomNumber is full")
@@ -81,7 +80,7 @@ fun Application.gameRoomRouting() {
             if (room == null) {
                 // Room not found
                 logger.info("Failure: room $roomNumber not found")
-                throw BadRequestException("Room not found")
+                throw NotFoundException("Room not found")
             }
             logger.info("Room $roomNumber fetch succeed")
             call.respond(room.properties)

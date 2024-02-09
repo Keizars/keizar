@@ -5,7 +5,7 @@ import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
 
-@Serializable
+
 sealed interface Message
 
 @Serializable
