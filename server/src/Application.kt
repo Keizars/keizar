@@ -3,9 +3,11 @@
 package org.keizar.server
 
 import io.ktor.server.application.Application
+import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
+import io.ktor.server.plugins.callloging.CallLogging
 import org.keizar.server.plugins.configureDatabases
 import org.keizar.server.plugins.configureMultiplayerRouting
 import org.keizar.server.plugins.configureSecurity
@@ -41,6 +43,8 @@ private fun getServer(): NettyApplicationEngine {
 }
 
 fun Application.module() {
+    install(CallLogging)
+    
     configureSecurity()
     configureSerialization()
     configureDatabases()
