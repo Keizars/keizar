@@ -23,7 +23,7 @@ data class GameRoom(
 interface GameRoomClient : AutoCloseable {
     suspend fun createRoom(roomNumber: UInt? = null, seed: Int? = null): GameRoom
     suspend fun createRoom(roomNumber: UInt? = null, boardProperties: BoardProperties): GameRoom
-    suspend fun getRoom(roomNumber: UInt?): GameRoom
+    suspend fun getRoom(roomNumber: UInt): GameRoom
 
     companion object {
         fun create(
@@ -61,13 +61,12 @@ class GameRoomClientImpl(
         return GameRoom(actualRoomNumber, boardProperties)
     }
 
-    override suspend fun getRoom(roomNumber: UInt?): GameRoom {
-        val actualRoomNumber = roomNumber ?: Random.nextUInt()
-        val respond: HttpResponse = client.get(urlString = "$endpoint/room/get/$actualRoomNumber")
+    override suspend fun getRoom(roomNumber: UInt): GameRoom {
+        val respond: HttpResponse = client.get(urlString = "$endpoint/room/get/$roomNumber")
         if (respond.status != HttpStatusCode.OK) {
             TODO("Handle exception")
         }
-        return GameRoom(actualRoomNumber, respond.body())
+        return GameRoom(roomNumber, respond.body())
     }
 
     override fun close() {
