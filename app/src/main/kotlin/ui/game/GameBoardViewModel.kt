@@ -126,6 +126,9 @@ interface GameBoardViewModel {
     @Stable
     val canUndo: StateFlow<Boolean>
 
+    @Stable
+    val isMultiplayer: Boolean
+
     // clicking
 
     /**
@@ -245,6 +248,7 @@ class MultiplayerGameBoardViewModel(
             difficulty = Difficulty.EASY,
             layoutSeed = boardProperties.seed ?: 0,
         )
+    override val isMultiplayer: Boolean = true
 }
 
 @Suppress("LeakingThis")
@@ -357,6 +361,8 @@ sealed class BaseGameBoardViewModel(
     override val lastMoveIsDrag: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     override val canUndo: StateFlow<Boolean> = game.currentRound.flatMapLatest { it.canUndo }.stateInBackground(false)
+
+    override val isMultiplayer: Boolean = false
 
     init {
         backgroundScope.launch {

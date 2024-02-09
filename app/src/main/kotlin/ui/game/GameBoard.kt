@@ -101,7 +101,9 @@ fun GameBoard(
                 Modifier.fillMaxWidth()
             )
 
-            UndoButton(vm)
+            if (!vm.isMultiplayer) {
+                UndoButton(vm)
+            }
         }
 
         DialogsAndBottomBar(vm, onClickHome, onClickGameConfig)
