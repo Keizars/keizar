@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.keizar.utils.communication.game.BoardPos
@@ -54,18 +55,20 @@ class RoundSessionTest {
         assertEquals(0, round.getLostPiecesCount(Role.BLACK).value)
 
         assertTrue(round.move(BoardPos("f2"), BoardPos("f4")))
-        assertTrue(round.move(BoardPos("e7"), BoardPos("e5")))
-        assertTrue(round.move(BoardPos("f4"), BoardPos("e5")))
-
-        assertEquals(0, round.getLostPiecesCount(Role.WHITE).value)
-        assertEquals(1, round.getLostPiecesCount(Role.BLACK).value)
-
-        assertTrue(round.move(BoardPos("d7"), BoardPos("d6")))
-        assertTrue(round.move(BoardPos("e5"), BoardPos("d6")))
-        assertTrue(round.move(BoardPos("c7"), BoardPos("d6")))
+        assertTrue(round.move(BoardPos("e7"), BoardPos("e6")))
+        assertTrue(round.move(BoardPos("f4"), BoardPos("f5")))
+        assertTrue(round.move(BoardPos("e6"), BoardPos("f5")))
 
         assertEquals(1, round.getLostPiecesCount(Role.WHITE).value)
-        assertEquals(2, round.getLostPiecesCount(Role.BLACK).value)
+        assertEquals(0, round.getLostPiecesCount(Role.BLACK).value)
+
+        assertTrue(round.move(BoardPos("g2"), BoardPos("g4")))
+        assertTrue(round.move(BoardPos("g7"), BoardPos("g6")))
+        assertTrue(round.move(BoardPos("g4"), BoardPos("f5")))
+        assertTrue(round.move(BoardPos("g6"), BoardPos("f5")))
+
+        assertEquals(2, round.getLostPiecesCount(Role.WHITE).value)
+        assertEquals(1, round.getLostPiecesCount(Role.BLACK).value)
     }
 
     @Test
@@ -130,13 +133,14 @@ class RoundSessionTest {
             round.getAllPiecesPos(Role.WHITE).last().toSet(),
         )
 
-        assertTrue(round.move(BoardPos("e7"), BoardPos("e5")))
-        assertTrue(round.move(BoardPos("f4"), BoardPos("e5")))
+        assertTrue(round.move(BoardPos("e7"), BoardPos("e6")))
+        assertTrue(round.move(BoardPos("f4"), BoardPos("f5")))
+        assertTrue(round.move(BoardPos("e6"), BoardPos("f5")))
 
         assertEquals(
             setOf(
                 "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
-                "a2", "b2", "c2", "d2", "e2", "g2", "h2", "e5"
+                "a2", "b2", "c2", "d2", "e2", "g2", "h2",
             ).map { BoardPos.fromString(it) }.toSet(),
             round.getAllPiecesPos(Role.WHITE).last().toSet(),
         )
@@ -144,7 +148,7 @@ class RoundSessionTest {
         assertEquals(
             setOf(
                 "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
-                "a7", "b7", "c7", "d7", "f7", "g7", "h7",
+                "a7", "b7", "c7", "d7", "f7", "g7", "h7", "f5",
             ).map { BoardPos.fromString(it) }.toSet(),
             round.getAllPiecesPos(Role.BLACK).last().toSet(),
         )
@@ -169,13 +173,14 @@ class RoundSessionTest {
             pieces.filter { it.role == Role.WHITE }.map { it.pos.value }.toSet(),
         )
 
-        assertTrue(round.move(BoardPos("e7"), BoardPos("e5")))
-        assertTrue(round.move(BoardPos("f4"), BoardPos("e5")))
+        assertTrue(round.move(BoardPos("e7"), BoardPos("e6")))
+        assertTrue(round.move(BoardPos("f4"), BoardPos("f5")))
+        assertTrue(round.move(BoardPos("e6"), BoardPos("f5")))
 
         assertEquals(
             setOf(
                 "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
-                "a2", "b2", "c2", "d2", "e2", "g2", "h2", "e5"
+                "a2", "b2", "c2", "d2", "e2", "g2", "h2",
             ).map { BoardPos.fromString(it) }.toSet(),
             pieces.filter { it.role == Role.WHITE && !it.isCaptured.value }.map { it.pos.value }
                 .toSet(),
@@ -184,10 +189,94 @@ class RoundSessionTest {
         assertEquals(
             setOf(
                 "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
-                "a7", "b7", "c7", "d7", "f7", "g7", "h7",
+                "a7", "b7", "c7", "d7", "f7", "g7", "h7", "f5",
             ).map { BoardPos.fromString(it) }.toSet(),
             pieces.filter { it.role == Role.BLACK && !it.isCaptured.value }.map { it.pos.value }
                 .toSet(),
         )
+    }
+
+    @Test
+    fun `test undo`() = runTest {
+        val game = GameSession.create(0)
+        val round = game.currentRound.first()
+        val pieces = round.pieces
+
+        assertFalse(round.undo(Role.WHITE))
+
+        assertTrue(round.move(BoardPos("f2"), BoardPos("f4")))
+        assertFalse(round.undo(Role.WHITE))
+
+        assertTrue(round.move(BoardPos("e7"), BoardPos("e6")))
+        assertTrue(round.move(BoardPos("f4"), BoardPos("f5")))
+        assertFalse(round.undo(Role.WHITE))
+
+        assertTrue(round.move(BoardPos("e6"), BoardPos("f5")))
+        assertTrue(round.undo(Role.WHITE))
+
+        assertEquals(
+            setOf(
+                "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+                "a2", "b2", "c2", "d2", "e2", "f4", "g2", "h2"
+            ).map { BoardPos.fromString(it) }.toSet(),
+            pieces.filter { it.role == Role.WHITE && !it.isCaptured.value }.map { it.pos.value }
+                .toSet(),
+        )
+
+        assertEquals(
+            setOf(
+                "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
+                "a7", "b7", "c7", "d7", "e6", "f7", "g7", "h7",
+            ).map { BoardPos.fromString(it) }.toSet(),
+            pieces.filter { it.role == Role.BLACK && !it.isCaptured.value }.map { it.pos.value }
+                .toSet(),
+        )
+    }
+
+    @Test
+    fun `test redo`() = runTest {
+        val game = GameSession.create(0)
+        val round = game.currentRound.first()
+        val pieces = round.pieces
+
+        assertFalse(round.undo(Role.WHITE))
+        assertFalse(round.redo(Role.WHITE))
+
+        assertTrue(round.move(BoardPos("f2"), BoardPos("f4")))
+        assertFalse(round.undo(Role.WHITE))
+
+        assertTrue(round.move(BoardPos("e7"), BoardPos("e6")))
+        assertTrue(round.move(BoardPos("f4"), BoardPos("f5")))
+        assertFalse(round.undo(Role.WHITE))
+
+        assertTrue(round.move(BoardPos("e6"), BoardPos("f5")))
+        assertTrue(round.undo(Role.WHITE))
+        assertTrue(round.redo(Role.WHITE))
+
+        assertEquals(
+            setOf(
+                "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+                "a2", "b2", "c2", "d2", "e2", "g2", "h2"
+            ).map { BoardPos.fromString(it) }.toSet(),
+            pieces.filter { it.role == Role.WHITE && !it.isCaptured.value }.map { it.pos.value }
+                .toSet(),
+        )
+
+        assertEquals(
+            setOf(
+                "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
+                "a7", "b7", "c7", "d7", "f5", "f7", "g7", "h7",
+            ).map { BoardPos.fromString(it) }.toSet(),
+            pieces.filter { it.role == Role.BLACK && !it.isCaptured.value }.map { it.pos.value }
+                .toSet(),
+        )
+
+        assertTrue(round.move(BoardPos("a2"), BoardPos("a3")))
+        assertTrue(round.undo(Role.BLACK))
+        assertTrue(round.undo(Role.BLACK))
+        assertTrue(round.redo(Role.BLACK))
+
+        assertTrue(round.move(BoardPos("e6"), BoardPos("f5")))
+        assertFalse(round.redo(Role.WHITE))
     }
 }

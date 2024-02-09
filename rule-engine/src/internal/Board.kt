@@ -118,4 +118,23 @@ class Board(
     fun getAllPiecesPos(role: Role): List<BoardPos> {
         return _pieces.filter { it.role == role && !it.isCaptured.value }.map { it.pos.value }
     }
+
+    fun undo(move: Move): Boolean {
+        val targetPiece = pieceAt(move.dest) ?: return false
+        if (pieceAt(move.source) != null) return false
+
+        if (!move.isCapture) {
+            tileAt(move.dest).piece = null
+        } else {
+            val recoveredPiece = _pieces.firstOrNull {
+                it.role == targetPiece.role.other() && it.pos.value == move.dest && it.isCaptured.value
+            } ?: return false
+            recoveredPiece.isCaptured.value = false
+            tileAt(move.dest).piece = recoveredPiece.asPiece()
+        }
+
+        _pieces[targetPiece.index].pos.value = move.source
+        tileAt(move.source).piece = targetPiece
+        return true
+    }
 }

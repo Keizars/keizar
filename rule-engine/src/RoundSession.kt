@@ -15,8 +15,15 @@ interface RoundSession {
     val winningCounter: StateFlow<Int>
     val curRole: StateFlow<Role>
 
-    suspend fun undo(): Boolean
-    suspend fun redo(): Boolean
+    // undo/redo: only available when playing against computer.
+    // Players can only undo in their own turn before they make a move.
+    // If they do so, the game returns to the state before the player makes their previous move
+    // i.e. undo 2 turns, one computer turn and one player turn.
+    suspend fun undo(role: Role): Boolean
+
+    // Upon redo, the player recovers their own move and also the computer move right after it
+    // i.e. redo 2 turns, one player turn and one computer turn.
+    suspend fun redo(role: Role): Boolean
 
     fun getAvailableTargets(from: BoardPos): Flow<List<BoardPos>>
     fun getAllPiecesPos(role: Role): Flow<List<BoardPos>>
@@ -44,14 +51,12 @@ class RoundSessionImpl(
 
     override val curRole: StateFlow<Role> = ruleEngine.curRole
 
-    override suspend fun undo(): Boolean {
-        // TODO("Not yet implemented")
-        return true
+    override suspend fun undo(role: Role): Boolean {
+        return ruleEngine.undo(role)
     }
 
-    override suspend fun redo(): Boolean {
-        // TODO("Not yet implemented")
-        return true
+    override suspend fun redo(role: Role): Boolean {
+        return ruleEngine.redo(role)
     }
 
     override fun getAvailableTargets(from: BoardPos): Flow<List<BoardPos>> {
