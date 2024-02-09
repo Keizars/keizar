@@ -68,9 +68,9 @@ class RuleEngineTest {
         assertEquals(ruleEngine.pieceAt(BoardPos("c2")), null)
         assertEquals(ruleEngine.pieceAt(BoardPos("c4")), Role.WHITE)
 
-        assertTrue(ruleEngine.move(BoardPos("e7"), BoardPos("e5")))
+        assertTrue(ruleEngine.move(BoardPos("e7"), BoardPos("e6")))
         assertEquals(ruleEngine.pieceAt(BoardPos("e7")), null)
-        assertEquals(ruleEngine.pieceAt(BoardPos("e5")), Role.BLACK)
+        assertEquals(ruleEngine.pieceAt(BoardPos("e6")), Role.BLACK)
 
         assertTrue(ruleEngine.move(BoardPos("h2"), BoardPos("h3")))
         assertEquals(ruleEngine.pieceAt(BoardPos("h2")), null)
