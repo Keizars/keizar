@@ -142,7 +142,7 @@ private fun PlayWithFriendsSection(
             OutlinedTextField(
                 value = roomId,
                 onValueChange = { vm.setJoinRoomId(it) },
-                label = { Text("Join Their Room") },
+                label = { Text("Join Room") },
                 shape = RoundedCornerShape(12.dp),
                 keyboardActions = KeyboardActions {
                     onJoinRoom(roomId)
