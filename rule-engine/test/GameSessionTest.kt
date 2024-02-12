@@ -5,6 +5,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.keizar.game.snapshot.GameSnapshotBuilder
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
@@ -418,5 +419,34 @@ class GameSessionTest {
         assertEquals(1, game.wonRounds(Player.FirstBlackPlayer).first())
         assertEquals(Player.FirstBlackPlayer, game.getRoundWinner(0).first())
         assertEquals(Player.FirstWhitePlayer, game.getRoundWinner(1).first())
+    }
+
+    @Test
+    fun `test game ends when no piece can move`() = runTest {
+        val gameSnapshot = GameSnapshotBuilder {
+            properties(prototype = BoardPropertiesPrototypes.Plain) {
+                tiles {
+                    change(BoardPos("c3") to TileType.QUEEN)
+                }
+            }
+
+            val curRound = round {
+                curRole { Role.BLACK }
+                pieces {
+                    clear()
+                    add(Role.WHITE, BoardPos("a4"))
+                    add(Role.BLACK, BoardPos("a6"))
+                }
+            }
+
+            round {}
+            setCurRound(curRound)
+        }.build()
+
+        val game = GameSession.restore(gameSnapshot)
+        val round = game.currentRound.first()
+
+        round.move(BoardPos("a6"), BoardPos("a5"))
+        assertEquals(Role.BLACK, round.winner.value)
     }
 }

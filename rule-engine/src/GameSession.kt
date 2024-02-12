@@ -159,8 +159,7 @@ class GameSessionImpl(
     private val agreementCounter: AtomicInteger = AtomicInteger(0)
 
     init {
-        rounds = (0..properties.rounds).map {
-            // allocate one more RoundSession as a dummy session after the game ends
+        rounds = (0..<properties.rounds).map {
             roundSessionConstructor(it)
         }
         currentRound = currentRoundNo.map { rounds[it] }

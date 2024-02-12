@@ -1,6 +1,7 @@
 package org.keizar.game.snapshot
 
 import org.keizar.game.AbstractBoardProperties
+import org.keizar.game.BoardProperties
 import org.keizar.game.BoardPropertiesBuilder
 import org.keizar.game.BoardPropertiesPrototypes
 import org.keizar.game.Role
@@ -28,19 +29,19 @@ class GameSnapshotBuilder private constructor(
     )
 
     fun properties(
-        prototype: AbstractBoardProperties = BoardPropertiesPrototypes.Plain,
+        prototype: AbstractBoardProperties,
         instructions: BoardPropertiesBuilder.() -> Unit,
     ) {
         properties = BoardPropertiesBuilder(prototype, instructions)
     }
 
     fun round(instructions: RoundSnapshotBuilder.() -> Unit): RoundSnapshotBuilder {
-        val round = RoundSnapshotBuilder(instructions)
+        val round = RoundSnapshotBuilder(properties, instructions)
         rounds.add(round)
         return round
     }
 
-    fun curRound(round: RoundSnapshotBuilder) {
+    fun setCurRound(round: RoundSnapshotBuilder) {
         this.currentRoundNo = rounds.indexOfFirst { it == round }
         if (this.currentRoundNo == -1) error("Unexpected RoundSnapshotBuilder")
     }
@@ -60,7 +61,8 @@ class GameSnapshotBuilder private constructor(
         ): GameSnapshotBuilder {
             return GameSnapshotBuilder(
                 BoardPropertiesBuilder(prototype = snapshot.properties),
-                snapshot.rounds.map { RoundSnapshotBuilder.from(it) }.toMutableList(),
+                snapshot.rounds.map { RoundSnapshotBuilder.from(snapshot.properties, it) }
+                    .toMutableList(),
                 snapshot.currentRoundNo,
                 instructions
             )
@@ -70,6 +72,7 @@ class GameSnapshotBuilder private constructor(
 
 @GameSnapshotDslMarker
 class RoundSnapshotBuilder private constructor(
+    private val properties: BoardPropertiesBuilder,
     private var winningCounter: Int,
     private var curRole: Role,
     private var winner: Role?,
@@ -80,11 +83,15 @@ class RoundSnapshotBuilder private constructor(
         this.apply(instructions)
     }
 
-    constructor(instructions: RoundSnapshotBuilder.() -> Unit) : this(
+    constructor(
+        properties: BoardPropertiesBuilder,
+        instructions: RoundSnapshotBuilder.() -> Unit
+    ) : this(
+        properties = properties,
         winningCounter = 0,
         curRole = Role.WHITE,
         winner = null,
-        pieces = PiecesBuilder(),
+        pieces = PiecesBuilder(properties),
         instructions = instructions,
     )
 
@@ -108,29 +115,39 @@ class RoundSnapshotBuilder private constructor(
         this.winningCounter = snapshot.winningCounter
         this.curRole = snapshot.curRole
         this.winner = snapshot.winner
-        this.pieces = PiecesBuilder { prototype(snapshot.pieces) }
+        this.pieces = PiecesBuilder(properties) { prototype(snapshot.pieces) }
     }
 
     fun pieces(instructions: PiecesBuilder.() -> Unit) {
-        this.pieces = PiecesBuilder(instructions)
+        this.pieces = PiecesBuilder(properties, instructions)
     }
 
     @GameSnapshotDslMarker
     class PiecesBuilder(
+        properties: BoardPropertiesBuilder,
         instructions: PiecesBuilder.() -> Unit = {},
     ) {
         private var pieces: MutableList<PieceSnapshot>
         private var curIndex: Int
 
         init {
+            val initialPoses = properties.getPiecesStartingPoses()
             pieces = mutableListOf()
             curIndex = 0
+            initialPoses.forEach { (role, boardPoses) ->
+                boardPoses.forEach { add(role, it) }
+            }
             this.apply(instructions)
         }
 
         fun prototype(prototype: List<PieceSnapshot>) {
             pieces = prototype.toMutableList()
             curIndex = prototype.lastIndex + 1
+        }
+
+        fun clear() {
+            pieces = mutableListOf()
+            curIndex = 0
         }
 
         fun add(role: Role, pos: BoardPos, isCaptured: Boolean = false) {
@@ -148,10 +165,11 @@ class RoundSnapshotBuilder private constructor(
 
     companion object {
         fun from(
+            properties: BoardProperties,
             snapshot: RoundSnapshot,
             instructions: RoundSnapshotBuilder.() -> Unit = {},
         ): RoundSnapshotBuilder {
-            return RoundSnapshotBuilder {
+            return RoundSnapshotBuilder(BoardPropertiesBuilder(properties)) {
                 prototype(snapshot)
                 this.apply(instructions)
             }

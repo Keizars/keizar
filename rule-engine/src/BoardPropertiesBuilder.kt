@@ -46,6 +46,10 @@ class BoardPropertiesBuilder private constructor(
         this.rounds = rounds()
     }
 
+    fun getPiecesStartingPoses(): Map<Role, List<BoardPos>> {
+        return piecesStartingPos
+    }
+
     fun piecesStartingPos(piecesStartingPos: () -> MutableMap<Role, List<BoardPos>>) {
         this.piecesStartingPos = piecesStartingPos()
     }
@@ -59,31 +63,39 @@ class BoardPropertiesBuilder private constructor(
         instructions: TileArrangementBuilder.() -> Unit = {},
     ) {
         private var seed: Int?
-        private var tileArrangement: Map<BoardPos, TileType>
+        private var tileArrangement: MutableMap<BoardPos, TileType>
 
         init {
             seed = null
-            tileArrangement = BoardPropertiesPrototypes.Plain.tileArrangement
+            tileArrangement = BoardPropertiesPrototypes.Plain.tileArrangement.toMutableMap()
             this.apply(instructions)
         }
 
         fun plain() {
-            this.tileArrangement = BoardPropertiesPrototypes.Plain.tileArrangement
+            this.tileArrangement = BoardPropertiesPrototypes.Plain.tileArrangement.toMutableMap()
         }
 
         fun standard(seed: () -> Int) {
             this.seed = seed()
             this.tileArrangement =
-                BoardPropertiesPrototypes.Standard(seed()).tileArrangement
+                BoardPropertiesPrototypes.Standard(seed()).tileArrangement.toMutableMap()
         }
 
         fun prototype(prototype: () -> AbstractBoardProperties) {
             this.seed = prototype().seed
-            this.tileArrangement = prototype().tileArrangement
+            this.tileArrangement = prototype().tileArrangement.toMutableMap()
         }
 
         fun factory(constraints: StandardTileArrangementFactory.() -> Unit) {
-            this.tileArrangement = StandardTileArrangementFactory(constraints).build()
+            this.tileArrangement = StandardTileArrangementFactory(constraints).build().toMutableMap()
+        }
+
+        fun change(pos: BoardPos, type: TileType) {
+            tileArrangement[pos] = type
+        }
+
+        fun change(pair: Pair<BoardPos, TileType>) {
+            tileArrangement[pair.first] = pair.second
         }
 
         fun build(): Pair<Map<BoardPos, TileType>, Int?> {
