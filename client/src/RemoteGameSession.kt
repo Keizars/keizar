@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.keizar.game.GameSession
 import org.keizar.game.RoundSessionImpl
-import org.keizar.game.serialization.GameSnapshot
+import org.keizar.game.snapshot.GameSnapshot
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.game.Player
 import kotlin.coroutines.CoroutineContext

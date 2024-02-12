@@ -1,4 +1,4 @@
-package org.keizar.game.serialization
+package org.keizar.game.snapshot
 
 import kotlinx.serialization.Serializable
 import org.keizar.game.BoardProperties

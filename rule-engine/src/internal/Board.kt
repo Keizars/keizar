@@ -8,7 +8,7 @@ import org.keizar.game.Piece
 import org.keizar.game.Role
 import org.keizar.game.TileType
 import org.keizar.game.asPiece
-import org.keizar.game.serialization.PieceSnapshot
+import org.keizar.game.snapshot.PieceSnapshot
 import org.keizar.utils.communication.game.BoardPos
 
 class Tile(val type: TileType) {

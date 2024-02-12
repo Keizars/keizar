@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.map
 import org.keizar.game.internal.RuleEngine
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
-import org.keizar.game.serialization.GameSnapshot
+import org.keizar.game.snapshot.GameSnapshot
 import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
 import java.util.concurrent.atomic.AtomicInteger

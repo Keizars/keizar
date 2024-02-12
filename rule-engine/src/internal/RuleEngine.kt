@@ -7,7 +7,7 @@ import org.keizar.game.Move
 import org.keizar.game.MoveCountered
 import org.keizar.game.Piece
 import org.keizar.game.Role
-import org.keizar.game.serialization.RoundSnapshot
+import org.keizar.game.snapshot.RoundSnapshot
 import org.keizar.utils.communication.game.BoardPos
 
 interface RuleEngine {
