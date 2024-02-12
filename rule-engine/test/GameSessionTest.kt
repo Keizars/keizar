@@ -446,7 +446,7 @@ class GameSessionTest {
         val game = GameSession.restore(gameSnapshot)
         val round = game.currentRound.first()
 
-        round.move(BoardPos("a6"), BoardPos("a5"))
+        assertTrue(round.move(BoardPos("a6"), BoardPos("a5")))
         assertEquals(Role.BLACK, round.winner.value)
     }
 }
