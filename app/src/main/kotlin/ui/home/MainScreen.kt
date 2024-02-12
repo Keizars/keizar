@@ -133,7 +133,7 @@ fun HomePage(navController: NavController) {
 
             // Multiplayer Button
             Button(onClick = { navController.navigate("game/lobby") }, modifier = Modifier.width(170.dp)) {
-                Text("Multiplayer")
+                Text("2 Players")
             }
 
             // Saved game Button
