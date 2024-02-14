@@ -2,6 +2,7 @@ package org.keizar.android.ui.foundation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import org.keizar.android.ui.KeizarApp
 import org.keizar.client.KeizarClientFacade
 import org.koin.core.context.GlobalContext
 import org.koin.dsl.module
@@ -17,6 +18,8 @@ fun ProvideCompositionalLocalsForPreview(block: @Composable () -> Unit) {
     }
 
     CompositionLocalProvider {
-        block()
+        KeizarApp {
+            block()
+        }
     }
 }
