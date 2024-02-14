@@ -51,7 +51,7 @@ class MultiplayerRoomViewModel(
     val playersReady = flow {
         while (currentCoroutineContext().isActive) {
             emit(client.getRoom(roomId).playersReady)
-            delay(5.seconds)
+            delay(2.seconds)
         }
     }.flowOn(Dispatchers.IO)
         .distinctUntilChanged()
