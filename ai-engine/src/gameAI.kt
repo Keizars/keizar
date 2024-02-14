@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.add
 import kotlinx.serialization.json.buildJsonArray
@@ -57,18 +58,16 @@ class RandomGameAIImpl(
 
     override fun start() {
         myCoroutine.launch {
-            game.currentRound.flatMapLatest { it.winner }.collect {
-                combine(game.currentRole(myPlayer), game.currentRound) { myRole, session ->
-                    myRole to session
-                }.collectLatest { (myRole, session) ->
-                    session.curRole.collect { currentRole ->
-                        if (myRole == currentRole) {
-                            val bestPos = findBestMove(session, currentRole)
-                            if (!test) {
-                                delay(Random.nextLong(1000L..1500L))
-                            }
-                            session.move(bestPos.first, bestPos.second)
+            game.currentRole(myPlayer).zip(game.currentRound) { myRole, session ->
+                myRole to session
+            }.collectLatest { (myRole, session) ->
+                session.curRole.collect { currentRole ->
+                    if (myRole == currentRole) {
+                        val bestPos = findBestMove(session, currentRole)
+                        if (!test) {
+                            delay(Random.nextLong(1000L..1500L))
                         }
+                        session.move(bestPos.first, bestPos.second)
                     }
                 }
             }
@@ -78,9 +77,6 @@ class RandomGameAIImpl(
             game.currentRound.flatMapLatest { it.winner }.collect {
                 if (it != null) {
                     game.confirmNextRound(myPlayer)
-                }
-                if (!test) {
-                    delay(Random.nextLong(1000L..1500L))
                 }
             }
         }

@@ -518,4 +518,32 @@ class GameSessionTest {
         // set current round to the second round
         assertEquals(1, game.currentRoundNo.first())
     }
+
+    @Test
+    fun `test game ends when no piece can move 2`() = runTest {
+        val gameSnapshot = GameSnapshotBuilder {
+            properties(prototype = BoardPropertiesPrototypes.Plain) {
+            }
+
+                val curRound = round {
+                    curRole { Role.BLACK }
+                    resetPieces {
+                        white("a8")
+                        black("a2")
+                    }
+                }
+            round {}
+            setCurRound(curRound)
+        }.build()
+
+        val game = GameSession.restore(gameSnapshot)
+        val round = game.currentRound.first()
+        val whitePieces = round.getAllPiecesPos(Role.WHITE).first()
+        val whiteMoves = whitePieces.flatMap { round.getAvailableTargets(it).first() }
+        assertTrue(whiteMoves.isEmpty())
+        assertTrue(round.move(BoardPos("a2"), BoardPos("a1")))
+        assertEquals(Role.BLACK, round.winner.value)
+    }
+
+
 }
