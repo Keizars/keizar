@@ -448,4 +448,43 @@ class GameSessionTest {
         assertTrue(round.move(BoardPos("a6"), BoardPos("a5")))
         assertEquals(Role.BLACK, round.winner.value)
     }
+
+    @Test
+    fun `test 2 round ends and it's a draw`() = runTest {
+        val gameSnapshot = GameSnapshotBuilder {
+            properties(prototype = BoardPropertiesPrototypes.Plain) {
+                tiles {
+                    change(BoardPos("c3") to TileType.QUEEN)
+                }
+            }
+
+            val Round1 = round {
+                curRole { Role.BLACK }
+                pieces {
+                    clear()
+                    add(Role.WHITE, BoardPos("a4"), isCaptured = false)
+                    add(Role.BLACK, BoardPos("d6"), isCaptured = false)
+                    // captured pieces
+                    add(Role.WHITE, BoardPos("d6"), isCaptured = true)
+                    add(Role.BLACK, BoardPos("a4"), isCaptured = true)
+                }
+                winner { Role.BLACK }
+            }
+            val Round2 = round {
+                curRole { Role.BLACK }
+                pieces {
+                    clear()
+                    add(Role.WHITE, BoardPos("a4"), isCaptured = false)
+                    add(Role.BLACK, BoardPos("d6"), isCaptured = false)
+                    // captured pieces
+                    add(Role.WHITE, BoardPos("d6"), isCaptured = true)
+                    add(Role.BLACK, BoardPos("a4"), isCaptured = true)
+                }
+                winner { Role.BLACK }
+            }
+        }.build()
+
+        val game = GameSession.restore(gameSnapshot)
+        assertEquals(game.finalWinner.first(), GameResult.Draw)
+    }
 }
