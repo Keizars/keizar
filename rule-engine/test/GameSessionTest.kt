@@ -460,8 +460,7 @@ class GameSessionTest {
 
             round {
                 curRole { Role.BLACK }
-                pieces {
-                    clear()
+                resetPieces {
                     add(Role.WHITE, BoardPos("a4"), isCaptured = false)
                     add(Role.BLACK, BoardPos("d6"), isCaptured = false)
                     // captured pieces
@@ -472,7 +471,7 @@ class GameSessionTest {
             }
             val Round2 = round {
                 curRole { Role.BLACK }
-                pieces {
+                resetPieces {
                     clear()
                     add(Role.WHITE, BoardPos("a4"), isCaptured = false)
                     add(Role.BLACK, BoardPos("d6"), isCaptured = false)
@@ -501,7 +500,7 @@ class GameSessionTest {
 
             round {
                 curRole { Role.BLACK }
-                pieces {
+                resetPieces {
                     clear()
                     add(Role.WHITE, BoardPos("a4"), isCaptured = false)
                     add(Role.BLACK, BoardPos("d6"), isCaptured = false)
