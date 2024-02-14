@@ -91,12 +91,14 @@ fun BoardPieces(
             val draggingOffset by vm.draggingOffset.collectAsStateWithLifecycle(DpOffset.Zero)
 
             val pos by piece.pos.collectAsStateWithLifecycle()
+            val isCaptured by piece.isCaptured.collectAsStateWithLifecycle()
+
             Box(
                 Modifier
                     .background(Color.Transparent)
                     .offset(offsetX, offsetY)
                     .then(
-                        if (vm.boardProperties.tileArrangement[pos] == TileType.KEIZAR) {
+                        if (vm.boardProperties.tileArrangement[pos] == TileType.KEIZAR && !isCaptured) {
                             Modifier.alpha(vm.boardTransitionController.winningPieceAlpha)
                         } else Modifier
                     )
