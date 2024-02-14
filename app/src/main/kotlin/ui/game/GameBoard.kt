@@ -2,7 +2,9 @@ package org.keizar.android.ui.game
 
 import android.app.Activity
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -17,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -75,7 +78,10 @@ fun GameBoard(
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.weight(0.9f)) {
-            WinningCounter(vm)
+            Box(modifier = Modifier.fillMaxWidth()){
+                TurnStatusIndicator(vm)
+                WinningCounter(vm)
+            }
 
             var boardGlobalCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
 
@@ -305,7 +311,9 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                                             Role.WHITE
                                         ).collectAsState().value
                                     }\n" +
-                                    "   Black captured: ${vm.getRoundPieceCount(1, Role.BLACK).collectAsState().value}"
+                                    "   Black captured: ${
+                                        vm.getRoundPieceCount(1, Role.BLACK).collectAsState().value
+                                    }"
                         )
                     },
                     confirmButton = {
@@ -440,6 +448,45 @@ fun Token(number: Int, isFlipped: Boolean) {
     }
 }
 
+@Composable
+fun TurnStatusIndicator(vm: GameBoardViewModel) {
+    var flipSide by remember { mutableStateOf(true) }
+    val rotationY by animateFloatAsState(targetValue = if (flipSide) 0f else 180f, label = "")
+    val isPlayerTurn by vm.isPlayerTurn.collectAsState()
+
+    // Change the side and update content when isPlayerTurn changes
+    LaunchedEffect(isPlayerTurn) {
+        flipSide = !flipSide
+    }
+
+    // Determine the text and background color based on the flip side
+    val text = if (flipSide) "Your Turn" else "Waiting"
+    val textColor = if (flipSide) MaterialTheme.colorScheme.onPrimary else Color.Gray
+    val bgColor = if (flipSide) MaterialTheme.colorScheme.primary else Color.LightGray
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .padding(6.dp)
+            .width(90.dp)
+            .height(36.dp)
+            .graphicsLayer {
+                // Apply the rotation around the Y-axis
+                this.rotationY = rotationY
+                // Adjust the camera distance to enhance the 3D effect
+                cameraDistance = 12f * density
+            }
+            .background(color = bgColor, shape = RoundedCornerShape(10.dp))
+
+    ) {
+        Text(
+            text = text,
+            color = textColor,
+            modifier = Modifier.padding(4.dp)
+        )
+    }
+
+}
+
 fun getDotPositions(number: Int, center: Offset, distance: Float): List<Offset> {
     return when (number) {
         1 -> listOf(
@@ -542,7 +589,7 @@ fun UndoButton(vm: GameBoardViewModel) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Button(
-                onClick = {vm.undo()},
+                onClick = { vm.undo() },
                 enabled = canUndo,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = if (canUndo) MaterialTheme.colorScheme.primary else Color.LightGray,

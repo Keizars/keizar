@@ -129,6 +129,9 @@ interface GameBoardViewModel {
     @Stable
     val isMultiplayer: Boolean
 
+    @Stable
+    val isPlayerTurn: StateFlow<Boolean>
+
     // clicking
 
     /**
@@ -369,6 +372,11 @@ sealed class BaseGameBoardViewModel(
         game.currentRound.flatMapLatest { it.canUndo }.stateInBackground(false)
 
     override val isMultiplayer: Boolean = false
+
+    // TODO
+    override val isPlayerTurn: StateFlow<Boolean> = game.currentRole(selfPlayer).map { it == selfRole.value }
+        .stateInBackground(false)
+
 
     init {
         backgroundScope.launch {
