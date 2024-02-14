@@ -41,6 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.launchInBackground
 
 @Composable
@@ -243,18 +244,20 @@ private fun PlayWithFriendsSection(
 private fun PreviewMatchPage(
     @PreviewParameter(BooleanProvider::class) roomCreated: Boolean
 ) {
-    MultiplayerLobbyScene(
-        {},
-        {},
-        vm = remember {
-            MatchViewModel().apply {
-                if (roomCreated) {
-                    launchInBackground { createSelfRoom() }
+    ProvideCompositionalLocalsForPreview {
+        MultiplayerLobbyScene(
+            {},
+            {},
+            vm = remember {
+                MatchViewModel().apply {
+                    if (roomCreated) {
+                        launchInBackground { createSelfRoom() }
+                    }
+                    setJoinRoomId("123456")
                 }
-                setJoinRoomId("123456")
             }
-        }
-    )
+        )
+    }
 }
 
 private open class BooleanProvider : CollectionPreviewParameterProvider<Boolean>(listOf(false, true))
@@ -264,16 +267,18 @@ private open class BooleanProvider : CollectionPreviewParameterProvider<Boolean>
 private fun PreviewRoomsForJoin(
     @PreviewParameter(BooleanProvider::class) hasJoin: Boolean
 ) {
-    PlayWithFriendsSection(
-        vm = remember {
-            MatchViewModel().apply {
-                if (hasJoin) {
-                    setJoinRoomId("123456")
+    ProvideCompositionalLocalsForPreview {
+        PlayWithFriendsSection(
+            vm = remember {
+                MatchViewModel().apply {
+                    if (hasJoin) {
+                        setJoinRoomId("123456")
+                    }
                 }
-            }
-        },
-        {}
-    )
+            },
+            {}
+        )
+    }
 }
 
 @Preview(showBackground = true)
@@ -281,14 +286,16 @@ private fun PreviewRoomsForJoin(
 private fun PreviewRoomsForHostingRoom(
     @PreviewParameter(BooleanProvider::class) roomCreated: Boolean
 ) {
-    PlayWithFriendsSection(
-        vm = remember {
-            MatchViewModel().apply {
-                if (roomCreated) {
-                    launchInBackground { createSelfRoom() }
+    ProvideCompositionalLocalsForPreview {
+        PlayWithFriendsSection(
+            vm = remember {
+                MatchViewModel().apply {
+                    if (roomCreated) {
+                        launchInBackground { createSelfRoom() }
+                    }
                 }
-            }
-        },
-        {}
-    )
+            },
+            {}
+        )
+    }
 }
