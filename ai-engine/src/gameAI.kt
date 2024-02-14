@@ -203,5 +203,95 @@ class QTableAI(
     override suspend fun end() {
         myCoroutine.cancel()
     }
+
+}
+
+
+class AlgorithmAI(
+    override val game: GameSession = GameSession.create(0),
+    override val myPlayer: Player,
+    private val parentCoroutineContext: CoroutineContext,
+    private val test: Boolean = false,
+//    private val endpoint: String = "http://home.him188.moe:4393"
+) : GameAI {
+    private val myCoroutine: CoroutineScope =
+        CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
+    override fun start() {
+        myCoroutine.launch {
+            game.currentRound.flatMapLatest { it.winner }.collect {
+                combine(game.currentRole(myPlayer), game.currentRound) { myRole, session ->
+                    myRole to session
+                }.collectLatest { (myRole, session) ->
+                    session.curRole.collect { currentRole ->
+                        if (myRole == currentRole) {
+                            val bestPos = findBestMove(session, currentRole)
+                            if (!test) {
+                                delay(Random.nextLong(1000L..1500L))
+                            }
+                            if (bestPos != null) {
+                                session.move(bestPos.first, bestPos.second)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        myCoroutine.launch {
+            game.currentRound.flatMapLatest { it.winner }.collect {
+                if (it != null) {
+                    game.confirmNextRound(myPlayer)
+                }
+                if (!test) {
+                    delay(Random.nextLong(1000L..1500L))
+                }
+            }
+        }
+
+    }
+
+    override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos>? {
+        val board = createKeizarGraph(role, game)
+        var minDistance = Int.MAX_VALUE
+        var move: Pair<BoardPos, BoardPos>? = null
+        for (i in 0 until 8) {
+            for (j in 0 until 8) {
+                println(board[i][j].distance)
+                println(board[i][j] is NormalNode)
+            }
+        }
+        for (i in 0 until 8) {
+            for (j in 0 until 8) {
+                if (game.currentRound.first().pieceAt(BoardPos(i, j)) == role && BoardPos(i, j) != game.properties.keizarTilePos) {
+                    if (board[i][j] is NormalNode) {
+                        if (board[i][j].distance in 1..< minDistance) {
+                            val chosenParent = board[i][j].chosenParent
+                            if (chosenParent != null) {
+                                val target = chosenParent.position
+                                if (target != game.properties.keizarTilePos || target == game.properties.keizarTilePos
+                                    && game.currentRound.first().pieceAt(target) == role.other()) {
+                                    minDistance = board[i][j].distance
+                                    move = BoardPos(i, j) to target
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        print(minDistance)
+        if (move != null) {
+            println(move.first.row)
+            println(move.first.col)
+            println(move.second.row)
+            println(move.second.col)
+        }
+        return move
+    }
+
+    override suspend fun end() {
+        myCoroutine.cancel()
+    }
+
 }
 

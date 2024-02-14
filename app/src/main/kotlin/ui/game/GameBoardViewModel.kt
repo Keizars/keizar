@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import me.him188.ani.utils.logging.info
+import org.keizar.aiengine.AlgorithmAI
 import org.keizar.aiengine.QTableAI
 import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.ui.foundation.AbstractViewModel
@@ -219,7 +220,7 @@ class SinglePlayerGameBoardViewModel(
                 backgroundScope.coroutineContext
             )
 
-            else -> QTableAI(
+            else -> AlgorithmAI(
                 game,
                 Player.entries.first { it != selfPlayer },
                 backgroundScope.coroutineContext,
