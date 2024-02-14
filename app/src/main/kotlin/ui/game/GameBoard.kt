@@ -2,9 +2,7 @@ package org.keizar.android.ui.game
 
 import android.app.Activity
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -63,6 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.flatMapLatest
 import org.keizar.android.ui.game.transition.CapturedPiecesHost
 import org.keizar.game.Role
 import org.keizar.utils.communication.game.GameResult
@@ -450,19 +449,17 @@ fun Token(number: Int, isFlipped: Boolean) {
 
 @Composable
 fun TurnStatusIndicator(vm: GameBoardViewModel) {
-    var flipSide by remember { mutableStateOf(true) }
-    val rotationY by animateFloatAsState(targetValue = if (flipSide) 0f else 180f, label = "")
-    val isPlayerTurn by vm.isPlayerTurn.collectAsState()
+    val selfRole by vm.selfRole.collectAsState()
 
-    // Change the side and update content when isPlayerTurn changes
-    LaunchedEffect(isPlayerTurn) {
-        flipSide = !flipSide
-    }
+    val curRole by vm.currentRound.flatMapLatest { it.curRole }.collectAsState(initial = Role.WHITE)
+
+    val isPlayerTurn = selfRole == curRole
+    val rotationY by animateFloatAsState(targetValue = if (isPlayerTurn) 0f else 180f, label = "")
 
     // Determine the text and background color based on the flip side
-    val text = if (flipSide) "Your Turn" else "Waiting"
-    val textColor = if (flipSide) MaterialTheme.colorScheme.onPrimary else Color.Gray
-    val bgColor = if (flipSide) MaterialTheme.colorScheme.primary else Color.LightGray
+    val text = if (isPlayerTurn) "Your Turn" else "Waiting"
+    val textColor = if (isPlayerTurn) MaterialTheme.colorScheme.onPrimary else Color.Gray
+    val bgColor = if (isPlayerTurn) MaterialTheme.colorScheme.primary else Color.LightGray
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
