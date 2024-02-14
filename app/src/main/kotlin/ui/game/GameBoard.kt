@@ -3,6 +3,7 @@ package org.keizar.android.ui.game
 import android.app.Activity
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -77,7 +78,7 @@ fun GameBoard(
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.weight(0.9f)) {
-            Box(modifier = Modifier.fillMaxWidth()){
+            Box(modifier = Modifier.fillMaxWidth()) {
                 TurnStatusIndicator(vm)
                 WinningCounter(vm)
             }
@@ -450,16 +451,17 @@ fun Token(number: Int, isFlipped: Boolean) {
 @Composable
 fun TurnStatusIndicator(vm: GameBoardViewModel) {
     val selfRole by vm.selfRole.collectAsState()
-
     val curRole by vm.currentRound.flatMapLatest { it.curRole }.collectAsState(initial = Role.WHITE)
-
     val isPlayerTurn = selfRole == curRole
-    val rotationY by animateFloatAsState(targetValue = if (isPlayerTurn) 0f else 180f, label = "")
 
-    // Determine the text and background color based on the flip side
-    val text = if (isPlayerTurn) "Your Turn" else "Waiting"
-    val textColor = if (isPlayerTurn) MaterialTheme.colorScheme.onPrimary else Color.Gray
-    val bgColor = if (isPlayerTurn) MaterialTheme.colorScheme.primary else Color.LightGray
+
+    // Animate the rotation
+    val rotationY by animateFloatAsState(
+        targetValue = if (isPlayerTurn) 0f else 180f,
+        animationSpec = tween(durationMillis = 600), label = ""
+    )
+
+
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
@@ -467,22 +469,29 @@ fun TurnStatusIndicator(vm: GameBoardViewModel) {
             .width(90.dp)
             .height(36.dp)
             .graphicsLayer {
-                // Apply the rotation around the Y-axis
                 this.rotationY = rotationY
-                // Adjust the camera distance to enhance the 3D effect
-                cameraDistance = 12f * density
+                cameraDistance = 8 * density
             }
-            .background(color = bgColor, shape = RoundedCornerShape(10.dp))
-
+            .background(
+                color = if (rotationY <= 90f) MaterialTheme.colorScheme.primary else Color.LightGray,
+                shape = RoundedCornerShape(10.dp)
+            )
     ) {
-        Text(
-            text = text,
-            color = textColor,
-            modifier = Modifier.padding(4.dp)
-        )
+        if (rotationY <= 90f) {
+            Text(
+                text = "Your Turn",
+                color = MaterialTheme.colorScheme.onPrimary,
+            )
+        } else {
+            Text(
+                text = "Waiting",
+                color = Color.White,
+                modifier = Modifier.graphicsLayer { this.rotationY = 180f }
+            )
+        }
     }
-
 }
+
 
 fun getDotPositions(number: Int, center: Offset, distance: Float): List<Offset> {
     return when (number) {
