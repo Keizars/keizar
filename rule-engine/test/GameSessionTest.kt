@@ -458,7 +458,7 @@ class GameSessionTest {
                 }
             }
 
-            val Round1 = round {
+            round {
                 curRole { Role.BLACK }
                 pieces {
                     clear()
@@ -482,9 +482,41 @@ class GameSessionTest {
                 }
                 winner { Role.BLACK }
             }
+            setCurRound(Round2)
         }.build()
 
         val game = GameSession.restore(gameSnapshot)
-        assertEquals(game.finalWinner.first(), GameResult.Draw)
+        assertEquals(1, game.currentRoundNo.first())
+        assertEquals(GameResult.Draw, game.finalWinner.first())
+    }
+
+    @Test
+    fun `test first round finished in the middle of second round`() = runTest {
+        val gameSnapshot = GameSnapshotBuilder {
+            properties(prototype = BoardPropertiesPrototypes.Plain) {
+                tiles {
+                    change(BoardPos("c3") to TileType.QUEEN)
+                }
+            }
+
+            round {
+                curRole { Role.BLACK }
+                pieces {
+                    clear()
+                    add(Role.WHITE, BoardPos("a4"), isCaptured = false)
+                    add(Role.BLACK, BoardPos("d6"), isCaptured = false)
+                    // captured pieces
+                    add(Role.WHITE, BoardPos("d6"), isCaptured = true)
+                    add(Role.BLACK, BoardPos("a4"), isCaptured = true)
+                }
+                winner { Role.BLACK }
+            }
+            val Round2 = round {}
+            setCurRound(Round2)
+        }.build()
+
+        val game = GameSession.restore(gameSnapshot)
+        // set current round to the second round
+        assertEquals(1, game.currentRoundNo.first())
     }
 }
