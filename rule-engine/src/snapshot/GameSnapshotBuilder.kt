@@ -118,13 +118,18 @@ class RoundSnapshotBuilder private constructor(
         this.pieces = PiecesBuilder(properties) { prototype(snapshot.pieces) }
     }
 
-    fun pieces(instructions: PiecesBuilder.() -> Unit) {
-        this.pieces = PiecesBuilder(properties, instructions)
+    fun resetPieces(instructions: PiecesBuilder.() -> Unit) {
+        this.pieces = PiecesBuilder(properties, fromEmptyBoard = true, instructions)
+    }
+
+    fun setPieces(fromEmptyBoard: Boolean, instructions: PiecesBuilder.() -> Unit) {
+        this.pieces = PiecesBuilder(properties, fromEmptyBoard, instructions)
     }
 
     @GameSnapshotDslMarker
     class PiecesBuilder(
         properties: BoardPropertiesBuilder,
+        fromEmptyBoard: Boolean = false,
         instructions: PiecesBuilder.() -> Unit = {},
     ) {
         private var pieces: MutableList<PieceSnapshot>
@@ -134,8 +139,10 @@ class RoundSnapshotBuilder private constructor(
             val initialPoses = properties.getPiecesStartingPoses()
             pieces = mutableListOf()
             curIndex = 0
-            initialPoses.forEach { (role, boardPoses) ->
-                boardPoses.forEach { add(role, it) }
+            if (!fromEmptyBoard) {
+                initialPoses.forEach { (role, boardPoses) ->
+                    boardPoses.forEach { add(role, it) }
+                }
             }
             this.apply(instructions)
         }
@@ -168,6 +175,14 @@ class RoundSnapshotBuilder private constructor(
 
         fun black(posStr: String) {
             add(Role.BLACK, BoardPos(posStr))
+        }
+
+        fun remove(pos: BoardPos) {
+            pieces.removeAll { it.pos == pos }
+        }
+
+        fun remove(posStr: String) {
+            remove(BoardPos(posStr))
         }
 
         fun addAll(role: Role, poses: Collection<BoardPos>, isCaptured: Boolean = false) {

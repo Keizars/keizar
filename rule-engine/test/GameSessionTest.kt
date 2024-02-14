@@ -432,8 +432,7 @@ class GameSessionTest {
 
             val curRound = round {
                 curRole { Role.BLACK }
-                pieces {
-                    clear()
+                resetPieces {
                     white("a4")
                     black("a6")
                 }
