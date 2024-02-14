@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +36,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 import org.keizar.android.ui.foundation.AbstractViewModel
+import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.client.KeizarClientFacade
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -79,6 +81,15 @@ fun MultiplayerRoomScene(
         clipboardManager.setText(AnnotatedString("P-$roomId"))
     }
 
+    MultiplayerRoomPage(roomId, onClickHome, modifier)
+}
+
+@Composable
+private fun MultiplayerRoomPage(
+    roomId: UInt,
+    onClickHome: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Scaffold(
         modifier.fillMaxSize(),
         topBar = {
@@ -127,5 +138,13 @@ fun MultiplayerRoomScene(
                 )
             }
         }
+    }
+}
+
+@Preview
+@Composable
+private fun PreviewMultiplayerRoomPage() {
+    ProvideCompositionalLocalsForPreview {
+        MultiplayerRoomPage(roomId = 12345u, onClickHome = { })
     }
 }
