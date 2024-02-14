@@ -434,8 +434,8 @@ class GameSessionTest {
                 curRole { Role.BLACK }
                 pieces {
                     clear()
-                    add(Role.WHITE, BoardPos("a4"))
-                    add(Role.BLACK, BoardPos("a6"))
+                    white("a4")
+                    black("a6")
                 }
             }
 
