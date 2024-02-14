@@ -25,6 +25,7 @@ import org.slf4j.Logger
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.keizar.game.TileType
 
 interface GameRoom {
     suspend fun addPlayer(player: PlayerSession): Boolean
@@ -46,6 +47,7 @@ class GameRoomImpl(
 
     private val players: Channel<PlayerSession> = Channel(capacity = 2)
     private var playerCount = 0
+    private var playersReady = false
     private val mutex = Mutex()
 
     private val _finished: MutableStateFlow<Boolean> = MutableStateFlow(false)
@@ -71,10 +73,15 @@ class GameRoomImpl(
 
     suspend fun getPlayerCount(): Int = mutex.withLock { playerCount }
 
+    suspend fun getPlayerReady(): Boolean = mutex.withLock { playersReady }
+
     private suspend fun waitForPlayers() {
         val player1 = players.receive()
         player1.setState(PlayerSessionState.WAITING)
         val player2 = players.receive()
+        mutex.withLock {
+            playersReady = true
+        }
         players.cancel()
         startGame(player1, player2)
         updateFinished(player1, player2)
