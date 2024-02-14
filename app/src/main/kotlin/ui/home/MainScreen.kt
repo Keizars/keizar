@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -128,28 +129,29 @@ fun HomePage(navController: NavController) {
         ) {
             // Single Player Button
             Button(onClick = { navController.navigate("game/configuration") }, modifier = Modifier.width(170.dp)) {
-                Text("Play vs Computer")
+                Text("Play vs Computer", textAlign = TextAlign.Center)
             }
 
             // Multiplayer Button
             Button(onClick = { navController.navigate("game/lobby") }, modifier = Modifier.width(170.dp)) {
-                Text("2 Players")
+                Text("2 Players", textAlign = TextAlign.Center)
             }
 
             // Saved game Button
             Button(onClick = { /* TODO: Handle saved game click */ }, modifier = Modifier.width(170.dp)) {
-                Text("Saved games")
+                Text("Saved games", textAlign = TextAlign.Center)
             }
 
             // Tutorial Button
             Button(onClick = { /* TODO: Handle tutorial click */ }, modifier = Modifier.width(170.dp)) {
-                Text("Tutorial")
+                Text("Tutorial", textAlign = TextAlign.Center)
             }
 
             val context = LocalContext.current
             Button(onClick = { if (context is Activity) context.finish() }, modifier = Modifier.width(170.dp)) {
-                Text("Exit")
+                Text("Exit", textAlign = TextAlign.Center)
             }
         }
     }
 }
+
