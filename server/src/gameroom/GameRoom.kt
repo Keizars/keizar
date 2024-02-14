@@ -23,9 +23,11 @@ import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.StateChange
 import org.slf4j.Logger
 import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 interface GameRoom {
-    fun addPlayer(player: PlayerSession): Boolean
+    suspend fun addPlayer(player: PlayerSession): Boolean
     fun close()
 
     val roomNumber: UInt
@@ -43,6 +45,8 @@ class GameRoomImpl(
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
     private val players: Channel<PlayerSession> = Channel(capacity = 2)
+    private var playerCount = 0
+    private val mutex = Mutex()
 
     private val _finished: MutableStateFlow<Boolean> = MutableStateFlow(false)
     override val finished: StateFlow<Boolean> = _finished.asStateFlow()
@@ -51,13 +55,21 @@ class GameRoomImpl(
         myCoroutineScope.launch { waitForPlayers() }
     }
 
-    override fun addPlayer(player: PlayerSession): Boolean {
-        return players.trySend(player).isSuccess
+    override suspend fun addPlayer(player: PlayerSession): Boolean {
+        val result = players.trySend(player).isSuccess
+        if (result) {
+            mutex.withLock {
+                playerCount++
+            }
+        }
+        return result
     }
 
     override fun close() {
         myCoroutineScope.cancel()
     }
+
+    suspend fun getPlayerCount(): Int = mutex.withLock { playerCount }
 
     private suspend fun waitForPlayers() {
         val player1 = players.receive()
