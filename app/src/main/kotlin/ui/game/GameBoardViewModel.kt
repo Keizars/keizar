@@ -284,15 +284,19 @@ sealed class BaseGameBoardViewModel(
     )
 
     @Stable
-    override val pieces: StateFlow<List<UiPiece>> = game.currentRound.map { it.pieces }.map { list ->
-        list.map {
-            UiPiece(
-                enginePiece = it,
-                offsetInBoard = boardTransitionController.pieceOffset(it, pieceArranger.offsetFor(it.pos)),
-                backgroundScope,
-            )
-        }
-    }.stateInBackground(emptyList())
+    override val pieces: StateFlow<List<UiPiece>> =
+        game.currentRound.map { it.pieces }.map { list ->
+            list.map {
+                UiPiece(
+                    enginePiece = it,
+                    offsetInBoard = boardTransitionController.pieceOffset(
+                        it,
+                        pieceArranger.offsetFor(it.pos)
+                    ),
+                    backgroundScope,
+                )
+            }
+        }.stateInBackground(emptyList())
 
     @Stable
     override val currentPick: MutableStateFlow<Pick?> = MutableStateFlow(null)
@@ -346,21 +350,23 @@ sealed class BaseGameBoardViewModel(
     override val gameOverReadyToBeAnnounced = _gameOverReadyToBeAnnounced
 
     @Stable
-    override val availablePositions: SharedFlow<List<BoardPos>?> = game.currentRound.flatMapLatest { turn ->
-        currentPick.flatMapLatest { pick ->
-            if (pick == null) {
-                flowOf(emptyList())
-            } else {
-                turn.getAvailableTargets(pieceArranger.viewToLogical(pick.viewPos).first())
+    override val availablePositions: SharedFlow<List<BoardPos>?> =
+        game.currentRound.flatMapLatest { turn ->
+            currentPick.flatMapLatest { pick ->
+                if (pick == null) {
+                    flowOf(emptyList())
+                } else {
+                    turn.getAvailableTargets(pieceArranger.viewToLogical(pick.viewPos).first())
+                }
+            }.map { list ->
+                list
             }
-        }.map { list ->
-            list
-        }
-    }.shareInBackground()
+        }.shareInBackground()
 
     override val lastMoveIsDrag: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
-    override val canUndo: StateFlow<Boolean> = game.currentRound.flatMapLatest { it.canUndo }.stateInBackground(false)
+    override val canUndo: StateFlow<Boolean> =
+        game.currentRound.flatMapLatest { it.canUndo }.stateInBackground(false)
 
     override val isMultiplayer: Boolean = false
 
@@ -473,6 +479,9 @@ sealed class BaseGameBoardViewModel(
 
     override fun replayGame() {
         setEndRoundAnnouncement(false)
+        launchInBackground(Dispatchers.Main.immediate, start = CoroutineStart.UNDISPATCHED) {
+            boardTransitionController.turnBoard()
+        }
         game.replayGame()
     }
 
