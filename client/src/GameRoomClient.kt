@@ -19,6 +19,14 @@ import kotlin.random.nextUInt
 data class GameRoom(
     val roomNumber: UInt,
     val gameProperties: BoardProperties,
+    /**
+     * Number of players currently in the room
+     */
+    val playerCount: Int = 1,
+    /**
+     * Whether all players are ready to start the game.
+     */
+    val playersReady: Boolean = false
 )
 
 interface GameRoomClient : AutoCloseable {

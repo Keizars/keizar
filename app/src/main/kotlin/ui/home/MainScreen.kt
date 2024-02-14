@@ -36,6 +36,7 @@ import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.mp.MatchViewModel
 import org.keizar.android.ui.game.mp.MultiplayerGamePage
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
+import org.keizar.android.ui.game.mp.MultiplayerRoomScene
 import org.keizar.android.ui.game.sp.SinglePlayerGameScene
 
 @Composable
@@ -76,8 +77,26 @@ fun MainScreen() {
                         putString("roomId", roomId)
                     })
                 },
+                onRoomCreated = { roomId ->
+                    navController.navigate(navController.graph["game/room"].id, Bundle().apply {
+                        putString("roomId", roomId)
+                    })
+                },
                 Modifier.fillMaxSize(),
                 vm = matchViewModel,
+            )
+        }
+        composable("game/room") { backStackEntry ->
+            val roomId = backStackEntry.arguments!!.getString("roomId")!!.toUInt()
+            MultiplayerRoomScene(
+                roomId = roomId,
+                onClickHome = { navController.navigate("home") },
+                onPlayersReady = {
+                    navController.navigate(navController.graph["game/multiplayer"].id, Bundle().apply {
+                        putString("roomId", roomId.toString())
+                    })
+                },
+                Modifier.fillMaxSize(),
             )
         }
         composable("game/multiplayer") { backStackEntry ->
