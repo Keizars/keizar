@@ -46,6 +46,21 @@ interface GameAI {
 
 }
 
+suspend fun findRandomMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos> {
+    val allPieces = round.getAllPiecesPos(role).first()
+    var randomPiece = allPieces.random()
+    var validTargets = round.getAvailableTargets(randomPiece).first()
+
+    do {
+        randomPiece = allPieces.random()
+        validTargets = round.getAvailableTargets(randomPiece).first()
+        delay(1000L)
+    } while (validTargets.isEmpty() && allPieces.isNotEmpty() && round.winner.first() == null)
+
+    val randomTarget = validTargets.random()
+    return Pair(randomPiece, randomTarget)
+}
+
 class RandomGameAIImpl(
     override val game: GameSession,
     override val myPlayer: Player,
@@ -122,18 +137,16 @@ class QTableAI(
 
     override fun start() {
         myCoroutine.launch {
-            game.currentRound.flatMapLatest { it.winner }.collect {
-                combine(game.currentRole(myPlayer), game.currentRound) { myRole, session ->
-                    myRole to session
-                }.collectLatest { (myRole, session) ->
-                    session.curRole.collect { currentRole ->
-                        if (myRole == currentRole) {
-                            val bestPos = findBestMove(session, currentRole)
-                            if (!test) {
-                                delay(Random.nextLong(1000L..1500L))
-                            }
-                            session.move(bestPos.first, bestPos.second)
+            game.currentRole(myPlayer).zip(game.currentRound) { myRole, session ->
+                myRole to session
+            }.collectLatest { (myRole, session) ->
+                session.curRole.collect { currentRole ->
+                    if (myRole == currentRole) {
+                        val bestPos = findBestMove(session, currentRole)
+                        if (!test) {
+                            delay(Random.nextLong(1000L..1500L))
                         }
+                        session.move(bestPos.first, bestPos.second)
                     }
                 }
             }
@@ -218,19 +231,21 @@ class AlgorithmAI(
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
     override fun start() {
         myCoroutine.launch {
-            game.currentRound.flatMapLatest { it.winner }.collect {
-                combine(game.currentRole(myPlayer), game.currentRound) { myRole, session ->
-                    myRole to session
-                }.collectLatest { (myRole, session) ->
-                    session.curRole.collect { currentRole ->
-                        if (myRole == currentRole) {
-                            val bestPos = findBestMove(session, currentRole)
-                            if (!test) {
-                                delay(Random.nextLong(1000L..1500L))
-                            }
-                            if (bestPos != null) {
-                                session.move(bestPos.first, bestPos.second)
-                            }
+            game.currentRole(myPlayer).zip(game.currentRound) { myRole, session ->
+                myRole to session
+            }.collectLatest { (myRole, session) ->
+                session.curRole.collect { currentRole ->
+                    if (myRole == currentRole) {
+                        val bestPos = findBestMove(session, currentRole)
+                        if (!test) {
+                            delay(Random.nextLong(1000L..1500L))
+                        }
+                        if (bestPos != null) {
+                            session.move(bestPos.first, bestPos.second)
+                        }
+                        else {
+                            val move = findRandomMove(session, currentRole)
+                            session.move(move.first, move.second)
                         }
                     }
                 }
