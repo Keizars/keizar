@@ -13,15 +13,9 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import org.keizar.game.BoardProperties
+import org.keizar.game.RoomInfo
 import kotlin.random.Random
 import kotlin.random.nextUInt
-
-
-data class RoomInfo(
-    val properties: BoardProperties,
-    val playerCount: Int,
-    val playersReady: Boolean
-)
 
 
 data class GameRoom(

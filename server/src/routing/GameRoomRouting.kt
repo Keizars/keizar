@@ -2,16 +2,21 @@ package org.keizar.server.routing
 
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.WebsocketDeserializeException
-import io.ktor.server.application.*
+import io.ktor.server.application.Application
+import io.ktor.server.application.call
+import io.ktor.server.application.log
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.NotFoundException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.routing.*
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.routing
 import io.ktor.server.websocket.receiveDeserialized
 import io.ktor.server.websocket.webSocket
 import kotlinx.coroutines.flow.first
 import org.keizar.game.BoardProperties
+import org.keizar.game.RoomInfo
 import org.keizar.server.gameroom.GameRoom
 import org.keizar.server.gameroom.GameRoomImpl
 import org.keizar.server.gameroom.PlayerSessionImpl
@@ -19,12 +24,6 @@ import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.message.UserInfo
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
-
-data class RoomInfo(
-    val properties: BoardProperties,
-    val playerCount: Int,
-    val playersReady: Boolean
-)
 
 fun Application.gameRoomRouting() {
     val logger = log
