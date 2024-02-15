@@ -76,10 +76,6 @@ class GameRoomImpl(
         myCoroutineScope.cancel()
     }
 
-    suspend fun getPlayerCount(): Int = mutex.withLock { playerCount }
-
-    suspend fun getPlayerReady(): Boolean = mutex.withLock { playersReady }
-
     private suspend fun waitForPlayers() {
         val player1 = players.receive()
         player1.setState(PlayerSessionState.WAITING)
