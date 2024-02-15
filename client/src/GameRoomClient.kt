@@ -16,6 +16,14 @@ import org.keizar.game.BoardProperties
 import kotlin.random.Random
 import kotlin.random.nextUInt
 
+
+data class RoomInfo(
+    val properties: BoardProperties,
+    val playerCount: Int,
+    val playersReady: Boolean
+)
+
+
 data class GameRoom(
     val roomNumber: UInt,
     val gameProperties: BoardProperties,
@@ -76,7 +84,8 @@ class GameRoomClientImpl(
         if (respond.status != HttpStatusCode.OK) {
             TODO("Handle exception")
         }
-        return GameRoom(roomNumber, respond.body())
+        val gameInfo = respond.body<RoomInfo>()
+        return GameRoom(roomNumber, gameInfo.properties, gameInfo.playerCount, gameInfo.playersReady)
     }
 
     override fun close() {

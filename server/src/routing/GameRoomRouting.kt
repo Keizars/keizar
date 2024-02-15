@@ -20,6 +20,12 @@ import org.keizar.utils.communication.message.UserInfo
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 
+data class RoomInfo(
+    val properties: BoardProperties,
+    val playerCount: Int,
+    val playersReady: Boolean
+)
+
 fun Application.gameRoomRouting() {
     val logger = log
     routing {
@@ -83,7 +89,12 @@ fun Application.gameRoomRouting() {
                 throw NotFoundException("Room not found")
             }
             logger.info("Room $roomNumber fetch succeed")
-            call.respond(room.properties)
+            val info = RoomInfo(
+                properties = room.properties,
+                playerCount = room.playerCount,
+                playersReady = room.playersReady
+            )
+            call.respond(info)
         }
     }
 }

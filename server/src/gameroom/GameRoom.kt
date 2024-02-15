@@ -34,6 +34,8 @@ interface GameRoom {
     val roomNumber: UInt
     val finished: StateFlow<Boolean>
     val properties: BoardProperties
+    var playerCount: Int
+    var playersReady: Boolean
 }
 
 class GameRoomImpl(
@@ -46,8 +48,8 @@ class GameRoomImpl(
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
     private val players: Channel<PlayerSession> = Channel(capacity = 2)
-    private var playerCount = 0
-    private var playersReady = false
+    override var playerCount = 0
+    override var playersReady = false
     private val mutex = Mutex()
 
     private val _finished: MutableStateFlow<Boolean> = MutableStateFlow(false)
@@ -62,6 +64,9 @@ class GameRoomImpl(
         if (result) {
             mutex.withLock {
                 playerCount++
+                if (playerCount == 2) {
+                    playersReady = true
+                }
             }
         }
         return result
@@ -79,9 +84,6 @@ class GameRoomImpl(
         val player1 = players.receive()
         player1.setState(PlayerSessionState.WAITING)
         val player2 = players.receive()
-        mutex.withLock {
-            playersReady = true
-        }
         players.cancel()
         startGame(player1, player2)
         updateFinished(player1, player2)
