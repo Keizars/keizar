@@ -31,6 +31,7 @@ import org.keizar.game.RoundSession
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
 import kotlin.coroutines.CoroutineContext
+import kotlin.math.min
 import kotlin.random.Random
 import kotlin.random.nextLong
 
@@ -270,40 +271,31 @@ class AlgorithmAI(
     override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos>? {
         val board = createKeizarGraph(role, game)
         var minDistance = Int.MAX_VALUE
-        var move: Pair<BoardPos, BoardPos>? = null
-        for (i in 0 until 8) {
-            for (j in 0 until 8) {
-                println(board[i][j].distance)
-                println(board[i][j] is NormalNode)
-            }
-        }
-        for (i in 0 until 8) {
-            for (j in 0 until 8) {
-                if (game.currentRound.first().pieceAt(BoardPos(i, j)) == role && BoardPos(i, j) != game.properties.keizarTilePos) {
-                    if (board[i][j] is NormalNode) {
-                        if (board[i][j].distance in 1..< minDistance) {
-                            val chosenParent = board[i][j].chosenParent
-                            if (chosenParent != null) {
-                                val target = chosenParent.position
-                                if (target != game.properties.keizarTilePos || target == game.properties.keizarTilePos
-                                    && game.currentRound.first().pieceAt(target) == role.other()) {
-                                    minDistance = board[i][j].distance
-                                    move = BoardPos(i, j) to target
-                                }
+        var moves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf()
+        val keizarCapture = game.currentRound.first().pieceAt(game.properties.keizarTilePos)
+        val keizarCount = game.currentRound.first().winningCounter.value
+        val allowCaptureKeizar = (keizarCapture != role && keizarCount != 2)
+        board.forEach {
+            it.forEach {node ->
+                println(node.distance)
+                if (node.occupy == role) {
+                    node.parents.sortBy { parent -> parent.second }
+                    for (parent in node.parents ) {
+                        if (parent.first.occupy != role) {
+                            val lowerBound = if (keizarCapture == role.other()) 1 else 2
+                            if (parent.second in lowerBound..< minDistance) {
+                                minDistance = parent.second
+                                moves = mutableListOf(node.position to parent.first.position)
+                            } else if (parent.second == minDistance) {
+                                moves.add(node.position to parent.first.position)
                             }
                         }
                     }
                 }
+
             }
         }
-        print(minDistance)
-        if (move != null) {
-            println(move.first.row)
-            println(move.first.col)
-            println(move.second.row)
-            println(move.second.col)
-        }
-        return move
+        return moves.random()
     }
 
     fun log_moves_made(move: Move) {

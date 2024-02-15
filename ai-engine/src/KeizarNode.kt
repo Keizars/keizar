@@ -9,62 +9,50 @@ import java.util.LinkedList
 import java.util.Queue
 import kotlin.math.abs
 
-enum class PieceType {
-    WHITE,
-    BLACK,
-    EMPTY
-}
 interface TileNode {
     val position: BoardPos
-    var occupy: PieceType
+    var occupy: Role?
     var distance: Int
-    val parents: MutableList<TileNode>
-    var chosenParent: TileNode?
+    val parents: MutableList<Pair<TileNode, Int>>
 }
 
 open class TileNodeImpl(
     override val position: BoardPos,
-    override var occupy: PieceType,
+    override var occupy: Role?,
     override var distance: Int,
-    override val parents: MutableList<TileNode>,
-    override var chosenParent: TileNode?
+    override val parents: MutableList<Pair<TileNode, Int>>,
 ) : TileNode
 
 class KeizarNode (
-    override var occupy: PieceType,
+    override var occupy: Role?,
 ) : TileNodeImpl(
     BoardPos("d5"),
     occupy,
     0,
     mutableListOf(),
-    null
 )
 
 class DefaultNode(
     override val position: BoardPos,
-    override var occupy: PieceType,
+    override var occupy: Role?,
     override var distance: Int,
-    override val parents: MutableList<TileNode>,
-    override var chosenParent: TileNode?
+    override val parents: MutableList<Pair<TileNode, Int>>,
 ) : TileNodeImpl(
     position,
     occupy,
     distance,
     parents,
-    null
 )
 class NormalNode(
     override val position: BoardPos,
-    override var occupy: PieceType,
+    override var occupy: Role?,
     override var distance: Int,
-    override val parents: MutableList<TileNode>,
-    override var chosenParent: TileNode?
+    override val parents: MutableList<Pair<TileNode, Int>>,
 ) : TileNodeImpl(
     position,
     occupy,
     distance,
     parents,
-    null
 )
 
 suspend fun createKeizarGraph(
@@ -76,12 +64,7 @@ suspend fun createKeizarGraph(
     for (i in 0 until 8) {
         val row = mutableListOf<TileNode>()
         for (j in 0 until 8) {
-            val occupy = when(game.currentRound.first().pieceAt(BoardPos("d5"))) {
-                Role.WHITE -> PieceType.WHITE
-                Role.BLACK -> PieceType.BLACK
-                null -> PieceType.EMPTY
-            }
-            row.add(DefaultNode(BoardPos(i, j), PieceType.EMPTY, Int.MAX_VALUE, mutableListOf(), null))
+            row.add(DefaultNode(BoardPos(i, j), null, Int.MAX_VALUE, mutableListOf()))
         }
         if (i == 0) {
             board[i] = row
@@ -89,33 +72,29 @@ suspend fun createKeizarGraph(
             board.add(row)
         }
     }
-    val occupy = when(game.currentRound.first().pieceAt(BoardPos("d5"))) {
-        Role.WHITE -> PieceType.WHITE
-        Role.BLACK -> PieceType.BLACK
-        null -> PieceType.EMPTY
-    }
-    val startFromKeizar = KeizarNode(occupy)
+    val occupyKeizar = game.currentRound.first().pieceAt(BoardPos("d5"))
+    val startFromKeizar = KeizarNode(occupyKeizar)
     createNode(startFromKeizar, game, board, role)
 
-    if (role == Role.WHITE) {
-        for (i in 4 until 8) {
-            for (j in 0 until  8) {
-                // if it is opposite plain tile, it can never reach keizar
-                if (tilesArrangement[board[i][j].position] == TileType.PLAIN) {
-                    board[i][j].distance = Int.MAX_VALUE
-                }
-            }
-        }
-    } else {
-        for (i in 0 until 5) {
-            for (j in 0 until  8) {
-                // if it is opposite plain tile, it can never reach keizar
-                if (tilesArrangement[board[i][j].position] == TileType.PLAIN) {
-                    board[i][j].distance = Int.MAX_VALUE
-                }
-            }
-        }
-    }
+//    if (role == Role.WHITE) {
+//        for (i in 4 until 8) {
+//            for (j in 0 until  8) {
+//                // if it is opposite plain tile, it can never reach keizar
+//                if (tilesArrangement[board[i][j].position] == TileType.PLAIN) {
+//                    board[i][j].distance = Int.MAX_VALUE
+//                }
+//            }
+//        }
+//    } else {
+//        for (i in 0 until 5) {
+//            for (j in 0 until  8) {
+//                // if it is opposite plain tile, it can never reach keizar
+//                if (tilesArrangement[board[i][j].position] == TileType.PLAIN) {
+//                    board[i][j].distance = Int.MAX_VALUE
+//                }
+//            }
+//        }
+//    }
     return board
 }
 
@@ -133,23 +112,27 @@ suspend fun createNode(
 
         if (fromTiles.size > 0) {
             fromTiles.map {
-                val occupy = when(game.currentRound.first().pieceAt(BoardPos("d5"))) {
-                    Role.WHITE -> PieceType.WHITE
-                    Role.BLACK -> PieceType.BLACK
-                    null -> PieceType.EMPTY
-                }
+                val occupy = game.currentRound.first().pieceAt(it)
                 if (board[it.row][it.col] !is NormalNode) {  // if the node has not been travelled
-                    board[it.row][it.col] = NormalNode(it, occupy, node.distance + 1, mutableListOf(node), node)
+                    board[it.row][it.col] = NormalNode(it, occupy, node.distance + 1, mutableListOf(Pair(node, node.distance + 1)))
                     queue.add(board[it.row][it.col])
                 } else {
-                    if (node.distance + 1 >= board[it.row][it.col].distance)
-                        board[it.row][it.col].parents.add(node)
-                    else {
-                        board[it.row][it.col].parents.add(node)
-                        board[it.row][it.col].distance = node.distance + 1
-                        board[it.row][it.col].chosenParent = node
-                        queue.add(root)
+                    var checked = false
+                    board[it.row][it.col].parents.forEachIndexed { index, parent ->
+                        if (parent.first == node) {
+                            checked = true
+                            board[it.row][it.col].parents[index] = Pair(node, node.distance + 1)
+                        }
                     }
+                    if (!checked) {
+                        board[it.row][it.col].parents.add(Pair(node, node.distance + 1))
+                    } else {
+                        if (node.distance + 1 < board[it.row][it.col].distance) {
+                            board[it.row][it.col].distance = node.distance + 1
+                            queue.add(board[it.row][it.col])
+                        } else { }
+                    }
+
                 }
             }
         }
@@ -160,7 +143,7 @@ suspend fun createNode(
 suspend fun getMoves (
     target: BoardPos,
     game: GameSession,
-    role:Role
+    role:Role,
 ): MutableList<BoardPos> {
     val positionList = mutableListOf<BoardPos>()
     val tileArrangement = game.properties.tileArrangement
@@ -177,43 +160,35 @@ suspend fun getMoves (
                 }
                 TileType.QUEEN -> if (!(target.row == i && target.col == j)
                     && (target.col == j || target.row == i || abs(target.col - j) == abs(target.row - i))) {
-                    if (game.currentRound.first().pieceAt(target) != role) {
-                        val stopped = checkLines(target, j, i, game) || checkDiagonals(target, j, i, game)
-                        if (!stopped) {
-                            positionList.add(
-                                BoardPos(i, j)
-                            )
-                        }
-                    }
-                }
-                TileType.BISHOP -> if (!(target.row == i && target.col == j)
-                    && (abs(target.col - j) == abs(target.row - i))) {
-                    if (game.currentRound.first().pieceAt(target) != role) {
-                        val stopped = checkDiagonals(target, j, i, game)
-                        if (!stopped) {
-                            positionList.add(
-                                BoardPos(i, j)
-                            )
-                        }
-                    }
-                }
-                TileType.KNIGHT -> if (abs(target.col - j) == 2 && abs(target.row - i) == 1
-                    || abs(target.col - j) == 1 && abs(target.row - i) == 2) {
-                    if (game.currentRound.first().pieceAt(target) != role || target == game.properties.keizarTilePos) {
+                    val stopped = checkLines(target, j, i, game) || checkDiagonals(target, j, i, game)
+                    if (!stopped) {
                         positionList.add(
                             BoardPos(i, j)
                         )
                     }
                 }
+                TileType.BISHOP -> if (!(target.row == i && target.col == j)
+                    && (abs(target.col - j) == abs(target.row - i))) {
+                    val stopped = checkDiagonals(target, j, i, game)
+                    if (!stopped) {
+                        positionList.add(
+                            BoardPos(i, j)
+                        )
+                    }
+                }
+                TileType.KNIGHT -> if (abs(target.col - j) == 2 && abs(target.row - i) == 1
+                    || abs(target.col - j) == 1 && abs(target.row - i) == 2) {
+                    positionList.add(
+                        BoardPos(i, j)
+                    )
+                }
                 TileType.ROOK -> if (!(target.row == i && target.col == j)
                     && (target.col == j || target.row == i)) {
-                    if (game.currentRound.first().pieceAt(target) != role || target == game.properties.keizarTilePos) {
-                        val stopped = checkLines(target, j, i, game)
-                        if (!stopped) {
-                            positionList.add(
-                                BoardPos(i, j)
-                            )
-                        }
+                    val stopped = checkLines(target, j, i, game)
+                    if (!stopped) {
+                        positionList.add(
+                            BoardPos(i, j)
+                        )
                     }
                 }
                 TileType.KEIZAR -> {}
@@ -222,13 +197,11 @@ suspend fun getMoves (
                         if (i < 2) {
                             if (target.col == j && (target.row - i == 1 || target.row - i == 2)) {
                                 if (target.row - i == 1) {
-                                    if (game.currentRound.first().pieceAt(target) == null) {
-                                        positionList.add(
-                                            BoardPos(i, j)
-                                        )
-                                    }
+                                    positionList.add(
+                                        BoardPos(i, j)
+                                    )
                                 } else if (target.row - i == 2) {
-                                    if (game.currentRound.first().pieceAt(target) == null && game.currentRound.first().pieceAt(
+                                    if (game.currentRound.first().pieceAt(
                                             BoardPos(target.row - 1, target.col)
                                         ) == null && tileArrangement[BoardPos(target.row - 1, target.col)] == TileType.PLAIN) {
                                         positionList.add(
@@ -239,11 +212,9 @@ suspend fun getMoves (
                             }
                         } else {
                             if (target.col == j && target.row - i == 1) {
-                                if (game.currentRound.first().pieceAt(target) == null) {
-                                    positionList.add(
-                                        BoardPos(i, j)
-                                    )
-                                }
+                                positionList.add(
+                                    BoardPos(i, j)
+                                )
                             }
                         }
                         if (game.currentRound.first().pieceAt(target) == Role.BLACK) {
@@ -257,22 +228,18 @@ suspend fun getMoves (
                         if (i > 5) {
                             if (i == 6 && j == 3 || i == 6 && j == 4 || i == 6 && j == 2) {
                                 if (target.col == j && (target.row - i == -1)) {
-                                    if (game.currentRound.first().pieceAt(target) == null) {
-                                        positionList.add(
-                                            BoardPos(i, j)
-                                        )
-                                    }
+                                    positionList.add(
+                                        BoardPos(i, j)
+                                    )
                                 }
                             } else {
                                 if (target.col == j && (target.row - i == -1 || target.row - i == -2)) {
                                     if (target.row - i == -1) {
-                                        if (game.currentRound.first().pieceAt(target) == null) {
-                                            positionList.add(
-                                                BoardPos(i, j)
-                                            )
-                                        }
+                                        positionList.add(
+                                            BoardPos(i, j)
+                                        )
                                     } else if (target.row - i == -2) {
-                                        if (game.currentRound.first().pieceAt(target) == null && game.currentRound.first().pieceAt(
+                                        if (game.currentRound.first().pieceAt(
                                                 BoardPos(target.row + 1, target.col)
                                             ) == null  && tileArrangement[BoardPos(target.row + 1, target.col)] == TileType.PLAIN) {
                                             positionList.add(
@@ -285,14 +252,12 @@ suspend fun getMoves (
 
                         } else {
                             if (target.col == j && target.row - i == -1) {
-                                if (game.currentRound.first().pieceAt(target) == null) {
-                                    positionList.add(
-                                        BoardPos(i, j)
-                                    )
-                                }
+                                positionList.add(
+                                    BoardPos(i, j)
+                                )
                             }
                         }
-                        if (game.currentRound.first().pieceAt(target) == Role.WHITE) {
+                        if (game.currentRound.first().pieceAt(target) == role.other()) {
                             if (target.row - i == -1 && abs(target.col - j) == 1) {
                                 positionList.add(
                                     BoardPos(i, j)
@@ -308,6 +273,13 @@ suspend fun getMoves (
 
     return positionList
 }
+
+private suspend fun canMoveToTarget(
+    game: GameSession,
+    target: BoardPos,
+    role: Role,
+    keizarCapture: Role?
+) = game.currentRound.first().pieceAt(target) != role || keizarCapture == role
 
 private suspend fun checkLines(
     target: BoardPos,
