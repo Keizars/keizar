@@ -310,7 +310,7 @@ class AlgorithmAI(
         moves.add(move.source to move.dest)
     }
 
-    fun get_close_nodes_to_keizar(board: List<List<TileNode>>): Int {
+    fun get_close_nodes_to_keizar(board: List<List<TileNode>>) {
         val close_nodes = mutableListOf<TileNode>()
         for (i in 0 until 8) {
             for (j in 0 until 8) {
