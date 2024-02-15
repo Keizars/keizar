@@ -225,7 +225,9 @@ class AlgorithmAI(
     override val myPlayer: Player,
     private val parentCoroutineContext: CoroutineContext,
     private val test: Boolean = false,
-//    private val endpoint: String = "http://home.him188.moe:4393"
+//    private val endpoint: String = "http://home.him188.moe:4393",
+    private val moves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf(),
+    private val kei_nums: MutableList<Int> = mutableListOf()
 ) : GameAI {
     private val myCoroutine: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
@@ -303,6 +305,23 @@ class AlgorithmAI(
         }
         return move
     }
+
+    fun log_moves_made(move: Move) {
+        moves.add(move.source to move.dest)
+    }
+
+    fun get_close_nodes_to_keizar(board: List<List<TileNode>>): Int {
+        val close_nodes = mutableListOf<TileNode>()
+        for (i in 0 until 8) {
+            for (j in 0 until 8) {
+                if (board[i][j].distance == 1) {
+                    close_nodes.add(board[i][j])
+                }
+            }
+        }
+        kei_nums.add(close_nodes.size)
+    }
+
 
     override suspend fun end() {
         myCoroutine.cancel()
