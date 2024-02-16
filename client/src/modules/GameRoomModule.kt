@@ -1,6 +1,7 @@
 package org.keizar.client.modules
 
 import org.keizar.game.BoardProperties
+import org.keizar.utils.communication.message.UserInfo
 import kotlin.random.Random
 import kotlin.random.nextUInt
 
@@ -21,6 +22,8 @@ interface GameRoomModule {
             return GameRoomModuleImpl(client)
         }
     }
+
+    suspend fun joinRoom(roomNumber: UInt, userInfo: UserInfo)
 }
 
 class GameRoomModuleImpl(
@@ -41,5 +44,9 @@ class GameRoomModuleImpl(
 
     override suspend fun getRoom(roomNumber: UInt): GameRoomInfo {
         return client.getRoom(roomNumber)
+    }
+
+    override suspend fun joinRoom(roomNumber: UInt, userInfo: UserInfo) {
+        return client.postRoomJoin(roomNumber, userInfo)
     }
 }

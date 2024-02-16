@@ -1,6 +1,8 @@
 package org.keizar.client
 
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
@@ -33,17 +35,16 @@ interface RemoteGameSession : GameSession {
             parentCoroutineContext: CoroutineContext,
             client: KeizarHttpClient,
         ): RemoteGameSession {
-            val gameRoomClient =
-                GameSessionModuleImpl(room.roomNumber, parentCoroutineContext, client)
+            val session = GameSessionModuleImpl(room.roomNumber, parentCoroutineContext, client)
             val game = GameSession.create(room.gameProperties) { ruleEngine ->
                 RemoteRoundSessionImpl(
                     RoundSessionImpl(ruleEngine),
-                    gameRoomClient
+                    session
                 )
             }
-            gameRoomClient.bind(game)
-            gameRoomClient.connect(UserInfo("temp"))
-            return RemoteGameSessionImpl(game, gameRoomClient)
+            session.bind(game)
+            session.connect(UserInfo("temp"))
+            return RemoteGameSessionImpl(game, session, parentCoroutineContext)
         }
 
         // Restore a RemoteGameSession by a snapshot of the game.
@@ -53,17 +54,16 @@ interface RemoteGameSession : GameSession {
             snapshot: GameSnapshot,
             client: KeizarHttpClient,
         ): RemoteGameSession {
-            val gameRoomClient =
-                GameSessionModuleImpl(room.roomNumber, parentCoroutineContext, client)
+            val session = GameSessionModuleImpl(room.roomNumber, parentCoroutineContext, client)
             val game = GameSession.restore(snapshot) { ruleEngine ->
                 RemoteRoundSessionImpl(
                     RoundSessionImpl(ruleEngine),
-                    gameRoomClient
+                    session
                 )
             }
-            gameRoomClient.bind(game)
-            gameRoomClient.connect(UserInfo("temp"))
-            return RemoteGameSessionImpl(game, gameRoomClient)
+            session.bind(game)
+            session.connect(UserInfo("temp"))
+            return RemoteGameSessionImpl(game, session, parentCoroutineContext)
         }
     }
 }
@@ -71,13 +71,15 @@ interface RemoteGameSession : GameSession {
 class RemoteGameSessionImpl internal constructor(
     private val game: GameSession,
     private val gameSessionModule: GameSessionModule,
+    parentCoroutineContext: CoroutineContext,
 ) : GameSession by game, RemoteGameSession {
+    private val myCoroutineScope: CoroutineScope =
+        CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
     override val state: Flow<PlayerSessionState> = gameSessionModule.getPlayerState()
 
-    // Note: Only call this when state has changed to PLAYING
     override val player: Flow<Player> = MutableSharedFlow<Player>(replay = 1).apply {
-        GlobalScope.launch {
+        myCoroutineScope.launch {
             emit(gameSessionModule.getPlayer())
         }
     }
@@ -92,7 +94,6 @@ class RemoteGameSessionImpl internal constructor(
 
     override val rounds: List<RemoteRoundSession> = game.rounds.map { it as RemoteRoundSession }
 
-    // Note: Only call this when state has changed to PLAYING
     override suspend fun confirmNextRound(player: Player): Boolean {
         if (player != this.player.first()) return false
         return game.confirmNextRound(player).also {
@@ -100,7 +101,6 @@ class RemoteGameSessionImpl internal constructor(
         }
     }
 
-    // Replaying is not allowed in online multiplayer mode
     override fun replayCurrentRound(): Boolean = false
     override fun replayGame(): Boolean = false
 }
