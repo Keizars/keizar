@@ -14,15 +14,6 @@ interface GameRoomModule {
     suspend fun createRoom(roomNumber: UInt? = null, seed: Int? = null): GameRoomInfo
     suspend fun createRoom(roomNumber: UInt? = null, boardProperties: BoardProperties): GameRoomInfo
     suspend fun getRoom(roomNumber: UInt): GameRoomInfo
-
-    companion object {
-        fun create(
-            client: KeizarHttpClient,
-        ): GameRoomModule {
-            return GameRoomModuleImpl(client)
-        }
-    }
-
     suspend fun joinRoom(roomNumber: UInt, userInfo: UserInfo)
 }
 

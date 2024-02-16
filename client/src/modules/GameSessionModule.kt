@@ -44,11 +44,6 @@ internal interface GameSessionModule : AutoCloseable {
     suspend fun connect(userInfo: UserInfo)
 }
 
-val ClientJson = Json {
-    ignoreUnknownKeys = true
-    serializersModule = CommunicationModule
-}
-
 internal class GameSessionModuleImpl(
     private val roomNumber: UInt,
     parentCoroutineContext: CoroutineContext,

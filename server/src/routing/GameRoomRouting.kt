@@ -85,5 +85,13 @@ fun Application.gameRoomRouting() {
             logger.info("Room $roomNumber fetch succeed")
             call.respond(room.properties)
         }
+
+        post("/room/join/{roomNumber}") {
+            val roomNumber: UInt = call.parameters["roomNumber"]?.toUIntOrNull()
+                ?: throw BadRequestException("Invalid room number")
+
+            // TODO
+            call.respond(HttpStatusCode.OK)
+        }
     }
 }

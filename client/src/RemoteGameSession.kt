@@ -11,6 +11,7 @@ import org.keizar.client.modules.GameRoomInfo
 import org.keizar.client.modules.GameSessionModule
 import org.keizar.client.modules.GameSessionModuleImpl
 import org.keizar.client.modules.KeizarHttpClient
+import org.keizar.game.BoardProperties
 import org.keizar.game.GameSession
 import org.keizar.game.RoundSessionImpl
 import org.keizar.game.snapshot.GameSnapshot
@@ -30,31 +31,31 @@ interface RemoteGameSession : GameSession {
     fun close()
 
     companion object {
-        suspend fun createAndConnect(
-            room: GameRoomInfo,
+        // use KeizarClientFacade.createGameSession()
+        internal suspend fun createAndConnect(
             parentCoroutineContext: CoroutineContext,
-            client: KeizarHttpClient,
+            session: GameSessionModule,
+            properties: BoardProperties,
+            userInfo: UserInfo,
         ): RemoteGameSession {
-            val session = GameSessionModuleImpl(room.roomNumber, parentCoroutineContext, client)
-            val game = GameSession.create(room.gameProperties) { ruleEngine ->
+            val game = GameSession.create(properties) { ruleEngine ->
                 RemoteRoundSessionImpl(
                     RoundSessionImpl(ruleEngine),
                     session
                 )
             }
             session.bind(game)
-            session.connect(UserInfo("temp"))
+            session.connect(userInfo)
             return RemoteGameSessionImpl(game, session, parentCoroutineContext)
         }
 
         // Restore a RemoteGameSession by a snapshot of the game.
-        suspend fun restoreAndConnect(
-            room: GameRoomInfo,
+        internal suspend fun restoreAndConnect(
             parentCoroutineContext: CoroutineContext,
+            session: GameSessionModule,
             snapshot: GameSnapshot,
-            client: KeizarHttpClient,
+            userInfo: UserInfo,
         ): RemoteGameSession {
-            val session = GameSessionModuleImpl(room.roomNumber, parentCoroutineContext, client)
             val game = GameSession.restore(snapshot) { ruleEngine ->
                 RemoteRoundSessionImpl(
                     RoundSessionImpl(ruleEngine),
@@ -62,7 +63,7 @@ interface RemoteGameSession : GameSession {
                 )
             }
             session.bind(game)
-            session.connect(UserInfo("temp"))
+            session.connect(userInfo)
             return RemoteGameSessionImpl(game, session, parentCoroutineContext)
         }
     }

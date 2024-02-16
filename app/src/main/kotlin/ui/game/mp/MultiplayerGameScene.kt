@@ -48,7 +48,7 @@ fun MultiplayerGamePage(
             try {
                 sessionFlow.emit(
                     Result.success(
-                        clientFacade.createGameSession(
+                        clientFacade.joinRoom(
                             roomId,
                             backgroundScope.scope.coroutineContext
                         )

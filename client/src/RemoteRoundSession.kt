@@ -22,7 +22,7 @@ class RemoteRoundSessionImpl internal constructor(
     }
 
     override suspend fun move(from: BoardPos, to: BoardPos): Boolean {
-        if (round.pieceAt(from) != curRole.value) return false
+//        if (round.pieceAt(from) != curRole.value) return false
         return round.move(from, to).also {
             if (it) gameSessionModule.sendMove(from, to)
         }

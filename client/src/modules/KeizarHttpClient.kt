@@ -16,9 +16,16 @@ import io.ktor.http.contentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.serialization.json.Json
 import org.keizar.client.exception.NetworkFailureException
 import org.keizar.game.BoardProperties
+import org.keizar.utils.communication.CommunicationModule
 import org.keizar.utils.communication.message.UserInfo
+
+private val ClientJson = Json {
+    ignoreUnknownKeys = true
+    serializersModule = CommunicationModule
+}
 
 interface KeizarHttpClient : AutoCloseable {
     suspend fun postRoomCreate(roomNumber: UInt, boardProperties: BoardProperties)
@@ -30,6 +37,7 @@ interface KeizarHttpClient : AutoCloseable {
 class KeizarHttpClientImpl(
     private val endpoint: String,
 ) : KeizarHttpClient {
+
     private val client = HttpClient {
         install(ContentNegotiation) {
             json()
