@@ -1,4 +1,4 @@
-package org.keizar.client
+package org.keizar.client.modules
 
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -41,7 +41,7 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.random.Random
 import kotlin.random.nextUInt
 
-internal interface GameSessionClient {
+internal interface GameSessionModule {
     fun getCurrentRole(): StateFlow<Role>
     fun getPlayerState(): Flow<PlayerSessionState>
     suspend fun getPlayer(): Player
@@ -57,11 +57,11 @@ val ClientJson = Json {
     serializersModule = CommunicationModule
 }
 
-internal class GameSessionClientImpl(
+internal class GameSessionModuleImpl(
     private val roomNumber: UInt,
     parentCoroutineContext: CoroutineContext,
     private val endpoint: String,
-) : GameSessionClient {
+) : GameSessionModule {
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 

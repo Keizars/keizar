@@ -73,8 +73,8 @@ object BoardPropertiesPrototypes {
             Role.BLACK to BoardPos.range("a7" to "h8"),
         )
         override val tileArrangement: Map<BoardPos, TileType> = PlainTileArrangementFactory(
-            boardWidth = 8,
-            boardHeight = 8,
+            boardWidth = width,
+            boardHeight = height,
             winningPos = keizarTilePos
         ).build()
         override val seed: Int? = null
