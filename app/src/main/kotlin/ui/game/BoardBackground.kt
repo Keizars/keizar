@@ -34,7 +34,6 @@ import org.keizar.android.R
 import org.keizar.android.ui.game.transition.PieceArranger
 import org.keizar.android.ui.theme.slightlyWeaken
 import org.keizar.game.BoardProperties
-import org.keizar.game.Role
 import org.keizar.game.TileType
 import org.keizar.utils.communication.game.BoardPos
 
@@ -87,7 +86,6 @@ fun BoardTiles(
 //                    }.collectAsStateWithLifecycle(BoardPos(0, 0))
                     properties.tileArrangement[pos] ?: TileType.PLAIN
                 },
-                role = null,
                 Modifier
                     .fillMaxSize()
                     .rotate(360 - rotationDegrees), // cancel rotation
@@ -219,11 +217,10 @@ fun Tile(
 @Composable
 fun TileImage(
     tileType: TileType,
-    role: Role?,
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier.border(2.dp, color = Color(0xFFa800d4))
+        modifier = modifier.border(1.dp, color = Color(0xFFa800d4))
     ) {
         CompositionLocalProvider(LocalContentColor provides LocalContentColor.current.slightlyWeaken()) {
             when (tileType) {
