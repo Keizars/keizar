@@ -16,7 +16,6 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.zip
@@ -32,7 +31,6 @@ import org.keizar.game.TileType
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
 import kotlin.coroutines.CoroutineContext
-import kotlin.math.min
 import kotlin.random.Random
 import kotlin.random.nextLong
 
@@ -283,11 +281,13 @@ class AlgorithmAI(
                 if (node is NormalNode && node.occupy == role) {
                     node.parents.sortBy { parent -> parent.second }
                     for (parent in node.parents ) {
-                        val notRecOccupy = if (role == Role.WHITE) BoardPos("d4") else BoardPos("d6")
-                        val checkValid = tiles[node.position] != TileType.PLAIN || ((tiles[node.position] == TileType.PLAIN) && node.position.col != parent.first.position.col)
-                        if (parent.first.position != notRecOccupy) {    // TODO: allow che and huang hou stay
+                        val notRecOccupyPos = if (role == Role.WHITE) BoardPos("d4") else BoardPos("d6")
+                        val notRecOccupy = tiles[notRecOccupyPos] == TileType.ROOK || tiles[notRecOccupyPos] == TileType.QUEEN
+                        val checkValid = tiles[node.position] != TileType.PLAIN
+                                || ((tiles[node.position] == TileType.PLAIN) && node.position.col != parent.first.position.col)
+                        if (parent.first.position != notRecOccupyPos || notRecOccupy) {
                             if (parent.first.occupy == null || parent.first.occupy == role.other() && checkValid) {
-                                val lowerBound = if (keizarCapture == role.other()) 1 else 2
+                                val lowerBound = if (allowCaptureKeizar) 1 else 2
                                 if (parent.second in lowerBound..< minDistance) {
                                     minDistance = parent.second
                                     moves = mutableListOf(node.position to parent.first.position)
@@ -304,22 +304,6 @@ class AlgorithmAI(
         val move = moves.random()
         println(move)
         return move
-    }
-
-    fun log_moves_made(move: Move) {
-        moves.add(move.source to move.dest)
-    }
-
-    fun get_close_nodes_to_keizar(board: List<List<TileNode>>) {
-        val close_nodes = mutableListOf<TileNode>()
-        for (i in 0 until 8) {
-            for (j in 0 until 8) {
-                if (board[i][j].distance == 1) {
-                    close_nodes.add(board[i][j])
-                }
-            }
-        }
-        kei_nums.add(close_nodes.size)
     }
 
 
