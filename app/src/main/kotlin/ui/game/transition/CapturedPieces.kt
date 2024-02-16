@@ -1,26 +1,44 @@
 package org.keizar.android.ui.game.transition
 
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.DpSize
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import org.keizar.android.ui.game.BoardBackground
+import org.keizar.android.ui.game.BoardPieces
+import org.keizar.android.ui.game.PossibleMovesOverlay
+import org.keizar.android.ui.game.rememberSinglePlayerGameBoardViewModel
+import org.keizar.game.snapshot.buildGameSession
+import org.keizar.utils.communication.game.Player
 
 /**
  * Represents a slot where a captured piece can be placed in.
@@ -46,6 +64,14 @@ interface CapturedPieceHostState {
     @Stable
     val slots: List<CapturedPieceSlot>
 
+    val capturedPieceCount: Int
+        @Composable
+        get() = remember {
+            derivedStateOf {
+                slots.count { it.pieceIndex != null }
+            }
+        }.value
+
     /**
      * Attempts to capture the piece with the given [pieceIndex]. Returns the slot allocated to this piece.
      */
@@ -63,10 +89,15 @@ interface CapturedPieceHostState {
 }
 
 fun CapturedPieceHostState(
-    slotCount: Int = 20,
+    slotCount: Int = 16,
 ): CapturedPieceHostState {
     return object : CapturedPieceHostState {
-        override val slots: List<CapturedPieceSlot> = List(slotCount) { CapturedPieceSlot() }
+        override val slots: List<CapturedPieceSlot> =
+            SnapshotStateList<CapturedPieceSlot>().apply {
+                repeat(slotCount) {
+                    add(CapturedPieceSlot())
+                }
+            }
     }
 }
 
@@ -82,29 +113,40 @@ fun CapturedPiecesHost(
     slotSize: DpSize,
     sourceCoordinates: LayoutCoordinates?,
     modifier: Modifier = Modifier,
-    horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
 ) {
     val density by rememberUpdatedState(newValue = LocalDensity.current)
     val sourceCoordinatesUpdated by rememberUpdatedState(newValue = sourceCoordinates)
     Row(
-        modifier = modifier.horizontalScroll(rememberScrollState()),
-        horizontalArrangement = horizontalArrangement,
-        verticalAlignment = Alignment.CenterVertically,
+        modifier,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        for (item in capturedPieceHostState.slots) {
-            key(sourceCoordinatesUpdated) { // Recompose when the source coordinates are updated
-                CapturedPieceSlot(
-                    slotSize,
-                    Modifier.onGloballyPositioned {
-                        density.run {
-                            item.offsetFromBoard = sourceCoordinatesUpdated?.let { source ->
-                                source.localPositionOf(it, Offset.Zero)
-                                    .run { DpOffset(x.toDp(), y.toDp()) }
-                            } ?: DpOffset.Zero
+        Box(
+//        horizontalArrangement = horizontalArrangement,
+//        verticalAlignment = Alignment.CenterVertically,
+        ) {
+            for (item in capturedPieceHostState.slots) {
+                key(sourceCoordinatesUpdated) { // Recompose when the source coordinates are updated
+                    CapturedPieceSlot(
+                        slotSize,
+                        Modifier.onGloballyPositioned {
+                            density.run {
+                                item.offsetFromBoard = sourceCoordinatesUpdated?.let { source ->
+                                    source.localPositionOf(it, Offset.Zero)
+                                        .run { DpOffset(x.toDp(), y.toDp()) }
+                                } ?: DpOffset.Zero
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
+        }
+        val capturedPieceCount = capturedPieceHostState.capturedPieceCount
+        if (capturedPieceCount > 1) {
+            Text(
+                text = "x $capturedPieceCount",
+                Modifier.offset(x = (-8).dp),
+                style = MaterialTheme.typography.labelLarge,
+            )
         }
     }
 }
@@ -115,4 +157,59 @@ private fun CapturedPieceSlot(
     modifier: Modifier = Modifier,
 ) {
     Spacer(modifier = modifier.size(size))
+}
+
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewCapturedPieces() {
+    val vm = rememberSinglePlayerGameBoardViewModel(
+        buildGameSession {
+            round {
+                resetPieces {
+                    black("a8", isCaptured = true)
+                    black("a1", isCaptured = true)
+                    black("a7")
+                    white("a6", isCaptured = true)
+                    white("a4", isCaptured = true)
+                }
+            }
+            round { }
+        },
+        selfPlayer = Player.FirstWhitePlayer,
+    )
+
+    SideEffect {
+        vm.theirCapturedPieceHostState.capture(0)
+        vm.theirCapturedPieceHostState.capture(1)
+    }
+
+    var boardGlobalCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
+
+    val tileSize by vm.pieceArranger.tileSize.collectAsStateWithLifecycle(DpSize.Zero)
+    Column(Modifier.width(400.dp)) {
+        CapturedPiecesHost(
+            capturedPieceHostState = vm.theirCapturedPieceHostState,
+            slotSize = tileSize,
+            sourceCoordinates = boardGlobalCoordinates,
+            Modifier.fillMaxWidth()
+        )
+
+        Box(modifier = Modifier
+            .fillMaxWidth()
+            .height(400.dp)
+            .onGloballyPositioned { boardGlobalCoordinates = it }) {
+            BoardBackground(vm, Modifier.matchParentSize())
+            BoardPieces(vm)
+            PossibleMovesOverlay(vm)
+        }
+
+        CapturedPiecesHost(
+            capturedPieceHostState = vm.myCapturedPieceHostState,
+            slotSize = tileSize,
+            sourceCoordinates = boardGlobalCoordinates,
+            Modifier.fillMaxWidth()
+        )
+    }
+
 }
