@@ -32,7 +32,7 @@ interface KeizarHttpClient : AutoCloseable {
     suspend fun postRoomCreate(roomNumber: UInt, boardProperties: BoardProperties)
     suspend fun getRoom(roomNumber: UInt): RoomInfo
     suspend fun getRoomWebsocketSession(roomNumber: UInt): DefaultClientWebSocketSession
-    suspend fun postRoomJoin(roomNumber: UInt, userInfo: UserInfo)
+    suspend fun postRoomJoin(roomNumber: UInt, userInfo: UserInfo): Boolean
 }
 
 class KeizarHttpClientImpl(
@@ -76,13 +76,14 @@ class KeizarHttpClientImpl(
     override suspend fun postRoomJoin(
         roomNumber: UInt,
         userInfo: UserInfo,
-    ) {
-        client.post(
+    ): Boolean {
+        val respond = client.post(
             urlString = "$endpoint/room/join/$roomNumber"
         ) {
             contentType(ContentType.Application.Json)
             setBody(userInfo)
         }
+        return respond.status == HttpStatusCode.OK
     }
 
     override suspend fun getRoomWebsocketSession(

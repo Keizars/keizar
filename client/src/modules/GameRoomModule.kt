@@ -34,7 +34,6 @@ class GameRoomModuleImpl(
     }
 
     override suspend fun joinRoom(roomNumber: UInt, userInfo: UserInfo): Boolean {
-        // TODO
-        return true
+        return client.postRoomJoin(roomNumber, userInfo)
     }
 }

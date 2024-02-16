@@ -48,7 +48,7 @@ class KeizarClientFacade(
      */
     suspend fun joinRoom(
         roomNumber: UInt,
-        userInfo: UserInfo = UserInfo("TODO: temp"),
+        userInfo: UserInfo,
     ): Boolean {
         val roomInfo = room.getRoom(roomNumber)
         return joinRoom(roomInfo, userInfo)
@@ -69,7 +69,8 @@ class KeizarClientFacade(
     }
 
     /**
-     * Create and return a RemoteGameSession once the players in the room are ready.
+     * Create and return a RemoteGameSession for the room specified by its room number.
+     * Should be called only when the players in the room are ready to start.
      */
     suspend fun createGameSession(
         roomInfo: RoomInfo,
