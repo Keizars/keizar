@@ -14,6 +14,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
 import io.ktor.server.websocket.receiveDeserialized
 import io.ktor.server.websocket.webSocket
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import org.keizar.game.BoardProperties
 import org.keizar.game.RoomInfo
@@ -25,8 +26,9 @@ import org.keizar.utils.communication.message.UserInfo
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 
-fun Application.gameRoomRouting() {
+fun Application.gameRoomRouting(parentScope: CoroutineScope) {
     val logger = log
+    val parentContext = parentScope.coroutineContext
     routing {
         val gameRooms: ConcurrentMap<UInt, GameRoom> = ConcurrentHashMap()
         webSocket("/room/{roomNumber}") {
@@ -66,7 +68,7 @@ fun Application.gameRoomRouting() {
 
             val properties = call.receive<BoardProperties>()
             logger.info("Creating room $roomNumber")
-            val room = GameRoomImpl(roomNumber, properties, coroutineContext, logger)
+            val room = GameRoomImpl(roomNumber, properties, parentContext, logger)
             if (gameRooms.putIfAbsent(roomNumber, room) != null) {
                 // Room already created
                 logger.info("Failure: room $roomNumber already created")
