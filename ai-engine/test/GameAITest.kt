@@ -1,31 +1,22 @@
 package org.keizar.aiengine
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectIndexed
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.keizar.game.GameSession
+import org.keizar.game.snapshot.buildGameSnapshot
+import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
 import kotlin.coroutines.EmptyCoroutineContext
-import kotlin.test.assertNotNull
-import org.keizar.game.*
-import org.keizar.game.snapshot.GameSnapshotBuilder
-import org.keizar.utils.communication.game.BoardPos
-import org.keizar.utils.communication.game.GameResult
 import kotlin.test.assertEquals
 
 
 class RoundSessionTest {
     @Test
     fun `test AI move and play 2 round and Draw`() = runTest {
-        val gameSnapshot = GameSnapshotBuilder {
-            properties(prototype = BoardPropertiesPrototypes.Plain) {
-            }
-
+        val gameSnapshot = buildGameSnapshot {
             val curRound = round {
                 resetPieces {
                     white("a7")
@@ -39,7 +30,7 @@ class RoundSessionTest {
                 }
             }
             setCurRound(curRound)
-        }.build()
+        }
 
         val game = GameSession.restore(gameSnapshot)
         val context = EmptyCoroutineContext

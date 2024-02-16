@@ -4,37 +4,51 @@ import org.keizar.game.AbstractBoardProperties
 import org.keizar.game.BoardProperties
 import org.keizar.game.BoardPropertiesBuilder
 import org.keizar.game.BoardPropertiesPrototypes
+import org.keizar.game.GameSession
 import org.keizar.game.Role
 import org.keizar.utils.communication.game.BoardPos
 
 @DslMarker
 annotation class GameSnapshotDslMarker
 
+/**
+ * Builds a [GameSession] by building and restoring a [GameSnapshot] based on the initial [boardProperties] and applies [builderAction].
+ */
+inline fun buildGameSession(
+    boardProperties: AbstractBoardProperties = BoardPropertiesPrototypes.Plain,
+    builderAction: GameSnapshotBuilder.() -> Unit
+): GameSession = GameSession.restore(buildGameSnapshot(boardProperties, builderAction))
+
+/**
+ * Builds a [GameSnapshot] based on the initial [boardProperties] and applies [builderAction].
+ */
+inline fun buildGameSnapshot(
+    boardProperties: AbstractBoardProperties = BoardPropertiesPrototypes.Plain,
+    builderAction: GameSnapshotBuilder.() -> Unit,
+): GameSnapshot {
+    return GameSnapshotBuilder(BoardPropertiesBuilder(boardProperties)).apply(builderAction).build()
+}
+
 @GameSnapshotDslMarker
-class GameSnapshotBuilder private constructor(
-    private var properties: BoardPropertiesBuilder,
-    private val rounds: MutableList<RoundSnapshotBuilder>,
-    private var currentRoundNo: Int,
-    instructions: GameSnapshotBuilder.() -> Unit
+class GameSnapshotBuilder @PublishedApi internal constructor(
+    @PublishedApi internal var properties: BoardPropertiesBuilder,
+    private val rounds: MutableList<RoundSnapshotBuilder> = mutableListOf(),
+    private var currentRoundNo: Int = 0,
 ) {
-    init {
-        this.apply(instructions)
-    }
-
-    constructor(instructions: GameSnapshotBuilder.() -> Unit) : this(
-        properties = BoardPropertiesBuilder(prototype = BoardPropertiesPrototypes.Plain),
-        rounds = mutableListOf(),
-        currentRoundNo = 0,
-        instructions = instructions,
-    )
-
-    fun properties(
-        prototype: AbstractBoardProperties,
+    /**
+     * Apply changes to current board properties
+     */
+    inline fun properties(
         instructions: BoardPropertiesBuilder.() -> Unit,
     ) {
-        properties = BoardPropertiesBuilder(prototype, instructions)
+        properties.apply(instructions)
     }
 
+    /**
+     * Adds a new round to the game, and configure the round using [instructions].
+     *
+     * The round is initialized with default pieces at their start positions just like in a real game.
+     */
     fun round(instructions: RoundSnapshotBuilder.() -> Unit): RoundSnapshotBuilder {
         val round = RoundSnapshotBuilder(properties, instructions)
         rounds.add(round)
@@ -54,20 +68,20 @@ class GameSnapshotBuilder private constructor(
         )
     }
 
-    companion object {
-        fun from(
-            snapshot: GameSnapshot,
-            instructions: GameSnapshotBuilder.() -> Unit = {},
-        ): GameSnapshotBuilder {
-            return GameSnapshotBuilder(
-                BoardPropertiesBuilder(prototype = snapshot.properties),
-                snapshot.rounds.map { RoundSnapshotBuilder.from(snapshot.properties, it) }
-                    .toMutableList(),
-                snapshot.currentRoundNo,
-                instructions
-            )
-        }
-    }
+//    companion object {
+//        fun from(
+//            snapshot: GameSnapshot,
+//            instructions: GameSnapshotBuilder.() -> Unit = {},
+//        ): GameSnapshotBuilder {
+//            return buildGameSnapshot(
+//                BoardPropertiesBuilder(prototype = snapshot.properties),
+//                snapshot.rounds.map { RoundSnapshotBuilder.from(snapshot.properties, it) }
+//                    .toMutableList(),
+//                snapshot.currentRoundNo,
+//                instructions
+//            )
+//        }
+//    }
 }
 
 @GameSnapshotDslMarker
@@ -118,6 +132,9 @@ class RoundSnapshotBuilder private constructor(
         this.pieces = PiecesBuilder(properties) { prototype(snapshot.pieces) }
     }
 
+    /**
+     * Remove all pieces in the round
+     */
     fun resetPieces(instructions: PiecesBuilder.() -> Unit) {
         this.pieces = PiecesBuilder(properties, fromEmptyBoard = true, instructions)
     }

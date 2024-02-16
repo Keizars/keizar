@@ -5,7 +5,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.keizar.game.snapshot.GameSnapshotBuilder
+import org.keizar.game.snapshot.buildGameSnapshot
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
@@ -228,12 +228,12 @@ class GameSessionTest {
     @Test
     fun `test getRole and getPlayer`() = runTest {
         val game = GameSession.create(0)
-        val FirstWhitePlayerRole = game.currentRole(Player.FirstWhitePlayer)
-        assertEquals(Role.WHITE, FirstWhitePlayerRole.value)
-        assertEquals(FirstWhitePlayerRole.value, game.getRole(Player.FirstWhitePlayer, 0))
-        assertEquals(FirstWhitePlayerRole.value.other(), game.getRole(Player.FirstBlackPlayer, 0))
-        assertEquals(FirstWhitePlayerRole.value.other(), game.getRole(Player.FirstWhitePlayer, 1))
-        assertEquals(FirstWhitePlayerRole.value, game.getRole(Player.FirstBlackPlayer, 1))
+        val firstWhitePlayerRole = game.currentRole(Player.FirstWhitePlayer)
+        assertEquals(Role.WHITE, firstWhitePlayerRole.value)
+        assertEquals(firstWhitePlayerRole.value, game.getRole(Player.FirstWhitePlayer, 0))
+        assertEquals(firstWhitePlayerRole.value.other(), game.getRole(Player.FirstBlackPlayer, 0))
+        assertEquals(firstWhitePlayerRole.value.other(), game.getRole(Player.FirstWhitePlayer, 1))
+        assertEquals(firstWhitePlayerRole.value, game.getRole(Player.FirstBlackPlayer, 1))
 
         for (roundNo in 0..1) {
             for (player in Player.entries) {
@@ -423,8 +423,8 @@ class GameSessionTest {
 
     @Test
     fun `test game ends when no piece can move`() = runTest {
-        val gameSnapshot = GameSnapshotBuilder {
-            properties(prototype = BoardPropertiesPrototypes.Plain) {
+        val gameSnapshot = buildGameSnapshot {
+            properties {
                 tiles {
                     change(BoardPos("c3") to TileType.QUEEN)
                 }
@@ -440,7 +440,7 @@ class GameSessionTest {
 
             round {}
             setCurRound(curRound)
-        }.build()
+        }
 
         val game = GameSession.restore(gameSnapshot)
         val round = game.currentRound.first()
@@ -451,8 +451,8 @@ class GameSessionTest {
 
     @Test
     fun `test 2 round ends and it's a draw`() = runTest {
-        val gameSnapshot = GameSnapshotBuilder {
-            properties(prototype = BoardPropertiesPrototypes.Plain) {
+        val gameSnapshot = buildGameSnapshot {
+            properties {
                 tiles {
                     change(BoardPos("c3") to TileType.QUEEN)
                 }
@@ -469,7 +469,7 @@ class GameSessionTest {
                 }
                 winner { Role.BLACK }
             }
-            val Round2 = round {
+            val round2 = round {
                 curRole { Role.BLACK }
                 resetPieces {
                     clear()
@@ -481,8 +481,8 @@ class GameSessionTest {
                 }
                 winner { Role.BLACK }
             }
-            setCurRound(Round2)
-        }.build()
+            setCurRound(round2)
+        }
 
         val game = GameSession.restore(gameSnapshot)
         assertEquals(1, game.currentRoundNo.first())
@@ -491,8 +491,8 @@ class GameSessionTest {
 
     @Test
     fun `test first round finished in the middle of second round`() = runTest {
-        val gameSnapshot = GameSnapshotBuilder {
-            properties(prototype = BoardPropertiesPrototypes.Plain) {
+        val gameSnapshot = buildGameSnapshot {
+            properties {
                 tiles {
                     change(BoardPos("c3") to TileType.QUEEN)
                 }
@@ -510,9 +510,9 @@ class GameSessionTest {
                 }
                 winner { Role.BLACK }
             }
-            val Round2 = round {}
-            setCurRound(Round2)
-        }.build()
+            val round2 = round {}
+            setCurRound(round2)
+        }
 
         val game = GameSession.restore(gameSnapshot)
         // set current round to the second round
@@ -521,20 +521,17 @@ class GameSessionTest {
 
     @Test
     fun `test game ends when no piece can move 2`() = runTest {
-        val gameSnapshot = GameSnapshotBuilder {
-            properties(prototype = BoardPropertiesPrototypes.Plain) {
-            }
-
-                val curRound = round {
-                    curRole { Role.BLACK }
-                    resetPieces {
-                        white("a8")
-                        black("a2")
-                    }
+        val gameSnapshot = buildGameSnapshot {
+            val curRound = round {
+                curRole { Role.BLACK }
+                resetPieces {
+                    white("a8")
+                    black("a2")
                 }
+            }
             round {}
             setCurRound(curRound)
-        }.build()
+        }
 
         val game = GameSession.restore(gameSnapshot)
         val round = game.currentRound.first()

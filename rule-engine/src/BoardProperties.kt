@@ -61,6 +61,9 @@ data class BoardProperties(
 
 
 object BoardPropertiesPrototypes {
+    /**
+     * An empty board without any special tiles.
+     */
     data object Plain : AbstractBoardProperties {
         override val width: Int = 8
         override val height: Int = 8
