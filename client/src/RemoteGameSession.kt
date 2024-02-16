@@ -31,7 +31,7 @@ interface RemoteGameSession : GameSession {
     fun close()
 
     companion object {
-        // use KeizarClientFacade.createGameSession()
+        // use functions in KeizarClientFacade instead
         internal suspend fun createAndConnect(
             parentCoroutineContext: CoroutineContext,
             session: GameSessionModule,
@@ -49,7 +49,6 @@ interface RemoteGameSession : GameSession {
             return RemoteGameSessionImpl(game, session, parentCoroutineContext)
         }
 
-        // Restore a RemoteGameSession by a snapshot of the game.
         internal suspend fun restoreAndConnect(
             parentCoroutineContext: CoroutineContext,
             session: GameSessionModule,
