@@ -310,14 +310,14 @@ private suspend fun checkLines(
         }
     } else if (target.row == i) {
         if (target.col > j) {
-            for (col in j + 1 until target.row) {
+            for (col in j + 1 until target.col) {
                 if (game.currentRound.first().pieceAt(BoardPos(target.row, col)) != null) {
                     stopped = true
                     break
                 }
             }
         } else if (target.col < j){
-            for (col in target.row + 1 until j) {
+            for (col in target.col + 1 until j) {
                 if (game.currentRound.first().pieceAt(BoardPos(target.row, col)) != null) {
                     stopped = true
                     break
