@@ -85,7 +85,9 @@ class RandomGameAIImpl(
                         if (!test) {
                             delay(Random.nextLong(1000L..1500L))
                         }
-                        session.move(bestPos.first, bestPos.second)
+                        if (bestPos != null) {
+                            session.move(bestPos.first, bestPos.second)
+                        }
                     }
                 }
             }
@@ -100,7 +102,7 @@ class RandomGameAIImpl(
         }
     }
 
-    override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos> {
+    override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos>? {
         val allPieces = round.getAllPiecesPos(role).first()
         var randomPiece = allPieces.random()
         var validTargets = round.getAvailableTargets(randomPiece).first()
@@ -111,8 +113,12 @@ class RandomGameAIImpl(
             delay(1000L)
         } while (validTargets.isEmpty() && allPieces.isNotEmpty() && round.winner.first() == null)
 
-        val randomTarget = validTargets.random()
-        return Pair(randomPiece, randomTarget)
+        return if (validTargets.isEmpty()) {
+            null
+        } else {
+            val randomTarget = validTargets.random()
+            Pair(randomPiece, randomTarget)
+        }
     }
 
     override suspend fun end() {
