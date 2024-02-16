@@ -247,7 +247,7 @@ class AlgorithmAI(
             }.collectLatest { (myRole, session) ->
                 session.curRole.collect { currentRole ->
                     if (myRole == currentRole) {
-                        delay(Random.nextLong(500L..1000L))
+                        delay(Random.nextLong(1000L..1500L))
                         findBestMove(session, currentRole)
                     }
                 }
