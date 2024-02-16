@@ -28,6 +28,7 @@ import org.keizar.game.GameSession
 import org.keizar.game.Move
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
+import org.keizar.game.TileType
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
 import kotlin.coroutines.CoroutineContext
@@ -268,7 +269,8 @@ class AlgorithmAI(
 
     }
 
-    override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos>? {
+    override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos> {
+        val tiles = game.properties.tileArrangement
         val board = createKeizarGraph(role, game)
         var minDistance = Int.MAX_VALUE
         var moves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf()
@@ -278,24 +280,30 @@ class AlgorithmAI(
         board.forEach {
             it.forEach {node ->
                 println(node.distance)
-                if (node.occupy == role) {
+                if (node is NormalNode && node.occupy == role) {
                     node.parents.sortBy { parent -> parent.second }
                     for (parent in node.parents ) {
-                        if (parent.first.occupy != role) {
-                            val lowerBound = if (keizarCapture == role.other()) 1 else 2
-                            if (parent.second in lowerBound..< minDistance) {
-                                minDistance = parent.second
-                                moves = mutableListOf(node.position to parent.first.position)
-                            } else if (parent.second == minDistance) {
-                                moves.add(node.position to parent.first.position)
+                        val notRecOccupy = if (role == Role.WHITE) BoardPos("d4") else BoardPos("d6")
+                        val checkValid = tiles[node.position] != TileType.PLAIN || ((tiles[node.position] == TileType.PLAIN) && node.position.col != parent.first.position.col)
+                        if (parent.first.position != notRecOccupy) {    // TODO: allow che and huang hou stay
+                            if (parent.first.occupy == null || parent.first.occupy == role.other() && checkValid) {
+                                val lowerBound = if (keizarCapture == role.other()) 1 else 2
+                                if (parent.second in lowerBound..< minDistance) {
+                                    minDistance = parent.second
+                                    moves = mutableListOf(node.position to parent.first.position)
+                                } else if (parent.second == minDistance) {
+                                    moves.add(node.position to parent.first.position)
+                                }
                             }
                         }
+
                     }
                 }
-
             }
         }
-        return moves.random()
+        val move = moves.random()
+        println(move)
+        return move
     }
 
     fun log_moves_made(move: Move) {

@@ -194,76 +194,9 @@ suspend fun getMoves (
                 TileType.KEIZAR -> {}
                 TileType.PLAIN -> {
                     if (role == Role.WHITE) {
-                        if (i < 2) {
-                            if (target.col == j && (target.row - i == 1 || target.row - i == 2)) {
-                                if (target.row - i == 1) {
-                                    positionList.add(
-                                        BoardPos(i, j)
-                                    )
-                                } else if (target.row - i == 2) {
-                                    if (game.currentRound.first().pieceAt(
-                                            BoardPos(target.row - 1, target.col)
-                                        ) == null && tileArrangement[BoardPos(target.row - 1, target.col)] == TileType.PLAIN) {
-                                        positionList.add(
-                                            BoardPos(i, j)
-                                        )
-                                    }
-                                }
-                            }
-                        } else {
-                            if (target.col == j && target.row - i == 1) {
-                                positionList.add(
-                                    BoardPos(i, j)
-                                )
-                            }
-                        }
-                        if (game.currentRound.first().pieceAt(target) == Role.BLACK) {
-                            if (target.row - i == 1 && abs(target.col - j) == 1) {
-                                positionList.add(
-                                    BoardPos(i, j)
-                                )
-                            }
-                        }
+                        checkForWhitePlain(i, target, j, positionList, game, tileArrangement, role)
                     } else {
-                        if (i > 5) {
-                            if (i == 6 && j == 3 || i == 6 && j == 4 || i == 6 && j == 2) {
-                                if (target.col == j && (target.row - i == -1)) {
-                                    positionList.add(
-                                        BoardPos(i, j)
-                                    )
-                                }
-                            } else {
-                                if (target.col == j && (target.row - i == -1 || target.row - i == -2)) {
-                                    if (target.row - i == -1) {
-                                        positionList.add(
-                                            BoardPos(i, j)
-                                        )
-                                    } else if (target.row - i == -2) {
-                                        if (game.currentRound.first().pieceAt(
-                                                BoardPos(target.row + 1, target.col)
-                                            ) == null  && tileArrangement[BoardPos(target.row + 1, target.col)] == TileType.PLAIN) {
-                                            positionList.add(
-                                                BoardPos(i, j)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-
-                        } else {
-                            if (target.col == j && target.row - i == -1) {
-                                positionList.add(
-                                    BoardPos(i, j)
-                                )
-                            }
-                        }
-                        if (game.currentRound.first().pieceAt(target) == role.other()) {
-                            if (target.row - i == -1 && abs(target.col - j) == 1) {
-                                positionList.add(
-                                    BoardPos(i, j)
-                                )
-                            }
-                        }
+                        checkForBlackPlain(i, j, target, positionList, game, tileArrangement, role)
                     }
                 }
                 null -> {}
@@ -274,12 +207,102 @@ suspend fun getMoves (
     return positionList
 }
 
-private suspend fun canMoveToTarget(
+private suspend fun checkForBlackPlain(
+    i: Int,
+    j: Int,
+    target: BoardPos,
+    positionList: MutableList<BoardPos>,
+    game: GameSession,
+    tileArrangement: Map<BoardPos, TileType>,
+    role: Role
+) {
+    if (i > 5) {
+        if (i == 6 && j == 3 || i == 6 && j == 4 || i == 6 && j == 2) {
+            if (target.col == j && (target.row - i == -1)) {
+                positionList.add(
+                    BoardPos(i, j)
+                )
+            }
+        } else {
+            checkValidForwardForPlain(target, j, i, positionList, game, tileArrangement, -1)
+        }
+    } else {
+        if (target.col == j && target.row - i == -1) {
+            positionList.add(
+                BoardPos(i, j)
+            )
+        }
+    }
+    checkPlainCapture(game, target, role, i, j, positionList, -1)
+}
+
+private suspend fun checkForWhitePlain(
+    i: Int,
+    target: BoardPos,
+    j: Int,
+    positionList: MutableList<BoardPos>,
+    game: GameSession,
+    tileArrangement: Map<BoardPos, TileType>,
+    role: Role
+) {
+    if (i < 2) {
+        checkValidForwardForPlain(target, j, i, positionList, game, tileArrangement, 1)
+    } else {
+        if (target.col == j && target.row - i == 1) {
+            positionList.add(
+                BoardPos(i, j)
+            )
+        }
+    }
+    checkPlainCapture(game, target, role, i, j, positionList, 1)
+}
+private suspend fun checkValidForwardForPlain(
+    target: BoardPos,
+    j: Int,
+    i: Int,
+    positionList: MutableList<BoardPos>,
+    game: GameSession,
+    tileArrangement: Map<BoardPos, TileType>,
+    role: Int
+) {
+    if (target.col == j && (target.row - i == role || target.row - i == 2 * role)) {
+        if (target.row - i == role) {
+            positionList.add(
+                BoardPos(i, j)
+            )
+        } else if (target.row - i == 2 * role) {
+            if (game.currentRound.first().pieceAt(
+                    BoardPos(target.row - role, target.col)
+                ) == null && tileArrangement[BoardPos(
+                    target.row - role,
+                    target.col
+                )] == TileType.PLAIN
+            ) {
+                positionList.add(
+                    BoardPos(i, j)
+                )
+            }
+        }
+    }
+}
+
+private suspend fun checkPlainCapture(
     game: GameSession,
     target: BoardPos,
     role: Role,
-    keizarCapture: Role?
-) = game.currentRound.first().pieceAt(target) != role || keizarCapture == role
+    i: Int,
+    j: Int,
+    positionList: MutableList<BoardPos>,
+    offset: Int
+) {
+    if (game.currentRound.first().pieceAt(target) == role.other()) {
+        if (target.row - i == offset && abs(target.col - j) == 1) {
+            positionList.add(
+                BoardPos(i, j)
+            )
+        }
+    }
+}
 
 private suspend fun checkLines(
     target: BoardPos,
