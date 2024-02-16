@@ -8,21 +8,21 @@ import kotlin.coroutines.CoroutineContext
 class KeizarClientFacade(
     private val endpoint: String = "http://home.him188.moe:4392"
 ) {
-    private val client: KeizarHttpClient = KeizarHttpClientImpl()
+    private val client: KeizarHttpClient = KeizarHttpClientImpl(endpoint)
 
     fun createRoomClient(): GameRoomModule {
-        return GameRoomModule.create(endpoint, client)
+        return GameRoomModule.create(client)
     }
 
     suspend fun createGameSession(
         roomNumber: UInt,
         parentCoroutineContext: CoroutineContext
     ): RemoteGameSession {
-        val room = GameRoomModule.create(endpoint, client).getRoom(roomNumber)
+        val room = GameRoomModule.create(client).getRoom(roomNumber)
         return RemoteGameSession.createAndConnect(
             room,
             parentCoroutineContext = parentCoroutineContext,
-            endpoint
+            client,
         )
     }
 }

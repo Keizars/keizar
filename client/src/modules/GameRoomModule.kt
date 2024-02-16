@@ -16,16 +16,14 @@ interface GameRoomModule {
 
     companion object {
         fun create(
-            endpoint: String,
             client: KeizarHttpClient,
         ): GameRoomModule {
-            return GameRoomModuleImpl(endpoint, client)
+            return GameRoomModuleImpl(client)
         }
     }
 }
 
 class GameRoomModuleImpl(
-    private val endpoint: String,
     private val client: KeizarHttpClient,
 ) : GameRoomModule {
 
@@ -37,11 +35,11 @@ class GameRoomModuleImpl(
 
     override suspend fun createRoom(roomNumber: UInt?, boardProperties: BoardProperties): GameRoomInfo {
         val actualRoomNumber = roomNumber ?: Random.nextUInt(10000u, 99999u)
-        client.postRoomCreate(endpoint, actualRoomNumber, boardProperties)
+        client.postRoomCreate(actualRoomNumber, boardProperties)
         return GameRoomInfo(actualRoomNumber, boardProperties)
     }
 
     override suspend fun getRoom(roomNumber: UInt): GameRoomInfo {
-        return client.getRoom(roomNumber, endpoint)
+        return client.getRoom(roomNumber)
     }
 }

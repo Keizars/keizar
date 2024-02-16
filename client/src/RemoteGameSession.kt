@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import org.keizar.client.modules.GameRoomInfo
 import org.keizar.client.modules.GameSessionModule
 import org.keizar.client.modules.GameSessionModuleImpl
+import org.keizar.client.modules.KeizarHttpClient
 import org.keizar.game.GameSession
 import org.keizar.game.RoundSessionImpl
 import org.keizar.game.snapshot.GameSnapshot
@@ -29,9 +30,10 @@ interface RemoteGameSession : GameSession {
         suspend fun createAndConnect(
             room: GameRoomInfo,
             parentCoroutineContext: CoroutineContext,
-            endpoint: String,
+            client: KeizarHttpClient,
         ): RemoteGameSession {
-            val gameRoomClient = GameSessionModuleImpl(room.roomNumber, parentCoroutineContext, endpoint)
+            val gameRoomClient =
+                GameSessionModuleImpl(room.roomNumber, parentCoroutineContext, client)
             val game = GameSession.create(room.gameProperties) { ruleEngine ->
                 RemoteRoundSessionImpl(
                     RoundSessionImpl(ruleEngine),
@@ -48,9 +50,10 @@ interface RemoteGameSession : GameSession {
             room: GameRoomInfo,
             parentCoroutineContext: CoroutineContext,
             snapshot: GameSnapshot,
-            endpoint: String,
+            client: KeizarHttpClient,
         ): RemoteGameSession {
-            val gameRoomClient = GameSessionModuleImpl(room.roomNumber, parentCoroutineContext, endpoint)
+            val gameRoomClient =
+                GameSessionModuleImpl(room.roomNumber, parentCoroutineContext, client)
             val game = GameSession.restore(snapshot) { ruleEngine ->
                 RemoteRoundSessionImpl(
                     RoundSessionImpl(ruleEngine),

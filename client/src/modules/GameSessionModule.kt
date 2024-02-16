@@ -60,20 +60,10 @@ val ClientJson = Json {
 internal class GameSessionModuleImpl(
     private val roomNumber: UInt,
     parentCoroutineContext: CoroutineContext,
-    private val endpoint: String,
+    private val client: KeizarHttpClient,
 ) : GameSessionModule {
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
-
-    private val client = HttpClient {
-        install(ContentNegotiation) {
-            json(ClientJson)
-        }
-        install(WebSockets) {
-            contentConverter = KotlinxWebsocketSerializationConverter(ClientJson)
-        }
-        Logging()
-    }
 
     private val playerState: MutableStateFlow<PlayerSessionState> =
         MutableStateFlow(PlayerSessionState.STARTED)
@@ -110,9 +100,7 @@ internal class GameSessionModuleImpl(
     }
 
     private suspend fun serverConnection() {
-        val session = client.webSocketSession(
-            urlString = "ws:${endpoint.substringAfter(':')}/room/$roomNumber",
-        )
+        val session = client.getWebsocketSession(roomNumber)
 
         // don't use sendRequest
         session.sendSerialized(UserInfo(username = "temp-username-${(Random.nextUInt() % 10000u).toInt()}"))
@@ -140,8 +128,6 @@ internal class GameSessionModuleImpl(
     private suspend fun DefaultClientWebSocketSession.messageInflow() {
         while (true) {
             try {
-//                val respond = incoming.receive().readBytes().decodeToString()
-//                    .let { ClientJson.decodeFromString(Respond.serializer(), it) }
                 val respond = receiveDeserialized<Respond>()
                 println("Client received: $respond")
                 when (respond) {
