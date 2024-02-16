@@ -242,13 +242,7 @@ class AlgorithmAI(
                         if (!test) {
                             delay(Random.nextLong(1000L..1500L))
                         }
-                        if (bestPos != null) {
-                            session.move(bestPos.first, bestPos.second)
-                        }
-                        else {
-                            val move = findRandomMove(session, currentRole)
-                            session.move(move.first, move.second)
-                        }
+                        session.move(bestPos.first, bestPos.second)
                     }
                 }
             }
