@@ -49,7 +49,7 @@ interface GameAI {
 suspend fun findRandomMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos> {
     val allPieces = round.getAllPiecesPos(role).first()
     var randomPiece = allPieces.random()
-    var validTargets = round.getAvailableTargets(randomPiece).first()
+    var validTargets: List<BoardPos>
 
     do {
         randomPiece = allPieces.random()
@@ -307,8 +307,11 @@ class AlgorithmAI(
         } else {
             println("Best Moves: $moves")
         }
-        val move = moves.random()
-        return move
+        return if (moves.isNotEmpty()) {
+            moves.random()
+        } else {
+            findRandomMove(round, role)
+        }
     }
 
 
