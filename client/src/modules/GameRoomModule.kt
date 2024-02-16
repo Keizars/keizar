@@ -10,7 +10,7 @@ interface GameRoomModule {
     suspend fun createRoom(roomNumber: UInt? = null, seed: Int? = null): RoomInfo
     suspend fun createRoom(roomNumber: UInt? = null, boardProperties: BoardProperties): RoomInfo
     suspend fun getRoom(roomNumber: UInt): RoomInfo
-    suspend fun joinRoom(roomNumber: UInt, userInfo: UserInfo)
+    suspend fun joinRoom(roomNumber: UInt, userInfo: UserInfo): Boolean
 }
 
 class GameRoomModuleImpl(
@@ -33,7 +33,8 @@ class GameRoomModuleImpl(
         return client.getRoom(roomNumber)
     }
 
-    override suspend fun joinRoom(roomNumber: UInt, userInfo: UserInfo) {
-        return client.postRoomJoin(roomNumber, userInfo)
+    override suspend fun joinRoom(roomNumber: UInt, userInfo: UserInfo): Boolean {
+        // TODO
+        return true
     }
 }

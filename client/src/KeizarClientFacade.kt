@@ -15,50 +15,63 @@ class KeizarClientFacade(
     private val client: KeizarHttpClient = KeizarHttpClientImpl(endpoint)
     private val room: GameRoomModule = GameRoomModuleImpl(client)
 
+    /**
+     * Create a room with random room number.
+     */
     suspend fun createRoom(): RoomInfo {
         return room.createRoom()
     }
 
+    /**
+     * Get the room information of a specified room number.
+     */
     suspend fun getRoom(roomNumber: UInt): RoomInfo {
         return room.getRoom(roomNumber)
     }
 
+    /**
+     * Create a room with random room number and join the room with given user info.
+     * Return the room info.
+     */
     suspend fun createRoomAndJoin(
         parentCoroutineContext: CoroutineContext,
         userInfo: UserInfo
-    ): RemoteGameSession {
+    ): RoomInfo {
         val roomInfo = room.createRoom()
-        return joinRoom(roomInfo, parentCoroutineContext, userInfo)
+        joinRoom(roomInfo, userInfo)
+        return roomInfo
     }
 
+    /**
+     * Join a room with given number and user info.
+     * Return true on success.
+     */
     suspend fun joinRoom(
         roomNumber: UInt,
-        parentCoroutineContext: CoroutineContext,
         userInfo: UserInfo = UserInfo("TODO: temp"),
-    ): RemoteGameSession {
+    ): Boolean {
         val roomInfo = room.getRoom(roomNumber)
-        return joinRoom(roomInfo, parentCoroutineContext, userInfo)
+        return joinRoom(roomInfo, userInfo)
     }
 
     private suspend fun joinRoom(
         roomInfo: RoomInfo,
-        parentCoroutineContext: CoroutineContext,
         userInfo: UserInfo,
-    ): RemoteGameSession {
-        room.joinRoom(roomInfo.roomNumber, userInfo)
-        return createGameSession(roomInfo, parentCoroutineContext, userInfo)
+    ): Boolean {
+        return room.joinRoom(roomInfo.roomNumber, userInfo)
     }
 
     suspend fun reconnectToRoom(
         roomNumber: UInt,
-        parentCoroutineContext: CoroutineContext,
         userInfo: UserInfo,
     ): RemoteGameSession {
-        val roomInfo = room.getRoom(roomNumber)
-        return createGameSession(roomInfo, parentCoroutineContext, userInfo)
+        TODO()
     }
 
-    private suspend fun createGameSession(
+    /**
+     * Create and return a RemoteGameSession once the players in the room are ready.
+     */
+    suspend fun createGameSession(
         roomInfo: RoomInfo,
         parentCoroutineContext: CoroutineContext,
         userInfo: UserInfo,
