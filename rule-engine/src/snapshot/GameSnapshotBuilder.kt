@@ -29,6 +29,15 @@ inline fun buildGameSnapshot(
     return GameSnapshotBuilder(BoardPropertiesBuilder(boardProperties)).apply(builderAction).build()
 }
 
+/**
+ * Constructs a new [GameSnapshotBuilder] with the given [boardProperties].
+ */
+fun GameSnapshotBuilder(
+    boardProperties: AbstractBoardProperties = BoardPropertiesPrototypes.Plain,
+): GameSnapshotBuilder {
+    return GameSnapshotBuilder(BoardPropertiesBuilder(boardProperties))
+}
+
 @GameSnapshotDslMarker
 class GameSnapshotBuilder @PublishedApi internal constructor(
     @PublishedApi internal var properties: BoardPropertiesBuilder,
@@ -42,6 +51,17 @@ class GameSnapshotBuilder @PublishedApi internal constructor(
         instructions: BoardPropertiesBuilder.() -> Unit,
     ) {
         properties.apply(instructions)
+    }
+
+    /**
+     * Apply changes to board tiles. Same as `properties { tiles { } }`
+     */
+    inline fun tiles(
+        crossinline instructions: BoardPropertiesBuilder.TileArrangementBuilder.() -> Unit,
+    ) {
+        properties {
+            tiles { instructions() }
+        }
     }
 
     /**
