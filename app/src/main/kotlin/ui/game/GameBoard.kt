@@ -385,18 +385,15 @@ fun WinningRoundDialog(
 fun WinningCounter(vm: GameBoardViewModel) {
     val winningCounter by vm.winningCounter.collectAsState()
     val flippedStates = remember { mutableStateListOf(true, true, true) }
-    var firstTimeFlipped by remember { mutableStateOf(false) }
 
     // Whenever winningCounter updates, set the corresponding token state to flipped
     LaunchedEffect(winningCounter) {
         if (winningCounter in 1..3) {
-            flippedStates[winningCounter - 1] = true
+            flippedStates[winningCounter - 1] = false
         } else {
-            if (!firstTimeFlipped) {
-                delay(3000)
-                firstTimeFlipped = true
+            for (i in 0 until 3) {
+                flippedStates[i] = true
             }
-            flippedStates.forEachIndexed { index, _ -> flippedStates[index] = false }
         }
     }
 
@@ -420,6 +417,8 @@ fun WinningCounter(vm: GameBoardViewModel) {
 @Composable
 fun Token(number: Int, isFlipped: Boolean) {
     val rotationDegrees by animateFloatAsState(targetValue = if (isFlipped) 180f else 0f)
+    val paleGreen = Color(0xFFC8E6C9)
+    val paleRed = Color(0xFFEB8C8C)
     Canvas(modifier = Modifier
         .size(48.dp)
         .padding(8.dp)
@@ -427,7 +426,7 @@ fun Token(number: Int, isFlipped: Boolean) {
             rotationY = rotationDegrees
             cameraDistance = 12f * density
         }) {
-        val circleColor = if (rotationDegrees <= 90f) Color.Gray else Color.LightGray
+        val circleColor = if (rotationDegrees <= 90f) paleRed else paleGreen
         val radius = size.minDimension / 2
         val center = Offset(radius, radius)
 
@@ -634,3 +633,4 @@ private fun PreviewUndoButton() {
         rememberSinglePlayerGameBoardForPreview()
     )
 }
+
