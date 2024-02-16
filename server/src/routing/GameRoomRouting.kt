@@ -89,6 +89,7 @@ fun Application.gameRoomRouting() {
             }
             logger.info("Room $roomNumber fetch succeed")
             val info = RoomInfo(
+                roomNumber = room.roomNumber,
                 properties = room.properties,
                 playerCount = room.playerCount,
                 playersReady = room.playersReady

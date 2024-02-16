@@ -19,6 +19,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.keizar.client.exception.NetworkFailureException
 import org.keizar.game.BoardProperties
+import org.keizar.game.RoomInfo
 import org.keizar.utils.communication.CommunicationModule
 import org.keizar.utils.communication.message.UserInfo
 
@@ -29,7 +30,7 @@ private val ClientJson = Json {
 
 interface KeizarHttpClient : AutoCloseable {
     suspend fun postRoomCreate(roomNumber: UInt, boardProperties: BoardProperties)
-    suspend fun getRoom(roomNumber: UInt): GameRoomInfo
+    suspend fun getRoom(roomNumber: UInt): RoomInfo
     suspend fun getRoomWebsocketSession(roomNumber: UInt): DefaultClientWebSocketSession
     suspend fun postRoomJoin(roomNumber: UInt, userInfo: UserInfo)
 }
@@ -64,12 +65,12 @@ class KeizarHttpClientImpl(
 
     override suspend fun getRoom(
         roomNumber: UInt,
-    ): GameRoomInfo {
+    ): RoomInfo {
         val respond: HttpResponse = client.get(urlString = "$endpoint/room/get/$roomNumber")
         if (respond.status != HttpStatusCode.OK) {
             throw NetworkFailureException("Failed getRoom")
         }
-        return GameRoomInfo(roomNumber, respond.body())
+        return respond.body<RoomInfo>()
     }
 
     override suspend fun postRoomJoin(

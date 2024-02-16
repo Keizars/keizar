@@ -47,10 +47,9 @@ class MultiplayerRoomViewModel(
     private val roomId: UInt,
 ) : AbstractViewModel(), KoinComponent {
     private val facade: KeizarClientFacade by inject()
-    private val client by lazy { facade.createRoomClient() }
     val playersReady = flow {
         while (currentCoroutineContext().isActive) {
-            emit(client.getRoom(roomId).playersReady)
+            emit(facade.getRoom(roomId).playersReady)
             delay(2.seconds)
         }
     }.flowOn(Dispatchers.IO)
