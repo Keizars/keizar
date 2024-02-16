@@ -275,7 +275,7 @@ class AlgorithmAI(
         val candidateMoves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf()
         val keizarCapture = game.currentRound.first().pieceAt(game.properties.keizarTilePos)
         val keizarCount = game.currentRound.first().winningCounter.value
-        val allowCaptureKeizar = (keizarCapture != role && keizarCount != 2)
+        val allowCaptureKeizar = (keizarCapture != role && keizarCount > 1)
         val threshold = 5 // TODO: change this to a better value
         board.forEach {
             it.forEach {node ->
@@ -305,7 +305,7 @@ class AlgorithmAI(
                 }
             }
         }
-        val noveltyLevel = 0.9 // TODO: change this to a better value
+        val noveltyLevel = 0.95 // TODO: change this to a better value
         val random = Random.nextDouble()
         if (random > noveltyLevel) {
             moves = candidateMoves
