@@ -76,25 +76,6 @@ suspend fun createKeizarGraph(
     val startFromKeizar = KeizarNode(occupyKeizar)
     createNode(startFromKeizar, game, board, role)
 
-//    if (role == Role.WHITE) {
-//        for (i in 4 until 8) {
-//            for (j in 0 until  8) {
-//                // if it is opposite plain tile, it can never reach keizar
-//                if (tilesArrangement[board[i][j].position] == TileType.PLAIN) {
-//                    board[i][j].distance = Int.MAX_VALUE
-//                }
-//            }
-//        }
-//    } else {
-//        for (i in 0 until 5) {
-//            for (j in 0 until  8) {
-//                // if it is opposite plain tile, it can never reach keizar
-//                if (tilesArrangement[board[i][j].position] == TileType.PLAIN) {
-//                    board[i][j].distance = Int.MAX_VALUE
-//                }
-//            }
-//        }
-//    }
     return board
 }
 
