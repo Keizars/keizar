@@ -272,7 +272,7 @@ class AlgorithmAI(
         val board = createKeizarGraph(role, game)
         var minDistance = Int.MAX_VALUE
         var moves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf()
-        var candidateMoves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf()
+        val candidateMoves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf()
         val keizarCapture = game.currentRound.first().pieceAt(game.properties.keizarTilePos)
         val keizarCount = game.currentRound.first().winningCounter.value
         val allowCaptureKeizar = (keizarCapture != role && keizarCount != 2)
@@ -305,7 +305,7 @@ class AlgorithmAI(
                 }
             }
         }
-        val noveltyLevel = 0.7 // TODO: change this to a better value
+        val noveltyLevel = 0.9 // TODO: change this to a better value
         val random = Random.nextDouble()
         if (random > noveltyLevel) {
             moves = candidateMoves
