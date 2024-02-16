@@ -36,7 +36,7 @@ class KeizarClientFacade(
         return joinRoom(roomInfo, parentCoroutineContext, userInfo)
     }
 
-    suspend fun joinRoom(
+    private suspend fun joinRoom(
         roomInfo: GameRoomInfo,
         parentCoroutineContext: CoroutineContext,
         userInfo: UserInfo,
