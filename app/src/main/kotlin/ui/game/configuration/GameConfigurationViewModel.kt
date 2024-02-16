@@ -58,7 +58,7 @@ data class GameStartConfiguration(
             return GameStartConfiguration(
                 layoutSeed = BoardProperties.generateRandomSeed(),
                 playAs = Role.entries.random(),
-                difficulty = Difficulty.EASY,
+                difficulty = Difficulty.MEDIUM,
             )
         }
     }

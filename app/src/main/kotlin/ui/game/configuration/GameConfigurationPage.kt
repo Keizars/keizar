@@ -103,7 +103,7 @@ private fun GameConfigurationPage(
                 item { BoardSeedTextField(vm) }
                 item { PlayAsSelector(vm) }
                 item {
-                    val selected by vm.difficulty.collectAsStateWithLifecycle(Difficulty.EASY)
+                    val selected by vm.difficulty.collectAsStateWithLifecycle(null)
                     DifficultySelector(selected, setDifficulty = { vm.setDifficulty(it) })
                 }
                 item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -238,7 +238,7 @@ private fun PlayAsSelector(vm: GameConfigurationViewModel) {
 
 @Composable
 private fun DifficultySelector(
-    selected: Difficulty,
+    selected: Difficulty?,
     setDifficulty: (Difficulty) -> Unit,
 ) {
     Text(
