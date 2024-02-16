@@ -19,9 +19,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import me.him188.ani.utils.logging.info
-import org.keizar.aiengine.QTableAI
+import org.keizar.aiengine.AlgorithmAI
 import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
@@ -129,8 +130,6 @@ interface GameBoardViewModel {
     @Stable
     val isMultiplayer: Boolean
 
-    @Stable
-    val isPlayerTurn: StateFlow<Boolean>
 
     // clicking
 
@@ -219,7 +218,7 @@ class SinglePlayerGameBoardViewModel(
                 backgroundScope.coroutineContext
             )
 
-            else -> QTableAI(
+            else -> AlgorithmAI(
                 game,
                 Player.entries.first { it != selfPlayer },
                 backgroundScope.coroutineContext,
@@ -331,7 +330,11 @@ sealed class BaseGameBoardViewModel(
     override val finalWinner: StateFlow<GameResult?> = game.finalWinner.stateInBackground(null)
 
     @Stable
-    override val currentRound: SharedFlow<RoundSession> = game.currentRound.shareInBackground()
+    override val currentRound: SharedFlow<RoundSession> = game.currentRound
+        .onEach {
+            logger.info { "[game] currentRound: $it" }
+        }
+        .shareInBackground()
 
     @Stable
     override val currentRoundCount: StateFlow<Int> = game.currentRoundNo
@@ -372,11 +375,6 @@ sealed class BaseGameBoardViewModel(
         game.currentRound.flatMapLatest { it.canUndo }.stateInBackground(false)
 
     override val isMultiplayer: Boolean = false
-
-    // TODO
-    override val isPlayerTurn: StateFlow<Boolean> = game.currentRole(selfPlayer).map { it == selfRole.value }
-        .stateInBackground(false)
-
 
     init {
         backgroundScope.launch {
@@ -466,6 +464,7 @@ sealed class BaseGameBoardViewModel(
     }
 
     override fun startNextRound(selfPlayer: Player) {
+        logger.info { "startNextRound, selfPlayer = $selfPlayer" }
         launchInBackground(Dispatchers.Main.immediate, start = CoroutineStart.UNDISPATCHED) {
             if (currentRoundCount.value != 1) {
                 boardTransitionController.turnBoard()

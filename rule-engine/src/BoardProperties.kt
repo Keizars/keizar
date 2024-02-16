@@ -61,6 +61,9 @@ data class BoardProperties(
 
 
 object BoardPropertiesPrototypes {
+    /**
+     * An empty board without any special tiles.
+     */
     data object Plain : AbstractBoardProperties {
         override val width: Int = 8
         override val height: Int = 8
@@ -73,8 +76,8 @@ object BoardPropertiesPrototypes {
             Role.BLACK to BoardPos.range("a7" to "h8"),
         )
         override val tileArrangement: Map<BoardPos, TileType> = PlainTileArrangementFactory(
-            boardWidth = 8,
-            boardHeight = 8,
+            boardWidth = width,
+            boardHeight = height,
             winningPos = keizarTilePos
         ).build()
         override val seed: Int? = null

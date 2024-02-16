@@ -33,7 +33,6 @@ fun MatchViewModel(): MatchViewModel = MatchViewModelImpl()
 
 internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinComponent {
     private val keizarClientFacade by inject<KeizarClientFacade>()
-    private val client = keizarClientFacade.createRoomClient()
 
     override val joinRoomIdEditing: MutableStateFlow<String> = MutableStateFlow("")
 
@@ -52,7 +51,7 @@ internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinCom
             if (creatingRoom.value) return
             creatingRoom.value = true
             try {
-                selfRoomId.value = client.createRoom().roomNumber.toString()
+                selfRoomId.value = keizarClientFacade.createRoom().roomNumber.toString()
             } finally {
                 creatingRoom.value = false
             }
