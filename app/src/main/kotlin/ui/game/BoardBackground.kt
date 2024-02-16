@@ -48,6 +48,7 @@ fun BoardBackground(
             properties = vm.boardProperties,
             currentPick = vm.currentPick.collectAsStateWithLifecycle().value,
             onClickTile = { logicalPos -> vm.onClickTile(logicalPos) },
+            Modifier.border(3.dp, Color(0xFFa800d4) /* purple */),
         )
         BoardTileLabels(
             properties = vm.boardProperties,
@@ -279,7 +280,9 @@ private fun PreviewBoardBackground() {
     BoxWithConstraints {
         BoardBackground(
             rememberSinglePlayerGameBoardForPreview(),
-            Modifier.size(min(maxWidth, maxHeight))
+            Modifier
+                .size(min(maxWidth, maxHeight))
+                .padding(all = 16.dp)
         )
     }
 }
