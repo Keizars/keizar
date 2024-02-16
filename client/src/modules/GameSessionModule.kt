@@ -15,11 +15,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
+import org.keizar.client.RemoteRoundSession
 import org.keizar.client.exception.NetworkFailureException
 import org.keizar.game.GameSession
 import org.keizar.game.Role
-import org.keizar.utils.communication.CommunicationModule
+import org.keizar.game.RoundSession
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
@@ -31,14 +31,13 @@ import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.StateChange
 import org.keizar.utils.communication.message.UserInfo
 import kotlin.coroutines.CoroutineContext
-import kotlin.random.Random
-import kotlin.random.nextUInt
 
 internal interface GameSessionModule : AutoCloseable {
     fun getCurrentRole(): StateFlow<Role>
     fun getPlayerState(): Flow<PlayerSessionState>
     suspend fun getPlayer(): Player
     fun bind(session: GameSession)
+    fun bind(remote: RemoteRoundSession, round: RoundSession)
     fun sendConfirmNextRound()
     fun sendMove(from: BoardPos, to: BoardPos)
     suspend fun connect(userInfo: UserInfo)
@@ -56,6 +55,7 @@ internal class GameSessionModuleImpl(
         MutableStateFlow(PlayerSessionState.STARTED)
 
     private lateinit var gameSession: GameSession
+    private val underlyingRoundSessionMap: MutableMap<RoundSession, RoundSession> = mutableMapOf()
     private val player: CompletableDeferred<Player> = CompletableDeferred()
     private val currentRole: MutableStateFlow<Role> = MutableStateFlow(Role.WHITE)
 
@@ -120,7 +120,8 @@ internal class GameSessionModuleImpl(
                     is PlayerAllocation -> player.complete(respond.who)
                     ConfirmNextRound -> gameSession.confirmNextRound(player.await().opponent())
                     is Move -> {
-                        gameSession.currentRound.first().move(respond.from, respond.to)
+                        val round = gameSession.currentRound.first()
+                        getUnderlyingRound(round).move(respond.from, respond.to)
                     }
                 }
             } catch (e: WebsocketDeserializeException) {
@@ -143,6 +144,14 @@ internal class GameSessionModuleImpl(
 
     override fun bind(session: GameSession) {
         gameSession = session
+    }
+
+    override fun bind(remote: RemoteRoundSession, round: RoundSession) {
+        underlyingRoundSessionMap[remote] = round
+    }
+
+    private fun getUnderlyingRound(remote: RoundSession): RoundSession {
+        return underlyingRoundSessionMap[remote]!!
     }
 
     override fun sendConfirmNextRound() {
