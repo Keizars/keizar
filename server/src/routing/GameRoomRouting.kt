@@ -18,6 +18,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import org.keizar.game.BoardProperties
 import org.keizar.game.RoomInfo
+import org.keizar.server.ServerContext
 import org.keizar.server.gameroom.GameRoom
 import org.keizar.server.gameroom.GameRoomImpl
 import org.keizar.server.gameroom.PlayerSessionImpl
@@ -26,9 +27,8 @@ import org.keizar.utils.communication.message.UserInfo
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 
-fun Application.gameRoomRouting(parentScope: CoroutineScope) {
+fun Application.gameRoomRouting(context: ServerContext) {
     val logger = log
-    val parentContext = parentScope.coroutineContext
     routing {
         val gameRooms: ConcurrentMap<UInt, GameRoom> = ConcurrentHashMap()
         webSocket("/room/{roomNumber}") {
@@ -68,7 +68,7 @@ fun Application.gameRoomRouting(parentScope: CoroutineScope) {
 
             val properties = call.receive<BoardProperties>()
             logger.info("Creating room $roomNumber")
-            val room = GameRoomImpl(roomNumber, properties, parentContext, logger)
+            val room = GameRoomImpl(roomNumber, properties, coroutineContext, logger)
             if (gameRooms.putIfAbsent(roomNumber, room) != null) {
                 // Room already created
                 logger.info("Failure: room $roomNumber already created")

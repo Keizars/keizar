@@ -16,7 +16,6 @@ import org.keizar.server.plugins.configureSecurity
 import org.keizar.server.plugins.configureSerialization
 import org.keizar.server.plugins.configureSockets
 import org.keizar.server.training.plugins.configureTrainingRouting
-import org.keizar.server.training.setupServerContext
 
 fun main() {
     getServer().start(wait = true)
@@ -57,7 +56,7 @@ fun Application.module() {
     configureDatabases()
     configureSockets()
     val serverCoroutineScope = CoroutineScope(SupervisorJob())
-    configureMultiplayerRouting(serverCoroutineScope)
-    val context = setupServerContext()
+    val context = setupServerContext(serverCoroutineScope)
+    configureMultiplayerRouting(context)
     configureTrainingRouting(context)
 }

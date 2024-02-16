@@ -12,20 +12,20 @@ import org.keizar.game.BoardProperties
 import org.keizar.game.Move
 import org.keizar.game.Role
 import org.keizar.server.training.RuleEngineAdaptor
-import org.keizar.server.training.ServerContext
+import org.keizar.server.ServerContext
 
 fun Application.configureTrainingRouting(context: ServerContext) {
     routing {
         put("/board/{seed}") {
             val seed = call.parameters["seed"]?.toIntOrNull()
                 ?: throw BadRequestException("Invalid seed")
-            context.boardProperties = BoardProperties.getStandardProperties(seed)
-            call.respond(RuleEngineAdaptor.encodeBoard(context.boardProperties))
+            context.trainingBoardProperties = BoardProperties.getStandardProperties(seed)
+            call.respond(RuleEngineAdaptor.encodeBoard(context.trainingBoardProperties))
         }
         post("/moves/white") {
             val boardInput = call.receive<AIBoardData>()
             val moves: List<Move> = RuleEngineAdaptor.getPossibleMoves(
-                context.boardProperties,
+                context.trainingBoardProperties,
                 boardInput.board,
                 Role.WHITE
             )
@@ -34,7 +34,7 @@ fun Application.configureTrainingRouting(context: ServerContext) {
         post("/moves/black") {
             val boardInput = call.receive<AIBoardData>()
             val moves: List<Move> = RuleEngineAdaptor.getPossibleMoves(
-                context.boardProperties,
+                context.trainingBoardProperties,
                 boardInput.board,
                 Role.BLACK
             )

@@ -5,6 +5,10 @@ import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.callloging.CallLogging
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import org.keizar.server.ServerContext
+import org.keizar.server.setupServerContext
 import org.keizar.server.training.plugins.configureSerialization
 import org.keizar.server.training.plugins.configureTrainingRouting
 
@@ -25,14 +29,11 @@ fun main() {
 
 
 fun Application.module() {
-    val context = setupServerContext()
+    val serverCoroutineScope = CoroutineScope(SupervisorJob())
+    val context = setupServerContext(serverCoroutineScope)
 
     install(CallLogging)
 
     configureSerialization()
     configureTrainingRouting(context)
-}
-
-fun setupServerContext(): ServerContext {
-    return ServerContext()
 }
