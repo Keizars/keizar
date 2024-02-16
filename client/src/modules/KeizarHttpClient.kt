@@ -18,11 +18,13 @@ import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
 import org.keizar.client.exception.NetworkFailureException
 import org.keizar.game.BoardProperties
+import org.keizar.utils.communication.message.UserInfo
 
 interface KeizarHttpClient : AutoCloseable {
     suspend fun postRoomCreate(roomNumber: UInt, boardProperties: BoardProperties)
     suspend fun getRoom(roomNumber: UInt): GameRoomInfo
-    suspend fun getWebsocketSession(roomNumber: UInt): DefaultClientWebSocketSession
+    suspend fun getRoomWebsocketSession(roomNumber: UInt): DefaultClientWebSocketSession
+    suspend fun postRoomJoin(roomNumber: UInt, userInfo: UserInfo)
 }
 
 class KeizarHttpClientImpl(
@@ -62,7 +64,19 @@ class KeizarHttpClientImpl(
         return GameRoomInfo(roomNumber, respond.body())
     }
 
-    override suspend fun getWebsocketSession(
+    override suspend fun postRoomJoin(
+        roomNumber: UInt,
+        userInfo: UserInfo,
+    ) {
+        client.post(
+            urlString = "$endpoint/room/join/$roomNumber"
+        ) {
+            contentType(ContentType.Application.Json)
+            setBody(userInfo)
+        }
+    }
+
+    override suspend fun getRoomWebsocketSession(
         roomNumber: UInt,
     ): DefaultClientWebSocketSession {
         return client.webSocketSession(

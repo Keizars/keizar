@@ -1,16 +1,9 @@
 package org.keizar.client.modules
 
-import io.ktor.client.HttpClient
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
-import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.receiveDeserialized
 import io.ktor.client.plugins.websocket.sendSerialized
-import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.serialization.WebsocketDeserializeException
-import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -41,15 +34,14 @@ import kotlin.coroutines.CoroutineContext
 import kotlin.random.Random
 import kotlin.random.nextUInt
 
-internal interface GameSessionModule {
+internal interface GameSessionModule : AutoCloseable {
     fun getCurrentRole(): StateFlow<Role>
     fun getPlayerState(): Flow<PlayerSessionState>
     suspend fun getPlayer(): Player
     fun bind(session: GameSession)
     fun sendConfirmNextRound()
     fun sendMove(from: BoardPos, to: BoardPos)
-    fun close()
-    suspend fun connect()
+    suspend fun connect(userInfo: UserInfo)
 }
 
 val ClientJson = Json {
@@ -74,9 +66,9 @@ internal class GameSessionModuleImpl(
 
     private val outflowChannel: Channel<Request> = Channel()
 
-    override suspend fun connect() {
+    override suspend fun connect(userInfo: UserInfo) {
         try {
-            serverConnection()
+            serverConnection(userInfo)
             startUpdateCurRole()
         } catch (e: CancellationException) {
             throw e
@@ -86,11 +78,10 @@ internal class GameSessionModuleImpl(
     }
 
     override fun close() {
-        client.close()
         myCoroutineScope.cancel()
     }
 
-    private suspend fun startUpdateCurRole() {
+    private fun startUpdateCurRole() {
         myCoroutineScope.launch {
             val player = getPlayer()
             gameSession.currentRoundNo.collect { curRoundNo ->
@@ -99,11 +90,10 @@ internal class GameSessionModuleImpl(
         }
     }
 
-    private suspend fun serverConnection() {
-        val session = client.getWebsocketSession(roomNumber)
+    private suspend fun serverConnection(userInfo: UserInfo) {
+        val session = client.getRoomWebsocketSession(roomNumber)
 
-        // don't use sendRequest
-        session.sendSerialized(UserInfo(username = "temp-username-${(Random.nextUInt() % 10000u).toInt()}"))
+        session.sendSerialized(userInfo)
 
         myCoroutineScope.launch {
             session.messageInflow()
@@ -152,8 +142,6 @@ internal class GameSessionModuleImpl(
         return playerState
     }
 
-    // Note: initialization of Player's value is only guaranteed after playerState becomes PLAYING.
-    // TODO: improve this
     override suspend fun getPlayer(): Player {
         return player.await()
     }

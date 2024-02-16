@@ -14,6 +14,7 @@ import org.keizar.game.RoundSessionImpl
 import org.keizar.game.snapshot.GameSnapshot
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.game.Player
+import org.keizar.utils.communication.message.UserInfo
 import kotlin.coroutines.CoroutineContext
 
 interface RemoteGameSession : GameSession {
@@ -41,7 +42,7 @@ interface RemoteGameSession : GameSession {
                 )
             }
             gameRoomClient.bind(game)
-            gameRoomClient.connect()
+            gameRoomClient.connect(UserInfo("temp"))
             return RemoteGameSessionImpl(game, gameRoomClient)
         }
 
@@ -61,7 +62,7 @@ interface RemoteGameSession : GameSession {
                 )
             }
             gameRoomClient.bind(game)
-            gameRoomClient.connect()
+            gameRoomClient.connect(UserInfo("temp"))
             return RemoteGameSessionImpl(game, gameRoomClient)
         }
     }
