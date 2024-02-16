@@ -247,13 +247,8 @@ class AlgorithmAI(
             }.collectLatest { (myRole, session) ->
                 session.curRole.collect { currentRole ->
                     if (myRole == currentRole) {
-                        val bestPos = findBestMove(session, currentRole)
-                        if (!test) {
-                            delay(Random.nextLong(1000L..1500L))
-                        }
-                        if (bestPos != null) {
-                            session.move(bestPos.first, bestPos.second)
-                        }
+                        delay(Random.nextLong(500L..1000L))
+                        findBestMove(session, currentRole)
                     }
                 }
             }
@@ -318,15 +313,32 @@ class AlgorithmAI(
         } else {
             println("Best Moves: $moves")
         }
-        return if (moves.isNotEmpty()) {
-            moves.random()
+        if (moves.isNotEmpty()) {
+            var bestMove = moves.random()
+            var count = 0
+            var valid = false
+            while (!valid && count < 10) {
+                valid = round.move(bestMove.first, bestMove.second)
+                bestMove = moves.random()
+                count += 1
+            }
+            if (!valid) {
+                val move = findRandomMove(round, role)
+                if (move == null) {
+                    println("No valid move found")
+                } else {
+                    round.move(move.first, move.second)
+                }
+            }
         } else {
             val move = findRandomMove(round, role)
             if (move == null) {
                 println("No valid move found")
+            } else {
+                round.move(move.first, move.second)
             }
-            return move
         }
+        return null
     }
 
 
