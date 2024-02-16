@@ -19,10 +19,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import me.him188.ani.utils.logging.info
 import org.keizar.aiengine.AlgorithmAI
-import org.keizar.aiengine.QTableAI
 import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
@@ -330,7 +330,11 @@ sealed class BaseGameBoardViewModel(
     override val finalWinner: StateFlow<GameResult?> = game.finalWinner.stateInBackground(null)
 
     @Stable
-    override val currentRound: SharedFlow<RoundSession> = game.currentRound.shareInBackground()
+    override val currentRound: SharedFlow<RoundSession> = game.currentRound
+        .onEach {
+            logger.info { "[game] currentRound: $it" }
+        }
+        .shareInBackground()
 
     @Stable
     override val currentRoundCount: StateFlow<Int> = game.currentRoundNo
@@ -460,6 +464,7 @@ sealed class BaseGameBoardViewModel(
     }
 
     override fun startNextRound(selfPlayer: Player) {
+        logger.info { "startNextRound, selfPlayer = $selfPlayer" }
         launchInBackground(Dispatchers.Main.immediate, start = CoroutineStart.UNDISPATCHED) {
             if (currentRoundCount.value != 1) {
                 boardTransitionController.turnBoard()
