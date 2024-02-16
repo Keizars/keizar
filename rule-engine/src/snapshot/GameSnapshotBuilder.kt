@@ -178,20 +178,20 @@ class RoundSnapshotBuilder private constructor(
             pieces.add(PieceSnapshot(curIndex++, role, pos, isCaptured))
         }
 
-        fun white(pos: BoardPos) {
-            add(Role.WHITE, pos)
+        fun white(pos: BoardPos, isCaptured: Boolean = false) {
+            add(Role.WHITE, pos, isCaptured)
         }
 
-        fun white(posStr: String) {
-            add(Role.WHITE, BoardPos(posStr))
+        fun white(posStr: String, isCaptured: Boolean = false) {
+            add(Role.WHITE, BoardPos(posStr), isCaptured)
         }
 
-        fun black(pos: BoardPos) {
-            add(Role.BLACK, pos)
+        fun black(pos: BoardPos, isCaptured: Boolean = false) {
+            add(Role.BLACK, pos, isCaptured)
         }
 
-        fun black(posStr: String) {
-            add(Role.BLACK, BoardPos(posStr))
+        fun black(posStr: String, isCaptured: Boolean = false) {
+            add(Role.BLACK, BoardPos(posStr), isCaptured)
         }
 
         fun remove(pos: BoardPos) {
