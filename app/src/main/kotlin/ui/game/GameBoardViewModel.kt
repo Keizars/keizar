@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 import me.him188.ani.utils.logging.info
 import org.keizar.aiengine.AlgorithmAI
 import org.keizar.aiengine.RandomGameAIImpl
+import org.keizar.android.BuildConfig
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground
@@ -222,12 +223,15 @@ class SinglePlayerGameBoardViewModel(
                 game,
                 Player.entries.first { it != selfPlayer },
                 backgroundScope.coroutineContext,
+                disableDelay = !BuildConfig.ENABLE_AI_DELAY,
             )
         }
 
     init {
         launchInBackground {
-            delay(5.seconds) // Wait a few seconds before computer starts as white
+            if (BuildConfig.ENABLE_AI_DELAY) {
+                delay(5.seconds) // Wait a few seconds before computer starts as white
+            }
             gameAi.start()
         }
     }

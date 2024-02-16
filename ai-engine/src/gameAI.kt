@@ -68,7 +68,7 @@ class RandomGameAIImpl(
     override val game: GameSession,
     override val myPlayer: Player,
     private val parentCoroutineContext: CoroutineContext,
-    private val test: Boolean = false
+    private val disableDelay: Boolean = false
 ) : GameAI {
 
     private val myCoroutine: CoroutineScope =
@@ -82,7 +82,7 @@ class RandomGameAIImpl(
                 session.curRole.collect { currentRole ->
                     if (myRole == currentRole) {
                         val bestPos = findBestMove(session, currentRole)
-                        if (!test) {
+                        if (!disableDelay) {
                             delay(Random.nextLong(1000L..1500L))
                         }
                         if (bestPos != null) {
@@ -233,7 +233,7 @@ class AlgorithmAI(
     override val game: GameSession = GameSession.create(0),
     override val myPlayer: Player,
     private val parentCoroutineContext: CoroutineContext,
-    private val test: Boolean = false,
+    private val disableDelay: Boolean = false,
 //    private val endpoint: String = "http://home.him188.moe:4393",
     private val moves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf(),
     private val kei_nums: MutableList<Int> = mutableListOf()
@@ -247,7 +247,9 @@ class AlgorithmAI(
             }.collectLatest { (myRole, session) ->
                 session.curRole.collect { currentRole ->
                     if (myRole == currentRole) {
-                        delay(Random.nextLong(1000L..1500L))
+                        if (!disableDelay) {
+                            delay(Random.nextLong(1000L..1500L))
+                        }
                         findBestMove(session, currentRole)
                     }
                 }
@@ -259,7 +261,7 @@ class AlgorithmAI(
                 if (it != null) {
                     game.confirmNextRound(myPlayer)
                 }
-                if (!test) {
+                if (!disableDelay) {
                     delay(Random.nextLong(1000L..1500L))
                 }
             }

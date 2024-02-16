@@ -1,4 +1,3 @@
-
 plugins {
     id("org.jetbrains.compose")
     id("com.android.application")
@@ -80,9 +79,11 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 *sharedAndroidProguardRules(),
             )
+            buildConfigField("boolean", "ENABLE_AI_DELAY", "true")
         }
         debug {
             isMinifyEnabled = false
+            buildConfigField("boolean", "ENABLE_AI_DELAY", "false")
         }
     }
     buildFeatures {
