@@ -34,7 +34,6 @@ class KeizarClientFacade(
      * Return the room info.
      */
     suspend fun createRoomAndJoin(
-        parentCoroutineContext: CoroutineContext,
         userInfo: UserInfo
     ): RoomInfo {
         val roomInfo = room.createRoom()
