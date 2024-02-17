@@ -1,5 +1,6 @@
 package org.keizar.android.ui.game.mp
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,7 +29,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
@@ -39,6 +42,8 @@ import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.launchInBackground
 
@@ -135,6 +140,13 @@ private fun PlayWithFriendsSection(
             style = MaterialTheme.typography.labelMedium
         )
 
+        var joiningRoom by remember {
+            mutableStateOf(false)
+        }
+        if (joiningRoom) {
+            ConnectingRoomDialog()
+        }
+
         Row(
             Modifier.padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -166,7 +178,19 @@ private fun PlayWithFriendsSection(
 
             Button(
                 onClick = {
-                    onJoinRoom(roomId)
+                    vm.launchInBackground {
+                        joiningRoom = true
+                        try {
+                            vm.joinRoom()
+                            withContext(Dispatchers.Main) {
+                                onJoinRoom(roomId)
+                            }
+                        } catch (e: Exception) {
+                            Log.e(null, "Error", e)
+                        } finally {
+                            joiningRoom = false
+                        }
+                    }
                 },
                 Modifier.padding(start = 8.dp, top = 8.dp),
                 enabled = roomId.isNotBlank(),

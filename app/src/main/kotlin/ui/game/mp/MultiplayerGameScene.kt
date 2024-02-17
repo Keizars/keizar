@@ -21,10 +21,7 @@ import org.keizar.android.ui.game.MultiplayerGameBoardViewModel
 import org.keizar.client.KeizarClientFacade
 import org.keizar.client.RemoteGameSession
 import org.keizar.client.exception.NetworkFailureException
-import org.keizar.utils.communication.message.UserInfo
 import org.koin.mp.KoinPlatform
-import kotlin.random.Random
-import kotlin.random.nextUInt
 
 private val clientFacade by KoinPlatform.getKoin().inject<KeizarClientFacade>()
 
@@ -54,7 +51,7 @@ fun MultiplayerGamePage(
                         clientFacade.createGameSession(
                             roomId,
                             backgroundScope.scope.coroutineContext,
-                            UserInfo("TODO: temp-${Random.nextUInt() % 1000u}")
+                            MyUserInfo
                         )
                     )
                 )

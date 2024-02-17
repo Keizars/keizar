@@ -8,6 +8,7 @@ import kotlinx.coroutines.sync.withLock
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.client.KeizarClientFacade
+import org.keizar.utils.communication.message.UserInfo
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -17,6 +18,8 @@ interface MatchViewModel : HasBackgroundScope {
 
     fun setJoinRoomId(roomId: String)
 
+    suspend fun joinRoom()
+
 
     @Stable
     val selfRoomId: StateFlow<String?>
@@ -24,10 +27,12 @@ interface MatchViewModel : HasBackgroundScope {
     @Stable
     val creatingRoom: MutableStateFlow<Boolean>
 
-    suspend fun createSelfRoom()
+    suspend fun createSelfRoom(): String
 
     fun removeSelfRoom()
 }
+
+val MyUserInfo = UserInfo(Math.random().toString()) // TODO: temp user name
 
 fun MatchViewModel(): MatchViewModel = MatchViewModelImpl()
 
@@ -40,18 +45,24 @@ internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinCom
         this.joinRoomIdEditing.value = roomId.filter { it.isDigit() }
     }
 
+    override suspend fun joinRoom() {
+        keizarClientFacade.joinRoom(joinRoomIdEditing.value.toUInt(), MyUserInfo)
+    }
+
     override val selfRoomId: MutableStateFlow<String?> = MutableStateFlow(null)
 
     private val creatingRoomLock = Mutex()
     override val creatingRoom: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
-    override suspend fun createSelfRoom() {
-        if (creatingRoomLock.isLocked || creatingRoom.value) return
+    override suspend fun createSelfRoom(): String {
         creatingRoomLock.withLock {
-            if (creatingRoom.value) return
+            selfRoomId.value?.let { return it }
             creatingRoom.value = true
             try {
-                selfRoomId.value = keizarClientFacade.createRoom().roomNumber.toString()
+                val roomId = keizarClientFacade.createRoom().roomNumber
+                keizarClientFacade.joinRoom(roomId, MyUserInfo)
+                selfRoomId.value = roomId.toString()
+                return roomId.toString()
             } finally {
                 creatingRoom.value = false
             }
