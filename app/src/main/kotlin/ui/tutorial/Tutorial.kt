@@ -1,165 +1,85 @@
 package org.keizar.android.ui.tutorial
 
+import kotlinx.coroutines.Job
+import org.keizar.game.GameSession
 import org.keizar.game.snapshot.GameSnapshot
-import org.keizar.game.snapshot.GameSnapshotBuilder
-import org.keizar.utils.communication.game.BoardPos
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
+
 
 /**
- * A template of a steps that the user can follow.
+ * A group of a steps that the user can follow to learn how to play the game.
+ *
+ * [Tutorial] is state-less: it describe what is going to happen in when the player plays the tutorial.
+ * When the player plays the tutorial, a [TutorialSession] is created.
+ *
+ * Use [newSession] to create a stateful session which tracks current progress when the player plays the tutorial.
  */
-class Tutorial(
-    val initialGameSnapshot: GameSnapshot,
-    val steps: List<Step> = emptyList()
-)
-
-sealed class Step
-
+class Tutorial
 /**
- * Request the user to move a piece from [from] to [to].
+ * It's recommended to use [buildTutorial] instead.
  */
-class RequestMove(
-    val from: BoardPos,
-    val to: BoardPos,
-) : Step()
-
-/**
- * Automatically move a piece from [from] to [to].
- */
-class AutoMove(
-    val from: BoardPos,
-    val to: BoardPos,
-) : Step()
-
-/**
- * Sets the message to be displayed for this step.
- */
-class SetMessage(
-    val message: String,
-) : Step()
-
-class Delay(
-    val duration: Duration,
-) : Step()
-
-
-inline fun buildTutorial(
-    action: TutorialBuilder.() -> Unit
-): Tutorial {
-    return TutorialBuilder().apply(action).build()
-}
-
-
-class MoveBuilder {
-    @PublishedApi
-    internal var from: BoardPos? = null
-
-    @PublishedApi
-    internal var to: BoardPos? = null
-
-    fun from(str: String) {
-        from = BoardPos.fromString(str)
-    }
-
-    fun to(str: String) {
-        to = BoardPos.fromString(str)
-    }
-
-    fun from(pos: BoardPos) {
-        from = pos
-    }
-
-    fun to(pos: BoardPos) {
-        to = pos
-    }
-
-    fun build(): Pair<BoardPos, BoardPos> {
-        return Pair(
-            from ?: error("from is not set"),
-            to ?: error("to is not set")
-        )
-    }
-}
-
-class TutorialBuilder(
-) {
-    @PublishedApi
-    internal val snapshotBuilder: GameSnapshotBuilder = GameSnapshotBuilder()
-
-    @PublishedApi
-    internal var steps: MutableList<Step> = mutableListOf()
-
-    inner class StepsBuilder {
-        fun requestMove(from: String, to: String) {
-            steps.add(RequestMove(BoardPos(from), BoardPos(to)))
-        }
-
-        fun requestMove(from: BoardPos, to: BoardPos) {
-            steps.add(RequestMove(from, to))
-        }
-
-        fun requestMove(moveBuilder: MoveBuilder.() -> Unit) {
-            val move = MoveBuilder().apply(moveBuilder).build()
-            steps.add(RequestMove(move.first, move.second))
-
-        }
-
-        fun delay(duration: Duration) {
-            steps.add(Delay(duration))
-        }
-
-        fun delay(millis: Long) {
-            steps.add(Delay(millis.milliseconds))
-        }
-
-        fun autoMove(from: BoardPos, to: BoardPos) {
-            steps.add(AutoMove(from, to))
-        }
-
-        fun message(message: String) {
-            steps.add(SetMessage(message))
-        }
-    }
-
+constructor(
     /**
-     * Configures the board
+     * Game snapshot that will be used to create a [GameSession] when this tutorial is being played (i.e. [newSession]).
      */
-    inline fun board(
-        builderAction: GameSnapshotBuilder.() -> Unit
-    ) {
-        snapshotBuilder.apply(builderAction)
-    }
-
-    inline fun steps(builderAction: StepsBuilder.() -> Unit) {
-        StepsBuilder().apply(builderAction)
-    }
-
-    fun build(): Tutorial {
-        return Tutorial(
-            initialGameSnapshot = snapshotBuilder.build(),
-            steps = steps,
-        )
+    val initialGameSnapshot: GameSnapshot,
+    /**
+     * Ordered steps of this tutorial. A tutorial should have at least one step.
+     */
+    val steps: List<Step>,
+) {
+    init {
+        require(steps.isNotEmpty()) { "A tutorial should have at least one step" }
     }
 }
 
+/**
+ * Starts a new [TutorialSession] that tracks the current progress of the player playing the tutorial.
+ *
+ * @param parentCoroutineContext Parent coroutine context for the session.
+ * Returned [TutorialSession] will attach a child [Job] to the [parentCoroutineContext]'s [Job].
+ */
+fun Tutorial.newSession(
+    parentCoroutineContext: CoroutineContext = EmptyCoroutineContext,
+): TutorialSession = TutorialSessionImpl(this, parentCoroutineContext)
 
-private fun test() {
-    buildTutorial {
-        board {
-            tiles {
 
-            }
-            round {
-
-            }
-        }
-
-        steps {
-            requestMove(BoardPos(0, 0), BoardPos(0, 1))
-            delay(Duration.ZERO)
-            autoMove(BoardPos(0, 1), BoardPos(0, 2))
-            message("Hello, world!")
-        }
-    }
+/**
+ * Represents a step in the tutorial.
+ *
+ * The [Step] is state-less: it describe what is going to happen in when the player plays the tutorial.
+ * When the player plays the tutorial, a [TutorialSession] is created.
+ *
+ * ## Invoking a step
+ *
+ * [action] describes what is going to happen in this step, e.g. requesting the player to move a piece, showing a message, etc.
+ *
+ * When the tutorial goes to this step, the [action] should be executed.
+ *
+ * ## Revoking a step
+ *
+ * When the [action] is invoked, the [TutorialSession] of which this step is a part of tracks what has been done in this step, i.e. piece movements.
+ * By revoking the step, all the tracked actions should be undone.
+ */
+class Step(
+    /**
+     * Name for debugging purposes. Not necessarily (but recommended) to be unique.
+     */
+    val name: String,
+    /**
+     * The action to be executed in this step.
+     *
+     * Note that when the steps are executed, they are executed in the order they are added.
+     */
+    val action: StepAction,
+) {
+    override fun toString(): String = "Step(name=$name)"
 }
+
+/**
+ * A function that represents an action that is executed in a step.
+ * @see StepActionContext
+ * @see Step
+ */
+typealias StepAction = suspend StepActionContext.() -> Unit
