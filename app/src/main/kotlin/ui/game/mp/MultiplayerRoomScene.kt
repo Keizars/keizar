@@ -69,8 +69,8 @@ fun MultiplayerRoomScene(
     }
 
     val playersReady by vm.playersReady.collectAsStateWithLifecycle(false)
-    SideEffect {
-        if (playersReady) {
+    if (playersReady) {
+        SideEffect {
             onPlayersReady()
         }
     }
