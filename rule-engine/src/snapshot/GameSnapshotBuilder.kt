@@ -12,21 +12,21 @@ import org.keizar.utils.communication.game.BoardPos
 annotation class GameSnapshotDslMarker
 
 /**
- * Builds a [GameSession] by building and restoring a [GameSnapshot] based on the initial [boardProperties] and applies [builderAction].
+ * Builds a [GameSession] by building and restoring a [GameSnapshot] based on the initial [prototype] and applies [builderAction].
  */
 inline fun buildGameSession(
-    boardProperties: AbstractBoardProperties = BoardPropertiesPrototypes.Plain,
+    prototype: AbstractBoardProperties = BoardPropertiesPrototypes.Plain,
     builderAction: GameSnapshotBuilder.() -> Unit
-): GameSession = GameSession.restore(buildGameSnapshot(boardProperties, builderAction))
+): GameSession = GameSession.restore(buildGameSnapshot(prototype, builderAction))
 
 /**
- * Builds a [GameSnapshot] based on the initial [boardProperties] and applies [builderAction].
+ * Builds a [GameSnapshot] based on the initial [prototypr] and applies [builderAction].
  */
 inline fun buildGameSnapshot(
-    boardProperties: AbstractBoardProperties = BoardPropertiesPrototypes.Plain,
+    prototypr: AbstractBoardProperties = BoardPropertiesPrototypes.Plain,
     builderAction: GameSnapshotBuilder.() -> Unit,
 ): GameSnapshot {
-    return GameSnapshotBuilder(BoardPropertiesBuilder(boardProperties)).apply(builderAction).build()
+    return GameSnapshotBuilder(BoardPropertiesBuilder(prototypr)).apply(builderAction).build()
 }
 
 /**
@@ -81,27 +81,16 @@ class GameSnapshotBuilder @PublishedApi internal constructor(
     }
 
     fun build(): GameSnapshot {
+        val concreteProperties = properties.build()
+        while (rounds.size < concreteProperties.rounds) {
+            rounds.add(RoundSnapshotBuilder(properties) {})
+        }
         return GameSnapshot(
-            properties = properties.build(),
+            properties = concreteProperties,
             rounds = rounds.map { it.build() },
             currentRoundNo = currentRoundNo
         )
     }
-
-//    companion object {
-//        fun from(
-//            snapshot: GameSnapshot,
-//            instructions: GameSnapshotBuilder.() -> Unit = {},
-//        ): GameSnapshotBuilder {
-//            return buildGameSnapshot(
-//                BoardPropertiesBuilder(prototype = snapshot.properties),
-//                snapshot.rounds.map { RoundSnapshotBuilder.from(snapshot.properties, it) }
-//                    .toMutableList(),
-//                snapshot.currentRoundNo,
-//                instructions
-//            )
-//        }
-//    }
 }
 
 @GameSnapshotDslMarker

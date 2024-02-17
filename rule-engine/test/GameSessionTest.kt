@@ -574,6 +574,4 @@ class GameSessionTest {
         assertTrue(round.move(BoardPos("a2"), BoardPos("a1")))
         assertEquals(Role.BLACK, round.winner.value)
     }
-
-
 }
