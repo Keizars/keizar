@@ -1,4 +1,4 @@
-package org.keizar.android.ui.tutorial
+package org.keizar.android.tutorial
 
 import org.keizar.game.snapshot.GameSnapshotBuilder
 import org.keizar.utils.communication.game.BoardPos

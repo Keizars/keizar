@@ -1,4 +1,4 @@
-package org.keizar.android.ui.tutorial
+package org.keizar.android.tutorial
 
 import androidx.compose.runtime.Composable
 import kotlinx.coroutines.flow.StateFlow

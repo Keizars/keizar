@@ -1,4 +1,4 @@
-package org.keizar.android.ui.tutorial
+package org.keizar.android.tutorial
 
 import kotlinx.coroutines.Job
 import org.keizar.game.GameSession
