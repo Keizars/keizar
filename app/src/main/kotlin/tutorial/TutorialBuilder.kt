@@ -2,6 +2,7 @@ package org.keizar.android.tutorial
 
 import org.keizar.game.snapshot.GameSnapshotBuilder
 import org.keizar.utils.communication.game.BoardPos
+import org.keizar.utils.communication.game.Player
 
 /**
  * Builds a tutorial.
@@ -12,17 +13,29 @@ import org.keizar.utils.communication.game.BoardPos
  * @sample samples.TutorialSamples.buildTutorialComplete
  */
 inline fun buildTutorial(
+    id: String,
     action: TutorialBuilder.() -> Unit
-): Tutorial = TutorialBuilder().apply(action).build()
+): Tutorial = TutorialBuilder(id).apply(action).build()
 
 /**
  * @see buildTutorial
  */
-class TutorialBuilder {
+class TutorialBuilder(
+    private val id: String,
+    private var player: Player = Player.FirstWhitePlayer
+) {
     @PublishedApi
     internal val snapshotBuilder: GameSnapshotBuilder = GameSnapshotBuilder()
 
     val steps = StepsBuilder()
+
+    fun playerStartAsWhite() {
+        player = Player.FirstWhitePlayer
+    }
+
+    fun playerStartAsBlack() {
+        player = Player.FirstBlackPlayer
+    }
 
     /**
      * Modifies the board.
@@ -75,7 +88,9 @@ class TutorialBuilder {
 
     fun build(): Tutorial {
         return Tutorial(
+            id = id,
             initialGameSnapshot = snapshotBuilder.build(),
+            player = player,
             steps = steps.toList(),
         )
     }

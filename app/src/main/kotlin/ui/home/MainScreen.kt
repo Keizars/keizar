@@ -31,12 +31,14 @@ import androidx.navigation.navArgument
 import kotlinx.serialization.decodeFromHexString
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.keizar.android.R
+import org.keizar.android.tutorial.Tutorials
 import org.keizar.android.ui.game.configuration.GameConfigurationScene
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.mp.MatchViewModel
 import org.keizar.android.ui.game.mp.MultiplayerGamePage
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
 import org.keizar.android.ui.game.sp.SinglePlayerGameScene
+import org.keizar.android.ui.tutorial.TutorialScene
 
 @Composable
 @Preview(showBackground = true)
@@ -99,7 +101,14 @@ fun MainScreen() {
             )
         }
         composable("saved games") { /* TODO: saved games page*/ }
-        composable("tutorial") { /* TODO: tutorial page*/ }
+        composable("tutorial") { entry ->
+            val tutorialId = entry.arguments?.getString("tutorialId")!!
+            val tutorial = Tutorials.getById(tutorialId)
+            TutorialScene(
+                tutorial,
+                navController = navController,
+            )
+        }
     }
 }
 

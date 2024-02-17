@@ -61,7 +61,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flatMapLatest
 import org.keizar.android.ui.game.transition.CapturedPiecesHost
 import org.keizar.game.Role
@@ -107,7 +106,7 @@ fun GameBoard(
                 Modifier.fillMaxWidth()
             )
 
-            if (!vm.isMultiplayer) {
+            if (!vm.showUndo) {
                 UndoButton(vm)
             }
         }

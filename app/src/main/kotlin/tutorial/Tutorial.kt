@@ -3,6 +3,7 @@ package org.keizar.android.tutorial
 import kotlinx.coroutines.Job
 import org.keizar.game.GameSession
 import org.keizar.game.snapshot.GameSnapshot
+import org.keizar.utils.communication.game.Player
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
@@ -21,9 +22,17 @@ class Tutorial
  */
 constructor(
     /**
+     * Unique id.
+     */
+    val id: String,
+    /**
      * Game snapshot that will be used to create a [GameSession] when this tutorial is being played (i.e. [newSession]).
      */
     val initialGameSnapshot: GameSnapshot,
+    /**
+     * Initial [Player] for the person who is playing the tutorial.
+     */
+    val player: Player,
     /**
      * Ordered steps of this tutorial. A tutorial should have at least one step.
      */

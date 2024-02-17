@@ -2,11 +2,11 @@
 
 package samples
 
-import org.keizar.android.ui.tutorial.TutorialBuilder
-import org.keizar.android.ui.tutorial.buildTutorial
-import org.keizar.android.ui.tutorial.message
-import org.keizar.android.ui.tutorial.moveOpponent
-import org.keizar.android.ui.tutorial.requestMovePlayer
+import org.keizar.android.tutorial.TutorialBuilder
+import org.keizar.android.tutorial.buildTutorial
+import org.keizar.android.tutorial.message
+import org.keizar.android.tutorial.moveOpponent
+import org.keizar.android.tutorial.requestMovePlayer
 import org.keizar.game.Role
 import kotlin.time.Duration.Companion.seconds
 
@@ -22,7 +22,7 @@ class TutorialSamples {
     }
 
     fun buildTutorialComplete() {
-        buildTutorial {
+        buildTutorial("example") {
             board {
                 round {
                     curRole { Role.WHITE }
