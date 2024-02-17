@@ -45,7 +45,7 @@ class RuleEngineCoreTest {
         Pair(Role.WHITE, BoardPos("h7")),
         Pair(Role.WHITE, BoardPos("g8")),
         Pair(Role.BLACK, BoardPos("e7")),
-    ).map {(player, pos) ->
+    ).map { (player, pos) ->
         MutablePiece(index1++, player, MutableStateFlow(pos))
     }
 
@@ -74,14 +74,14 @@ class RuleEngineCoreTest {
         setOf(BoardPos("h2"), BoardPos("h3")),
         setOf(BoardPos("a6"), BoardPos("a7")),
         setOf(BoardPos("b5"), BoardPos("b6")),
-        setOf(BoardPos("c6")),
+        setOf(BoardPos("c6"), BoardPos("c5")),
         setOf(BoardPos("d6")),
         setOf(BoardPos("f4"), BoardPos("g4")),
         setOf(),
         setOf(BoardPos("g4"), BoardPos("h4")),
         setOf(BoardPos("h8")),
         setOf(),
-        setOf(BoardPos("e6")),
+        setOf(BoardPos("e6"), BoardPos("e5")),
     )
 
     @TestFactory
@@ -119,7 +119,7 @@ class RuleEngineCoreTest {
         Pair(Role.WHITE, BoardPos("e3")),
         Pair(Role.BLACK, BoardPos("g7")),
         Pair(Role.WHITE, BoardPos("f1")),
-    ).map {(player, pos) ->
+    ).map { (player, pos) ->
         MutablePiece(index2++, player, MutableStateFlow(pos))
     }
 
