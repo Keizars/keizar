@@ -1,5 +1,8 @@
 package org.keizar.client.modules
 
+import me.him188.ani.utils.logging.error
+import me.him188.ani.utils.logging.info
+import me.him188.ani.utils.logging.logger
 import org.keizar.game.BoardProperties
 import org.keizar.game.RoomInfo
 import org.keizar.utils.communication.message.UserInfo
@@ -16,6 +19,9 @@ interface GameRoomModule {
 class GameRoomModuleImpl(
     private val client: KeizarHttpClient,
 ) : GameRoomModule {
+    private companion object {
+        private val logger = logger<GameRoomModuleImpl>()
+    }
 
     override suspend fun createRoom(roomNumber: UInt?, seed: Int?): RoomInfo {
         val actualSeed = seed ?: Random.nextInt()
@@ -25,7 +31,13 @@ class GameRoomModuleImpl(
 
     override suspend fun createRoom(roomNumber: UInt?, boardProperties: BoardProperties): RoomInfo {
         val actualRoomNumber = roomNumber ?: Random.nextUInt(10000u, 99999u)
-        client.postRoomCreate(actualRoomNumber, boardProperties)
+        runCatching {
+            client.postRoomCreate(actualRoomNumber, boardProperties)
+        }.onSuccess {
+            logger.info { "GameRoomModule.createRoom: successfully created $actualRoomNumber" }
+        }.onFailure {
+            logger.error(it) { "GameRoomModule.createRoom: failed to create $actualRoomNumber" }
+        }.getOrThrow()
         return RoomInfo(actualRoomNumber, boardProperties, 0, false)
     }
 
@@ -34,6 +46,11 @@ class GameRoomModuleImpl(
     }
 
     override suspend fun joinRoom(roomNumber: UInt, userInfo: UserInfo): Boolean {
-        return client.postRoomJoin(roomNumber, userInfo)
+        return kotlin.runCatching { client.postRoomJoin(roomNumber, userInfo) }
+            .onSuccess {
+                logger.info { "GameRoomModule.joinRoom: successfully joined $roomNumber" }
+            }.onFailure {
+                logger.error(it) { "GameRoomModule.joinRoom: failed to join $roomNumber" }
+            }.getOrThrow()
     }
 }

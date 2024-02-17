@@ -14,4 +14,5 @@ dependencies {
     implementation(libs.ktor.client.websockets)
     implementation(libs.ktor.serialization.kotlinx.json)
     runtimeOnly(libs.slf4j.simple)
+    implementation(projects.utils.slf4jKt)
 }

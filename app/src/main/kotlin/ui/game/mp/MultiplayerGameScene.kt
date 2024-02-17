@@ -1,7 +1,5 @@
 package org.keizar.android.ui.game.mp
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -14,7 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import org.keizar.android.ui.external.placeholder.placeholder
+import org.keizar.android.BuildConfig
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.game.BaseGamePage
 import org.keizar.android.ui.game.MultiplayerGameBoardViewModel
@@ -96,12 +94,25 @@ fun MultiplayerGamePage(
                 onClickGameConfig = onClickGameConfig,
                 modifier
             )
+        } ?: run {
+            ConnectingRoomDialog({
+                if (BuildConfig.DEBUG) {
+                    Text(text = "Debug info: RemoteGameSession.player is still null")
+                }
+            })
         }
     } ?: run {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .placeholder(true)
+        AlertDialog(
+            onDismissRequest = goBack,
+            confirmButton = { Text(text = "OK") },
+            title = { Text(text = "Error") },
+            text = {
+                Text(text = "Failed to join the room. Please check your internet connection and try again.")
+
+                if (BuildConfig.DEBUG) {
+                    Text(text = "Debug info: \n${session?.exceptionOrNull()?.stackTraceToString()}")
+                }
+            }
         )
     }
 }
