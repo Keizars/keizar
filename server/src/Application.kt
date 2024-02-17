@@ -4,6 +4,7 @@ package org.keizar.server
 
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.application.log
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
@@ -56,7 +57,7 @@ fun Application.module() {
     configureDatabases()
     configureSockets()
     val serverCoroutineScope = CoroutineScope(SupervisorJob())
-    val context = setupServerContext(serverCoroutineScope)
+    val context = setupServerContext(serverCoroutineScope, log)
     configureMultiplayerRouting(context)
     configureTrainingRouting(context)
 }

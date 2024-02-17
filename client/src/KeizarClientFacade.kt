@@ -73,10 +73,11 @@ class KeizarClientFacade(
      * Should be called only when the players in the room are ready to start.
      */
     suspend fun createGameSession(
-        roomInfo: RoomInfo,
+        roomNumber: UInt,
         parentCoroutineContext: CoroutineContext,
         userInfo: UserInfo,
     ): RemoteGameSession {
+        val roomInfo = room.getRoom(roomNumber)
         val session = GameSessionModuleImpl(roomInfo.roomNumber, parentCoroutineContext, client)
         return RemoteGameSession.createAndConnect(
             parentCoroutineContext,
