@@ -242,9 +242,8 @@ class AlgorithmAI(
 //    private val endpoint: String = "http://home.him188.moe:4393",
 //    private val moves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf(),
 //    private val kei_numbers: MutableList<Int> = mutableListOf(),
-    private val keizarThreshold: Int = 1,
-    private val possibleMovesThreshold: Int = 5,
-    private val noveltyLevel: Double = 0.95
+    private val aiParameter: AIParameter,
+    private val test: Boolean = false
 ) : GameAI {
     private val myCoroutine: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
@@ -285,7 +284,7 @@ class AlgorithmAI(
         val candidateMoves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf()
         val keizarCapture = game.currentRound.first().pieceAt(game.properties.keizarTilePos)
         val keizarCount = game.currentRound.first().winningCounter.value
-        val allowCaptureKeizar = (keizarCapture != role && keizarCount > keizarThreshold) // TODO: Change keizarCount to a better value
+        val allowCaptureKeizar = (keizarCapture != role && keizarCount > aiParameter.keizarThreshold) // TODO: Change keizarCount to a better value
         board.forEach {
             it.forEach {node ->
                 if (node is NormalNode && node.occupy == role) {
@@ -304,7 +303,7 @@ class AlgorithmAI(
                                 } else if (parent.second == minDistance) {
                                     moves.add(node.position to parent.first.position)
                                 }
-                                if (parent.second in lowerBound.. possibleMovesThreshold) {
+                                if (parent.second in lowerBound.. aiParameter.possibleMovesThreshold) {
                                     candidateMoves.add(node.position to parent.first.position)
                                 }
                             }
@@ -315,7 +314,7 @@ class AlgorithmAI(
             }
         }
         val random = Random.nextDouble()
-        if (random > noveltyLevel) {
+        if (random > aiParameter.noveltyLevel) {
             moves = candidateMoves
 //            println("Candidate Moves: $candidateMoves")
         } else {
@@ -356,3 +355,7 @@ class AlgorithmAI(
 
 }
 
+class AIParameter(
+    val keizarThreshold: Int = 1,
+    val possibleMovesThreshold: Int = 5,
+    val noveltyLevel: Double = 0.95)
