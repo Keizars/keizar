@@ -98,12 +98,12 @@ class HyperParameterTuning {
             println("Session: $i ")
             val game = GameSession.create(0)
             val context = EmptyCoroutineContext
-            val ai1Parameter = AIParameter(
+            val ai1Parameter = AIParameters(
                 keizarThreshold = 1,
                 possibleMovesThreshold = 5,
                 noveltyLevel = 0.9
             )
-            val ai2Parameter = AIParameter(
+            val ai2Parameter = AIParameters(
                 keizarThreshold = 2,
                 possibleMovesThreshold = 5,
                 noveltyLevel = 0.9
