@@ -1,5 +1,6 @@
 package org.keizar.android.ui.tutorial
 
+import androidx.compose.runtime.Stable
 import org.keizar.android.tutorial.Tutorial
 import org.keizar.android.tutorial.TutorialSession
 import org.keizar.android.tutorial.newSession
@@ -21,6 +22,7 @@ fun TutorialGameBoardViewModel(
 }
 
 class TutorialGameBoardViewModel(
+    @Stable
     val tutorialSession: TutorialSession,
     game: GameSession = tutorialSession.game, selfPlayer: Player = tutorialSession.tutorial.player,
 ) : BaseGameBoardViewModel(game, selfPlayer) {
