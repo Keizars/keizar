@@ -2,6 +2,7 @@ package org.keizar.aiengine
 
 import kotlinx.coroutines.flow.collectIndexed
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -85,4 +86,28 @@ class RoundSessionTest {
 //        assertNotNull(winner)
 //        println(winner)
 //    }
+    @Test
+    fun `better parameter tuning`() = runTest {
+        var ai1Win = 0
+        var ai2Win = 0
+        for (i in 1..100) {
+            print("Session: $i ")
+            val game = GameSession.create()
+            val context = EmptyCoroutineContext
+            val ai1 = AlgorithmAI(game, Player.FirstWhitePlayer, context, true, 1)
+            val ai2 = AlgorithmAI(game, Player.FirstBlackPlayer, context, true, 2)
+            ai1.start()
+            ai2.start()
+            val winner = game.finalWinner.filterNotNull().first()
+            if (winner == GameResult.Winner(Player.FirstWhitePlayer)) {
+                ai1Win++
+            } else if (winner == GameResult.Winner(Player.FirstBlackPlayer)) {
+                ai2Win++
+            }
+            ai1.end()
+            ai2.end()
+        }
+        println("ai1Win: $ai1Win")
+        println("ai2Win: $ai2Win")
+    }
 }

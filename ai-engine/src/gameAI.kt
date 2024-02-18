@@ -48,20 +48,25 @@ interface GameAI {
 
 suspend fun findRandomMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos>? {
     val allPieces = round.getAllPiecesPos(role).first()
-    var randomPiece = allPieces.random()
-    var validTargets: List<BoardPos>
-
-    do {
-        randomPiece = allPieces.random()
-        validTargets = round.getAvailableTargets(randomPiece).first()
-    } while (validTargets.isEmpty() && allPieces.isNotEmpty() && round.winner.first() == null)
-
-    return if (validTargets.isEmpty()) {
-        null
+    if (allPieces.isEmpty()) {
+        return null
     } else {
-        val randomTarget = validTargets.random()
-        Pair(randomPiece, randomTarget)
+        var randomPiece = allPieces.random()
+        var validTargets = listOf<BoardPos>()
+
+        while (validTargets.isEmpty() && round.winner.first() == null) {
+            randomPiece = allPieces.random()
+            validTargets = round.getAvailableTargets(randomPiece).first()
+        }
+
+        return if (validTargets.isEmpty()) {
+            null
+        } else {
+            val randomTarget = validTargets.random()
+            Pair(randomPiece, randomTarget)
+        }
     }
+
 }
 
 class RandomGameAIImpl(
@@ -235,8 +240,11 @@ class AlgorithmAI(
     private val parentCoroutineContext: CoroutineContext,
     private val disableDelay: Boolean = false,
 //    private val endpoint: String = "http://home.him188.moe:4393",
-    private val moves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf(),
-    private val kei_nums: MutableList<Int> = mutableListOf()
+//    private val moves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf(),
+//    private val kei_numbers: MutableList<Int> = mutableListOf(),
+    private val keizarThreshold: Int = 1,
+    private val possibleMovesThreshold: Int = 5,
+    private val noveltyLevel: Double = 0.95
 ) : GameAI {
     private val myCoroutine: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
@@ -277,8 +285,7 @@ class AlgorithmAI(
         val candidateMoves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf()
         val keizarCapture = game.currentRound.first().pieceAt(game.properties.keizarTilePos)
         val keizarCount = game.currentRound.first().winningCounter.value
-        val allowCaptureKeizar = (keizarCapture != role && keizarCount > 1)
-        val threshold = 5 // TODO: change this to a better value
+        val allowCaptureKeizar = (keizarCapture != role && keizarCount > keizarThreshold) // TODO: Change keizarCount to a better value
         board.forEach {
             it.forEach {node ->
                 if (node is NormalNode && node.occupy == role) {
@@ -297,7 +304,7 @@ class AlgorithmAI(
                                 } else if (parent.second == minDistance) {
                                     moves.add(node.position to parent.first.position)
                                 }
-                                if (parent.second in lowerBound.. threshold) {
+                                if (parent.second in lowerBound.. possibleMovesThreshold) {
                                     candidateMoves.add(node.position to parent.first.position)
                                 }
                             }
@@ -307,13 +314,12 @@ class AlgorithmAI(
                 }
             }
         }
-        val noveltyLevel = 0.95 // TODO: change this to a better value
         val random = Random.nextDouble()
         if (random > noveltyLevel) {
             moves = candidateMoves
-            println("Candidate Moves: $candidateMoves")
+//            println("Candidate Moves: $candidateMoves")
         } else {
-            println("Best Moves: $moves")
+//            println("Best Moves: $moves")
         }
         if (moves.isNotEmpty()) {
             var bestMove = moves.random()
