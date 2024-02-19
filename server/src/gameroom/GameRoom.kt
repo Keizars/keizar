@@ -116,7 +116,7 @@ class GameRoomImpl(
             player.setState(PlayerSessionState.WAITING)
             notifyPlayerAllocation(player, playerAllocation[player.user]!!)
             if (!playerSessions.containsKey(user)) {
-                playerSessions[user] = MutableSharedFlow()
+                playerSessions[user] = MutableSharedFlow(replay = 1)
             }
             playerSessions[user]!!.emit(player)
             if (playerSessions.keys.containsAll(playerInfos)) {
@@ -166,6 +166,8 @@ class GameRoomImpl(
 
         myCoroutineScope.launch {
             combine(playerSessions.values) { (player1, player2) ->
+                player1.setState(PlayerSessionState.PLAYING)
+                player2.setState(PlayerSessionState.PLAYING)
                 myCoroutineScope.launch { forwardMessages(player1, player2) }
                 myCoroutineScope.launch { forwardMessages(player2, player1) }
             }.collectLatest { }
