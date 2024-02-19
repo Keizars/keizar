@@ -7,12 +7,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.map
 import org.keizar.android.tutorial.Tutorial
 import org.keizar.android.tutorial.Tutorials
 import org.keizar.android.tutorial.respond
@@ -65,10 +67,10 @@ private fun TutorialPage(
         modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text(text = "Game") },
+                title = { Text(text = "Tutorial") },
                 navigationIcon = {
                     IconButton(onClick = onClickHome) {
-                        Icon(Icons.Rounded.Home, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back")
                     }
                 },
                 actions = {
@@ -99,6 +101,17 @@ private fun TutorialPage(
                         ) {
                             val message by vm.tutorialSession.presentation.message.collectAsState()
                             message?.let { it() }
+                        }
+
+                        Box {
+                            TextButton(
+                                onClick = { vm.launchInBackground { vm.tutorialSession.back() } },
+                                enabled = remember(vm) {
+                                    vm.tutorialSession.currentStep.map { it.index != 0 }
+                                }.collectAsStateWithLifecycle(false).value,
+                            ) {
+                                Text(text = "Back")
+                            }
                         }
 
                         Box {

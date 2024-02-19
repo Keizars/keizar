@@ -92,8 +92,8 @@ internal class TutorialSessionImpl(
     private val started = atomic(false)
     override val game = GameSession.restore(tutorial.initialGameSnapshot)
 
-    private val stepStates = tutorial.steps.map { step ->
-        StepSessionImpl(step = step)
+    private val stepStates = tutorial.steps.mapIndexed { index, step ->
+        StepSessionImpl(index = index, step = step)
     }
 
     override val currentStep: MutableStateFlow<StepSessionImpl> = MutableStateFlow(stepStates.first())
@@ -106,7 +106,7 @@ internal class TutorialSessionImpl(
     private val logger = logger("TutorialSessionImpl")
 
     override suspend fun back() = executionLock.withLock {
-        check(!started.value) { "Cannot revoke steps when the tutorial has not yet started" }
+        check(started.value) { "Cannot revoke steps when the tutorial has not yet started" }
 
         val currentExecution = currentExecution
         check(currentExecution != null)
@@ -168,13 +168,16 @@ internal class TutorialSessionImpl(
 
         suspend fun <R> issueAndAwait(request: TutorialRequest<R>): R = lock.withLock {
             this.request.value = request
-            return request.awaitResponse().also {
+            try {
+                return request.awaitResponse()
+            } finally {
                 this.request.value = null
             }
         }
     }
 
     inner class StepSessionImpl(
+        override val index: Int,
         override val step: Step,
     ) : StepSession {
         private val stepScope = this@TutorialSessionImpl.tutorialScope.childSupervisorScope()
@@ -206,10 +209,10 @@ internal class TutorialSessionImpl(
             }
 
             override suspend fun moveOpponent(from: BoardPos, to: BoardPos): Unit = lock.withLock {
-                val myRole = game.currentRound.first().curRole.first()
                 check(
                     game.currentRound.first().move(from, to)
                 ) { "Step '${step.name}': Failed to move opponent from $from to $to" }
+                val myRole = game.currentRound.first().curRole.first().other()
                 logger.info { "Step '${step.name}': Moved opponent from $from to $to" }
                 revokers.add { game.currentRound.first().undo(myRole) }
             }
@@ -242,6 +245,9 @@ internal class TutorialSessionImpl(
             val job = stepScope.launch {
                 try {
                     step.action(executionContext)
+                } catch (e: CancellationException) {
+                    // revoked
+                    throw e
                 } catch (e: Throwable) {
                     throw IllegalStateException("Exception in invoking step '${step.name}', see cause for details", e)
                 }

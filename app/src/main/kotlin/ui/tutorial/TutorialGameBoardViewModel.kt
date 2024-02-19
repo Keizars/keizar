@@ -38,6 +38,7 @@ class TutorialGameBoardViewModel(
         tutorialSession.requests.requestingShowPossibleMoves
             .transformLatest { request ->
                 if (request == null) {
+                    completePick(false)
                     return@transformLatest
                 }
                 coroutineScope {
