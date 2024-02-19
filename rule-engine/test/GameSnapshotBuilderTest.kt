@@ -39,4 +39,22 @@ class GameSnapshotBuilderTest {
         assertEquals(1, game.currentRoundNo.value)
         assertEquals(GameResult.Draw, game.finalWinner.first())
     }
+
+    @Test
+    fun `test free move round builder`() = runTest {
+        val game = buildGameSession {
+            tiles {  }
+            round {
+                allowFreeMove()
+                resetPieces {
+                    white("b1")
+                    black("g7")
+                }
+            }
+        }
+        val round = game.currentRound.first()
+        assertTrue(round.move(BoardPos("g7"), BoardPos("g5")))
+        assertTrue(round.move(BoardPos("g5"), BoardPos("g4")))
+        assertTrue(round.move(BoardPos("g4"), BoardPos("g3")))
+    }
 }
