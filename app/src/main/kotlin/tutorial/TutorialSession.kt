@@ -224,6 +224,11 @@ internal class TutorialSessionImpl(
                 logger.info { "Step '${step.name}': Displayed message" }
             }
 
+            override suspend fun compose(content: @Composable (request: TutorialRequest.CompletableTutorialRequest<Unit>) -> Unit) {
+                requests.issueAndAwait(TutorialRequest.Compose(content))
+                logger.info { "Step '${step.name}': Displayed composable" }
+            }
+
             override suspend fun awaitNext() {
                 requests.issueAndAwait(TutorialRequest.ClickNext())
             }

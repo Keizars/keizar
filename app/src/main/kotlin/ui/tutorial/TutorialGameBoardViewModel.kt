@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import org.keizar.android.tutorial.Tutorial
 import org.keizar.android.tutorial.TutorialSession
 import org.keizar.android.tutorial.newSession
+import org.keizar.android.tutorial.respond
 import org.keizar.android.ui.game.BaseGameBoardViewModel
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.game.GameSession

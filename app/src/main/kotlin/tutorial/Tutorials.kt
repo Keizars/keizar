@@ -2,6 +2,7 @@
 
 package org.keizar.android.tutorial
 
+import androidx.compose.material3.Text
 import org.keizar.game.Role
 import org.keizar.game.TileType
 import kotlin.time.Duration.Companion.seconds
@@ -74,7 +75,9 @@ object Tutorials {
             }
 
             step("show rules") {
-                
+                showBottomSheet {
+                    Text(text = "Rules")
+                }
             }
         }
     }

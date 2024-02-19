@@ -1,5 +1,6 @@
 package org.keizar.android.ui.tutorial
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -27,6 +28,7 @@ import androidx.navigation.NavController
 import kotlinx.coroutines.delay
 import org.keizar.android.tutorial.Tutorial
 import org.keizar.android.tutorial.Tutorials
+import org.keizar.android.tutorial.respond
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.GameBoard
 import org.keizar.android.ui.game.GameBoardTopBar
@@ -90,15 +92,26 @@ private fun TutorialPage(
                     onClickGameConfig = {},
                     topBar = { GameBoardTopBar(vm = vm, turnStatusIndicator = null) },
                     actions = {
-                        val next by remember {
-                            vm.tutorialSession.requests.requestingClickNext
-                        }.collectAsStateWithLifecycle(null)
-                        next.let { n ->
-                            Button(
-                                onClick = { n?.respond() },
-                                enabled = n != null && !n.isResponded
-                            ) {
-                                Text(text = "Next")
+                        Box(
+                            Modifier
+                                .weight(1f)
+                                .padding(end = 12.dp)
+                        ) {
+                            val message by vm.tutorialSession.presentation.message.collectAsState()
+                            message?.let { it() }
+                        }
+
+                        Box {
+                            val next by remember {
+                                vm.tutorialSession.requests.requestingClickNext
+                            }.collectAsStateWithLifecycle(null)
+                            next.let { n ->
+                                Button(
+                                    onClick = { n?.respond() },
+                                    enabled = n != null && !n.isResponded
+                                ) {
+                                    Text(text = "Next")
+                                }
                             }
                         }
                     }
@@ -110,8 +123,10 @@ private fun TutorialPage(
                     .padding(horizontal = 16.dp)
                     .padding(vertical = 8.dp)
             ) {
-                val message by vm.tutorialSession.presentation.message.collectAsState()
-                message?.let { it() }
+            }
+
+            vm.tutorialSession.requests.requestingCompose.collectAsStateWithLifecycle(initialValue = null).value?.let {
+                it.content(it)
             }
         }
     }

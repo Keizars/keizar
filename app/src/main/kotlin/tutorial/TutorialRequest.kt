@@ -1,5 +1,6 @@
 package org.keizar.android.tutorial
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
@@ -46,6 +47,9 @@ abstract class TutorialRequests {
 
     @Stable
     val requestingShowPossibleMoves: Flow<TutorialRequest.ShowPossibleMoves?> by lazy { filterRequest<TutorialRequest.ShowPossibleMoves>() }
+
+    @Stable
+    val requestingCompose: Flow<TutorialRequest.Compose?> by lazy { filterRequest<TutorialRequest.Compose>() }
 }
 
 /**
@@ -86,13 +90,19 @@ sealed interface TutorialRequest<R> {
         val to: BoardPos,
     ) : CompletableTutorialRequest<BoardPos>()
 
-    class ClickNext : CompletableTutorialRequest<Unit>() {
-        fun respond() = respond(Unit)
-    }
+    /**
+     * Opens a drawer and awaits until the user closes it.
+     */
+    data class Compose(
+        @Stable
+        val content: @Composable (request: CompletableTutorialRequest<Unit>) -> Unit,
+    ) : CompletableTutorialRequest<Unit>()
 
-    class ShowPossibleMoves(val logicalPos: BoardPos, val duration: Duration) : CompletableTutorialRequest<Unit>() {
-        fun respond() = respond(Unit)
-    }
+    class ClickNext : CompletableTutorialRequest<Unit>()
+
+    class ShowPossibleMoves(val logicalPos: BoardPos, val duration: Duration) : CompletableTutorialRequest<Unit>()
 }
+
+fun TutorialRequest.CompletableTutorialRequest<Unit>.respond() = respond(Unit)
 
 suspend inline fun <R> TutorialRequest<R>.awaitResponse(): R = response.await()

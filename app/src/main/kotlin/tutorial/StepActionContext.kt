@@ -1,7 +1,14 @@
 package org.keizar.android.tutorial
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import org.keizar.utils.communication.game.BoardPos
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -47,14 +54,41 @@ interface StepActionContext {
     /**
      * Update the message displayed to the user.
      *
-     * @param content The composable to be rendered in the message area.
+     * @param content The composable to be rendered in the board actions area, to the left of the "Next" button.
      */
     suspend fun message(content: @Composable () -> Unit)
+
+    /**
+     * Composes a composable to the UI.
+     *
+     * The composable is displayed in the board actions area.
+     * You should only use bottom sheets, dialogs, navigation in the [compose].
+     * If you want to display a message, use [message].
+     */
+    suspend fun compose(content: @Composable (request: TutorialRequest.CompletableTutorialRequest<Unit>) -> Unit)
 
     /**
      * Suspends until the player has clicked the "Next" button.
      */
     suspend fun awaitNext()
+}
+
+/**
+ * Shows a bottom sheet with the given [content].
+ *
+ * Suspend until the bottom sheet is dismissed.
+ */
+suspend fun StepActionContext.showBottomSheet(
+    contentPadding: PaddingValues = PaddingValues(16.dp),
+    content: @Composable ColumnScope.() -> Unit
+) {
+    return compose { request ->
+        ModalBottomSheet(onDismissRequest = { request.respond() }) {
+            Column(Modifier.padding(contentPadding)) {
+                content()
+            }
+        }
+    }
 }
 
 suspend inline fun StepActionContext.showPossibleMoves(pos: String, duration: Duration = 3.seconds) =
