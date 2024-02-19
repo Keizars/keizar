@@ -204,7 +204,7 @@ private suspend fun checkForBlackPlain(
     role: Role
 ) {
     if (i > 5) {
-        if (i == 6 && j == 3 || i == 6 && j == 4 || i == 6 && j == 2 || i == 7 && j == 3) {
+        if (i == 7 && j == 4 || i == 6 && j == 3 || i == 7 && j == 2) {
             if (target.col == j && (target.row - i == -1)) {
                 positionList.add(
                     BoardPos(i, j)

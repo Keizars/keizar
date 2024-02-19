@@ -267,14 +267,23 @@ class AlgorithmAI(
         val board = createKeizarGraph(role, game)
         var minDistance = Int.MAX_VALUE
         var moves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf()
+        val keizarMoves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf()
+        var oneStepToKeizarCount = 0
+        var oneStepToKeizarCountRole = 0
         val candidateMoves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf()
         val keizarCapture = game.currentRound.first().pieceAt(game.properties.keizarTilePos)
         val keizarCount = game.currentRound.first().winningCounter.value
         val allowCaptureKeizar =
-            (keizarCapture != role && keizarCount > aiParameters.keizarThreshold) // TODO: Change keizarCount to a better value
+            (keizarCapture != role && keizarCount > aiParameters.keizarThreshold)
         board.forEach {
             it.forEach {node ->
+                if (node.distance == 1 || node.distance == 2) {
+                    oneStepToKeizarCount += 1
+                }
                 if (node is NormalNode && node.occupy == role) {
+                    if (node.distance == 1 || node.distance == 2) {
+                        oneStepToKeizarCountRole += 1
+                    }
                     node.parents.sortBy { parent -> parent.second }
                     for (parent in node.parents ) {
                         val notRecOccupyPos = if (role == Role.WHITE) BoardPos("d4") else BoardPos("d6")
@@ -283,30 +292,38 @@ class AlgorithmAI(
                                 || ((tiles[node.position] == TileType.PLAIN) && node.position.col != parent.first.position.col)
                         if (parent.first.position != notRecOccupyPos || notRecOccupy) {
                             if (parent.first.occupy == null || parent.first.occupy == role.other() && checkCapture) {
-                                val lowerBound = if (allowCaptureKeizar) 1 else 2
-                                if (parent.second in lowerBound..< minDistance) {
+                                if (parent.second == 1) {
+                                    keizarMoves.add(node.position to parent.first.position)
+                                }
+                                if (parent.second in 2..< minDistance) {
                                     minDistance = parent.second
                                     moves = mutableListOf(node.position to parent.first.position)
                                 } else if (parent.second == minDistance) {
                                     moves.add(node.position to parent.first.position)
                                 }
-                                if (parent.second in lowerBound..aiParameters.possibleMovesThreshold) {
+                                if (parent.second in 2..aiParameters.possibleMovesThreshold) {
                                     candidateMoves.add(node.position to parent.first.position)
                                 }
                             }
                         }
-
                     }
                 }
             }
         }
-        val random = Random.nextDouble()
-        if (random > aiParameters.noveltyLevel) {
-            moves = candidateMoves
-//            println("Candidate Moves: $candidateMoves")
+        println("Two step to keizar: $oneStepToKeizarCount")
+        if (keizarMoves.isNotEmpty() && (allowCaptureKeizar || keizarCapture != role && oneStepToKeizarCountRole >= oneStepToKeizarCount * aiParameters.allowCaptureKeizarThreshold)) {
+            println("Keizar Moves: $keizarMoves")
+            moves = keizarMoves
         } else {
+            val random = Random.nextDouble()
+            if (random > aiParameters.noveltyLevel) {
+                moves = candidateMoves
+//            println("Candidate Moves: $candidateMoves")
+            } else {
 //            println("Best Moves: $moves")
+            }
         }
+
         if (moves.isNotEmpty()) {
             var bestMove = moves.random()
             var count = 0
@@ -345,4 +362,5 @@ class AlgorithmAI(
 class AIParameters(
     val keizarThreshold: Int = 1,         // Allow capture keizar if keizarCount > keizarThreshold
     val possibleMovesThreshold: Int = 5,    // Collect all possible moves if distance < possibleMovesThreshold for novelty search (or not best move)
-    val noveltyLevel: Double = 0.95)    // The probability of not using novelty (or not best move) to enhance exploration of the game tree
+    val noveltyLevel: Double = 0.99,
+    val allowCaptureKeizarThreshold: Double = 0.6)    // The probability of not using novelty (or not best move) to enhance exploration of the game tree
