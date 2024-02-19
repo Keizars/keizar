@@ -18,6 +18,7 @@ interface RuleEngine {
     val canRedo: StateFlow<Boolean>
     val canUndo: StateFlow<Boolean>
     val isFreeMove: Boolean
+    val disableWinner: Boolean
 
     fun showPossibleMoves(pos: BoardPos): List<BoardPos>
     fun move(source: BoardPos, dest: BoardPos): Boolean
@@ -34,6 +35,7 @@ open class RuleEngineImpl private constructor(
     private val board: Board,
 
     override val isFreeMove: Boolean,
+    override val disableWinner: Boolean,
     private val movesLog: MutableList<MoveCountered> = mutableListOf(),
     override val winningCounter: MutableStateFlow<Int> = MutableStateFlow(0),
     override val curRole: MutableStateFlow<Role> = MutableStateFlow(boardProperties.startingRole),
@@ -50,10 +52,12 @@ open class RuleEngineImpl private constructor(
         boardProperties: BoardProperties,
         ruleEngineCore: RuleEngineCore,
         isFreeMove: Boolean = false,
+        disableWinner: Boolean = false,
     ) : this(
         boardProperties = boardProperties,
         board = Board(boardProperties, ruleEngineCore),
         isFreeMove = isFreeMove,
+        disableWinner = disableWinner,
     )
 
     override val pieces: List<Piece> = board.pieces
@@ -68,6 +72,10 @@ open class RuleEngineImpl private constructor(
         val piece = board.pieceAt(source) ?: return false
         if (!isValidMove(piece, dest)) {
             return false
+        }
+
+        if (isFreeMove) {
+            curRole.value = piece.role
         }
 
         if (clearRedoBuffer) {
@@ -163,12 +171,14 @@ open class RuleEngineImpl private constructor(
     }
 
     private fun updateWinner() {
+        if (disableWinner) return
         if (winningCounter.value == boardProperties.winningCount) {
             winner.value = curRole.value
         }
     }
 
     private fun updateWinnerWhenNoMove() {
+        if (disableWinner) return
         if (board.noValidMoves(curRole.value)) {
             winner.value = if (board.havePieceInKeizar(curRole.value)) {
                 curRole.value
@@ -194,6 +204,7 @@ open class RuleEngineImpl private constructor(
                 boardProperties = properties,
                 board = board,
                 isFreeMove = roundSnapshot.isFreeMove,
+                disableWinner = roundSnapshot.disableWinner,
                 movesLog = mutableListOf(),
                 winningCounter = MutableStateFlow(roundSnapshot.winningCounter),
                 curRole = MutableStateFlow(roundSnapshot.curRole),
