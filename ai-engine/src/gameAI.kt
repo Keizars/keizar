@@ -312,7 +312,6 @@ class AlgorithmAI(
             var count = 0
             var valid = false
             while (!valid && count < 10) {
-                moves.remove(bestMove)
                 valid = round.move(bestMove.first, bestMove.second)
                 bestMove = moves.random()
                 count += 1
