@@ -148,7 +148,12 @@ internal class TutorialSessionImpl(
             for (step in stepStates) {
                 logger.info { "Executing step '${step.step.name}'" }
                 currentStep.value = step
-                step.invoke()
+                try {
+                    step.invoke()
+                } catch (e: CancellationException) {
+                    // Revoked
+                    break
+                }
             }
         }
     }
@@ -191,6 +196,7 @@ internal class TutorialSessionImpl(
                 check(
                     game.currentRound.first().move(from, to)
                 ) { "Step '${step.name}': Failed to move player from $from to $to" }
+                logger.info { "Step '${step.name}': Moved player from $from to $to" }
                 revokers.add { game.currentRound.first().undo(myRole) }
             }
 
@@ -199,6 +205,7 @@ internal class TutorialSessionImpl(
                 check(
                     game.currentRound.first().move(from, to)
                 ) { "Step '${step.name}': Failed to move opponent from $from to $to" }
+                logger.info { "Step '${step.name}': Moved opponent from $from to $to" }
                 revokers.add { game.currentRound.first().undo(myRole) }
             }
 
@@ -209,6 +216,7 @@ internal class TutorialSessionImpl(
 
             override suspend fun message(content: @Composable () -> Unit) = lock.withLock {
                 presentation.message.value = content
+                logger.info { "Step '${step.name}': Displayed message" }
             }
 
             override suspend fun awaitNext() {
@@ -221,15 +229,15 @@ internal class TutorialSessionImpl(
                 "Internal error: attempting to invoke step '${step.name}' that is currently in the ${state.value} state."
             }
 
-            currentInvocation = stepScope.launch {
-                step.action(executionContext)
+            val job = stepScope.launch {
+                try {
+                    step.action(executionContext)
+                } catch (e: Throwable) {
+                    throw IllegalStateException("Exception in invoking step '${step.name}', see cause for details", e)
+                }
             }
-
-            try {
-                step.action(executionContext)
-            } catch (e: Throwable) {
-                throw IllegalStateException("Exception in invoking step '${step.name}', see cause for details", e)
-            }
+            currentInvocation = job
+            job.join()
 
             check(state.value == StepState.INVOKING)
             state.value = StepState.INVOKED
