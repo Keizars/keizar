@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.keizar.game.BoardPropertiesPrototypes
+import org.keizar.game.Role
 import org.keizar.game.snapshot.buildGameSession
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.GameResult
@@ -38,5 +39,21 @@ class GameSnapshotBuilderTest {
         assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
         assertEquals(1, game.currentRoundNo.value)
         assertEquals(GameResult.Draw, game.finalWinner.first())
+    }
+
+    @Test
+    fun `test custom plain board1`() = runTest {
+        val game = buildGameSession {
+            tiles {}
+            round {
+                curRole { Role.BLACK }
+                resetPieces {
+                    white("b2")
+                    black("g7")
+                }
+            }
+        }
+        val round = game.currentRound.first()
+        assertTrue(round.move(BoardPos("g7"), BoardPos("g6")))
     }
 }
