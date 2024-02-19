@@ -357,6 +357,6 @@ class AlgorithmAI(
 }
 
 class AIParameters(
-    val keizarThreshold: Int = 1,
-    val possibleMovesThreshold: Int = 5,
-    val noveltyLevel: Double = 0.95)
+    val keizarThreshold: Int = 1,         // Allow capture keizar if keizarCount > keizarThreshold
+    val possibleMovesThreshold: Int = 5,    // Collect all possible moves if distance < possibleMovesThreshold for novelty search (or not best move)
+    val noveltyLevel: Double = 0.95)    // The probability of not using novelty (or not best move) to enhance exploration of the game tree
