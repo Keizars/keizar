@@ -10,9 +10,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,6 +43,8 @@ import org.keizar.android.ui.game.mp.MultiplayerGamePage
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
 import org.keizar.android.ui.game.sp.SinglePlayerGameScene
 import org.keizar.android.ui.tutorial.TutorialScene
+import org.keizar.android.ui.tutorial.TutorialSelectionPage
+import org.keizar.android.ui.tutorial.TutorialSelectionScene
 
 @Composable
 @Preview(showBackground = true)
@@ -101,12 +107,25 @@ fun MainScreen() {
             )
         }
         composable("saved games") { /* TODO: saved games page*/ }
-        composable("tutorial") { entry ->
+        composable(
+            "tutorial/{tutorialId}",
+            arguments = listOf(navArgument("tutorialId") { type = NavType.StringType })
+        ) { entry ->
             val tutorialId = entry.arguments?.getString("tutorialId")!!
             val tutorial = Tutorials.getById(tutorialId)
             TutorialScene(
                 tutorial,
                 navController = navController,
+            )
+        }
+        composable("tutorials") { entry ->
+            TutorialSelectionScene(
+                onClickBack = {
+                    navController.popBackStack("home", false)
+                },
+                onClickTutorial = {
+                    navController.navigate("tutorial/$it")
+                }
             )
         }
     }
@@ -152,7 +171,23 @@ fun HomePage(navController: NavController) {
             }
 
             // Tutorial Button
-            Button(onClick = { /* TODO: Handle tutorial click */ }, modifier = Modifier.width(170.dp)) {
+            var showTutorialSheet by remember { mutableStateOf(false) }
+
+            if (showTutorialSheet) {
+                ModalBottomSheet(onDismissRequest = { showTutorialSheet = false }) {
+                    TutorialSelectionPage(
+                        onClickTutorial = {
+                            showTutorialSheet = false
+                            navController.navigate("tutorial/$it")
+                        },
+                        Modifier.padding(all = 16.dp),
+                    )
+                }
+            }
+
+            Button(onClick = {
+                showTutorialSheet = true
+            }, modifier = Modifier.width(170.dp)) {
                 Text("Tutorial", textAlign = TextAlign.Center)
             }
 

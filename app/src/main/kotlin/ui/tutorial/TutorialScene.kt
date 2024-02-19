@@ -50,7 +50,7 @@ fun TutorialScene(
             }
         }
     }
-    TutorialPage(
+    TutorialSelectionPage(
         vm,
         onClickHome = { navController.popBackStack("home", false) },
         modifier
@@ -58,7 +58,7 @@ fun TutorialScene(
 }
 
 @Composable
-private fun TutorialPage(
+private fun TutorialSelectionPage(
     vm: TutorialGameBoardViewModel,
     onClickHome: () -> Unit,
     modifier: Modifier = Modifier,
@@ -148,7 +148,7 @@ private fun TutorialPage(
 @Preview
 @Composable
 private fun PreviewTutorialPage() {
-    TutorialPage(
+    TutorialSelectionPage(
         vm = remember {
             TutorialGameBoardViewModel(Tutorials.Refresher1).also {
                 it.launchInBackground {
