@@ -118,6 +118,7 @@ class GameRoomImpl(
             if (!playerSessions.containsKey(user)) {
                 playerSessions[user] = MutableSharedFlow(replay = 1)
             }
+            logger.info("Session of user $user changed to $player")
             playerSessions[user]!!.emit(player)
             if (playerSessions.keys.containsAll(playerInfos)) {
                 playersConnected.value = true
@@ -159,17 +160,21 @@ class GameRoomImpl(
         playerSessions.values.map {
             myCoroutineScope.launch {
                 it.collectLatest { player ->
-                    myCoroutineScope.launch { notifyStateChange(player) }
+                    player.setState(PlayerSessionState.PLAYING)
+                    notifyStateChange(player)
                 }
             }
         }
 
         myCoroutineScope.launch {
             combine(playerSessions.values) { (player1, player2) ->
-                player1.setState(PlayerSessionState.PLAYING)
-                player2.setState(PlayerSessionState.PLAYING)
-                myCoroutineScope.launch { forwardMessages(player1, player2) }
-                myCoroutineScope.launch { forwardMessages(player2, player1) }
+                forwardMessages(player2, player1)
+            }.collectLatest { }
+        }
+
+        myCoroutineScope.launch {
+            combine(playerSessions.values) { (player1, player2) ->
+                forwardMessages(player1, player2)
             }.collectLatest { }
         }
     }
