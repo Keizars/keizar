@@ -276,6 +276,7 @@ internal class TutorialSessionImpl(
             currentInvocation?.run {
                 cancel(CancellationException("Revoking step '${step.name}'"))
                 join()
+                currentStep.value.state.value = StepState.NOT_INVOKED
             }
 
             for (revoker in revokers) {
