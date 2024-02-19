@@ -25,7 +25,7 @@ object Tutorials {
             step("move black") {
                 moveOpponent { "g7" to "g6" }
                 delay(1.seconds)
-                moveOpponent { "g6" to "g8" }
+                moveOpponent { "g6" to "g4" }
                 delay(1.seconds)
                 awaitNext()
             }
