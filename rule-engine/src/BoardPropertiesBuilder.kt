@@ -94,6 +94,10 @@ class BoardPropertiesBuilder private constructor(
             tileArrangement[pos] = type
         }
 
+        fun change(pos: String, type: TileType) {
+            return change(BoardPos.fromString(pos), type)
+        }
+
         fun change(pair: Pair<BoardPos, TileType>) {
             tileArrangement[pair.first] = pair.second
         }

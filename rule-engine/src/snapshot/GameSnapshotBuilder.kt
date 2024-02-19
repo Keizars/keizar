@@ -100,6 +100,8 @@ class RoundSnapshotBuilder private constructor(
     private var curRole: Role,
     private var winner: Role?,
     private var pieces: PiecesBuilder,
+    private var isFreeMove: Boolean,
+    private var disableWinner: Boolean,
     instructions: RoundSnapshotBuilder.() -> Unit,
 ) {
     init {
@@ -115,11 +117,28 @@ class RoundSnapshotBuilder private constructor(
         curRole = Role.WHITE,
         winner = null,
         pieces = PiecesBuilder(properties),
+        isFreeMove = false,
+        disableWinner = false,
         instructions = instructions,
     )
 
     fun build(): RoundSnapshot {
-        return RoundSnapshot(winningCounter, curRole, winner, pieces.build())
+        return RoundSnapshot(
+            winningCounter = winningCounter,
+            curRole = curRole,
+            winner = winner,
+            pieces = pieces.build(),
+            isFreeMove = isFreeMove,
+            disableWinner = disableWinner
+        )
+    }
+
+    fun allowFreeMove() {
+        isFreeMove = true
+    }
+
+    fun disableWinner() {
+        disableWinner = true
     }
 
     fun winningCounter(winningCounter: () -> Int) {

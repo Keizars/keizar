@@ -18,6 +18,8 @@ data class RoundSnapshot(
     val curRole: Role,
     val winner: Role?,
     val pieces: List<PieceSnapshot>,
+    val isFreeMove: Boolean = false,
+    val disableWinner: Boolean = false,
 )
 
 @Serializable

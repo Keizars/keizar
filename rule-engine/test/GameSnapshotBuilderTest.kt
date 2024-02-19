@@ -1,6 +1,7 @@
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.keizar.game.BoardPropertiesPrototypes
@@ -39,6 +40,51 @@ class GameSnapshotBuilderTest {
         assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
         assertEquals(1, game.currentRoundNo.value)
         assertEquals(GameResult.Draw, game.finalWinner.first())
+    }
+
+    @Test
+    fun `test free move round builder`() = runTest {
+        val game = buildGameSession {
+            tiles {  }
+            round {
+                allowFreeMove()
+                resetPieces {
+                    white("b1")
+                    black("g7")
+                }
+            }
+        }
+        val round = game.currentRound.first()
+        assertTrue(round.move(BoardPos("g7"), BoardPos("g5")))
+        assertTrue(round.move(BoardPos("g5"), BoardPos("g4")))
+        assertTrue(round.move(BoardPos("g4"), BoardPos("g3")))
+    }
+
+    @Test
+    fun `test disable winner round builder`() = runTest {
+        val game = buildGameSession {
+            tiles {  }
+            round {
+                disableWinner()
+                resetPieces {
+                    white("c1")
+                    black("g7")
+                    black("d5")
+                }
+            }
+        }
+        val round = game.currentRound.first()
+        assertTrue(round.move(BoardPos("c1"), BoardPos("c2")))
+        assertTrue(round.move(BoardPos("g7"), BoardPos("g6")))
+        assertNull(round.winner.value)
+        assertTrue(round.move(BoardPos("c2"), BoardPos("c3")))
+        assertTrue(round.move(BoardPos("g6"), BoardPos("g5")))
+        assertNull(round.winner.value)
+        assertTrue(round.move(BoardPos("c3"), BoardPos("c4")))
+        assertTrue(round.move(BoardPos("g5"), BoardPos("g4")))
+        assertNull(round.winner.value)
+        assertTrue(round.move(BoardPos("c4"), BoardPos("d5")))
+        assertNull(round.winner.value)
     }
 
     @Test

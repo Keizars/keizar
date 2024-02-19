@@ -93,7 +93,7 @@ fun MultiplayerGamePage(
                 },
                 onClickHome = onClickHome,
                 onClickGameConfig = onClickGameConfig,
-                modifier
+                modifier = modifier
             )
         }
     } ?: run {

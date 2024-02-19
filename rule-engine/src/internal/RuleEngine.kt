@@ -17,6 +17,8 @@ interface RuleEngine {
     val pieces: List<Piece>
     val canRedo: StateFlow<Boolean>
     val canUndo: StateFlow<Boolean>
+    val isFreeMove: Boolean
+    val disableWinner: Boolean
 
     fun showPossibleMoves(pos: BoardPos): List<BoardPos>
     fun move(source: BoardPos, dest: BoardPos): Boolean
@@ -28,32 +30,34 @@ interface RuleEngine {
     fun redo(role: Role): Boolean
 }
 
-class RuleEngineImpl private constructor(
+open class RuleEngineImpl private constructor(
     private val boardProperties: BoardProperties,
     private val board: Board,
 
-    private val movesLog: MutableList<MoveCountered>,
-    override val winningCounter: MutableStateFlow<Int>,
-    override val curRole: MutableStateFlow<Role>,
-    override val winner: MutableStateFlow<Role?>,
+    override val isFreeMove: Boolean,
+    override val disableWinner: Boolean,
+    private val movesLog: MutableList<MoveCountered> = mutableListOf(),
+    override val winningCounter: MutableStateFlow<Int> = MutableStateFlow(0),
+    override val curRole: MutableStateFlow<Role> = MutableStateFlow(boardProperties.startingRole),
+    override val winner: MutableStateFlow<Role?> = MutableStateFlow(null),
 
-    private val lostPiecesCount: Map<Role, MutableStateFlow<Int>>
+    private val lostPiecesCount: Map<Role, MutableStateFlow<Int>> = mapOf(
+        Role.WHITE to MutableStateFlow(0),
+        Role.BLACK to MutableStateFlow(0),
+    ),
 ) : RuleEngine {
     private val redoBuffer: MutableList<Move> = mutableListOf()
 
-    constructor(boardProperties: BoardProperties, ruleEngineCore: RuleEngineCore) : this(
+    constructor(
+        boardProperties: BoardProperties,
+        ruleEngineCore: RuleEngineCore,
+        isFreeMove: Boolean = false,
+        disableWinner: Boolean = false,
+    ) : this(
         boardProperties = boardProperties,
-        board = Board(
-            boardProperties, ruleEngineCore
-        ),
-        movesLog = mutableListOf<MoveCountered>(),
-        winningCounter = MutableStateFlow(0),
-        curRole = MutableStateFlow(boardProperties.startingRole),
-        winner = MutableStateFlow(null),
-        lostPiecesCount = mapOf(
-            Role.WHITE to MutableStateFlow(0),
-            Role.BLACK to MutableStateFlow(0),
-        ),
+        board = Board(boardProperties, ruleEngineCore),
+        isFreeMove = isFreeMove,
+        disableWinner = disableWinner,
     )
 
     override val pieces: List<Piece> = board.pieces
@@ -68,6 +72,10 @@ class RuleEngineImpl private constructor(
         val piece = board.pieceAt(source) ?: return false
         if (!isValidMove(piece, dest)) {
             return false
+        }
+
+        if (isFreeMove) {
+            curRole.value = piece.role
         }
 
         if (clearRedoBuffer) {
@@ -151,7 +159,7 @@ class RuleEngineImpl private constructor(
     }
 
     private fun isValidMove(piece: Piece, dest: BoardPos): Boolean {
-        return piece.role == curRole.value && board.isValidMove(piece, dest)
+        return (isFreeMove || piece.role == curRole.value) && board.isValidMove(piece, dest)
     }
 
     private fun updateWinningCounter(move: Move) {
@@ -163,12 +171,14 @@ class RuleEngineImpl private constructor(
     }
 
     private fun updateWinner() {
+        if (disableWinner) return
         if (winningCounter.value == boardProperties.winningCount) {
             winner.value = curRole.value
         }
     }
 
     private fun updateWinnerWhenNoMove() {
+        if (disableWinner) return
         if (board.noValidMoves(curRole.value)) {
             winner.value = if (board.havePieceInKeizar(curRole.value)) {
                 curRole.value
@@ -193,6 +203,8 @@ class RuleEngineImpl private constructor(
             return RuleEngineImpl(
                 boardProperties = properties,
                 board = board,
+                isFreeMove = roundSnapshot.isFreeMove,
+                disableWinner = roundSnapshot.disableWinner,
                 movesLog = mutableListOf(),
                 winningCounter = MutableStateFlow(roundSnapshot.winningCounter),
                 curRole = MutableStateFlow(roundSnapshot.curRole),

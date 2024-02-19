@@ -5,6 +5,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import org.keizar.android.ui.game.BaseGamePage
+import org.keizar.android.ui.game.UndoButton
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
 import org.keizar.android.ui.game.rememberSinglePlayerGameBoardViewModel
@@ -20,20 +21,24 @@ fun SinglePlayerGameScene(
     startConfiguration: GameStartConfiguration,
     navController: NavController,
 ) {
+    val vm = rememberSinglePlayerGameBoardViewModel(
+        session = remember(startConfiguration) {
+            GameSession.create(startConfiguration.createBoard())
+        },
+        selfPlayer = if (startConfiguration.playAs == Role.WHITE) {
+            Player.FirstWhitePlayer
+        } else {
+            Player.FirstBlackPlayer
+        },
+        difficulty = startConfiguration.difficulty,
+    )
     BaseGamePage(
-        rememberSinglePlayerGameBoardViewModel(
-            session = remember(startConfiguration) {
-                GameSession.create(startConfiguration.createBoard())
-            },
-            selfPlayer = if (startConfiguration.playAs == Role.WHITE) {
-                Player.FirstWhitePlayer
-            } else {
-                Player.FirstBlackPlayer
-            },
-            difficulty = startConfiguration.difficulty,
-        ),
+        vm,
         onClickHome = { navController.popBackStack("home", false) },
-        onClickGameConfig = { navController.popBackStack("game/configuration", false) }
+        onClickGameConfig = { navController.popBackStack("game/configuration", false) },
+        actions = {
+            UndoButton(vm = vm)
+        }
     )
 }
 

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -69,17 +70,42 @@ import kotlin.math.sqrt
 
 
 @Composable
+fun GameBoardTopBar(
+    vm: GameBoardViewModel,
+    turnStatusIndicator: (@Composable () -> Unit)? = {
+        TurnStatusIndicator(vm, Modifier.padding(all = 6.dp))
+    },
+    winningCounter: (@Composable () -> Unit)? = {
+        WinningCounter(vm)
+    },
+) {
+    Box(Modifier.fillMaxWidth()) {
+        turnStatusIndicator?.let { it ->
+            Box(modifier = Modifier.padding(all = 6.dp)) {
+                it()
+            }
+        }
+        winningCounter?.let {
+            Box(modifier = Modifier.align(Alignment.Center)) {
+                it()
+            }
+        }
+    }
+}
+
+@Composable
 fun GameBoard(
     vm: GameBoardViewModel,
     modifier: Modifier = Modifier,
     onClickHome: () -> Unit,
     onClickGameConfig: () -> Unit,
+    topBar: @Composable () -> Unit = { GameBoardTopBar(vm) },
+    actions: @Composable RowScope.() -> Unit = {}
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.weight(0.9f)) {
             Box(modifier = Modifier.fillMaxWidth()) {
-                TurnStatusIndicator(vm)
-                WinningCounter(vm)
+                topBar()
             }
 
             var boardGlobalCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
@@ -106,8 +132,12 @@ fun GameBoard(
                 Modifier.fillMaxWidth()
             )
 
-            if (!vm.isMultiplayer) {
-                UndoButton(vm)
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp), horizontalArrangement = Arrangement.End
+            ) {
+                actions()
             }
         }
 
@@ -390,7 +420,10 @@ fun WinningRoundDialog(
 }
 
 @Composable
-fun WinningCounter(vm: GameBoardViewModel) {
+fun WinningCounter(
+    vm: GameBoardViewModel,
+    modifier: Modifier = Modifier
+) {
     val winningCounter by vm.winningCounter.collectAsState()
     val flippedStates = remember { mutableStateListOf(true, true, true) }
 
@@ -407,7 +440,7 @@ fun WinningCounter(vm: GameBoardViewModel) {
 
     // A row of tokens
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier,
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -456,7 +489,10 @@ fun Token(number: Int, isFlipped: Boolean) {
 }
 
 @Composable
-fun TurnStatusIndicator(vm: GameBoardViewModel) {
+fun TurnStatusIndicator(
+    vm: GameBoardViewModel,
+    modifier: Modifier = Modifier
+) {
     val selfRole by vm.selfRole.collectAsState()
     val curRole by vm.currentRound.flatMapLatest { it.curRole }.collectAsState(initial = Role.WHITE)
     val isPlayerTurn = selfRole == curRole
@@ -471,8 +507,7 @@ fun TurnStatusIndicator(vm: GameBoardViewModel) {
 
     Box(
         contentAlignment = Alignment.Center,
-        modifier = Modifier
-            .padding(6.dp)
+        modifier = modifier
             .width(90.dp)
             .height(36.dp)
             .graphicsLayer {

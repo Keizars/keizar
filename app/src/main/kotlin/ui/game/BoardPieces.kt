@@ -60,7 +60,7 @@ fun BoardPieces(
 
         val tileSize by pieceArranger.tileSize.collectAsStateWithLifecycle(DpSize.Zero)
 
-        val pieces by vm.pieces.collectAsStateWithLifecycle()
+        val pieces by vm.pieces.collectAsStateWithLifecycle(emptyList())
         for (piece in pieces) {
             val isVisible by piece.isVisible.collectAsStateWithLifecycle(false)
             if (!isVisible) {

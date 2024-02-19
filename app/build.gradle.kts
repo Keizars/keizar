@@ -38,6 +38,7 @@ dependencies {
     implementation(projects.aiEngine)
     implementation(projects.ruleEngine)
     implementation(projects.client)
+    implementation(projects.utils.coroutines)
 }
 
 android {

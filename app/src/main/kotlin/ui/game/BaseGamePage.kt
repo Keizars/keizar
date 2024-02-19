@@ -2,6 +2,7 @@ package org.keizar.android.ui.game
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -42,6 +43,7 @@ fun BaseGamePage(
     onClickHome: () -> Unit,
     onClickGameConfig: () -> Unit,
     modifier: Modifier = Modifier,
+    actions: @Composable RowScope.() -> Unit = {},
 ) {
     var showGameConfigurationDialog by remember { mutableStateOf(false) }
     if (showGameConfigurationDialog) {
@@ -95,6 +97,7 @@ fun BaseGamePage(
                         .size(min(maxWidth, maxHeight)),
                     onClickHome = onClickHome,
                     onClickGameConfig = onClickGameConfig,
+                    actions = actions,
                 )
             }
         }
