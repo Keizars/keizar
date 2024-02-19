@@ -72,7 +72,7 @@ class GameRoomImpl(
         if (playerIndex < Player.entries.size) {
             myCoroutineScope.launch {
                 playersMutex.withLock {
-                    playerInfos[playerIndex] = user
+                    playerInfos.add(playerIndex, user)
                 }
             }
             if (playerIndex == Player.entries.size - 1) {
@@ -144,6 +144,7 @@ class GameRoomImpl(
     }
 
     private suspend fun notifyPlayerAllocation(player: PlayerSession, allocation: Player) {
+        logger.info("Notify user $player of player allocation: $allocation")
         player.session.sendRespond(PlayerAllocation(allocation))
     }
 
@@ -167,7 +168,7 @@ class GameRoomImpl(
 
     private suspend fun notifyStateChange(player: PlayerSession) {
         player.state.collect { newState ->
-            println("notifyStateChange: $newState")
+            logger.info("Notify player $player of state change: $newState")
             player.session.sendRespond(StateChange(newState))
         }
     }
