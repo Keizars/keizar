@@ -22,11 +22,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import kotlinx.coroutines.delay
 import org.keizar.android.tutorial.Tutorial
 import org.keizar.android.tutorial.Tutorials
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.GameBoard
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun TutorialScene(
@@ -35,7 +38,12 @@ fun TutorialScene(
     modifier: Modifier = Modifier,
 ) {
     val vm = remember(tutorial) {
-        TutorialGameBoardViewModel(tutorial)
+        TutorialGameBoardViewModel(tutorial).also {
+            it.launchInBackground {
+                delay(2.seconds)
+                tutorialSession.start()
+            }
+        }
     }
     TutorialPage(
         vm,
@@ -69,7 +77,7 @@ private fun TutorialPage(
             BoxWithConstraints(
                 Modifier
                     .padding(contentPadding)
-                    .fillMaxSize(),
+                    .weight(1f),
                 contentAlignment = Alignment.Center
             ) {
                 GameBoard(
@@ -90,8 +98,13 @@ private fun TutorialPage(
                 val message by vm.tutorialSession.presentation.message.collectAsState()
                 message?.let { it() }
 
-                Button(onClick = { vm.launchInBackground { vm.tutorialSession.start() } }) {
-                    Text(text = "Start")
+                val next by vm.tutorialSession.requests.requestingClickNext.collectAsStateWithLifecycle(null)
+                next?.let { n ->
+                    Button(onClick = {
+                        n.respond()
+                    }) {
+                        Text(text = "Next")
+                    }
                 }
             }
         }
@@ -103,7 +116,11 @@ private fun TutorialPage(
 private fun PreviewTutorialPage() {
     TutorialPage(
         vm = remember {
-            TutorialGameBoardViewModel(Tutorials.Refresher1)
+            TutorialGameBoardViewModel(Tutorials.Refresher1).also {
+                it.launchInBackground {
+                    tutorialSession.start()
+                }
+            }
         },
         onClickHome = { }
     )
