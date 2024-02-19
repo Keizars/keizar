@@ -64,7 +64,9 @@ sealed interface TutorialRequest<R> {
         val to: BoardPos,
     ) : CompletableTutorialRequest<BoardPos>()
 
-    class ClickNext : CompletableTutorialRequest<Unit>()
+    class ClickNext : CompletableTutorialRequest<Unit>() {
+        fun respond() = respond(Unit)
+    }
 }
 
 suspend inline fun <R> TutorialRequest<R>.awaitResponse(): R = response.await()
