@@ -61,7 +61,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.flatMapLatest
 import org.keizar.android.ui.game.transition.CapturedPiecesHost
 import org.keizar.game.Role
@@ -354,13 +353,22 @@ fun WinningRoundDialog(
         null -> {}
 
         else -> {
+            val roundCountText = if (currentRoundCount == 0) "First" else "Second"
             if (showFlag.value || !endRoundAnnounced) {
                 AlertDialog(onDismissRequest = {},
-                    title = { Text(text = "This Round Winner: $winner") },
+                    title = {
+                        Text(
+                            text = "$roundCountText Round Winner: $winner",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    },
                     text = {
                         Text(
-                            text = "White captured: ${whiteCapturedPieces}\n" +
-                                    "Black captured: ${blackCapturedPieces}\n"
+                            text = "White player captured: $blackCapturedPieces\n" +
+                                    "Black player captured: $whiteCapturedPieces\n",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
                         )
                     },
                     confirmButton = {
