@@ -1,16 +1,25 @@
 package org.keizar.android.ui.tutorial
 
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -21,6 +30,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
@@ -127,6 +139,29 @@ private fun TutorialSelectionPage(
                                 }
                             }
                         }
+                    },
+                    boardOverlay = {
+                        val tooltip by vm.tutorialSession.presentation.tooltip.collectAsState()
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.TopCenter)
+                                .padding(top = 16.dp)
+                        ) {
+                            androidx.compose.animation.AnimatedVisibility(
+                                visible = tooltip != null,
+                                enter = fadeIn(),
+                                exit = fadeOut(snap()),
+                            ) {
+                                Tooltip(
+                                    Modifier
+                                        .align(Alignment.TopCenter)
+                                ) {
+                                    ProvideTextStyle(value = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)) {
+                                        tooltip?.invoke(this)
+                                    }
+                                }
+                            }
+                        }
                     }
                 )
             }
@@ -142,6 +177,34 @@ private fun TutorialSelectionPage(
                 it.content(it)
             }
         }
+    }
+}
+
+
+@Composable
+private fun Tooltip(
+    modifier: Modifier = Modifier,
+    content: @Composable RowScope.() -> Unit,
+) {
+    OutlinedCard(
+        modifier
+            .shadow(1.dp, shape = CardDefaults.outlinedShape)
+            .alpha(0.98f),
+    ) {
+        Row(
+            modifier
+                .padding(16.dp)
+        ) {
+            content()
+        }
+    }
+}
+
+@Composable
+@Preview
+private fun PreviewTooltip() {
+    Tooltip {
+        Text(text = "Test")
     }
 }
 

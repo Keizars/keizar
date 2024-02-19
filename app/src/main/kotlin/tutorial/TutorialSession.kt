@@ -1,5 +1,6 @@
 package org.keizar.android.tutorial
 
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CoroutineScope
@@ -160,6 +161,7 @@ internal class TutorialSessionImpl(
 
     inner class TutorialPresentationImpl : TutorialPresentation {
         override val message: MutableStateFlow<(@Composable () -> Unit)?> = MutableStateFlow(null)
+        override val tooltip: MutableStateFlow<(@Composable RowScope.() -> Unit)?> = MutableStateFlow(null)
     }
 
     inner class TutorialRequestsImpl : TutorialRequests() {
@@ -220,6 +222,21 @@ internal class TutorialSessionImpl(
             override suspend fun requestMovePlayer(from: BoardPos, to: BoardPos) = lock.withLock {
                 val playerMove = requests.issueAndAwait(TutorialRequest.MovePlayer(from, to))
                 // TODO: check if move is correct, otherwise request again
+            }
+
+            override suspend fun tooltip(duration: Duration, content: @Composable() (RowScope.() -> Unit)) {
+                presentation.tooltip.value = content
+                if (duration != Duration.INFINITE) {
+                    try {
+                        kotlinx.coroutines.delay(duration)
+                    } finally { // covers cancellation
+                        presentation.tooltip.value = null
+                    }
+                }
+            }
+
+            override suspend fun removeTooltip() {
+                presentation.tooltip.value = null
             }
 
             override suspend fun message(content: @Composable () -> Unit) = lock.withLock {

@@ -18,14 +18,16 @@ enum class Role {
 }
 
 @Serializable
-enum class TileType {
-    KING,
-    QUEEN,
-    BISHOP,
-    KNIGHT,
-    ROOK,
-    KEIZAR,
-    PLAIN,
+enum class TileType(
+    val displayName: String,
+) {
+    KING("King"),
+    QUEEN("Queen"),
+    BISHOP("Bishop"),
+    KNIGHT("Knight"),
+    ROOK("Rook"),
+    KEIZAR("KEIZÁR"),
+    PLAIN("Pawn"),
 }
 
 @Serializable

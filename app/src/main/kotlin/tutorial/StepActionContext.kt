@@ -3,6 +3,7 @@ package org.keizar.android.tutorial
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -27,7 +28,7 @@ interface StepActionContext {
      */
     suspend fun delay(duration: Duration)
 
-    suspend fun showPossibleMoves(pos: BoardPos, duration: Duration = 1.5.seconds)
+    suspend fun showPossibleMoves(pos: BoardPos, duration: Duration = 2.seconds)
 
     /**
      * Move the player's piece from one position to another.
@@ -50,6 +51,21 @@ interface StepActionContext {
      * If the player makes an invalid move, tutorial engine will ask the player to try again.
      */
     suspend fun requestMovePlayer(from: BoardPos, to: BoardPos)
+
+    /**
+     * Update the tooltip message displayed in the top center of the board.
+     *
+     * If the [duration] is [Duration.INFINITE], this function returns as soon as the message it set.
+     * If it is a finite duration, the message is displayed for that duration.
+     */
+    suspend fun tooltip(duration: Duration = Duration.INFINITE, content: @Composable RowScope.() -> Unit)
+
+    /**
+     * Remove the tooltip message displayed in the top center of the board.
+     *
+     * If there is not a tooltip message, this function does nothing.
+     */
+    suspend fun removeTooltip()
 
     /**
      * Update the message displayed to the user.
@@ -80,7 +96,7 @@ interface StepActionContext {
  */
 suspend fun StepActionContext.showBottomSheet(
     contentPadding: PaddingValues = PaddingValues(16.dp),
-    content: @Composable ColumnScope.() -> Unit
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     return compose { request ->
         ModalBottomSheet(onDismissRequest = { request.respond() }) {
