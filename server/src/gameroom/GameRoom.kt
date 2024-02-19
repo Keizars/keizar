@@ -7,7 +7,7 @@ import io.ktor.server.websocket.sendSerialized
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,14 +23,33 @@ import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.StateChange
 import org.slf4j.Logger
 import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import org.keizar.utils.communication.message.UserInfo
+import java.util.concurrent.atomic.AtomicInteger
 
-interface GameRoom {
-    fun addPlayer(player: PlayerSession): Boolean
-    fun close()
+interface GameRoom : AutoCloseable {
+    fun connect(user: UserInfo, player: PlayerSession): Boolean
+    fun addPlayer(user: UserInfo): Boolean
 
     val roomNumber: UInt
-    val finished: StateFlow<Boolean>
+    val finished: Flow<Boolean>
     val properties: BoardProperties
+    val playerCount: Int
+    val playersReady: Boolean
+
+    companion object {
+        fun create(
+            roomNumber: UInt,
+            properties: BoardProperties,
+            parentCoroutineContext: CoroutineContext,
+            logger: Logger,
+        ): GameRoom {
+            return GameRoomImpl(roomNumber, properties, parentCoroutineContext, logger)
+        }
+    }
+
+    fun containsPlayer(user: UserInfo): Boolean
 }
 
 class GameRoomImpl(
@@ -42,36 +61,72 @@ class GameRoomImpl(
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
-    private val players: Channel<PlayerSession> = Channel(capacity = 2)
+    private val playerInfos: MutableList<UserInfo> = mutableListOf()
+    private val _playerCount: AtomicInteger = AtomicInteger(0)
+    override val playerCount: Int get() = _playerCount.get()
+    override var playersReady = false
+    private val playersMutex = Mutex()
 
-    private val _finished: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    override val finished: StateFlow<Boolean> = _finished.asStateFlow()
+    override fun addPlayer(user: UserInfo): Boolean {
+        val playerIndex = _playerCount.getAndIncrement()
+        if (playerIndex < Player.entries.size) {
+            myCoroutineScope.launch {
+                playersMutex.withLock {
+                    playerInfos.add(playerIndex, user)
+                }
+            }
+            if (playerIndex == Player.entries.size - 1) {
+                playersReady = true
+            }
+            return true
+        }
+        return false
+    }
+
+    override fun containsPlayer(user: UserInfo): Boolean {
+        return user in playerInfos
+    }
+
+    private val players: MutableMap<UserInfo, PlayerSession> = mutableMapOf()
+    private val playersConnected: MutableStateFlow<Boolean> = MutableStateFlow(false)
+
+    override fun connect(user: UserInfo, player: PlayerSession): Boolean {
+        if (user in playerInfos) {
+            players[user] = player
+            player.setState(PlayerSessionState.WAITING)
+            if (players.keys.containsAll(playerInfos)) {
+                playersConnected.value = true
+            }
+            return true
+        }
+        return false
+    }
 
     init {
-        myCoroutineScope.launch { waitForPlayers() }
+        startWaitingForPlayers()
     }
 
-    override fun addPlayer(player: PlayerSession): Boolean {
-        return players.trySend(player).isSuccess
+    private fun startWaitingForPlayers() {
+        myCoroutineScope.launch {
+            playersConnected.first { it }
+            val player1 = players[playerInfos[0]]!!
+            val player2 = players[playerInfos[1]]!!
+            startGame(player1, player2)
+            updateFinished(player1, player2)
+        }
     }
 
-    override fun close() {
-        myCoroutineScope.cancel()
-    }
-
-    private suspend fun waitForPlayers() {
-        val player1 = players.receive()
-        player1.setState(PlayerSessionState.WAITING)
-        val player2 = players.receive()
-        players.cancel()
-        startGame(player1, player2)
-        updateFinished(player1, player2)
-    }
+    private var _finished: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    override var finished: StateFlow<Boolean> = _finished.asStateFlow()
 
     private suspend fun updateFinished(player1: PlayerSession, player2: PlayerSession) {
         player1.state.first { it == PlayerSessionState.TERMINATING }
         player2.state.first { it == PlayerSessionState.TERMINATING }
         _finished.value = true
+    }
+
+    override fun close() {
+        myCoroutineScope.cancel()
     }
 
     private suspend fun startGame(player1: PlayerSession, player2: PlayerSession) {
@@ -89,6 +144,7 @@ class GameRoomImpl(
     }
 
     private suspend fun notifyPlayerAllocation(player: PlayerSession, allocation: Player) {
+        logger.info("Notify user $player of player allocation: $allocation")
         player.session.sendRespond(PlayerAllocation(allocation))
     }
 
@@ -112,7 +168,7 @@ class GameRoomImpl(
 
     private suspend fun notifyStateChange(player: PlayerSession) {
         player.state.collect { newState ->
-            println("notifyStateChange: $newState")
+            logger.info("Notify player $player of state change: $newState")
             player.session.sendRespond(StateChange(newState))
         }
     }

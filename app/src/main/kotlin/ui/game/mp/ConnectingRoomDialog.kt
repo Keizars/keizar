@@ -2,6 +2,7 @@ package org.keizar.android.ui.game.mp
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +22,7 @@ import androidx.compose.ui.window.DialogProperties
 
 @Composable
 fun ConnectingRoomDialog(
+    extra: @Composable ColumnScope.() -> Unit = {},
     properties: DialogProperties = DialogProperties(
         dismissOnBackPress = false,
         dismissOnClickOutside = false,
@@ -45,6 +47,7 @@ fun ConnectingRoomDialog(
                     .padding(top = 32.dp)
                     .width(128.dp)
             )
+            extra()
         }
     }
 }

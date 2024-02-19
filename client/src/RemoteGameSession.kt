@@ -1,16 +1,12 @@
 package org.keizar.client
 
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import org.keizar.client.modules.GameRoomInfo
 import org.keizar.client.modules.GameSessionModule
-import org.keizar.client.modules.GameSessionModuleImpl
-import org.keizar.client.modules.KeizarHttpClient
 import org.keizar.game.BoardProperties
 import org.keizar.game.GameSession
 import org.keizar.game.RoundSessionImpl

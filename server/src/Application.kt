@@ -4,17 +4,19 @@ package org.keizar.server
 
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
+import io.ktor.server.application.log
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
 import io.ktor.server.plugins.callloging.CallLogging
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import org.keizar.server.plugins.configureDatabases
 import org.keizar.server.plugins.configureMultiplayerRouting
 import org.keizar.server.plugins.configureSecurity
 import org.keizar.server.plugins.configureSerialization
 import org.keizar.server.plugins.configureSockets
 import org.keizar.server.training.plugins.configureTrainingRouting
-import org.keizar.server.training.setupServerContext
 
 fun main() {
     getServer().start(wait = true)
@@ -54,7 +56,8 @@ fun Application.module() {
     configureSerialization()
     configureDatabases()
     configureSockets()
-    configureMultiplayerRouting()
-    val context = setupServerContext()
+    val serverCoroutineScope = CoroutineScope(SupervisorJob())
+    val context = setupServerContext(serverCoroutineScope, log)
+    configureMultiplayerRouting(context)
     configureTrainingRouting(context)
 }

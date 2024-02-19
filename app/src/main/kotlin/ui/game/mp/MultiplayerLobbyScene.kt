@@ -1,7 +1,6 @@
 package org.keizar.android.ui.game.mp
 
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +14,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
@@ -28,19 +26,24 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.launchInBackground
 
@@ -48,6 +51,7 @@ import org.keizar.android.ui.foundation.launchInBackground
 fun MultiplayerLobbyScene(
     onClickHome: () -> Unit,
     onJoinGame: (roomId: String) -> Unit,
+    onRoomCreated: (roomId: String) -> Unit,
     modifier: Modifier = Modifier,
     vm: MatchViewModel = remember {
         MatchViewModel()
@@ -97,7 +101,7 @@ fun MultiplayerLobbyScene(
             Column(Modifier.padding(16.dp)) {
                 OnlineMatchingSection(Modifier.weight(1f))
 
-                PlayWithFriendsSection(vm, onJoinGame)
+                PlayWithFriendsSection(vm, onJoinGame, onRoomCreated)
             }
         }
     }
@@ -122,6 +126,7 @@ private fun OnlineMatchingSection(modifier: Modifier = Modifier) {
 private fun PlayWithFriendsSection(
     vm: MatchViewModel,
     onJoinRoom: (roomId: String) -> Unit,
+    onRoomCreated: (roomId: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier) {
@@ -134,6 +139,13 @@ private fun PlayWithFriendsSection(
             text = "Play with friends in a private room. ",
             style = MaterialTheme.typography.labelMedium
         )
+
+        var joiningRoom by remember {
+            mutableStateOf(false)
+        }
+        if (joiningRoom) {
+            ConnectingRoomDialog()
+        }
 
         Row(
             Modifier.padding(vertical = 8.dp),
@@ -166,7 +178,19 @@ private fun PlayWithFriendsSection(
 
             Button(
                 onClick = {
-                    onJoinRoom(roomId)
+                    vm.launchInBackground {
+                        joiningRoom = true
+                        try {
+                            vm.joinRoom()
+                            withContext(Dispatchers.Main) {
+                                onJoinRoom(roomId)
+                            }
+                        } catch (e: Exception) {
+                            Log.e(null, "Error", e)
+                        } finally {
+                            joiningRoom = false
+                        }
+                    }
                 },
                 Modifier.padding(start = 8.dp, top = 8.dp),
                 enabled = roomId.isNotBlank(),
@@ -184,56 +208,24 @@ private fun PlayWithFriendsSection(
                 .heightIn(min = 92.dp),
             contentAlignment = Alignment.CenterStart
         ) {
-            val selfRoomId by vm.selfRoomId.collectAsState()
-            androidx.compose.animation.AnimatedVisibility(visible = selfRoomId == null, exit = fadeOut()) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "You can also", style = MaterialTheme.typography.bodyMedium)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(text = "You can also", style = MaterialTheme.typography.bodyMedium)
 
-                    OutlinedButton(
-                        onClick = { vm.launchInBackground { createSelfRoom() } },
-                        Modifier.padding(horizontal = 8.dp)
-                    ) {
-                        Text(text = "Create a Room")
+                OutlinedButton(
+                    onClick = { vm.launchInBackground { createSelfRoom() } },
+                    Modifier.padding(horizontal = 8.dp)
+                ) {
+                    Text(text = "Create a Room")
+                }
+
+
+                vm.selfRoomId.collectAsStateWithLifecycle().value?.let { roomId ->
+                    SideEffect {
+                        onRoomCreated(roomId)
                     }
-
-                    Text(text = "and invite others.", style = MaterialTheme.typography.bodyMedium)
                 }
-            }
-            androidx.compose.animation.AnimatedVisibility(visible = selfRoomId != null, enter = fadeIn()) {
-                Row {
-                    OutlinedTextField(
-                        value = selfRoomId ?: "",
-                        onValueChange = { },
-                        label = { Text("Your Room ID") },
-                        shape = RoundedCornerShape(12.dp),
-                        readOnly = true,
-                        trailingIcon = {
-                            val clipboard = LocalClipboardManager.current
-                            IconButton(onClick = {
-                                clipboard.setText(AnnotatedString("P-$selfRoomId"))
-                            }) {
-                                Icon(Icons.Default.ContentCopy, contentDescription = "Paste")
-                            }
-                        },
-                        prefix = { Text(text = "P-") },
-                        supportingText = { Text("Share this ID with your friends to play in the same game.") },
-                        singleLine = true,
-                        modifier = Modifier
-                            .padding(vertical = 4.dp)
-                            .weight(1f),
-                    )
 
-//                    Button(onClick = { }, Modifier.padding(start = 8.dp, top = 16.dp)) {
-//                        Icon(
-//                            Icons.Outlined.Share,
-//                            contentDescription = "Share",
-//                            Modifier
-//                                .padding(end = 6.dp)
-//                                .size(16.dp)
-//                        )
-//                        Text(text = "Share")
-//                    }
-                }
+                Text(text = "and invite others.", style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
@@ -248,6 +240,7 @@ private fun PreviewMatchPage(
         MultiplayerLobbyScene(
             {},
             {},
+            {},
             vm = remember {
                 MatchViewModel().apply {
                     if (roomCreated) {
@@ -255,8 +248,7 @@ private fun PreviewMatchPage(
                     }
                     setJoinRoomId("123456")
                 }
-            }
-        )
+            })
     }
 }
 
@@ -276,7 +268,8 @@ private fun PreviewRoomsForJoin(
                     }
                 }
             },
-            {}
+            onJoinRoom = {},
+            onRoomCreated = {},
         )
     }
 }
@@ -295,7 +288,8 @@ private fun PreviewRoomsForHostingRoom(
                     }
                 }
             },
-            {}
+            onJoinRoom = {},
+            onRoomCreated = {},
         )
     }
 }
