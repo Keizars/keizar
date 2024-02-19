@@ -19,7 +19,7 @@ interface GameRoomManager {
     fun createRoom(roomNumber: UInt, properties: BoardProperties)
     fun getRoom(roomNumber: UInt): GameRoom
     fun joinRoom(roomNumber: UInt, userInfo: UserInfo)
-    fun connectToWebsocketSession(
+    suspend fun connectToWebsocketSession(
         roomNumber: UInt,
         userInfo: UserInfo,
         session: DefaultWebSocketServerSession
@@ -68,7 +68,7 @@ class GameRoomManagerImpl(
         }
     }
 
-    override fun connectToWebsocketSession(
+    override suspend fun connectToWebsocketSession(
         roomNumber: UInt,
         userInfo: UserInfo,
         session: DefaultWebSocketServerSession,
@@ -77,7 +77,7 @@ class GameRoomManagerImpl(
         if (!room.containsPlayer(userInfo)) {
             throw BadRequestException("User ${userInfo.username} did not join room $roomNumber")
         }
-        val player = PlayerSessionImpl(session)
+        val player = PlayerSessionImpl(session, userInfo)
         if (!room.connect(userInfo, player)) {
             throw BadRequestException("Room $roomNumber connection to websocket failed")
         }

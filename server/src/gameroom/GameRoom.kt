@@ -8,10 +8,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.keizar.game.BoardProperties
 import org.keizar.utils.communication.PlayerSessionState
@@ -26,10 +32,12 @@ import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.keizar.utils.communication.message.UserInfo
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.atomic.AtomicInteger
 
 interface GameRoom : AutoCloseable {
-    fun connect(user: UserInfo, player: PlayerSession): Boolean
+    suspend fun connect(user: UserInfo, player: PlayerSession): Boolean
     fun addPlayer(user: UserInfo): Boolean
 
     val roomNumber: UInt
@@ -67,6 +75,8 @@ class GameRoomImpl(
     override var playersReady = false
     private val playersMutex = Mutex()
 
+    private val playerAllocation: ConcurrentMap<UserInfo, Player> = ConcurrentHashMap()
+
     override fun addPlayer(user: UserInfo): Boolean {
         val playerIndex = _playerCount.getAndIncrement()
         if (playerIndex < Player.entries.size) {
@@ -78,23 +88,38 @@ class GameRoomImpl(
             if (playerIndex == Player.entries.size - 1) {
                 playersReady = true
             }
+            allocatePlayer(user)
             return true
         }
         return false
+    }
+
+    private val allPlayers = Player.entries.shuffled()
+    private val allPlayersIndex = AtomicInteger(0)
+    private fun allocatePlayer(user: UserInfo) {
+        if (playerAllocation.containsKey(user)) return
+        val index = allPlayersIndex.getAndIncrement()
+        if (index >= allPlayers.size) return
+        playerAllocation[user] = allPlayers[index]
     }
 
     override fun containsPlayer(user: UserInfo): Boolean {
         return user in playerInfos
     }
 
-    private val players: MutableMap<UserInfo, PlayerSession> = mutableMapOf()
+    private val playerSessions: MutableMap<UserInfo, MutableSharedFlow<PlayerSession>> =
+        mutableMapOf()
     private val playersConnected: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
-    override fun connect(user: UserInfo, player: PlayerSession): Boolean {
+    override suspend fun connect(user: UserInfo, player: PlayerSession): Boolean {
         if (user in playerInfos) {
-            players[user] = player
             player.setState(PlayerSessionState.WAITING)
-            if (players.keys.containsAll(playerInfos)) {
+            notifyPlayerAllocation(player, playerAllocation[player.user]!!)
+            if (!playerSessions.containsKey(user)) {
+                playerSessions[user] = MutableSharedFlow()
+            }
+            playerSessions[user]!!.emit(player)
+            if (playerSessions.keys.containsAll(playerInfos)) {
                 playersConnected.value = true
             }
             return true
@@ -109,19 +134,20 @@ class GameRoomImpl(
     private fun startWaitingForPlayers() {
         myCoroutineScope.launch {
             playersConnected.first { it }
-            val player1 = players[playerInfos[0]]!!
-            val player2 = players[playerInfos[1]]!!
-            startGame(player1, player2)
-            updateFinished(player1, player2)
+            startGame()
+            updateFinished()
         }
     }
 
     private var _finished: MutableStateFlow<Boolean> = MutableStateFlow(false)
     override var finished: StateFlow<Boolean> = _finished.asStateFlow()
 
-    private suspend fun updateFinished(player1: PlayerSession, player2: PlayerSession) {
-        player1.state.first { it == PlayerSessionState.TERMINATING }
-        player2.state.first { it == PlayerSessionState.TERMINATING }
+    private suspend fun updateFinished() {
+        combine(playerSessions.values.map { session ->
+            session.flatMapLatest { it.state }
+        }) { states ->
+            states.all { it == PlayerSessionState.TERMINATING }
+        }.first { it }
         _finished.value = true
     }
 
@@ -129,18 +155,21 @@ class GameRoomImpl(
         myCoroutineScope.cancel()
     }
 
-    private suspend fun startGame(player1: PlayerSession, player2: PlayerSession) {
-        val playerAllocation = Player.entries.shuffled()
-        notifyPlayerAllocation(player1, playerAllocation[0])
-        notifyPlayerAllocation(player2, playerAllocation[1])
+    private fun startGame() {
+        playerSessions.values.map {
+            myCoroutineScope.launch {
+                it.collectLatest { player ->
+                    myCoroutineScope.launch { notifyStateChange(player) }
+                }
+            }
+        }
 
-        player1.setState(PlayerSessionState.PLAYING)
-        player2.setState(PlayerSessionState.PLAYING)
-
-        myCoroutineScope.launch { forwardMessages(player1, player2) }
-        myCoroutineScope.launch { forwardMessages(player2, player1) }
-        myCoroutineScope.launch { notifyStateChange(player1) }
-        myCoroutineScope.launch { notifyStateChange(player2) }
+        myCoroutineScope.launch {
+            combine(playerSessions.values) { (player1, player2) ->
+                myCoroutineScope.launch { forwardMessages(player1, player2) }
+                myCoroutineScope.launch { forwardMessages(player2, player1) }
+            }.collectLatest { }
+        }
     }
 
     private suspend fun notifyPlayerAllocation(player: PlayerSession, allocation: Player) {
