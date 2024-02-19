@@ -1,10 +1,11 @@
 package org.keizar.android.tutorial
 
+import androidx.compose.runtime.Stable
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filterIsInstance
+import kotlinx.coroutines.flow.map
 import org.keizar.utils.communication.game.BoardPos
 import kotlin.time.Duration
 
@@ -19,22 +20,40 @@ abstract class TutorialRequests {
      *
      * `null` if the current step is not requesting anything, in which case the UI should cancel any existing requests.
      */
+    @Stable
     abstract val request: StateFlow<TutorialRequest<*>?>
+
+    private inline fun <reified T> filterRequest(): Flow<T?> {
+        return request.map {
+            when (it) {
+                null -> null
+                is T -> it
+                else -> null
+            }
+        }
+    }
 
     /**
      * A flow of requests that the current step is requesting.
      */
-    val requestingPlayerMove: Flow<TutorialRequest.MovePlayer> by lazy { request.filterIsInstance<TutorialRequest.MovePlayer>() }
+    @Stable
+    val requestingPlayerMove: Flow<TutorialRequest.MovePlayer?> by lazy { filterRequest<TutorialRequest.MovePlayer>() }
 
-    val requestingClickNext: Flow<TutorialRequest.ClickNext> by lazy { request.filterIsInstance<TutorialRequest.ClickNext>() }
-    
-    val requestingShowPossibleMoves: Flow<TutorialRequest.ShowPossibleMoves> by lazy { request.filterIsInstance<TutorialRequest.ShowPossibleMoves>() }
+    @Stable
+    val requestingClickNext: Flow<TutorialRequest.ClickNext?> by lazy {
+        filterRequest<TutorialRequest.ClickNext>()
+    }
+
+    @Stable
+    val requestingShowPossibleMoves: Flow<TutorialRequest.ShowPossibleMoves?> by lazy { filterRequest<TutorialRequest.ShowPossibleMoves>() }
 }
 
 /**
  * @see TutorialRequests
  */
 sealed interface TutorialRequest<R> {
+    val isResponded: Boolean get() = response.isCompleted
+
     val response: Deferred<R>
 
     /**
@@ -71,7 +90,7 @@ sealed interface TutorialRequest<R> {
         fun respond() = respond(Unit)
     }
 
-    class ShowPossibleMoves(val pos: BoardPos, val duration: Duration) : CompletableTutorialRequest<Unit>() {
+    class ShowPossibleMoves(val logicalPos: BoardPos, val duration: Duration) : CompletableTutorialRequest<Unit>() {
         fun respond() = respond(Unit)
     }
 }

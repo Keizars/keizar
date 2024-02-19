@@ -13,13 +13,15 @@ object Tutorials {
                 change("f3", TileType.ROOK)
                 change("a3", TileType.KNIGHT)
                 change("b5", TileType.BISHOP)
-                change("c7", TileType.QUEEN)
-                change("e5", TileType.KING)
+                change("e8", TileType.QUEEN)
+                change("e6", TileType.KING)
             }
             round {
+                allowFreeMove()
                 curRole { Role.BLACK }
                 resetPieces {
                     white("f3")
+                    white("f4")
                     black("g7")
                 }
             }
@@ -52,17 +54,17 @@ object Tutorials {
             }
 
             step("move as bishop") {
-                showPossibleMovesThenMove { "b5" to "c7" }
+                showPossibleMovesThenMove { "b5" to "e8" }
                 awaitNext()
             }
 
             step("move as queen") {
-                showPossibleMovesThenMove { "c7" to "e5" }
+                showPossibleMovesThenMove { "e8" to "e6" }
                 awaitNext()
             }
 
             step("move as king to keizar") {
-                showPossibleMovesThenMove { "e5" to "d5" }
+                showPossibleMovesThenMove { "e6" to "d5" }
                 awaitNext()
             }
         }

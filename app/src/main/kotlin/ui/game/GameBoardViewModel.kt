@@ -72,7 +72,7 @@ interface GameBoardViewModel {
      * List of the pieces on the board.
      */
     @Stable
-    val pieces: StateFlow<List<UiPiece>>
+    val pieces: SharedFlow<List<UiPiece>>
 
     /**
      * Currently picked piece. `null` if no piece is picked.
@@ -290,7 +290,7 @@ abstract class BaseGameBoardViewModel(
     )
 
     @Stable
-    override val pieces: StateFlow<List<UiPiece>> =
+    override val pieces: SharedFlow<List<UiPiece>> =
         game.currentRound.map { it.pieces }.map { list ->
             list.map {
                 UiPiece(
@@ -302,7 +302,7 @@ abstract class BaseGameBoardViewModel(
                     backgroundScope,
                 )
             }
-        }.stateInBackground(emptyList())
+        }.shareInBackground()
 
     @Stable
     override val currentPick: MutableStateFlow<Pick?> = MutableStateFlow(null)
@@ -440,7 +440,7 @@ abstract class BaseGameBoardViewModel(
         launchInBackground(start = CoroutineStart.UNDISPATCHED) {
             try {
                 movePiece(
-                    currentPick.viewPos,
+                    currentPick.logicalPos,
                     pieceArranger.getNearestPos(dragOffset, from = piece.pos.value).first()
                 )
                 completePick(isDrag = true)
@@ -452,13 +452,13 @@ abstract class BaseGameBoardViewModel(
     }
 
 
-    suspend fun startPick(pos: BoardPos) {
-        val piece = pieces.value.firstOrNull { it.pos.value == pos } ?: return
+    suspend fun startPick(logicalPos: BoardPos) {
+        val piece = pieces.first().firstOrNull { it.pos.value == logicalPos } ?: error("No piece at $logicalPos")
         startPick(piece)
     }
 
     private suspend fun startPick(piece: UiPiece) {
-        this.currentPick.value = Pick(piece, pieceArranger.viewToLogical(piece.pos.value).first())
+        this.currentPick.value = Pick(piece, pieceArranger.logicalToView(piece.pos.value).first())
     }
 
     fun completePick(isDrag: Boolean) {

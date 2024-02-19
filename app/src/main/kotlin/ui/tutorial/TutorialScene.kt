@@ -98,11 +98,16 @@ private fun TutorialPage(
                 val message by vm.tutorialSession.presentation.message.collectAsState()
                 message?.let { it() }
 
-                val next by vm.tutorialSession.requests.requestingClickNext.collectAsStateWithLifecycle(null)
+                val next by remember {
+                    vm.tutorialSession.requests.requestingClickNext
+                }.collectAsStateWithLifecycle(null)
                 next?.let { n ->
-                    Button(onClick = {
-                        n.respond()
-                    }) {
+                    Button(
+                        onClick = {
+                            n.respond()
+                        },
+                        enabled = !n.isResponded
+                    ) {
                         Text(text = "Next")
                     }
                 }

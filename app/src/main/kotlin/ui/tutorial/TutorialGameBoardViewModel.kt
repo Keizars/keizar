@@ -36,14 +36,18 @@ class TutorialGameBoardViewModel(
     init {
         tutorialSession.requests.requestingShowPossibleMoves
             .transformLatest { request ->
+                if (request == null) {
+                    return@transformLatest
+                }
                 coroutineScope {
-                    startPick(request.pos)
-                    emit(Unit)
+                    startPick(request.logicalPos)
                     launch {
                         delay(request.duration)
                         completePick(false)
+                        request.respond()
                     }
                 }
+                emit(Unit)
             }.launchIn(backgroundScope)
     }
 }

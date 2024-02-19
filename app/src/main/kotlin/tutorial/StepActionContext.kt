@@ -20,7 +20,7 @@ interface StepActionContext {
      */
     suspend fun delay(duration: Duration)
 
-    suspend fun showPossibleMoves(pos: BoardPos, duration: Duration = 3.seconds)
+    suspend fun showPossibleMoves(pos: BoardPos, duration: Duration = 1.5.seconds)
 
     /**
      * Move the player's piece from one position to another.
