@@ -20,13 +20,13 @@ inline fun buildGameSession(
 ): GameSession = GameSession.restore(buildGameSnapshot(prototype, builderAction))
 
 /**
- * Builds a [GameSnapshot] based on the initial [prototypr] and applies [builderAction].
+ * Builds a [GameSnapshot] based on the initial [prototype] and applies [builderAction].
  */
 inline fun buildGameSnapshot(
-    prototypr: AbstractBoardProperties = BoardPropertiesPrototypes.Plain,
+    prototype: AbstractBoardProperties = BoardPropertiesPrototypes.Plain,
     builderAction: GameSnapshotBuilder.() -> Unit,
 ): GameSnapshot {
-    return GameSnapshotBuilder(BoardPropertiesBuilder(prototypr)).apply(builderAction).build()
+    return GameSnapshotBuilder(BoardPropertiesBuilder(prototype)).apply(builderAction).build()
 }
 
 /**
