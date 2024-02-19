@@ -131,107 +131,107 @@ class RandomGameAIImpl(
     }
 }
 
-class QTableAI(
-    override val game: GameSession = GameSession.create(0),
-    override val myPlayer: Player,
-    private val parentCoroutineContext: CoroutineContext,
-    private val test: Boolean = false,
-    private val endpoint: String = "http://home.him188.moe:4393"
-) : GameAI {
-
-    private val client = HttpClient(CIO) {
-        install(ContentNegotiation) {
-            json()
-        }
-        Logging()
-    }
-
-    private val myCoroutine: CoroutineScope =
-        CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
-
-    override fun start() {
-        myCoroutine.launch {
-            game.currentRole(myPlayer).zip(game.currentRound) { myRole, session ->
-                myRole to session
-            }.collectLatest { (myRole, session) ->
-                session.curRole.collect { currentRole ->
-                    if (myRole == currentRole) {
-                        val bestPos = findBestMove(session, currentRole)
-                        if (!test) {
-                            delay(Random.nextLong(1000L..1500L))
-                        }
-                        session.move(bestPos.first, bestPos.second)
-                    }
-                }
-            }
-        }
-
-        myCoroutine.launch {
-            game.currentRound.flatMapLatest { it.winner }.collect {
-                if (it != null) {
-                    game.confirmNextRound(myPlayer)
-                }
-                if (!test) {
-                    delay(Random.nextLong(1000L..1500L))
-                }
-            }
-        }
-    }
-
-    override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos> {
-        val moves = round.getAllPiecesPos(role).first().flatMap { source ->
-            round.getAvailableTargets(source).first().map { dest ->
-                Move(source, dest, round.pieceAt(dest) != null)
-            }
-        }
-
-        val blackPiece = round.getAllPiecesPos(Role.BLACK).first()
-        val whitePiece = round.getAllPiecesPos(Role.WHITE).first()
-        val seed = game.properties.seed
-        val resp = client.post(
-            endpoint + "/AI/" + if (role == Role.BLACK) "black" else "white"
-        ) {
-            contentType(Application.Json)
-            setBody(buildJsonObject {
-                put("move", buildJsonArray {
-                    for (m in moves) {
-                        add(buildJsonArray {
-                            add(m.source.row)
-                            add(m.source.col)
-                            add(m.dest.row)
-                            add(m.dest.col)
-                            add(m.isCapture)
-                        })
-                    }
-                })
-                put("black_pieces", buildJsonArray {
-                    for (p in blackPiece) {
-                        add(buildJsonArray {
-                            add(p.row)
-                            add(p.col)
-                        })
-                    }
-                })
-                put("white_pieces", buildJsonArray {
-                    for (p in whitePiece) {
-                        add(buildJsonArray {
-                            add(p.row)
-                            add(p.col)
-                        })
-                    }
-                })
-                put("seed", buildJsonArray { add(seed) })
-            })
-        }
-        val move = resp.body<List<Int>>()
-        return BoardPos(move[0], move[1]) to BoardPos(move[2], move[3])
-    }
-
-    override suspend fun end() {
-        myCoroutine.cancel()
-    }
-
-}
+//class QTableAI(
+//    override val game: GameSession = GameSession.create(0),
+//    override val myPlayer: Player,
+//    private val parentCoroutineContext: CoroutineContext,
+//    private val test: Boolean = false,
+//    private val endpoint: String = "http://home.him188.moe:4393"
+//) : GameAI {
+//
+//    private val client = HttpClient(CIO) {
+//        install(ContentNegotiation) {
+//            json()
+//        }
+//        Logging()
+//    }
+//
+//    private val myCoroutine: CoroutineScope =
+//        CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
+//
+//    override fun start() {
+//        myCoroutine.launch {
+//            game.currentRole(myPlayer).zip(game.currentRound) { myRole, session ->
+//                myRole to session
+//            }.collectLatest { (myRole, session) ->
+//                session.curRole.collect { currentRole ->
+//                    if (myRole == currentRole) {
+//                        val bestPos = findBestMove(session, currentRole)
+//                        if (!test) {
+//                            delay(Random.nextLong(1000L..1500L))
+//                        }
+//                        session.move(bestPos.first, bestPos.second)
+//                    }
+//                }
+//            }
+//        }
+//
+//        myCoroutine.launch {
+//            game.currentRound.flatMapLatest { it.winner }.collect {
+//                if (it != null) {
+//                    game.confirmNextRound(myPlayer)
+//                }
+//                if (!test) {
+//                    delay(Random.nextLong(1000L..1500L))
+//                }
+//            }
+//        }
+//    }
+//
+//    override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos> {
+//        val moves = round.getAllPiecesPos(role).first().flatMap { source ->
+//            round.getAvailableTargets(source).first().map { dest ->
+//                Move(source, dest, round.pieceAt(dest) != null)
+//            }
+//        }
+//
+//        val blackPiece = round.getAllPiecesPos(Role.BLACK).first()
+//        val whitePiece = round.getAllPiecesPos(Role.WHITE).first()
+//        val seed = game.properties.seed
+//        val resp = client.post(
+//            endpoint + "/AI/" + if (role == Role.BLACK) "black" else "white"
+//        ) {
+//            contentType(Application.Json)
+//            setBody(buildJsonObject {
+//                put("move", buildJsonArray {
+//                    for (m in moves) {
+//                        add(buildJsonArray {
+//                            add(m.source.row)
+//                            add(m.source.col)
+//                            add(m.dest.row)
+//                            add(m.dest.col)
+//                            add(m.isCapture)
+//                        })
+//                    }
+//                })
+//                put("black_pieces", buildJsonArray {
+//                    for (p in blackPiece) {
+//                        add(buildJsonArray {
+//                            add(p.row)
+//                            add(p.col)
+//                        })
+//                    }
+//                })
+//                put("white_pieces", buildJsonArray {
+//                    for (p in whitePiece) {
+//                        add(buildJsonArray {
+//                            add(p.row)
+//                            add(p.col)
+//                        })
+//                    }
+//                })
+//                put("seed", buildJsonArray { add(seed) })
+//            })
+//        }
+//        val move = resp.body<List<Int>>()
+//        return BoardPos(move[0], move[1]) to BoardPos(move[2], move[3])
+//    }
+//
+//    override suspend fun end() {
+//        myCoroutine.cancel()
+//    }
+//
+//}
 
 
 class AlgorithmAI(
