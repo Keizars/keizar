@@ -286,11 +286,11 @@ class AlgorithmAI(
                     }
                     node.parents.sortBy { parent -> parent.second }
                     for (parent in node.parents ) {
-                        val notRecOccupyPos = if (role == Role.WHITE) BoardPos("d4") else BoardPos("d6")
-                        val notRecOccupy = tiles[notRecOccupyPos] == TileType.ROOK || tiles[notRecOccupyPos] == TileType.QUEEN || tiles[notRecOccupyPos] == TileType.KING
+//                        val notRecOccupyPos = if (role == Role.WHITE) BoardPos("d4") else BoardPos("d6")
+//                        val notRecOccupy = tiles[notRecOccupyPos] == TileType.ROOK || tiles[notRecOccupyPos] == TileType.QUEEN || tiles[notRecOccupyPos] == TileType.KING
                         val checkCapture = tiles[node.position] != TileType.PLAIN
                                 || ((tiles[node.position] == TileType.PLAIN) && node.position.col != parent.first.position.col)
-                        if (parent.first.position != notRecOccupyPos || notRecOccupy) {
+//                        if (parent.first.position != notRecOccupyPos || notRecOccupy) {
                             if (parent.first.occupy == null || parent.first.occupy == role.other() && checkCapture) {
                                 if (parent.second == 1) {
                                     keizarMoves.add(node.position to parent.first.position)
@@ -305,7 +305,7 @@ class AlgorithmAI(
                                     candidateMoves.add(node.position to parent.first.position)
                                 }
                             }
-                        }
+//                        }
                     }
                 }
             }
@@ -360,7 +360,7 @@ class AlgorithmAI(
 }
 
 class AIParameters(
-    val keizarThreshold: Int = 1,         // Allow capture keizar if keizarCount > keizarThreshold
-    val possibleMovesThreshold: Int = 5,    // Collect all possible moves if distance < possibleMovesThreshold for novelty search (or not best move)
+    val keizarThreshold: Int = 0,         // Allow capture keizar if keizarCount > keizarThreshold
+    val possibleMovesThreshold: Int = 3,    // Collect all possible moves if distance < possibleMovesThreshold for novelty search (or not best move)
     val noveltyLevel: Double = 0.99,
-    val allowCaptureKeizarThreshold: Double = 0.6)    // The probability of not using novelty (or not best move) to enhance exploration of the game tree
+    val allowCaptureKeizarThreshold: Double = 0.5)    // The probability of not using novelty (or not best move) to enhance exploration of the game tree
