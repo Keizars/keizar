@@ -452,11 +452,16 @@ abstract class BaseGameBoardViewModel(
     }
 
 
+    suspend fun startPick(pos: BoardPos) {
+        val piece = pieces.value.firstOrNull { it.pos.value == pos } ?: return
+        startPick(piece)
+    }
+
     private suspend fun startPick(piece: UiPiece) {
         this.currentPick.value = Pick(piece, pieceArranger.viewToLogical(piece.pos.value).first())
     }
 
-    private fun completePick(isDrag: Boolean) {
+    fun completePick(isDrag: Boolean) {
         this.currentPick.value = null
         lastMoveIsDrag.value = isDrag
         draggingOffset.value = DpOffset.Zero

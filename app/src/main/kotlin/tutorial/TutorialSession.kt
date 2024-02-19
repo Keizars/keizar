@@ -191,6 +191,11 @@ internal class TutorialSessionImpl(
                 kotlinx.coroutines.delay(duration)
             }
 
+            override suspend fun showPossibleMoves(pos: BoardPos, duration: Duration) {
+                val req = TutorialRequest.ShowPossibleMoves(pos, duration)
+                requests.issueAndAwait(req)
+            }
+
             override suspend fun movePlayer(from: BoardPos, to: BoardPos): Unit = lock.withLock {
                 val myRole = game.currentRound.first().curRole.first()
                 check(

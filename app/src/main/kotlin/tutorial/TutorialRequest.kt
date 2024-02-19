@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterIsInstance
 import org.keizar.utils.communication.game.BoardPos
+import kotlin.time.Duration
 
 
 /**
@@ -26,6 +27,8 @@ abstract class TutorialRequests {
     val requestingPlayerMove: Flow<TutorialRequest.MovePlayer> by lazy { request.filterIsInstance<TutorialRequest.MovePlayer>() }
 
     val requestingClickNext: Flow<TutorialRequest.ClickNext> by lazy { request.filterIsInstance<TutorialRequest.ClickNext>() }
+    
+    val requestingShowPossibleMoves: Flow<TutorialRequest.ShowPossibleMoves> by lazy { request.filterIsInstance<TutorialRequest.ShowPossibleMoves>() }
 }
 
 /**
@@ -65,6 +68,10 @@ sealed interface TutorialRequest<R> {
     ) : CompletableTutorialRequest<BoardPos>()
 
     class ClickNext : CompletableTutorialRequest<Unit>() {
+        fun respond() = respond(Unit)
+    }
+
+    class ShowPossibleMoves(val pos: BoardPos, val duration: Duration) : CompletableTutorialRequest<Unit>() {
         fun respond() = respond(Unit)
     }
 }

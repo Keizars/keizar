@@ -1,6 +1,11 @@
 package org.keizar.android.ui.tutorial
 
 import androidx.compose.runtime.Stable
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.transformLatest
+import kotlinx.coroutines.launch
 import org.keizar.android.tutorial.Tutorial
 import org.keizar.android.tutorial.TutorialSession
 import org.keizar.android.tutorial.newSession
@@ -27,4 +32,18 @@ class TutorialGameBoardViewModel(
     game: GameSession = tutorialSession.game, selfPlayer: Player = tutorialSession.tutorial.player,
 ) : BaseGameBoardViewModel(game, selfPlayer) {
     override val startConfiguration: GameStartConfiguration = GameStartConfiguration.random()
+
+    init {
+        tutorialSession.requests.requestingShowPossibleMoves
+            .transformLatest { request ->
+                coroutineScope {
+                    startPick(request.pos)
+                    emit(Unit)
+                    launch {
+                        delay(request.duration)
+                        completePick(false)
+                    }
+                }
+            }.launchIn(backgroundScope)
+    }
 }

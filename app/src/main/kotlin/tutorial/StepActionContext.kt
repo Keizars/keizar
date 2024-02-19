@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import org.keizar.utils.communication.game.BoardPos
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * The context in which a step action is executed.
@@ -18,6 +19,8 @@ interface StepActionContext {
      * Delays the step for a given [duration].
      */
     suspend fun delay(duration: Duration)
+
+    suspend fun showPossibleMoves(pos: BoardPos, duration: Duration = 3.seconds)
 
     /**
      * Move the player's piece from one position to another.
@@ -53,6 +56,9 @@ interface StepActionContext {
      */
     suspend fun awaitNext()
 }
+
+suspend inline fun StepActionContext.showPossibleMoves(pos: String, duration: Duration = 3.seconds) =
+    this.showPossibleMoves(BoardPos(pos), duration)
 
 /**
  * Update the message displayed to the user.
