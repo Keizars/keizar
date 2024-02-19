@@ -29,6 +29,7 @@ import org.keizar.android.tutorial.Tutorial
 import org.keizar.android.tutorial.Tutorials
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.GameBoard
+import org.keizar.android.ui.game.GameBoardTopBar
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -87,6 +88,7 @@ private fun TutorialPage(
                         .size(min(maxWidth, maxHeight)),
                     onClickHome = onClickHome,
                     onClickGameConfig = {},
+                    topBar = { GameBoardTopBar(vm = vm, turnStatusIndicator = null) },
                     actions = {
                         val next by remember {
                             vm.tutorialSession.requests.requestingClickNext
