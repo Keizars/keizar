@@ -18,6 +18,7 @@ object Tutorials {
             }
             round {
                 allowFreeMove()
+                disableWinner()
                 curRole { Role.BLACK }
                 resetPieces {
                     white("f3")
@@ -30,6 +31,10 @@ object Tutorials {
         playerStartAsBlack()
 
         steps {
+            step("start") {
+                awaitNext()
+            }
+
             step("move black") {
                 showPossibleMovesThenMove { "g7" to "g5" }
                 delay(1.seconds)
@@ -66,6 +71,10 @@ object Tutorials {
             step("move as king to keizar") {
                 showPossibleMovesThenMove { "e6" to "d5" }
                 awaitNext()
+            }
+
+            step("show rules") {
+                
             }
         }
     }

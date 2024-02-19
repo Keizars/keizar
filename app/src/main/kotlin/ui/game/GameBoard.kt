@@ -108,7 +108,10 @@ fun GameBoard(
                 Modifier.fillMaxWidth()
             )
 
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp), horizontalArrangement = Arrangement.End) {
                 actions()
             }
         }

@@ -87,6 +87,19 @@ private fun TutorialPage(
                         .size(min(maxWidth, maxHeight)),
                     onClickHome = onClickHome,
                     onClickGameConfig = {},
+                    actions = {
+                        val next by remember {
+                            vm.tutorialSession.requests.requestingClickNext
+                        }.collectAsStateWithLifecycle(null)
+                        next.let { n ->
+                            Button(
+                                onClick = { n?.respond() },
+                                enabled = n != null && !n.isResponded
+                            ) {
+                                Text(text = "Next")
+                            }
+                        }
+                    }
                 )
             }
 
@@ -97,20 +110,6 @@ private fun TutorialPage(
             ) {
                 val message by vm.tutorialSession.presentation.message.collectAsState()
                 message?.let { it() }
-
-                val next by remember {
-                    vm.tutorialSession.requests.requestingClickNext
-                }.collectAsStateWithLifecycle(null)
-                next?.let { n ->
-                    Button(
-                        onClick = {
-                            n.respond()
-                        },
-                        enabled = !n.isResponded
-                    ) {
-                        Text(text = "Next")
-                    }
-                }
             }
         }
     }
