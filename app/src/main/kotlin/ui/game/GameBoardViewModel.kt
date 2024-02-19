@@ -128,9 +128,6 @@ interface GameBoardViewModel {
     @Stable
     val canUndo: StateFlow<Boolean>
 
-    @Stable
-    val showUndo: Boolean
-
 
     // clicking
 
@@ -254,7 +251,6 @@ class MultiplayerGameBoardViewModel(
             difficulty = Difficulty.EASY,
             layoutSeed = boardProperties.seed ?: 0,
         )
-    override val showUndo: Boolean = true
 }
 
 @Suppress("LeakingThis")
@@ -377,8 +373,6 @@ abstract class BaseGameBoardViewModel(
 
     override val canUndo: StateFlow<Boolean> =
         game.currentRound.flatMapLatest { it.canUndo }.stateInBackground(false)
-
-    override val showUndo: Boolean = false
 
 
     init {
