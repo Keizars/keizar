@@ -14,25 +14,28 @@ import org.keizar.utils.communication.game.Player
  */
 inline fun buildTutorial(
     id: String,
-    action: TutorialBuilder.() -> Unit
+    action: TutorialBuilder.() -> Unit,
 ): Tutorial = TutorialBuilder(id).apply(action).build()
 
 /**
  * @see buildTutorial
  */
+@TutorialDslMarker
 class TutorialBuilder(
     private val id: String,
-    private var player: Player = Player.FirstWhitePlayer
+    private var player: Player = Player.FirstWhitePlayer,
 ) {
     @PublishedApi
     internal val snapshotBuilder: GameSnapshotBuilder = GameSnapshotBuilder()
 
     val steps = StepsBuilder()
 
+    @TutorialDslMarker
     fun playerStartAsWhite() {
         player = Player.FirstWhitePlayer
     }
 
+    @TutorialDslMarker
     fun playerStartAsBlack() {
         player = Player.FirstBlackPlayer
     }
@@ -42,7 +45,7 @@ class TutorialBuilder(
      */
     @TutorialDslMarker
     inline fun board(
-        builderAction: GameSnapshotBuilder.() -> Unit
+        builderAction: (@TutorialDslMarker GameSnapshotBuilder).() -> Unit,
     ) {
         snapshotBuilder.apply(builderAction)
     }
@@ -55,6 +58,7 @@ class TutorialBuilder(
         steps.apply(execution)
     }
 
+    @TutorialDslMarker
     inner class StepsBuilder {
         @PublishedApi
         internal val list: MutableList<Step> = mutableListOf()
@@ -63,12 +67,28 @@ class TutorialBuilder(
          * Adds a step to the tutorial.
          *
          * Steps are executed in the order they are added.
+         *
+         * @param name Name for debugging purposes. Not necessarily (but recommended) to be unique.
          */
+        @TutorialDslMarker
         fun step(name: String, action: StepAction): Step {
             val step = Step(name, action)
             list.add(step)
             return step
         }
+
+        /**
+         * Adds a step to the executed just after this step has been successfully executed.
+         *
+         * This is useful to add a message after a move has been requested, without specifying the name of the step.
+         *
+         * @sample samples.TutorialSamples.stepThen
+         */
+        @TutorialDslMarker
+        fun Step.then(
+            name: String = this.name + "-then",
+            execution: StepAction,
+        ): Step = step(name, execution)
 
         internal fun toList() = list.toList()
     }
@@ -81,10 +101,11 @@ class TutorialBuilder(
      *
      * @sample samples.TutorialSamples.stepThen
      */
+    @TutorialDslMarker
     fun Step.then(
         name: String = this.name + "-then",
-        execution: StepAction
-    ): Step = steps.step(name, execution)
+        execution: StepAction,
+    ): Step = steps.run { then(name, execution) }
 
     fun build(): Tutorial {
         return Tutorial(
@@ -97,6 +118,7 @@ class TutorialBuilder(
 }
 
 @DslMarker
+@Target(AnnotationTarget.CLASS, AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.VALUE_PARAMETER)
 annotation class TutorialDslMarker
 
 @TutorialDslMarker
@@ -129,7 +151,7 @@ class MoveBuilder {
 
     @TutorialDslMarker
     infix fun String.to(pos: String) {
-        from(pos)
+        from(this)
         to = BoardPos.fromString(pos)
     }
 
