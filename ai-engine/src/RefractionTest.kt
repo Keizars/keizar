@@ -22,6 +22,8 @@ import kotlin.math.abs
 import kotlin.random.Random
 import kotlin.random.nextLong
 
+//Todo： This file cannot run due to circular dependency on the distance property of the rTileNode interface
+
 // defined tile node interface for the graph
 // position: the position of the node
 // occupy: the player that occupies the node, null if no player occupies the node
