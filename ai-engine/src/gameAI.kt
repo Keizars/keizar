@@ -1,16 +1,6 @@
 package org.keizar.aiengine
 
 
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.http.ContentType.Application
-import io.ktor.http.contentType
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
@@ -20,11 +10,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
-import kotlinx.serialization.json.add
-import kotlinx.serialization.json.buildJsonArray
-import kotlinx.serialization.json.buildJsonObject
 import org.keizar.game.GameSession
-import org.keizar.game.Move
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import org.keizar.game.TileType
@@ -293,10 +279,10 @@ class AlgorithmAI(
                     for (parent in node.parents ) {
                         val notRecOccupyPos = if (role == Role.WHITE) BoardPos("d4") else BoardPos("d6")
                         val notRecOccupy = tiles[notRecOccupyPos] == TileType.ROOK || tiles[notRecOccupyPos] == TileType.QUEEN || tiles[notRecOccupyPos] == TileType.KING
-                        val checkValid = tiles[node.position] != TileType.PLAIN
+                        val checkCapture = tiles[node.position] != TileType.PLAIN
                                 || ((tiles[node.position] == TileType.PLAIN) && node.position.col != parent.first.position.col)
                         if (parent.first.position != notRecOccupyPos || notRecOccupy) {
-                            if (parent.first.occupy == null || parent.first.occupy == role.other() && checkValid) {
+                            if (parent.first.occupy == null || parent.first.occupy == role.other() && checkCapture) {
                                 val lowerBound = if (allowCaptureKeizar) 1 else 2
                                 if (parent.second in lowerBound..< minDistance) {
                                     minDistance = parent.second
@@ -326,6 +312,7 @@ class AlgorithmAI(
             var count = 0
             var valid = false
             while (!valid && count < 10) {
+                moves.remove(bestMove)
                 valid = round.move(bestMove.first, bestMove.second)
                 bestMove = moves.random()
                 count += 1
