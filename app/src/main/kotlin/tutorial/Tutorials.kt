@@ -5,9 +5,11 @@ package org.keizar.android.tutorial
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.unit.dp
 import org.keizar.android.ui.rules.RuleReferencesPage
 import org.keizar.game.Role
@@ -98,7 +100,18 @@ object Tutorials {
             }
 
             step("move as king to keizar") {
-                tooltip { Text("King", color = PawnColors.King) }
+                tooltip {
+                    Text(
+                        "King", color = PawnColors.King,
+                        style = LocalTextStyle.current
+                            .copy(
+                                shadow = Shadow(
+                                    color = Color.Black,
+                                    blurRadius = 1.dp.value,
+                                ),
+                            )
+                    )
+                }
                 showPossibleMovesThenMove { "e6" to "d5" }
                 tooltip { Text("KEIZÁR", color = PawnColors.Keizar) }
                 removeTooltip()
@@ -132,3 +145,20 @@ object Tutorials {
         return list.first { it.id == id }
     }
 }
+
+//@Composable
+//@Preview(showBackground = true)
+//private fun PreviewKingText() {
+//    Text(
+//        "King", color = PawnColors.King,
+//        style = LocalTextStyle.current
+//            .copy(
+////                                drawStyle = Stroke(width = 1f),
+//                shadow = Shadow(
+//                    color = Color.Black,
+//                    blurRadius = 1.dp.value,
+////                                    offset = Offset(2f, 2f)
+//                ),
+//            )
+//    )
+//}
