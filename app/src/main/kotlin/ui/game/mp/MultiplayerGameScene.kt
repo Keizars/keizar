@@ -102,7 +102,9 @@ fun MultiplayerGamePage(
                 }
             })
         }
-    } ?: run {
+    }
+
+    if (session != null && session?.getOrNull() == null) {
         AlertDialog(
             onDismissRequest = goBack,
             confirmButton = { Text(text = "OK") },
