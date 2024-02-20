@@ -294,8 +294,7 @@ class AlgorithmAI(
                     for (parent in node.parents ) {
 //                        val notRecOccupyPos = if (role == Role.WHITE) BoardPos("d4") else BoardPos("d6")
 //                        val notRecOccupy = tiles[notRecOccupyPos] == TileType.ROOK || tiles[notRecOccupyPos] == TileType.QUEEN || tiles[notRecOccupyPos] == TileType.KING
-                        val checkCapture = tiles[node.position] != TileType.PLAIN
-                                || ((tiles[node.position] == TileType.PLAIN) && node.position.col != parent.first.position.col)
+                        val checkCapture = tiles[node.position] != TileType.PLAIN || ((tiles[node.position] == TileType.PLAIN) && node.position.col != parent.first.position.col)
 //                        if (parent.first.position != notRecOccupyPos || notRecOccupy) {
                             if (parent.first.occupy == null || parent.first.occupy == role.other() && checkCapture) {
                                 if (parent.second == 1) {
