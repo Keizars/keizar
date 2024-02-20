@@ -364,3 +364,137 @@ class AIParameters(
     val possibleMovesThreshold: Int = 3,    // Collect all possible moves if distance < possibleMovesThreshold for novelty search (or not best move)
     val noveltyLevel: Double = 0.99,
     val allowCaptureKeizarThreshold: Double = 0.5)    // The probability of not using novelty (or not best move) to enhance exploration of the game tree
+
+
+class ScoringAlgorithmAI(
+    override val game: GameSession = GameSession.create(0),
+    override val myPlayer: Player,
+    private val parentCoroutineContext: CoroutineContext,
+    private val disableDelay: Boolean = false,
+//    private val endpoint: String = "http://home.him188.moe:4393",
+//    private val moves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf(),
+//    private val kei_numbers: MutableList<Int> = mutableListOf(),
+//    private val aiParameters: AIParameters = AIParameters(),
+    private val test: Boolean = false
+) : GameAI {
+    private val myCoroutine: CoroutineScope =
+        CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
+    override fun start() {
+        myCoroutine.launch {
+            game.currentRole(myPlayer).zip(game.currentRound) { myRole, session ->
+                myRole to session
+            }.collectLatest { (myRole, session) ->
+                session.curRole.collect { currentRole ->
+                    if (myRole == currentRole) {
+                        val bestPos = findBestMove(session, currentRole)
+                        if (!disableDelay) {
+                            delay(Random.nextLong(1000L..1500L))
+                        }
+                        if (bestPos != null) {
+                            session.move(bestPos.first, bestPos.second)
+                        }
+                    }
+                }
+            }
+        }
+
+        myCoroutine.launch {
+            game.currentRound.flatMapLatest { it.winner }.collect {
+                if (it != null) {
+                    game.confirmNextRound(myPlayer)
+                }
+                if (!disableDelay) {
+                    delay(Random.nextLong(1000L..1500L))
+                }
+            }
+        }
+
+    }
+
+    override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos>? {
+        val tiles = game.properties.tileArrangement
+        val board = createKeizarGraph(role, game)
+        board.forEach{
+            it.forEach {node ->
+                println(node.distance)
+            }
+        }
+        val selfPieces = round.getAllPiecesPos(role).first()
+        val opponentPieces = round.getAllPiecesPos(role.other()).first()
+        var highestScore = Int.MIN_VALUE
+        var move: Pair<BoardPos, BoardPos>? = null
+        selfPieces.forEach { pos ->
+            val targets = round.getAvailableTargets(pos).first()
+            targets.forEach { target ->
+                val newSelfPieces = selfPieces.toMutableList()
+                val newOpponentPieces = opponentPieces.toMutableList()
+                updateNewPieces(newSelfPieces, newOpponentPieces, pos, target)
+                val selfScore = newSelfPieces.sumOf { pos -> score(pos, tiles, board) }
+                val opponentScore = newOpponentPieces.sumOf { pos -> score(pos, tiles, board) }
+                val newScore = selfScore - opponentScore
+                if (newScore > highestScore) {
+                    highestScore = newScore
+                    move = pos to target
+                }
+            }
+        }
+        if (move == null) {
+            println("No valid move found")
+        }
+        return move
+    }
+
+    override suspend fun end() {
+        myCoroutine.cancel()
+    }
+
+    private fun updateNewPieces(selfPieces: MutableList<BoardPos>, opponentPieces: MutableList<BoardPos>, source: BoardPos, target: BoardPos) {
+        selfPieces.remove(source)
+        selfPieces.add(target)
+        if (target in opponentPieces) {
+            opponentPieces.remove(target)
+        }
+    }
+
+    private fun score(pos: BoardPos, tiles: Map<BoardPos, TileType>, board: MutableList<MutableList<TileNode>>): Int {
+        val node = board[pos.row][pos.col]
+//        return if (node.distance == Int.MAX_VALUE && tiles[pos] != TileType.KEIZAR) {
+//            0
+//        } else {
+////            if (node.distance <= 3) {
+////                val value = when (tiles[pos]) {
+////                    TileType.ROOK -> 10
+////                    TileType.QUEEN -> 12    // Queen is more valuable than other pieces
+////                    TileType.KING -> 10
+////                    TileType.BISHOP -> 10
+////                    TileType.KNIGHT -> 10
+////                    TileType.PLAIN -> 8     // Plain is less valuable than other pieces
+////                    TileType.KEIZAR -> Int.MAX_VALUE   // Keizar is the most valuable piece
+////                    else -> 0
+////                }
+////                if (tiles[pos] == TileType.KEIZAR) {
+////                    return value
+////                } else {
+////                    return value - node.distance
+////                }
+////            } else {
+////                return 0
+////            }
+//            return when(node.distance) {
+//                1 -> 10
+//                2 -> 8
+//                3 -> 6
+//                else -> 0
+//            }
+//        }
+        return when(node.distance) {
+            1 -> {
+                10
+            }
+            2 -> 8
+            3 -> 6
+            else -> 0
+        }
+    }
+
+}

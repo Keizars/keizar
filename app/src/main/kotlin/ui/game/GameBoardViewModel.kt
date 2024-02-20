@@ -24,6 +24,7 @@ import kotlinx.coroutines.launch
 import me.him188.ani.utils.logging.info
 import org.keizar.aiengine.AlgorithmAI
 import org.keizar.aiengine.RandomGameAIImpl
+import org.keizar.aiengine.ScoringAlgorithmAI
 import org.keizar.android.BuildConfig
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
@@ -216,7 +217,7 @@ class SinglePlayerGameBoardViewModel(
                 backgroundScope.coroutineContext
             )
 
-            else -> AlgorithmAI(
+            else -> ScoringAlgorithmAI(
                 game,
                 Player.entries.first { it != selfPlayer },
                 backgroundScope.coroutineContext,
