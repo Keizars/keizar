@@ -452,8 +452,8 @@ class ScoringAlgorithmAI(
         val selfPieces = round.getAllPiecesPos(role).first()
         val opponentPieces = round.getAllPiecesPos(role.other()).first()
         var highestScore = Int.MIN_VALUE
-        val keizarCount = round.winningCounter.first()
-        val keizarCapture = round.pieceAt(game.properties.keizarTilePos)
+        val keizarCount = round.winningCounter.first()          // TODO: remember to update the keizarCount
+        val keizarCapture = round.pieceAt(game.properties.keizarTilePos) == role // TODO: remember to update the keizarCapture
         var chosenMove: Pair<BoardPos, BoardPos>? = null
         selfPieces.forEach { pos ->
             // get the valid targets of the piece at pos
@@ -514,7 +514,7 @@ class ScoringAlgorithmAI(
         tiles: Map<BoardPos, TileType>,
         board: MutableList<MutableList<TileNode>>,
         keizarCount: Int,
-        keizarCapture: Role?
+        keizarCapture: Boolean
     ): Int {
         val node = board[pos.row][pos.col]
 //        return if (node.distance == Int.MAX_VALUE && tiles[pos] != TileType.KEIZAR) {
@@ -547,7 +547,13 @@ class ScoringAlgorithmAI(
 //            }
 //        }
         return when(node.distance) {
-            0 -> 20     // if distance is 0, it means the piece is on the keizar tile
+            0 -> {
+                if (keizarCount == 2 && keizarCapture) {
+                    Int.MAX_VALUE   // if distance is 0, and keizar is captured by the opponent, it means the piece is the most valuable
+                } else {
+                    12  // if distance is 0, it means the piece is on the keizar tile
+                }
+            }
             1 -> 10     // if distance is 1, it means the piece is one step away from the keizar tile
             2 -> 8      // if distance is 2, it means the piece is two steps away from the keizar tile
             3 -> 6      // if distance is 3, it means the piece is three steps away from the keizar tile
