@@ -5,15 +5,20 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
 import org.keizar.game.GameSession
+import org.keizar.game.MutablePiece
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import org.keizar.game.TileType
+import org.keizar.game.asPiece
+import org.keizar.game.internal.RuleEngineCore
+import org.keizar.game.internal.Tile
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
 import kotlin.coroutines.CoroutineContext
@@ -375,7 +380,8 @@ class ScoringAlgorithmAI(
 //    private val moves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf(),
 //    private val kei_numbers: MutableList<Int> = mutableListOf(),
 //    private val aiParameters: AIParameters = AIParameters(),
-    private val test: Boolean = false
+    private val test: Boolean = false,
+    private val ruleEngine: RuleEngineCore
 ) : GameAI {
     private val myCoroutine: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
@@ -411,8 +417,29 @@ class ScoringAlgorithmAI(
 
     }
 
+    private val BoardPos.index get() = row * game.properties.width + col
+
+    private fun initTiles(): MutableList<Tile> {
+        val boardProperties = game.properties
+        val tiles = MutableList(boardProperties.width * boardProperties.height) {
+            Tile(TileType.PLAIN)
+        }
+        boardProperties.tileArrangement.toList().map { (pos, type) ->
+            tiles[pos.index] = Tile(type)
+        }
+        var index = 0
+        for ((color, startingPos) in boardProperties.piecesStartingPos) {
+            for (pos in startingPos) {
+                val piece = MutablePiece(index++, color, MutableStateFlow(pos))
+                tiles[pos.index].piece = piece.asPiece()
+            }
+        }
+        return tiles
+    }
+
     override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos>? {
-        val tiles = game.properties.tileArrangement
+        val tileArrangement = game.properties.tileArrangement
+        val tiles = initTiles()
         val board = createKeizarGraph(role, game)
         board.forEach{
             it.forEach {node ->
@@ -422,15 +449,16 @@ class ScoringAlgorithmAI(
         val selfPieces = round.getAllPiecesPos(role).first()
         val opponentPieces = round.getAllPiecesPos(role.other()).first()
         var highestScore = Int.MIN_VALUE
+        val keizarCount = round.winningCounter.first()
         var move: Pair<BoardPos, BoardPos>? = null
         selfPieces.forEach { pos ->
-            val targets = round.getAvailableTargets(pos).first()
+            val targets = ruleEngine.showValidMoves(tiles, pos) { index }
             targets.forEach { target ->
                 val newSelfPieces = selfPieces.toMutableList()
                 val newOpponentPieces = opponentPieces.toMutableList()
                 updateNewPieces(newSelfPieces, newOpponentPieces, pos, target)
-                val selfScore = newSelfPieces.sumOf { pos -> score(pos, tiles, board) }
-                val opponentScore = newOpponentPieces.sumOf { pos -> score(pos, tiles, board) }
+                val selfScore = newSelfPieces.sumOf { pos -> score(pos, tileArrangement, board) }
+                val opponentScore = newOpponentPieces.sumOf { pos -> score(pos, tileArrangement, board) }
                 val newScore = selfScore - opponentScore
                 if (newScore > highestScore) {
                     highestScore = newScore
@@ -489,7 +517,11 @@ class ScoringAlgorithmAI(
 //        }
         return when(node.distance) {
             1 -> {
-                10
+                if (tiles[pos] == TileType.KEIZAR) {
+                    20
+                } else {
+                    10
+                }
             }
             2 -> 8
             3 -> 6

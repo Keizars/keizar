@@ -25,6 +25,7 @@ import org.keizar.utils.communication.game.BoardPos
 
 interface RuleEngineCore {
     fun showValidMoves(tiles: List<Tile>, piece: Piece, index: BoardPos.() -> Int): List<BoardPos>
+    fun showValidMoves(tiles: List<Tile>, pos: BoardPos, index: BoardPos.() -> Int): List<BoardPos>
 }
 
 class RuleEngineCoreImpl(
@@ -76,6 +77,15 @@ class RuleEngineCoreImpl(
         }
 
         return validMoves
+    }
+
+    override fun showValidMoves(
+        tiles: List<Tile>,
+        pos: BoardPos,
+        index: BoardPos.() -> Int
+    ): List<BoardPos> {
+        val piece = tiles[pos.index()].piece!!
+        return showValidMoves(tiles, piece, index)
     }
 
     private class Route(
