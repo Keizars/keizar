@@ -452,9 +452,9 @@ class ScoringAlgorithmAI(
         }
         val selfPieces = round.getAllPiecesPos(role).first()
         val opponentPieces = round.getAllPiecesPos(role.other()).first()
-        var highestScore = Int.MIN_VALUE
+        val highestScore = Int.MIN_VALUE
         val keizarCount = round.winningCounter.first()          // TODO: remember to update the keizarCount
-        val keizarCapture = round.pieceAt(game.properties.keizarTilePos) == role // TODO: remember to update the keizarCapture
+        val keizarOpponentCapture = round.pieceAt(game.properties.keizarTilePos) != role // TODO: remember to update the keizarCapture
         var chosenMove: Pair<BoardPos, BoardPos>? = null
         chosenMove = findHighestScoreMove(
             selfPieces,
@@ -463,7 +463,7 @@ class ScoringAlgorithmAI(
             tileArrangement,
             board,
             keizarCount,
-            keizarCapture,
+            keizarOpponentCapture,
             highestScore,
             chosenMove
         )
