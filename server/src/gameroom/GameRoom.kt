@@ -8,17 +8,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.cancel
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.keizar.game.BoardProperties
 import org.keizar.utils.communication.PlayerSessionState
@@ -38,13 +34,36 @@ import java.util.concurrent.ConcurrentMap
 import java.util.concurrent.atomic.AtomicInteger
 
 interface GameRoom : AutoCloseable {
+    /**
+     * Connect to the user through a web socket session. When two players both connect,
+     * the game should start automatically. (On the server side, it should start to send
+     * and forward messages through the websockets.)
+     * Calling connect() twice on the same [UserInfo] will override its registered [PlayerSession].
+     * The messages will be sent to the newest [PlayerSession].
+     */
     suspend fun connect(user: UserInfo, player: PlayerSession): Boolean
+
+    /**
+     * Add a user into the room. Register them as one of the players, but not start the game.
+     */
     fun addPlayer(user: UserInfo): Boolean
 
     val roomNumber: UInt
-    val finished: Flow<Boolean>
     val properties: BoardProperties
+
+    /**
+     * Whether the game has finished.
+     */
+    val finished: Flow<Boolean>
+
+    /**
+     * Number of players that are [addPlayer()]-ed to the room.
+     */
     val playerCount: Int
+
+    /**
+     * Whether all players added are ready to start the game.
+     */
     val playersReady: Boolean
 
     companion object {
@@ -70,7 +89,12 @@ class GameRoomImpl(
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
-    private val playerInfos: MutableList<UserInfo> = mutableListOf()
+
+    /**
+     * Add players into the room and register player information.
+     */
+
+    private val playerInfo: MutableList<UserInfo> = mutableListOf()
     private val _playerCount: AtomicInteger = AtomicInteger(0)
     override val playerCount: Int get() = _playerCount.get()
     override var playersReady = false
@@ -83,7 +107,7 @@ class GameRoomImpl(
         if (playerIndex < Player.entries.size) {
             myCoroutineScope.launch {
                 playersMutex.withLock {
-                    playerInfos.add(playerIndex, user)
+                    playerInfo.add(playerIndex, user)
                 }
             }
             if (playerIndex == Player.entries.size - 1) {
@@ -95,6 +119,15 @@ class GameRoomImpl(
         return false
     }
 
+    override fun containsPlayer(user: UserInfo): Boolean {
+        return user in playerInfo
+    }
+
+
+    /**
+     * Determine which player is the FirstBlackPlayer and which is the FirstWhitePlayer.
+     */
+
     private val allPlayers = Player.entries.shuffled()
     private val allPlayersIndex = AtomicInteger(0)
     private fun allocatePlayer(user: UserInfo) {
@@ -104,16 +137,17 @@ class GameRoomImpl(
         playerAllocation[user] = allPlayers[index]
     }
 
-    override fun containsPlayer(user: UserInfo): Boolean {
-        return user in playerInfos
-    }
+
+    /**
+     * Connect players ([UserInfo]s) to websocket sessions ([PlayerSession]s).
+     */
 
     private val playerSessions: MutableMap<UserInfo, MutableStateFlow<PlayerSession>> =
         mutableMapOf()
     private val playersConnected: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     override suspend fun connect(user: UserInfo, player: PlayerSession): Boolean {
-        if (user in playerInfos) {
+        if (user in playerInfo) {
             player.setState(PlayerSessionState.WAITING)
             notifyPlayerAllocation(player, playerAllocation[player.user]!!)
             logger.info("Session of user $user changed to $player")
@@ -124,13 +158,19 @@ class GameRoomImpl(
                 oldSession.cancel("Websocket session expired")
                 playerSessions[user]!!.value = player
             }
-            if (playerSessions.keys.containsAll(playerInfos)) {
+            if (playerSessions.keys.containsAll(playerInfo)) {
                 playersConnected.value = true
             }
             return true
         }
         return false
     }
+
+
+    /**
+     * Start the game.
+     * Contains functions for running a game.
+     */
 
     init {
         startWaitingForPlayers()
@@ -173,8 +213,8 @@ class GameRoomImpl(
             }
         }
 
-        val player1 = playerSessions[playerInfos[0]]!!
-        val player2 = playerSessions[playerInfos[1]]!!
+        val player1 = playerSessions[playerInfo[0]]!!
+        val player2 = playerSessions[playerInfo[1]]!!
 
         myCoroutineScope.launch {
             player2.collectLatest {
