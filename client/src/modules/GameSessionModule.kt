@@ -33,7 +33,7 @@ import org.keizar.utils.communication.message.UserInfo
 import kotlin.coroutines.CoroutineContext
 
 internal interface GameSessionModule : AutoCloseable {
-    fun getCurrentRole(): StateFlow<Role>
+    fun getCurrentSelfRole(): StateFlow<Role>
     fun getPlayerState(): Flow<PlayerSessionState>
     suspend fun getPlayer(): Player
     fun bind(session: GameSession)
@@ -57,7 +57,7 @@ internal class GameSessionModuleImpl(
     private lateinit var gameSession: GameSession
     private val underlyingRoundSessionMap: MutableMap<RoundSession, RoundSession> = mutableMapOf()
     private val player: CompletableDeferred<Player> = CompletableDeferred()
-    private val currentRole: MutableStateFlow<Role> = MutableStateFlow(Role.WHITE)
+    private val currentSelfRole: MutableStateFlow<Role> = MutableStateFlow(Role.WHITE)
 
     private val outflowChannel: Channel<Request> = Channel()
 
@@ -80,7 +80,7 @@ internal class GameSessionModuleImpl(
         myCoroutineScope.launch {
             val player = getPlayer()
             gameSession.currentRoundNo.collect { curRoundNo ->
-                currentRole.value = gameSession.getRole(player, curRoundNo)
+                currentSelfRole.value = gameSession.getRole(player, curRoundNo)
             }
         }
     }
@@ -130,8 +130,8 @@ internal class GameSessionModuleImpl(
         }
     }
 
-    override fun getCurrentRole(): StateFlow<Role> {
-        return currentRole
+    override fun getCurrentSelfRole(): StateFlow<Role> {
+        return currentSelfRole
     }
 
     override fun getPlayerState(): Flow<PlayerSessionState> {

@@ -18,7 +18,7 @@ class RemoteRoundSessionImpl internal constructor(
         gameSessionModule.bind(this, round)
     }
 
-    private val selfRole: StateFlow<Role> = gameSessionModule.getCurrentRole()
+    private val selfRole: StateFlow<Role> = gameSessionModule.getCurrentSelfRole()
 
     override fun getAvailableTargets(from: BoardPos): Flow<List<BoardPos>> {
         if (round.pieceAt(from) != selfRole.value) return flowOf(listOf())
