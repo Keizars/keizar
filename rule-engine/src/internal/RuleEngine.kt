@@ -26,8 +26,10 @@ interface RuleEngine {
     fun getLostPiecesCount(role: Role): StateFlow<Int>
     fun getAllPiecesPos(role: Role): List<BoardPos>
     fun reset()
-    fun undo(role: Role): Boolean
-    fun redo(role: Role): Boolean
+    fun undo2Steps(role: Role): Boolean
+    fun redo2Steps(role: Role): Boolean
+    fun undo(): Boolean
+    fun redo(): Boolean
 }
 
 open class RuleEngineImpl private constructor(
@@ -127,34 +129,48 @@ open class RuleEngineImpl private constructor(
         lostPiecesCount.forEach { (_, flow) -> flow.value = 0 }
     }
 
-    override fun undo(role: Role): Boolean {
+    override fun undo2Steps(role: Role): Boolean {
         if (movesLog.size < 2) return false
         // only allow undo if the last move is made by opponent
         if (pieceAt(movesLog.last().move.dest) != role.other()) return false
 
         for (repeat in 0..1) {
-            val lastMove = movesLog.last()
-            movesLog.removeLast()
-            if (!board.undo(lastMove.move)) throw IllegalStateException("Undo unexpectedly failed")
-            winningCounter.value = lastMove.counterValue
-            redoBuffer.add(lastMove.move)
+            undo()
         }
+
         canUndo.value = movesLog.size >= 2
         canRedo.value = redoBuffer.size >= 2
         return true
     }
 
-    override fun redo(role: Role): Boolean {
+    override fun undo(): Boolean {
+        if (movesLog.isEmpty()) return false
+        val lastMove = movesLog.last()
+        movesLog.removeLast()
+        if (!board.undo(lastMove.move)) throw IllegalStateException("Undo unexpectedly failed")
+        winningCounter.value = lastMove.counterValue
+        redoBuffer.add(lastMove.move)
+        curRole.value = curRole.value.other()
+        return true
+    }
+
+    override fun redo2Steps(role: Role): Boolean {
         if (redoBuffer.size < 2) return false
         // only allow redo if the next move is to make by the player
         if (pieceAt(redoBuffer.last().source) != role) return false
 
         for (repeat in 0..1) {
-            val nextMove = redoBuffer.last()
-            redoBuffer.removeLast()
-            move(nextMove.source, nextMove.dest, clearRedoBuffer = false)
+            redo()
         }
         canRedo.value = redoBuffer.size >= 2
+        return true
+    }
+
+    override fun redo(): Boolean {
+        if (redoBuffer.isEmpty()) return false
+        val nextMove = redoBuffer.last()
+        redoBuffer.removeLast()
+        move(nextMove.source, nextMove.dest, clearRedoBuffer = false)
         return true
     }
 

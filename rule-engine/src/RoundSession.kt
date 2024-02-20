@@ -26,6 +26,12 @@ interface RoundSession {
     // i.e. redo 2 turns, one player turn and one computer turn.
     suspend fun redo(role: Role): Boolean
 
+    // Undo one turn, should only be called on offline multiplayer or free-move mode.
+    fun revertLast(): Boolean
+
+    // Redo one turn, should only be called on offline multiplayer or free-move mode.
+    fun recoverLast(): Boolean
+
     fun getAvailableTargets(from: BoardPos): Flow<List<BoardPos>>
     fun getAllPiecesPos(role: Role): Flow<List<BoardPos>>
     suspend fun move(from: BoardPos, to: BoardPos): Boolean
@@ -57,11 +63,19 @@ class RoundSessionImpl(
     override val canRedo: StateFlow<Boolean> = ruleEngine.canRedo
 
     override suspend fun undo(role: Role): Boolean {
-        return ruleEngine.undo(role)
+        return ruleEngine.undo2Steps(role)
     }
 
     override suspend fun redo(role: Role): Boolean {
-        return ruleEngine.redo(role)
+        return ruleEngine.redo2Steps(role)
+    }
+
+    override fun revertLast(): Boolean {
+        return ruleEngine.undo()
+    }
+
+    override fun recoverLast(): Boolean {
+        return ruleEngine.redo()
     }
 
     override fun getAvailableTargets(from: BoardPos): Flow<List<BoardPos>> {

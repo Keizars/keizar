@@ -279,4 +279,64 @@ class RoundSessionTest {
         assertTrue(round.move(BoardPos("e6"), BoardPos("f5")))
         assertFalse(round.redo(Role.WHITE))
     }
+
+    @Test
+    fun `test revertLast and recoverLast`() = runTest {
+        val game = GameSession.create(0)
+        val round = game.currentRound.first()
+        val pieces = round.pieces
+
+        assertFalse(round.revertLast())
+
+        assertTrue(round.move(BoardPos("f2"), BoardPos("f4")))
+        assertTrue(round.move(BoardPos("e7"), BoardPos("e6")))
+        assertTrue(round.move(BoardPos("f4"), BoardPos("f5")))
+        assertTrue(round.revertLast())
+        assertTrue(round.move(BoardPos("f4"), BoardPos("f5")))
+        assertTrue(round.move(BoardPos("e6"), BoardPos("f5")))
+
+        assertEquals(
+            setOf(
+                "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+                "a2", "b2", "c2", "d2", "e2", "g2", "h2"
+            ).map { BoardPos.fromString(it) }.toSet(),
+            pieces.filter { it.role == Role.WHITE && !it.isCaptured.value }.map { it.pos.value }
+                .toSet(),
+        )
+
+        assertEquals(
+            setOf(
+                "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
+                "a7", "b7", "c7", "d7", "f5", "f7", "g7", "h7",
+            ).map { BoardPos.fromString(it) }.toSet(),
+            pieces.filter { it.role == Role.BLACK && !it.isCaptured.value }.map { it.pos.value }
+                .toSet(),
+        )
+
+        assertTrue(round.move(BoardPos("a2"), BoardPos("a3")))
+        assertTrue(round.revertLast())
+        assertTrue(round.revertLast())
+        assertTrue(round.recoverLast())
+
+        assertEquals(
+            setOf(
+                "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
+                "a2", "b2", "c2", "d2", "e2", "g2", "h2"
+            ).map { BoardPos.fromString(it) }.toSet(),
+            pieces.filter { it.role == Role.WHITE && !it.isCaptured.value }.map { it.pos.value }
+                .toSet(),
+        )
+
+        assertEquals(
+            setOf(
+                "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
+                "a7", "b7", "c7", "d7", "f5", "f7", "g7", "h7",
+            ).map { BoardPos.fromString(it) }.toSet(),
+            pieces.filter { it.role == Role.BLACK && !it.isCaptured.value }.map { it.pos.value }
+                .toSet(),
+        )
+
+        assertTrue(round.move(BoardPos("h2"), BoardPos("h3")))
+        assertFalse(round.recoverLast())
+    }
 }
