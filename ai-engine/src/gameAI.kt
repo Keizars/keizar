@@ -438,8 +438,11 @@ class ScoringAlgorithmAI(
     }
 
     override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos>? {
+        // tile arrangement
         val tileArrangement = game.properties.tileArrangement
+        // Initialize a internal game board for AI to maintain
         val tiles = initTiles()
+
         val board = createKeizarGraph(role, game)
         board.forEach{
             it.forEach {node ->
@@ -450,30 +453,42 @@ class ScoringAlgorithmAI(
         val opponentPieces = round.getAllPiecesPos(role.other()).first()
         var highestScore = Int.MIN_VALUE
         val keizarCount = round.winningCounter.first()
-        var move: Pair<BoardPos, BoardPos>? = null
+        var chosenMove: Pair<BoardPos, BoardPos>? = null
         selfPieces.forEach { pos ->
+            // get the valid targets of the piece at pos
             val targets = ruleEngine.showValidMoves(tiles, pos) { index }
+
             targets.forEach { target ->
                 val newSelfPieces = selfPieces.toMutableList()
                 val newOpponentPieces = opponentPieces.toMutableList()
                 updateNewPieces(newSelfPieces, newOpponentPieces, pos, target)
+
+                updateInternalMove(tiles, pos, target)
+
                 val selfScore = newSelfPieces.sumOf { pos -> score(pos, tileArrangement, board) }
                 val opponentScore = newOpponentPieces.sumOf { pos -> score(pos, tileArrangement, board) }
                 val newScore = selfScore - opponentScore
                 if (newScore > highestScore) {
                     highestScore = newScore
-                    move = pos to target
+                    chosenMove = pos to target
                 }
             }
         }
-        if (move == null) {
+        if (chosenMove == null) {
             println("No valid move found")
         }
-        return move
+        return chosenMove
     }
 
     override suspend fun end() {
         myCoroutine.cancel()
+    }
+
+    private fun updateInternalMove(tiles: MutableList<Tile>, source: BoardPos, target: BoardPos) {
+        val sourceIndex = source.index
+        val targetIndex = target.index
+        tiles[targetIndex].piece = tiles[sourceIndex].piece
+        tiles[sourceIndex].piece = null
     }
 
     private fun updateNewPieces(selfPieces: MutableList<BoardPos>, opponentPieces: MutableList<BoardPos>, source: BoardPos, target: BoardPos) {
@@ -481,6 +496,14 @@ class ScoringAlgorithmAI(
         selfPieces.add(target)
         if (target in opponentPieces) {
             opponentPieces.remove(target)
+        }
+    }
+
+    private fun undoNewPieces(selfPieces: MutableList<BoardPos>, opponentPieces: MutableList<BoardPos>, source: BoardPos, target: BoardPos) {
+        selfPieces.remove(target)
+        selfPieces.add(source)
+        if (target in opponentPieces) {
+            opponentPieces.add(target)
         }
     }
 
