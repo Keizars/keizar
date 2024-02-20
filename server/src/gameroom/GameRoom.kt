@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -107,7 +108,7 @@ class GameRoomImpl(
         return user in playerInfos
     }
 
-    private val playerSessions: MutableMap<UserInfo, MutableSharedFlow<PlayerSession>> =
+    private val playerSessions: MutableMap<UserInfo, MutableStateFlow<PlayerSession>> =
         mutableMapOf()
     private val playersConnected: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
@@ -115,11 +116,14 @@ class GameRoomImpl(
         if (user in playerInfos) {
             player.setState(PlayerSessionState.WAITING)
             notifyPlayerAllocation(player, playerAllocation[player.user]!!)
-            if (!playerSessions.containsKey(user)) {
-                playerSessions[user] = MutableSharedFlow(replay = 1)
-            }
             logger.info("Session of user $user changed to $player")
-            playerSessions[user]!!.emit(player)
+            if (!playerSessions.containsKey(user)) {
+                playerSessions[user] = MutableStateFlow(player)
+            } else {
+                val oldSession = playerSessions[user]!!.value
+                oldSession.cancel("Websocket session expired")
+                playerSessions[user]!!.value = player
+            }
             if (playerSessions.keys.containsAll(playerInfos)) {
                 playersConnected.value = true
             }
@@ -161,21 +165,23 @@ class GameRoomImpl(
             myCoroutineScope.launch {
                 it.collectLatest { player ->
                     player.setState(PlayerSessionState.PLAYING)
-                    notifyStateChange(player)
                 }
+            }
+
+            myCoroutineScope.launch {
+                notifyStateChange(it)
             }
         }
 
+        val player1 = playerSessions[playerInfos[0]]!!
+        val player2 = playerSessions[playerInfos[1]]!!
+
         myCoroutineScope.launch {
-            combine(playerSessions.values) { (player1, player2) ->
-                forwardMessages(player2, player1)
-            }.collectLatest { }
+            forwardMessages(player2, player1)
         }
 
         myCoroutineScope.launch {
-            combine(playerSessions.values) { (player1, player2) ->
-                forwardMessages(player1, player2)
-            }.collectLatest { }
+            forwardMessages(player1, player2)
         }
     }
 
@@ -184,28 +190,28 @@ class GameRoomImpl(
         player.session.sendRespond(PlayerAllocation(allocation))
     }
 
-    private suspend fun forwardMessages(from: PlayerSession, to: PlayerSession) {
+    private suspend fun forwardMessages(from: StateFlow<PlayerSession>, to: StateFlow<PlayerSession>) {
         while (true) {
             try {
-                val message = from.session.receiveDeserialized<Request>()
-                logger.info("Received request $message from $from")
+                val message = from.value.session.receiveDeserialized<Request>()
+                logger.info("Received request $message from ${from.value}")
                 if (message == Exit) {
-                    from.setState(PlayerSessionState.TERMINATING)
+                    from.value.setState(PlayerSessionState.TERMINATING)
                     logger.info("$from exiting")
                     return
                 }
-                to.session.sendRequest(message)
-                logger.info("Forwarded request $message to $to")
+                to.value.session.sendRequest(message)
+                logger.info("Forwarded request $message to ${to.value}")
             } catch (e: WebsocketDeserializeException) {
                 // ignore
             }
         }
     }
 
-    private suspend fun notifyStateChange(player: PlayerSession) {
-        player.state.collect { newState ->
-            logger.info("Notify player $player of state change: $newState")
-            player.session.sendRespond(StateChange(newState))
+    private suspend fun notifyStateChange(player: StateFlow<PlayerSession>) {
+        player.value.state.collect { newState ->
+            logger.info("Notify player ${player.value} of state change: $newState")
+            player.value.session.sendRespond(StateChange(newState))
         }
     }
 }

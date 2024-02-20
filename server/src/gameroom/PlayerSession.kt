@@ -1,6 +1,7 @@
 package org.keizar.server.gameroom
 
 import io.ktor.server.websocket.DefaultWebSocketServerSession
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,6 +13,7 @@ interface PlayerSession {
     val state: StateFlow<PlayerSessionState>
     val user: UserInfo
     fun setState(newState: PlayerSessionState)
+    fun cancel(message: String)
 }
 
 class PlayerSessionImpl(
@@ -23,5 +25,9 @@ class PlayerSessionImpl(
 
     override fun setState(newState: PlayerSessionState) {
         _state.value = newState
+    }
+
+    override fun cancel(message: String) {
+        session.cancel(message)
     }
 }
