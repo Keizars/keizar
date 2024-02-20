@@ -455,30 +455,72 @@ class ScoringAlgorithmAI(
         val keizarCount = round.winningCounter.first()          // TODO: remember to update the keizarCount
         val keizarCapture = round.pieceAt(game.properties.keizarTilePos) == role // TODO: remember to update the keizarCapture
         var chosenMove: Pair<BoardPos, BoardPos>? = null
+        chosenMove = findHighestScoreMove(
+            selfPieces,
+            tiles,
+            opponentPieces,
+            tileArrangement,
+            board,
+            keizarCount,
+            keizarCapture,
+            highestScore,
+            chosenMove
+        )
+        if (chosenMove == null) {
+            println("No valid move found")
+        }
+        return chosenMove
+    }
+
+    private fun findHighestScoreMove(
+        selfPieces: List<BoardPos>,
+        tiles: MutableList<Tile>,
+        opponentPieces: List<BoardPos>,
+        tileArrangement: Map<BoardPos, TileType>,
+        board: MutableList<MutableList<TileNode>>,
+        keizarCount: Int,
+        keizarCapture: Role?,
+        highestScore: Int = Int.MIN_VALUE,
+        chosenMove: Pair<BoardPos, BoardPos>?
+    ): Pair<BoardPos, BoardPos>? {
+        var highestScore1 = highestScore
+        var chosenMove1 = chosenMove
         selfPieces.forEach { pos ->
             // get the valid targets of the piece at pos
             val targets = ruleEngine.showValidMoves(tiles, pos) { index }
 
             targets.forEach { target ->
+                // get the pieces list
                 val newSelfPieces = selfPieces.toMutableList()
                 val newOpponentPieces = opponentPieces.toMutableList()
+                // update the pieces list with a potential move
                 updateNewPieces(newSelfPieces, newOpponentPieces, pos, target)
-                val selfScore = newSelfPieces.sumOf { pos -> score(pos, tileArrangement, board, keizarCount, keizarCapture) }
-                val opponentScore = newOpponentPieces.sumOf { pos -> score(pos, tileArrangement, board, keizarCount, keizarCapture) }
-
-                updateInternalMove(tiles, pos, target)
-
+                val selfScore = newSelfPieces.sumOf { pos ->
+                    score(
+                        pos,
+                        tileArrangement,
+                        board,
+                        keizarCount,
+                        keizarCapture
+                    )
+                }
+                val opponentScore = newOpponentPieces.sumOf { pos ->
+                    score(
+                        pos,
+                        tileArrangement,
+                        board,
+                        keizarCount,
+                        keizarCapture
+                    )
+                }
                 val newScore = selfScore - opponentScore
-                if (newScore > highestScore) {
-                    highestScore = newScore
-                    chosenMove = pos to target
+                if (newScore > highestScore1) {
+                    highestScore1 = newScore
+                    chosenMove1 = pos to target
                 }
             }
         }
-        if (chosenMove == null) {
-            println("No valid move found")
-        }
-        return chosenMove
+        return chosenMove1
     }
 
     override suspend fun end() {
@@ -492,19 +534,18 @@ class ScoringAlgorithmAI(
         tiles[sourceIndex].piece = null
     }
 
+    private fun undoInternalMove(tiles: MutableList<Tile>, source: BoardPos, target: BoardPos) {
+        val sourceIndex = source.index
+        val targetIndex = target.index
+        tiles[sourceIndex].piece = tiles[targetIndex].piece
+        tiles[targetIndex].piece = null
+    }
+
     private fun updateNewPieces(selfPieces: MutableList<BoardPos>, opponentPieces: MutableList<BoardPos>, source: BoardPos, target: BoardPos) {
         selfPieces.remove(source)
         selfPieces.add(target)
         if (target in opponentPieces) {
             opponentPieces.remove(target)
-        }
-    }
-
-    private fun undoNewPieces(selfPieces: MutableList<BoardPos>, opponentPieces: MutableList<BoardPos>, source: BoardPos, target: BoardPos) {
-        selfPieces.remove(target)
-        selfPieces.add(source)
-        if (target in opponentPieces) {
-            opponentPieces.add(target)
         }
     }
 
