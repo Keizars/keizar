@@ -39,7 +39,7 @@ fun RuleReferencesScene(
         modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text(text = "Rule References") },
+                title = { Text(text = "Rule Book") },
                 navigationIcon = {
                     IconButton(onClick = onClickBack) {
                         Icon(Icons.AutoMirrored.Default.ArrowBack, contentDescription = "Back")

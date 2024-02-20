@@ -43,6 +43,7 @@ import org.keizar.android.ui.game.mp.MultiplayerGamePage
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
 import org.keizar.android.ui.game.mp.MultiplayerRoomScene
 import org.keizar.android.ui.game.sp.SinglePlayerGameScene
+import org.keizar.android.ui.rules.RuleReferencesScene
 import org.keizar.android.ui.tutorial.TutorialScene
 import org.keizar.android.ui.tutorial.TutorialSelectionPage
 import org.keizar.android.ui.tutorial.TutorialSelectionScene
@@ -125,7 +126,9 @@ fun MainScreen() {
                 Modifier.fillMaxSize()
             )
         }
-        composable("saved games") { /* TODO: saved games page*/ }
+        composable("rules") {
+            RuleReferencesScene(onClickBack = { navController.popBackStack() })
+        }
         composable(
             "tutorial/{tutorialId}",
             arguments = listOf(navArgument("tutorialId") { type = NavType.StringType })
@@ -185,8 +188,8 @@ fun HomePage(navController: NavController) {
             }
 
             // Saved game Button
-            Button(onClick = { /* TODO: Handle saved game click */ }, modifier = Modifier.width(170.dp)) {
-                Text("Saved games", textAlign = TextAlign.Center)
+            Button(onClick = { navController.navigate("rules") }, modifier = Modifier.width(170.dp)) {
+                Text("Rule Book", textAlign = TextAlign.Center)
             }
 
             // Tutorial Button
