@@ -590,7 +590,7 @@ class ScoringAlgorithmAI(
 //        }
         return when(node.distance) {
             0 -> {
-                if (keizarCount == 2 && keizarCapture) {
+                if (keizarCount == 1 && keizarCapture) {
                     Int.MAX_VALUE   // if distance is 0, and keizar is captured by the opponent, it means the piece is the most valuable
                 } else {
                     12  // if distance is 0, it means the piece is on the keizar tile
