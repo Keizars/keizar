@@ -4,9 +4,12 @@ import io.ktor.serialization.WebsocketDeserializeException
 import io.ktor.server.websocket.DefaultWebSocketServerSession
 import io.ktor.server.websocket.receiveDeserialized
 import io.ktor.server.websocket.sendSerialized
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -94,8 +97,15 @@ class GameRoomImpl(
     parentCoroutineContext: CoroutineContext,
     private val logger: Logger,
 ) : GameRoom {
-    private val myCoroutineScope: CoroutineScope =
-        CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
+    private val exceptionHandler = CoroutineExceptionHandler{ _, e ->
+        logger.error(e.message)
+    }
+
+    private val myCoroutineScope: CoroutineScope = CoroutineScope(
+        parentCoroutineContext +
+                SupervisorJob(parent = parentCoroutineContext[Job]) +
+                exceptionHandler
+    )
 
 
     /**
@@ -250,10 +260,12 @@ class GameRoomImpl(
         gameSnapshot: GameSnapshot
     ) {
         logger.info("Notify user $player of player allocation: $allocation and gameSnapshot")
-        player.session.sendRespond(RemoteSessionSetup(
-            allocation,
-            Json.encodeToJsonElement(gameSnapshot)
-        ))
+        player.sendRespond(
+            RemoteSessionSetup(
+                allocation,
+                Json.encodeToJsonElement(gameSnapshot)
+            )
+        )
     }
 
     private suspend fun forwardMessages(
@@ -271,7 +283,7 @@ class GameRoomImpl(
                             if (!serverGame.confirmNextRound(player)) {
                                 logger.info("Player ${from.value} sends invalid confirmNextRound")
                             }
-                            to.value.session.sendRequest(message)
+                            to.value.sendRequest(message)
                         }
 
                         Exit -> {
@@ -283,7 +295,7 @@ class GameRoomImpl(
                             if (!serverGame.currentRound.first().move(message.from, message.to)) {
                                 logger.info("Player ${from.value} sends invalid move $message")
                             }
-                            to.value.session.sendRequest(message)
+                            to.value.sendRequest(message)
                         }
 
                         is UserInfo -> {}
@@ -299,15 +311,15 @@ class GameRoomImpl(
     private suspend fun notifyStateChange(player: StateFlow<PlayerSession>) {
         player.value.state.collect { newState ->
             logger.info("Notify player ${player.value} of state change: $newState")
-            player.value.session.sendRespond(StateChange(newState))
+            player.value.sendRespond(StateChange(newState))
         }
     }
 }
 
-suspend inline fun DefaultWebSocketServerSession.sendRespond(message: Respond) {
-    sendSerialized(message)
+suspend inline fun PlayerSession.sendRespond(message: Respond) {
+    session.sendSerialized(message)
 }
 
-suspend inline fun DefaultWebSocketServerSession.sendRequest(message: Request) {
-    sendSerialized(message)
+suspend inline fun PlayerSession.sendRequest(message: Request) {
+    session.sendSerialized(message)
 }

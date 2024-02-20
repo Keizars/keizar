@@ -15,6 +15,7 @@ import io.ktor.server.routing.routing
 import io.ktor.server.websocket.receiveDeserialized
 import io.ktor.server.websocket.webSocket
 import io.ktor.util.pipeline.PipelineContext
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.flow.first
 import org.keizar.game.BoardProperties
 import org.keizar.game.RoomInfo
@@ -22,6 +23,7 @@ import org.keizar.server.ServerContext
 import org.keizar.server.gameroom.GameRoom
 import org.keizar.server.gameroom.GameRoomManager
 import org.keizar.server.gameroom.PlayerSession
+import org.keizar.server.gameroom.PlayerSessionImpl
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.message.UserInfo
 
