@@ -453,6 +453,7 @@ class ScoringAlgorithmAI(
         val opponentPieces = round.getAllPiecesPos(role.other()).first()
         var highestScore = Int.MIN_VALUE
         val keizarCount = round.winningCounter.first()
+        val keizarCapture = round.pieceAt(game.properties.keizarTilePos)
         var chosenMove: Pair<BoardPos, BoardPos>? = null
         selfPieces.forEach { pos ->
             // get the valid targets of the piece at pos
@@ -462,11 +463,11 @@ class ScoringAlgorithmAI(
                 val newSelfPieces = selfPieces.toMutableList()
                 val newOpponentPieces = opponentPieces.toMutableList()
                 updateNewPieces(newSelfPieces, newOpponentPieces, pos, target)
+                val selfScore = newSelfPieces.sumOf { pos -> score(pos, tileArrangement, board, keizarCount, keizarCapture) }
+                val opponentScore = newOpponentPieces.sumOf { pos -> score(pos, tileArrangement, board, keizarCount, keizarCapture) }
 
                 updateInternalMove(tiles, pos, target)
 
-                val selfScore = newSelfPieces.sumOf { pos -> score(pos, tileArrangement, board) }
-                val opponentScore = newOpponentPieces.sumOf { pos -> score(pos, tileArrangement, board) }
                 val newScore = selfScore - opponentScore
                 if (newScore > highestScore) {
                     highestScore = newScore
@@ -507,7 +508,14 @@ class ScoringAlgorithmAI(
         }
     }
 
-    private fun score(pos: BoardPos, tiles: Map<BoardPos, TileType>, board: MutableList<MutableList<TileNode>>): Int {
+
+    private fun score(
+        pos: BoardPos,
+        tiles: Map<BoardPos, TileType>,
+        board: MutableList<MutableList<TileNode>>,
+        keizarCount: Int,
+        keizarCapture: Role?
+    ): Int {
         val node = board[pos.row][pos.col]
 //        return if (node.distance == Int.MAX_VALUE && tiles[pos] != TileType.KEIZAR) {
 //            0
@@ -539,16 +547,11 @@ class ScoringAlgorithmAI(
 //            }
 //        }
         return when(node.distance) {
-            1 -> {
-                if (tiles[pos] == TileType.KEIZAR) {
-                    20
-                } else {
-                    10
-                }
-            }
-            2 -> 8
-            3 -> 6
-            else -> 0
+            0 -> 20     // if distance is 0, it means the piece is on the keizar tile
+            1 -> 10     // if distance is 1, it means the piece is one step away from the keizar tile
+            2 -> 8      // if distance is 2, it means the piece is two steps away from the keizar tile
+            3 -> 6      // if distance is 3, it means the piece is three steps away from the keizar tile
+            else -> 0   // if distance is more than 3, it means the piece not valuable
         }
     }
 
