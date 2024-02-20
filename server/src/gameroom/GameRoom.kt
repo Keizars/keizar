@@ -52,6 +52,7 @@ interface GameRoom : AutoCloseable {
 
     /**
      * Add a user into the room. Register them as one of the players, but not start the game.
+     * If the player is already in the room, return true.
      */
     fun addPlayer(user: UserInfo): Boolean
 
@@ -110,6 +111,7 @@ class GameRoomImpl(
     private val playerAllocation: ConcurrentMap<UserInfo, Player> = ConcurrentHashMap()
 
     override fun addPlayer(user: UserInfo): Boolean {
+        if (user in playerInfo) return true
         val playerIndex = _playerCount.getAndIncrement()
         if (playerIndex < Player.entries.size) {
             myCoroutineScope.launch {

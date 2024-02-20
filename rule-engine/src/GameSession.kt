@@ -165,8 +165,8 @@ class GameSessionImpl(
         currentRound = currentRoundNo.map { rounds[it] }
 
         curRoles = listOf(
-            MutableStateFlow(Role.WHITE),
-            MutableStateFlow(Role.BLACK),
+            MutableStateFlow(getRole(Player.FirstWhitePlayer, currentRoundNo.value)),
+            MutableStateFlow(getRole(Player.FirstBlackPlayer, currentRoundNo.value)),
         )
 
         wonRounds = Player.entries.map { player ->

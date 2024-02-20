@@ -5,5 +5,5 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 enum class PlayerSessionState {
-    STARTED, WAITING, PLAYING, TERMINATING
+    STARTED, WAITING, PLAYING, DISCONNECTED, TERMINATING
 }
