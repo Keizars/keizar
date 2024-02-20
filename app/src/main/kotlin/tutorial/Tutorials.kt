@@ -64,9 +64,9 @@ object Tutorials {
             }
 
             step("capture white") {
-                tooltip { Text("Capture") }
+                tooltip { Text("Pawn", color = PawnColors.Pawn) }
                 showPossibleMovesThenMove { "g4" to "f3" }
-                removeTooltip()
+                tooltip(3.seconds) { Text("Captured") }
                 awaitNext()
             }
 
@@ -99,8 +99,9 @@ object Tutorials {
             }
 
             step("move as king to keizar") {
-                tooltip { Text("KEIZÁR", color = PawnColors.Keizar) }
+                tooltip { Text("King", color = PawnColors.King) }
                 showPossibleMovesThenMove { "e6" to "d5" }
+                tooltip { Text("KEIZÁR", color = PawnColors.Keizar) }
                 removeTooltip()
                 awaitNext()
             }
