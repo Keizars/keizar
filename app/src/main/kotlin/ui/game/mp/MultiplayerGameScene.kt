@@ -1,5 +1,6 @@
 package org.keizar.android.ui.game.mp
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -107,10 +108,16 @@ fun MultiplayerGamePage(
             confirmButton = { Text(text = "OK") },
             title = { Text(text = "Error") },
             text = {
-                Text(text = "Failed to join the room. Please check your internet connection and try again.")
+                Column {
+                    Text(text = "Failed to join the room. Please check your internet connection and try again.")
 
-                if (BuildConfig.DEBUG) {
-                    Text(text = "Debug info: \n${session?.exceptionOrNull()?.stackTraceToString()}")
+                    if (BuildConfig.DEBUG) {
+                        Text(
+                            text = "Debug info: \n${
+                                session?.exceptionOrNull()?.stackTraceToString()
+                            }"
+                        )
+                    }
                 }
             }
         )
