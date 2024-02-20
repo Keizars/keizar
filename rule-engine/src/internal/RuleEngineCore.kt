@@ -84,7 +84,7 @@ class RuleEngineCoreImpl(
         pos: BoardPos,
         index: BoardPos.() -> Int
     ): List<BoardPos> {
-        val piece = tiles[pos.index()].piece!!
+        val piece = tiles[pos.index()].piece ?: return listOf()
         return showValidMoves(tiles, piece, index)
     }
 

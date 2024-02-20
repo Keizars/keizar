@@ -18,6 +18,7 @@ import org.keizar.game.RoundSession
 import org.keizar.game.TileType
 import org.keizar.game.asPiece
 import org.keizar.game.internal.RuleEngineCore
+import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.Tile
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
@@ -381,7 +382,7 @@ class ScoringAlgorithmAI(
 //    private val kei_numbers: MutableList<Int> = mutableListOf(),
 //    private val aiParameters: AIParameters = AIParameters(),
     private val test: Boolean = false,
-    private val ruleEngine: RuleEngineCore
+    private val ruleEngine: RuleEngineCore = RuleEngineCoreImpl(game.properties)
 ) : GameAI {
     private val myCoroutine: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
