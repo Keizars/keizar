@@ -480,7 +480,7 @@ class ScoringAlgorithmAI(
         tileArrangement: Map<BoardPos, TileType>,
         board: MutableList<MutableList<TileNode>>,
         keizarCount: Int,
-        keizarCapture: Role?,
+        keizarCapture: Boolean,
         highestScore: Int = Int.MIN_VALUE,
         chosenMove: Pair<BoardPos, BoardPos>?
     ): Pair<BoardPos, BoardPos>? {
