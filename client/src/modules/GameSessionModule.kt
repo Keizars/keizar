@@ -15,17 +15,20 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromJsonElement
 import org.keizar.client.RemoteRoundSession
 import org.keizar.client.exception.NetworkFailureException
 import org.keizar.game.GameSession
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
+import org.keizar.game.snapshot.GameSnapshot
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.message.ConfirmNextRound
 import org.keizar.utils.communication.message.Move
-import org.keizar.utils.communication.message.PlayerAllocation
+import org.keizar.utils.communication.message.RemoteSessionSetup
 import org.keizar.utils.communication.message.Request
 import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.StateChange
@@ -36,6 +39,7 @@ internal interface GameSessionModule : AutoCloseable {
     fun getCurrentSelfRole(): StateFlow<Role>
     fun getPlayerState(): Flow<PlayerSessionState>
     suspend fun getPlayer(): Player
+    suspend fun getGameSnapshot(): GameSnapshot
     fun bind(session: GameSession)
     fun bind(remote: RemoteRoundSession, round: RoundSession)
     fun sendConfirmNextRound()
@@ -57,6 +61,7 @@ internal class GameSessionModuleImpl(
     private lateinit var gameSession: GameSession
     private val underlyingRoundSessionMap: MutableMap<RoundSession, RoundSession> = mutableMapOf()
     private val player: CompletableDeferred<Player> = CompletableDeferred()
+    private val gameSnapshot: CompletableDeferred<GameSnapshot> = CompletableDeferred()
     private val currentSelfRole: MutableStateFlow<Role> = MutableStateFlow(Role.WHITE)
 
     private val outflowChannel: Channel<Request> = Channel()
@@ -64,7 +69,6 @@ internal class GameSessionModuleImpl(
     override suspend fun connect(userInfo: UserInfo) {
         try {
             serverConnection(userInfo)
-            startUpdateCurRole()
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -117,7 +121,10 @@ internal class GameSessionModuleImpl(
                 println("Client received: $respond")
                 when (respond) {
                     is StateChange -> playerState.value = respond.newState
-                    is PlayerAllocation -> player.complete(respond.who)
+                    is RemoteSessionSetup -> {
+                        player.complete(respond.playerAllocation)
+                        gameSnapshot.complete(Json.decodeFromJsonElement(respond.gameSnapshot))
+                    }
                     ConfirmNextRound -> gameSession.confirmNextRound(player.await().opponent())
                     is Move -> {
                         val round = gameSession.currentRound.first()
@@ -142,8 +149,13 @@ internal class GameSessionModuleImpl(
         return player.await()
     }
 
+    override suspend fun getGameSnapshot(): GameSnapshot {
+        return gameSnapshot.await()
+    }
+
     override fun bind(session: GameSession) {
         gameSession = session
+        startUpdateCurRole()
     }
 
     override fun bind(remote: RemoteRoundSession, round: RoundSession) {

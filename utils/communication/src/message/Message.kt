@@ -1,6 +1,7 @@
 package org.keizar.utils.communication.message
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
@@ -25,8 +26,9 @@ data class StateChange(
 ): Respond
 
 @Serializable
-data class PlayerAllocation(
-    val who: Player
+data class RemoteSessionSetup(
+    val playerAllocation: Player,
+    val gameSnapshot: JsonElement,
 ): Respond
 
 @Serializable

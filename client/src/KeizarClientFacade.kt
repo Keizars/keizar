@@ -60,13 +60,6 @@ class KeizarClientFacade(
         return room.joinRoom(roomInfo.roomNumber, userInfo)
     }
 
-    suspend fun reconnectToRoom(
-        roomNumber: UInt,
-        userInfo: UserInfo,
-    ): RemoteGameSession {
-        TODO()
-    }
-
     /**
      * Create and return a RemoteGameSession for the room specified by its room number.
      * Should be called only when the players in the room are ready to start.
@@ -81,7 +74,6 @@ class KeizarClientFacade(
         return RemoteGameSession.createAndConnect(
             parentCoroutineContext,
             session,
-            roomInfo.properties,
             userInfo,
         )
     }

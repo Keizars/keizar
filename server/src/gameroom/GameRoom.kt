@@ -20,7 +20,7 @@ import org.keizar.game.BoardProperties
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.message.Exit
-import org.keizar.utils.communication.message.PlayerAllocation
+import org.keizar.utils.communication.message.RemoteSessionSetup
 import org.keizar.utils.communication.message.Request
 import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.StateChange
@@ -28,6 +28,13 @@ import org.slf4j.Logger
 import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.BinaryFormat
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.encodeToJsonElement
+import org.keizar.game.GameSession
+import org.keizar.game.snapshot.GameSnapshot
+import org.keizar.utils.communication.message.ConfirmNextRound
+import org.keizar.utils.communication.message.Move
 import org.keizar.utils.communication.message.UserInfo
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
@@ -148,16 +155,21 @@ class GameRoomImpl(
 
     override suspend fun connect(user: UserInfo, player: PlayerSession): Boolean {
         if (user in playerInfo) {
-            player.setState(PlayerSessionState.WAITING)
-            notifyPlayerAllocation(player, playerAllocation[player.user]!!)
-            logger.info("Session of user $user changed to $player")
+            notifyRemoteSessionSetup(
+                player = player,
+                allocation = playerAllocation[player.user]!!,
+                gameSnapshot = serverGame.getSnapshot()
+            )
+
             if (!playerSessions.containsKey(user)) {
                 playerSessions[user] = MutableStateFlow(player)
             } else {
                 val oldSession = playerSessions[user]!!.value
-                oldSession.cancel("Websocket session expired")
+                oldSession.cancel("Websocket session $oldSession expired")
                 playerSessions[user]!!.value = player
             }
+            logger.info("Session of user $user changed to $player")
+
             if (playerSessions.keys.containsAll(playerInfo)) {
                 playersConnected.value = true
             }
@@ -168,8 +180,7 @@ class GameRoomImpl(
 
 
     /**
-     * Start the game.
-     * Contains functions for running a game.
+     * Start the game. Contains functions for running a game.
      */
 
     init {
@@ -200,6 +211,8 @@ class GameRoomImpl(
         myCoroutineScope.cancel()
     }
 
+    private val serverGame: GameSession = GameSession.create(properties)
+
     private fun startGame() {
         playerSessions.values.map {
             myCoroutineScope.launch {
@@ -229,25 +242,51 @@ class GameRoomImpl(
         }
     }
 
-    private suspend fun notifyPlayerAllocation(player: PlayerSession, allocation: Player) {
-        logger.info("Notify user $player of player allocation: $allocation")
-        player.session.sendRespond(PlayerAllocation(allocation))
+    private suspend fun notifyRemoteSessionSetup(
+        player: PlayerSession,
+        allocation: Player,
+        gameSnapshot: GameSnapshot
+    ) {
+        logger.info("Notify user $player of player allocation: $allocation and gameSnapshot")
+        player.session.sendRespond(RemoteSessionSetup(
+            allocation,
+            Json.encodeToJsonElement(gameSnapshot)
+        ))
     }
 
     private suspend fun forwardMessages(
         from: StateFlow<PlayerSession>,
         to: StateFlow<PlayerSession>
     ) {
+        val player = playerAllocation[from.value.user]!!
         while (true) {
             try {
                 val message = from.value.session.receiveDeserialized<Request>()
                 logger.info("Received request $message from ${from.value}")
-                if (message == Exit) {
-                    from.value.setState(PlayerSessionState.TERMINATING)
-                    logger.info("$from exiting")
-                    return
+                myCoroutineScope.launch {
+                    when (message) {
+                        ConfirmNextRound -> {
+                            if (!serverGame.confirmNextRound(player)) {
+                                logger.info("Player ${from.value} sends invalid confirmNextRound")
+                            }
+                            to.value.session.sendRequest(message)
+                        }
+
+                        Exit -> {
+                            from.value.setState(PlayerSessionState.TERMINATING)
+                            logger.info("$from exiting")
+                        }
+
+                        is Move -> {
+                            if (!serverGame.currentRound.first().move(message.from, message.to)) {
+                                logger.info("Player ${from.value} sends invalid move $message")
+                            }
+                            to.value.session.sendRequest(message)
+                        }
+
+                        is UserInfo -> {}
+                    }
                 }
-                to.value.session.sendRequest(message)
                 logger.info("Forwarded request $message to ${to.value}")
             } catch (e: WebsocketDeserializeException) {
                 // ignore

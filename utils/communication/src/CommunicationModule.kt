@@ -7,7 +7,7 @@ import org.keizar.utils.communication.message.ConfirmNextRound
 import org.keizar.utils.communication.message.Exit
 import org.keizar.utils.communication.message.Message
 import org.keizar.utils.communication.message.Move
-import org.keizar.utils.communication.message.PlayerAllocation
+import org.keizar.utils.communication.message.RemoteSessionSetup
 import org.keizar.utils.communication.message.Request
 import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.StateChange
@@ -17,7 +17,7 @@ val CommunicationModule = SerializersModule {
     polymorphic(Message::class) {
         subclass(UserInfo::class)
         subclass(StateChange::class)
-        subclass(PlayerAllocation::class)
+        subclass(RemoteSessionSetup::class)
         subclass(Exit::class)
         subclass(ConfirmNextRound::class)
         subclass(Move::class)
@@ -30,7 +30,7 @@ val CommunicationModule = SerializersModule {
     }
     polymorphic(Respond::class) {
         subclass(StateChange::class)
-        subclass(PlayerAllocation::class)
+        subclass(RemoteSessionSetup::class)
         subclass(ConfirmNextRound::class)
         subclass(Move::class)
     }
