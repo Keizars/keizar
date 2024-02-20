@@ -40,7 +40,6 @@ object Tutorials {
                 curRole { Role.BLACK }
                 resetPieces {
                     white("f3")
-                    white("f4")
                     black("g7")
                 }
             }
