@@ -59,8 +59,7 @@ internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinCom
             selfRoomId.value?.let { return it }
             creatingRoom.value = true
             try {
-                val roomId = keizarClientFacade.createRoom().roomNumber
-                keizarClientFacade.joinRoom(roomId, MyUserInfo)
+                val roomId = keizarClientFacade.createRoomAndJoin(MyUserInfo).roomNumber
                 selfRoomId.value = roomId.toString()
                 return roomId.toString()
             } finally {

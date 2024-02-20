@@ -177,11 +177,15 @@ class GameRoomImpl(
         val player2 = playerSessions[playerInfos[1]]!!
 
         myCoroutineScope.launch {
-            forwardMessages(player2, player1)
+            player2.collectLatest {
+                forwardMessages(player2, player1)
+            }
         }
 
         myCoroutineScope.launch {
-            forwardMessages(player1, player2)
+            player1.collectLatest {
+                forwardMessages(player1, player2)
+            }
         }
     }
 
@@ -190,7 +194,10 @@ class GameRoomImpl(
         player.session.sendRespond(PlayerAllocation(allocation))
     }
 
-    private suspend fun forwardMessages(from: StateFlow<PlayerSession>, to: StateFlow<PlayerSession>) {
+    private suspend fun forwardMessages(
+        from: StateFlow<PlayerSession>,
+        to: StateFlow<PlayerSession>
+    ) {
         while (true) {
             try {
                 val message = from.value.session.receiveDeserialized<Request>()
