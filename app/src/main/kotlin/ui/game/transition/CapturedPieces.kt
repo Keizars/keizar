@@ -89,7 +89,9 @@ interface CapturedPieceHostState {
 }
 
 fun CapturedPieceHostState(
-    slotCount: Int = 16,
+    // Actually only 16 pieces can be captured, 
+    // but currently the game crashes on clicking "Next Round" so we use 32 here.
+    slotCount: Int = 32, 
 ): CapturedPieceHostState {
     return object : CapturedPieceHostState {
         override val slots: List<CapturedPieceSlot> =
