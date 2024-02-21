@@ -152,7 +152,14 @@ internal class TutorialSessionImpl(
     }
 
     private fun getStepIndexToRestart(): Int {
-        val lastInvoked = stepSessions.indexOfLast { it.state.value.hasEffect }
+        val lastInvoked = stepSessions.indexOfLast {
+            val currentStep = currentStep.value
+            if (currentStep.step is Savepoint && currentStep.index == it.index) { // current is savepoint, don't restart from current position (no effect)
+                false
+            } else {
+                it.state.value.hasEffect
+            }
+        }
         if (lastInvoked == -1) {
             return 0
         }
