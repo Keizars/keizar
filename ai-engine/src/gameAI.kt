@@ -243,7 +243,8 @@ class AlgorithmAI(
                         if (!disableDelay) {
                             delay(Random.nextLong(1000L..1500L))
                         }
-                        findBestMove(session, currentRole)
+                        val rememberStates = mutableListOf<Pair<BoardPos, BoardPos>>()
+                        findBestMove(session, currentRole, rememberStates)
                     }
                 }
             }
@@ -263,6 +264,10 @@ class AlgorithmAI(
     }
 
     override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos>? {
+        TODO("Not yet implemented")
+    }
+
+    private suspend fun findBestMove(round: RoundSession, role: Role, rememberStates :MutableList<Pair<BoardPos, BoardPos>>): Pair<BoardPos, BoardPos>? {
         val tiles = game.properties.tileArrangement
         val board = createKeizarGraph(role, game)
         var minDistance = Int.MAX_VALUE
@@ -288,20 +293,19 @@ class AlgorithmAI(
                     for (parent in node.parents ) {
 //                        val notRecOccupyPos = if (role == Role.WHITE) BoardPos("d4") else BoardPos("d6")
 //                        val notRecOccupy = tiles[notRecOccupyPos] == TileType.ROOK || tiles[notRecOccupyPos] == TileType.QUEEN || tiles[notRecOccupyPos] == TileType.KING
-                        val checkCapture = tiles[node.position] != TileType.PLAIN
-                                || ((tiles[node.position] == TileType.PLAIN) && node.position.col != parent.first.position.col)
+                        val checkCapture = tiles[node.position] != TileType.PLAIN || ((tiles[node.position] == TileType.PLAIN) && node.position.col != parent.first.position.col)
 //                        if (parent.first.position != notRecOccupyPos || notRecOccupy) {
                             if (parent.first.occupy == null || parent.first.occupy == role.other() && checkCapture) {
                                 if (parent.second == 1) {
                                     keizarMoves.add(node.position to parent.first.position)
                                 }
-                                if (parent.second in 2..< minDistance) {
+                                if (parent.second in 2..< minDistance && !checkCircle(node.position to parent.first.position, rememberStates)) {
                                     minDistance = parent.second
                                     moves = mutableListOf(node.position to parent.first.position)
-                                } else if (parent.second == minDistance) {
+                                } else if (parent.second == minDistance && !checkCircle(node.position to parent.first.position, rememberStates)) {
                                     moves.add(node.position to parent.first.position)
                                 }
-                                if (parent.second in 2..aiParameters.possibleMovesThreshold) {
+                                if (parent.second in 2..aiParameters.possibleMovesThreshold && !checkCircle(node.position to parent.first.position, rememberStates)) {
                                     candidateMoves.add(node.position to parent.first.position)
                                 }
                             }
@@ -330,6 +334,9 @@ class AlgorithmAI(
             var valid = false
             while (!valid && count < 10) {
                 valid = round.move(bestMove.first, bestMove.second)
+                if (valid) {
+                    rememberStates.add(bestMove)
+                }
                 bestMove = moves.random()
                 count += 1
             }
@@ -339,6 +346,7 @@ class AlgorithmAI(
                     println("No valid move found")
                 } else {
                     round.move(move.first, move.second)
+                    rememberStates.add(move)
                 }
             }
         } else {
@@ -347,9 +355,27 @@ class AlgorithmAI(
                 println("No valid move found")
             } else {
                 round.move(move.first, move.second)
+                rememberStates.add(move)
             }
         }
+        for (move in rememberStates) {
+            println("Remember States: $move")
+        }
         return null
+    }
+
+    private fun checkCircle(move: Pair<BoardPos, BoardPos>, rememberState: MutableList<Pair<BoardPos, BoardPos>>): Boolean {
+        return if (rememberState.isEmpty()) {
+            false
+        } else {
+            val size = rememberState.size
+            val lastMove = rememberState[size - 1]
+            val secondLastMove = if (size > 1) rememberState[size - 2] else null
+            val reverseMove = move.second to move.first
+            if (reverseMove == lastMove) {
+                true
+            } else move.first == lastMove.second && move.second == secondLastMove?.first
+        }
     }
 
 
