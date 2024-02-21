@@ -88,6 +88,7 @@ fun BoardTiles(
                     properties.tileArrangement[pos] ?: TileType.PLAIN
                 },
                 Modifier
+                    .border(1.dp, color = Color(0xFFa800d4))
                     .fillMaxSize()
                     .rotate(360 - rotationDegrees), // cancel rotation
             )
@@ -221,7 +222,7 @@ fun TileImage(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier.border(1.dp, color = Color(0xFFa800d4))
+        modifier = modifier
     ) {
         CompositionLocalProvider(LocalContentColor provides LocalContentColor.current.slightlyWeaken()) {
             when (tileType) {

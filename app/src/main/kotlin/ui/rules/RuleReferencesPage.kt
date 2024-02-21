@@ -1,13 +1,15 @@
 package org.keizar.android.ui.rules
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -21,11 +23,13 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import org.keizar.android.R
 import org.keizar.android.ui.game.Tile
 import org.keizar.android.ui.game.TileImage
 import org.keizar.game.TileType
@@ -96,32 +100,134 @@ fun RuleReferencesPage(
 }
 
 @Composable
+private fun PieceImage(
+    tileType: TileType,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+    ) {
+        when (tileType) {
+            TileType.KING -> Icon(
+                painter = painterResource(id = R.drawable.bishop_piece),
+                contentDescription = "King",
+                Modifier.matchParentSize(),
+            )
+
+            TileType.QUEEN -> Icon(
+                painter = painterResource(id = R.drawable.queen_piece),
+                contentDescription = "Queen",
+                Modifier.matchParentSize(),
+            )
+
+            TileType.BISHOP -> Icon(
+                painter = painterResource(id = R.drawable.bishop_piece),
+                contentDescription = "Bishop",
+                Modifier.matchParentSize(),
+            )
+
+            TileType.KNIGHT -> Icon(
+                painter = painterResource(id = R.drawable.knight_piece),
+                contentDescription = "Knight",
+                Modifier.matchParentSize(),
+            )
+
+            TileType.ROOK -> Icon(
+                painter = painterResource(id = R.drawable.rook_piece),
+                contentDescription = "Rook",
+                Modifier.matchParentSize(),
+            )
+
+            TileType.KEIZAR -> {}
+            TileType.PLAIN -> Icon(
+                painter = painterResource(id = R.drawable.pawn_piece),
+                contentDescription = "Pawn",
+                Modifier.matchParentSize(),
+            )
+        }
+    }
+}
+
+
+@Composable
 private fun Symbols(
     modifier: Modifier = Modifier,
 ) {
-    val tiles = TileType.entries
-    FlowRow(
-        maxItemsInEachRow = 4,
-        horizontalArrangement = Arrangement.spacedBy(12.dp, alignment = Alignment.CenterHorizontally),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier,
-    ) {
-        for (tile in tiles) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    val tiles = remember {
+        TileType.entries - TileType.KEIZAR
+    }
+
+    Row(modifier = modifier, horizontalArrangement = Arrangement.SpaceEvenly) {
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            for (tile in tiles) {
                 Tile(onClick = { }, backgroundColor = Color.DarkGray, Modifier.size(64.dp)) {
                     TileImage(
                         tileType = tile,
                         Modifier.fillMaxSize(),
                     )
                 }
-                Text(
-                    text = tile.displayName,
-                    Modifier.padding(vertical = 3.dp),
-                    style = MaterialTheme.typography.labelMedium
-                )
+//                Text(
+//                    text = tile.displayName,
+//                    Modifier.padding(vertical = 3.dp),
+//                    style = MaterialTheme.typography.labelMedium
+//                )
+            }
+        }
+
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            for (tile in tiles) {
+                Tile(
+                    onClick = { }, backgroundColor = Color.White,
+                    Modifier
+                        .size(64.dp)
+                        .border(1.dp, Color.LightGray)
+                ) {
+                    TileImage(
+                        tileType = tile,
+                        Modifier.fillMaxSize(),
+                    )
+                }
+            }
+        }
+
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            for (tile in tiles) {
+                Tile(
+                    onClick = { }, backgroundColor = Color.White,
+                    Modifier
+                        .size(64.dp)
+                        .border(1.dp, Color.LightGray)
+                ) {
+                    PieceImage(
+                        tileType = tile,
+                        Modifier.fillMaxSize(),
+                    )
+                }
             }
         }
     }
+//    FlowRow(
+//        maxItemsInEachRow = 4,
+//        horizontalArrangement = Arrangement.spacedBy(12.dp, alignment = Alignment.CenterHorizontally),
+//        verticalArrangement = Arrangement.spacedBy(8.dp),
+//        modifier = modifier,
+//    ) {
+//        for (tile in tiles) {
+//            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+//                Tile(onClick = { }, backgroundColor = Color.DarkGray, Modifier.size(64.dp)) {
+//                    TileImage(
+//                        tileType = tile,
+//                        Modifier.fillMaxSize(),
+//                    )
+//                }
+//                Text(
+//                    text = tile.displayName,
+//                    Modifier.padding(vertical = 3.dp),
+//                    style = MaterialTheme.typography.labelMedium
+//                )
+//            }
+//        }
+//    }
 }
 
 private val rules = listOf(
@@ -148,5 +254,7 @@ private fun PreviewRuleReferencesPage() {
 @Composable
 @Preview(showBackground = true)
 private fun PreviewSymbols() {
-    Symbols()
+    Column(Modifier.width(800.dp)) {
+        Symbols(Modifier.fillMaxWidth())
+    }
 }
