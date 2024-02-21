@@ -233,6 +233,7 @@ class AlgorithmAI(
 ) : GameAI {
     private val myCoroutine: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
+
     override fun start() {
         myCoroutine.launch {
             game.currentRole(myPlayer).zip(game.currentRound) { myRole, session ->
@@ -267,7 +268,11 @@ class AlgorithmAI(
         TODO("Not yet implemented")
     }
 
-    private suspend fun findBestMove(round: RoundSession, role: Role, rememberStates :MutableList<Pair<BoardPos, BoardPos>>): Pair<BoardPos, BoardPos>? {
+    private suspend fun findBestMove(
+        round: RoundSession,
+        role: Role,
+        rememberStates: MutableList<Pair<BoardPos, BoardPos>>
+    ): Pair<BoardPos, BoardPos>? {
         val tiles = game.properties.tileArrangement
         val board = createKeizarGraph(role, game)
         var minDistance = Int.MAX_VALUE
@@ -281,7 +286,7 @@ class AlgorithmAI(
         val allowCaptureKeizar =
             (keizarCapture != role && keizarCount > aiParameters.keizarThreshold)
         board.forEach {
-            it.forEach {node ->
+            it.forEach { node ->
                 if (node.distance == 1 || node.distance == 2) {
                     oneStepToKeizarCount += 1
                 }
@@ -290,25 +295,38 @@ class AlgorithmAI(
                         oneStepToKeizarCountRole += 1
                     }
                     node.parents.sortBy { parent -> parent.second }
-                    for (parent in node.parents ) {
+                    for (parent in node.parents) {
 //                        val notRecOccupyPos = if (role == Role.WHITE) BoardPos("d4") else BoardPos("d6")
 //                        val notRecOccupy = tiles[notRecOccupyPos] == TileType.ROOK || tiles[notRecOccupyPos] == TileType.QUEEN || tiles[notRecOccupyPos] == TileType.KING
-                        val checkCapture = tiles[node.position] != TileType.PLAIN || ((tiles[node.position] == TileType.PLAIN) && node.position.col != parent.first.position.col)
+                        val checkCapture =
+                            tiles[node.position] != TileType.PLAIN || ((tiles[node.position] == TileType.PLAIN) && node.position.col != parent.first.position.col)
 //                        if (parent.first.position != notRecOccupyPos || notRecOccupy) {
-                            if (parent.first.occupy == null || parent.first.occupy == role.other() && checkCapture) {
-                                if (parent.second == 1) {
-                                    keizarMoves.add(node.position to parent.first.position)
-                                }
-                                if (parent.second in 2..< minDistance && !checkCircle(node.position to parent.first.position, rememberStates)) {
-                                    minDistance = parent.second
-                                    moves = mutableListOf(node.position to parent.first.position)
-                                } else if (parent.second == minDistance && !checkCircle(node.position to parent.first.position, rememberStates)) {
-                                    moves.add(node.position to parent.first.position)
-                                }
-                                if (parent.second in 2..aiParameters.possibleMovesThreshold && !checkCircle(node.position to parent.first.position, rememberStates)) {
-                                    candidateMoves.add(node.position to parent.first.position)
-                                }
+                        if (parent.first.occupy == null || parent.first.occupy == role.other() && checkCapture) {
+                            if (parent.second == 1) {
+                                keizarMoves.add(node.position to parent.first.position)
                             }
+                            if (parent.second in 2..<minDistance && !checkCircle(
+                                    node.position to parent.first.position,
+                                    rememberStates
+                                )
+                            ) {
+                                minDistance = parent.second
+                                moves = mutableListOf(node.position to parent.first.position)
+                            } else if (parent.second == minDistance && !checkCircle(
+                                    node.position to parent.first.position,
+                                    rememberStates
+                                )
+                            ) {
+                                moves.add(node.position to parent.first.position)
+                            }
+                            if (parent.second in 2..aiParameters.possibleMovesThreshold && !checkCircle(
+                                    node.position to parent.first.position,
+                                    rememberStates
+                                )
+                            ) {
+                                candidateMoves.add(node.position to parent.first.position)
+                            }
+                        }
 //                        }
                     }
                 }
@@ -364,7 +382,10 @@ class AlgorithmAI(
         return null
     }
 
-    private fun checkCircle(move: Pair<BoardPos, BoardPos>, rememberState: MutableList<Pair<BoardPos, BoardPos>>): Boolean {
+    private fun checkCircle(
+        move: Pair<BoardPos, BoardPos>,
+        rememberState: MutableList<Pair<BoardPos, BoardPos>>
+    ): Boolean {
         return if (rememberState.isEmpty()) {
             false
         } else {
@@ -389,4 +410,5 @@ class AIParameters(
     val keizarThreshold: Int = 0,         // Allow capture keizar if keizarCount > keizarThreshold
     val possibleMovesThreshold: Int = 3,    // Collect all possible moves if distance < possibleMovesThreshold for novelty search (or not best move)
     val noveltyLevel: Double = 0.99,
-    val allowCaptureKeizarThreshold: Double = 0.5)    // The probability of not using novelty (or not best move) to enhance exploration of the game tree
+    val allowCaptureKeizarThreshold: Double = 0.5
+)    // The probability of not using novelty (or not best move) to enhance exploration of the game tree
