@@ -239,6 +239,7 @@ class AlgorithmAI(
 ) : GameAI {
     private val myCoroutine: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
+
     override fun start() {
         myCoroutine.launch {
             game.currentRole(myPlayer).zip(game.currentRound) { myRole, session ->
@@ -282,7 +283,7 @@ class AlgorithmAI(
         val allowCaptureKeizar =
             (keizarCapture != role && keizarCount > aiParameters.keizarThreshold)
         board.forEach {
-            it.forEach {node ->
+            it.forEach { node ->
                 if (node.distance == 1 || node.distance == 2) {
                     oneStepToKeizarCount += 1
                 }
@@ -291,25 +292,26 @@ class AlgorithmAI(
                         oneStepToKeizarCountRole += 1
                     }
                     node.parents.sortBy { parent -> parent.second }
-                    for (parent in node.parents ) {
+                    for (parent in node.parents) {
 //                        val notRecOccupyPos = if (role == Role.WHITE) BoardPos("d4") else BoardPos("d6")
 //                        val notRecOccupy = tiles[notRecOccupyPos] == TileType.ROOK || tiles[notRecOccupyPos] == TileType.QUEEN || tiles[notRecOccupyPos] == TileType.KING
-                        val checkCapture = tiles[node.position] != TileType.PLAIN || ((tiles[node.position] == TileType.PLAIN) && node.position.col != parent.first.position.col)
+                        val checkCapture =
+                            tiles[node.position] != TileType.PLAIN || ((tiles[node.position] == TileType.PLAIN) && node.position.col != parent.first.position.col)
 //                        if (parent.first.position != notRecOccupyPos || notRecOccupy) {
-                            if (parent.first.occupy == null || parent.first.occupy == role.other() && checkCapture) {
-                                if (parent.second == 1) {
-                                    keizarMoves.add(node.position to parent.first.position)
-                                }
-                                if (parent.second in 2..< minDistance) {
-                                    minDistance = parent.second
-                                    moves = mutableListOf(node.position to parent.first.position)
-                                } else if (parent.second == minDistance) {
-                                    moves.add(node.position to parent.first.position)
-                                }
-                                if (parent.second in 2..aiParameters.possibleMovesThreshold) {
-                                    candidateMoves.add(node.position to parent.first.position)
-                                }
+                        if (parent.first.occupy == null || parent.first.occupy == role.other() && checkCapture) {
+                            if (parent.second == 1) {
+                                keizarMoves.add(node.position to parent.first.position)
                             }
+                            if (parent.second in 2..<minDistance) {
+                                minDistance = parent.second
+                                moves = mutableListOf(node.position to parent.first.position)
+                            } else if (parent.second == minDistance) {
+                                moves.add(node.position to parent.first.position)
+                            }
+                            if (parent.second in 2..aiParameters.possibleMovesThreshold) {
+                                candidateMoves.add(node.position to parent.first.position)
+                            }
+                        }
 //                        }
                     }
                 }
@@ -368,7 +370,8 @@ class AIParameters(
     val keizarThreshold: Int = 0,         // Allow capture keizar if keizarCount > keizarThreshold
     val possibleMovesThreshold: Int = 3,    // Collect all possible moves if distance < possibleMovesThreshold for novelty search (or not best move)
     val noveltyLevel: Double = 0.99,
-    val allowCaptureKeizarThreshold: Double = 0.5)    // The probability of not using novelty (or not best move) to enhance exploration of the game tree
+    val allowCaptureKeizarThreshold: Double = 0.5
+)    // The probability of not using novelty (or not best move) to enhance exploration of the game tree
 
 
 class ScoringAlgorithmAI(
@@ -385,6 +388,7 @@ class ScoringAlgorithmAI(
 ) : GameAI {
     private val myCoroutine: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
+
     override fun start() {
         myCoroutine.launch {
             game.currentRole(myPlayer).zip(game.currentRound) { myRole, session ->
@@ -444,16 +448,18 @@ class ScoringAlgorithmAI(
         val tiles = initTiles()
 
         val board = createKeizarGraph(role, game)
-        board.forEach{
-            it.forEach {node ->
+        board.forEach {
+            it.forEach { node ->
                 println(node.distance)
             }
         }
         val selfPieces = round.getAllPiecesPos(role).first()
         val opponentPieces = round.getAllPiecesPos(role.other()).first()
         val highestScore = Int.MIN_VALUE
-        val keizarCount = round.winningCounter.first()          // TODO: remember to update the keizarCount
-        val keizarOpponentCapture = round.pieceAt(game.properties.keizarTilePos) != role // TODO: remember to update the keizarCapture
+        val keizarCount =
+            round.winningCounter.first()          // TODO: remember to update the keizarCount
+        val keizarOpponentCapture =
+            round.pieceAt(game.properties.keizarTilePos) != role // TODO: remember to update the keizarCapture
         var chosenMove: Pair<BoardPos, BoardPos>? = null
         chosenMove = findHighestScoreMove(
             selfPieces,
@@ -541,7 +547,12 @@ class ScoringAlgorithmAI(
         tiles[targetIndex].piece = null
     }
 
-    private fun updateNewPieces(selfPieces: MutableList<BoardPos>, opponentPieces: MutableList<BoardPos>, source: BoardPos, target: BoardPos) {
+    private fun updateNewPieces(
+        selfPieces: MutableList<BoardPos>,
+        opponentPieces: MutableList<BoardPos>,
+        source: BoardPos,
+        target: BoardPos
+    ) {
         selfPieces.remove(source)
         selfPieces.add(target)
         if (target in opponentPieces) {
@@ -587,7 +598,7 @@ class ScoringAlgorithmAI(
 //                else -> 0
 //            }
 //        }
-        return when(node.distance) {
+        return when (node.distance) {
             0 -> {
                 if (keizarCount == 1 && keizarCapture) {
                     Int.MAX_VALUE   // if distance is 0, and keizar is captured by the opponent, it means the piece is the most valuable
@@ -595,6 +606,7 @@ class ScoringAlgorithmAI(
                     12  // if distance is 0, it means the piece is on the keizar tile
                 }
             }
+
             1 -> 10     // if distance is 1, it means the piece is one step away from the keizar tile
             2 -> 8      // if distance is 2, it means the piece is two steps away from the keizar tile
             3 -> 6      // if distance is 3, it means the piece is three steps away from the keizar tile
