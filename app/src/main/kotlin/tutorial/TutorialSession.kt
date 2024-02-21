@@ -82,6 +82,23 @@ interface TutorialSession {
     suspend fun start()
 }
 
+private class Revoker(
+    val name: String,
+    val action: suspend () -> Unit,
+)
+
+private class Revokers {
+    val revokers = mutableListOf<Revoker>()
+
+    fun add(name: String, action: suspend () -> Unit) {
+        revokers.add(Revoker(name, action))
+    }
+
+    fun clear() {
+        revokers.clear()
+    }
+}
+
 /**
  * @see TutorialSession
  */
@@ -116,6 +133,7 @@ internal class TutorialSessionImpl(
         this.currentLoopJob = null
 
         val indexToRestart = getStepIndexToRestart()
+        logger.info { "Back: restoring to savepoint ${stepSessions[indexToRestart].step.name} (index=$indexToRestart)" }
 
         for (i in currentStep.value.index downTo indexToRestart) {
             stepSessions[i].revoke()
@@ -155,7 +173,7 @@ internal class TutorialSessionImpl(
         currentLoopJob = tutorialScope.launch {
             for (i in startIndex..stepSessions.lastIndex) {
                 val session = stepSessions[i]
-                logger.info { "Loop: current step '${session.step.name}'" }
+                logger.info { "Loop: current step '${session.step.name}' (index=${session.index})" }
                 currentStep.value = session
                 if (session.step !is Savepoint // a normal Action
                     || (invokeSavepoint && !savepointInvoked) // not yet invoked any savepoint
@@ -199,7 +217,7 @@ internal class TutorialSessionImpl(
         private val stepScope = this@TutorialSessionImpl.tutorialScope.childSupervisorScope()
 
         override val state: MutableStateFlow<StepState> = MutableStateFlow(StepState.NotInvoked)
-        private val revokers: MutableList<suspend () -> Unit> = mutableListOf()
+        private val revokers: Revokers = Revokers()
 
         @Volatile
         private var currentInvocation: Job? = null
@@ -220,7 +238,7 @@ internal class TutorialSessionImpl(
                     game.currentRound.first().move(from, to)
                 ) { "Step '${step.name}': Failed to move player from $from to $to" }
                 logger.info { "Step '${step.name}': Moved player from $from to $to" }
-                revokers.add { game.currentRound.first().revertLast() }
+                revokers.add("move $to to $from") { game.currentRound.first().revertLast() }
             }
 
             override suspend fun moveOpponent(from: BoardPos, to: BoardPos): Unit = lock.withLock {
@@ -228,7 +246,7 @@ internal class TutorialSessionImpl(
                     game.currentRound.first().move(from, to)
                 ) { "Step '${step.name}': Failed to move opponent from $from to $to" }
                 logger.info { "Step '${step.name}': Moved opponent from $from to $to" }
-                revokers.add { game.currentRound.first().revertLast() }
+                revokers.add("move $to to $from") { game.currentRound.first().revertLast() }
             }
 
             override suspend fun requestMovePlayer(from: BoardPos, to: BoardPos) = lock.withLock {
@@ -240,7 +258,7 @@ internal class TutorialSessionImpl(
                 presentation.tooltip.value = content
                 if (duration == Duration.INFINITE) {
                     // Ensure that tooltip is always removed when revoked
-                    revokers.add { presentation.tooltip.value = null }
+                    revokers.add("remove tooltip") { presentation.tooltip.value = null }
                 } else {
                     try {
                         kotlinx.coroutines.delay(duration)
@@ -285,7 +303,7 @@ internal class TutorialSessionImpl(
          * It is guaranteed that when the job completes, the state of the step will be updated to any of the INVOKED states, i.e. [StepState.FullyInvoked] or [StepState.PartiallyInvoked].
          */
         suspend fun invoke() {
-            logger.info { "Invoking step '${step.name}'" }
+            logger.info { "Step '${step.name}' start" }
 
             val step = step
             check(state.compareAndSet(expect = StepState.NotInvoked, update = StepState.Invoking)) {
@@ -301,10 +319,13 @@ internal class TutorialSessionImpl(
                 } catch (e: CancellationException) {
                     // revoked
                     state.value = StepState.PartiallyInvoked
+                    logger.info { "Step '${step.name}' cancelled" }
                     throw e
                 } catch (e: Throwable) {
+                    logger.info { "Step '${step.name}' exception" }
                     throw IllegalStateException("Exception in invoking step '${step.name}', see cause for details", e)
                 }
+                logger.info { "Step '${step.name}' succeed" }
 
                 // normally succeed
 
@@ -318,7 +339,7 @@ internal class TutorialSessionImpl(
         }
 
         suspend fun revoke() {
-            logger.info { "Revoking step '${step.name}'" }
+            logger.info { "Revoking step '${step.name}' (index=$index)" }
             // CAS update state to REVOKING
             while (true) {
                 val value = state.value
@@ -341,13 +362,18 @@ internal class TutorialSessionImpl(
                 "Step ${step.name} check failed: $stateBeforeRevokers != StepState.REVOKING"
             }
 
-            for (revoker in revokers) {
+            for (revoker in revokers.revokers) {
                 try {
-                    revoker()
+                    logger.info { "Revoking step '${step.name}': run revoker '${revoker.name}'" }
+                    revoker.action()
                 } catch (e: Throwable) {
-                    throw IllegalStateException("Exception in revoking step '${step.name}', see cause for details", e)
+                    throw IllegalStateException(
+                        "Exception in revoking step '${step.name}', revoker is '${revoker.name}', see cause for details",
+                        e
+                    )
                 }
             }
+            revokers.revokers.clear()
 
             check(state.value == stateBeforeRevokers) {
                 "Step ${step.name} check failed: concurrent modification: was ${stateBeforeRevokers}, now ${state.value}"
