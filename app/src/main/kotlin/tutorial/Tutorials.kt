@@ -117,6 +117,8 @@ object Tutorials {
                             .verticalScroll(rememberScrollState())
                     )
                 }
+            }.then(awaitNext = false) {
+                awaitNext("Finish")
             }
         }
     }

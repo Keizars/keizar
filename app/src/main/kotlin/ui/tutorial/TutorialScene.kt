@@ -59,6 +59,8 @@ fun TutorialScene(
             it.launchInBackground {
                 delay(2.seconds)
                 tutorialSession.start()
+                tutorialSession.awaitSuccess()
+                navController.popBackStack("home", false)
             }
         }
     }

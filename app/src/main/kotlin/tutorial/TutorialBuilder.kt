@@ -81,11 +81,14 @@ class TutorialBuilder(
          * Steps are executed in the order they are added.
          *
          * @param name Name for debugging purposes. Not necessarily (but recommended) to be unique.
+         * @param savepoint `true` to create a savepoint, with which the player can go "Back" to this step.
+         * @param awaitNext `true` to add a step that awaits the player to click "Next".
          */
         @TutorialDslMarker
         fun step(
             name: String,
             savepoint: Boolean = true,
+            awaitNext: Boolean = true,
             action: StepAction = {}
         ): Step {
             val step = Action(name, action)
@@ -93,7 +96,9 @@ class TutorialBuilder(
                 list.add(Savepoint("$name-savepoint") { awaitNext() })
             }
             list.add(step)
-            list.add(Action("$name-awaitNext") { awaitNext() })
+            if (awaitNext) {
+                list.add(Action("$name-awaitNext") { awaitNext() })
+            }
             return step
         }
 
@@ -108,10 +113,11 @@ class TutorialBuilder(
         @TutorialDslMarker
         fun Step.then(
             name: String = this.name + "-then",
+            awaitNext: Boolean = true,
             execution: StepAction,
         ): Step {
-            list.removeIf { it.name == "$name-awaitNext" }
-            return step(name, savepoint = false, execution)
+            list.removeIf { it.name == "${this.name}-awaitNext" } // a new one will be added by 
+            return step(name, savepoint = false, awaitNext = awaitNext, execution)
         }
 
         internal fun toList() = list.toList()

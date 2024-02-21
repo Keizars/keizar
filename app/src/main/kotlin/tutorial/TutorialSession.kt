@@ -3,6 +3,7 @@ package org.keizar.android.tutorial
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.runtime.Composable
 import kotlinx.atomicfu.atomic
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
@@ -81,6 +82,8 @@ interface TutorialSession {
      * Does nothing if the tutorial has already been started.
      */
     suspend fun start()
+
+    suspend fun awaitSuccess()
 }
 
 private class Revoker(
@@ -121,6 +124,7 @@ internal class TutorialSessionImpl(
 
     private val executionLock = Mutex()
     private var currentLoopJob: Job? = null
+    private val onSuccess = CompletableDeferred<Unit>()
 
     private val logger = logger("TutorialSessionImpl")
 
@@ -150,6 +154,10 @@ internal class TutorialSessionImpl(
         }
 
         launchSequentialExecution(startIndex = 0, invokeSavepoint = false)
+    }
+
+    override suspend fun awaitSuccess() {
+        onSuccess.await()
     }
 
     private fun getStepIndexToRestart(): Int {
@@ -196,6 +204,7 @@ internal class TutorialSessionImpl(
                     session.skip()
                 }
             }
+            onSuccess.complete(Unit)
         }
     }
 
