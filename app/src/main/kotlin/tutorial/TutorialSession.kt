@@ -202,21 +202,19 @@ internal class TutorialSessionImpl(
             }
 
             override suspend fun movePlayer(from: BoardPos, to: BoardPos): Unit = lock.withLock {
-                val myRole = game.currentRound.first().curRole.first()
                 check(
                     game.currentRound.first().move(from, to)
                 ) { "Step '${step.name}': Failed to move player from $from to $to" }
                 logger.info { "Step '${step.name}': Moved player from $from to $to" }
-                revokers.add { game.currentRound.first().undo(myRole) }
+                revokers.add { game.currentRound.first().revertLast() }
             }
 
             override suspend fun moveOpponent(from: BoardPos, to: BoardPos): Unit = lock.withLock {
                 check(
                     game.currentRound.first().move(from, to)
                 ) { "Step '${step.name}': Failed to move opponent from $from to $to" }
-                val myRole = game.currentRound.first().curRole.first().other()
                 logger.info { "Step '${step.name}': Moved opponent from $from to $to" }
-                revokers.add { game.currentRound.first().undo(myRole) }
+                revokers.add { game.currentRound.first().revertLast() }
             }
 
             override suspend fun requestMovePlayer(from: BoardPos, to: BoardPos) = lock.withLock {
@@ -226,7 +224,10 @@ internal class TutorialSessionImpl(
 
             override suspend fun tooltip(duration: Duration, content: @Composable() (RowScope.() -> Unit)) {
                 presentation.tooltip.value = content
-                if (duration != Duration.INFINITE) {
+                if (duration == Duration.INFINITE) {
+                    // Ensure that tooltip is always removed when revoked
+                    revokers.add { presentation.tooltip.value = null }
+                } else {
                     try {
                         kotlinx.coroutines.delay(duration)
                     } finally { // covers cancellation
@@ -255,6 +256,9 @@ internal class TutorialSessionImpl(
         }
 
         suspend fun invoke() {
+            if (state.value == StepState.INVOKED) {
+                return
+            }
             check(state.compareAndSet(expect = StepState.NOT_INVOKED, update = StepState.INVOKING)) {
                 "Internal error: attempting to invoke step '${step.name}' that is currently in the ${state.value} state."
             }
@@ -293,7 +297,9 @@ internal class TutorialSessionImpl(
             currentInvocation?.run {
                 cancel(CancellationException("Revoking step '${step.name}'"))
                 join()
-                currentStep.value.state.value = StepState.NOT_INVOKED
+                if (currentStep.value != this@StepSessionImpl) {
+                    currentStep.value.state.value = StepState.NOT_INVOKED
+                }
             }
 
             for (revoker in revokers) {
