@@ -28,17 +28,24 @@ interface StepActionContext {
      */
     suspend fun delay(duration: Duration)
 
+    /**
+     * Shows the possible moves for the piece at the given position [pos].
+     *
+     * If the pos is invalid, no action is taken.
+     *
+     * Suspends until the possible moves are shown for [duration].
+     */
     suspend fun showPossibleMoves(pos: BoardPos, duration: Duration = 2.seconds)
 
     /**
-     * Move the player's piece from one position to another.
+     * Moves the player's piece from one position to another.
      *
      * Suspends until the move and relevant animations are complete.
      */
     suspend fun movePlayer(from: BoardPos, to: BoardPos)
 
     /**
-     * Move the opponent's piece from one position to another.
+     * Moves the opponent's piece from one position to another.
      *
      * Suspends until the move and relevant animations are complete.
      */
@@ -55,13 +62,15 @@ interface StepActionContext {
     /**
      * Update the tooltip message displayed in the top center of the board.
      *
-     * If the [duration] is [Duration.INFINITE], this function returns as soon as the message it set.
-     * If it is a finite duration, the message is displayed for that duration.
+     * If the [duration] is [Duration.INFINITE], this function returns as soon as the message it set, and does not wait for it to disappear.
+     * You can use [removeTooltip] later.
+     *
+     * If [duration] finite, the message is displayed for that duration. This function suspends until the tooltip disappears.
      */
     suspend fun tooltip(duration: Duration = Duration.INFINITE, content: @Composable RowScope.() -> Unit)
 
     /**
-     * Remove the tooltip message displayed in the top center of the board.
+     * Removes the tooltip message displayed in the top center of the board.
      *
      * If there is not a tooltip message, this function does nothing.
      */
@@ -79,11 +88,17 @@ interface StepActionContext {
      *
      * The composable is displayed in the board actions area.
      * You should only use bottom sheets, dialogs, navigation in the [compose].
-     * If you want to display a message, use [message].
+     *
+     * There are helper functions that you should prefer:
+     * - to display a tooltip (at the top center of the board), use [tooltip].
+     * - to display a general message, use [StepActionContext.message].
+     * - to show a bottom sheet, use [showBottomSheet]
      */
     suspend fun compose(content: @Composable (request: TutorialRequest.CompletableTutorialRequest<Unit>) -> Unit)
 
     /**
+     * Requests and awaits the player to click the "Next" button.
+     *
      * Suspends until the player has clicked the "Next" button.
      */
     suspend fun awaitNext()
@@ -107,6 +122,9 @@ suspend fun StepActionContext.showBottomSheet(
     }
 }
 
+/**
+ * @see StepActionContext.showPossibleMoves
+ */
 suspend inline fun StepActionContext.showPossibleMoves(pos: String, duration: Duration = 3.seconds) =
     this.showPossibleMoves(BoardPos(pos), duration)
 

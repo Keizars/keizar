@@ -130,6 +130,13 @@ object Tutorials {
         }
     }
 
+    /**
+     * Builds a move using the [moveBuilder], show the possible moves for the `from` position, then move the piece.
+     *
+     * Suspends until the piece has been moved.
+     *
+     * See [buildMove] for how to describe the move.
+     */
     private suspend inline fun StepActionContext.showPossibleMovesThenMove(moveBuilder: MoveBuilder.() -> Unit) {
         val builder = MoveBuilder().apply(moveBuilder)
         val (from, to) = builder.build()

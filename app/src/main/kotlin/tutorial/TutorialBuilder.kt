@@ -121,6 +121,18 @@ class TutorialBuilder(
 @Target(AnnotationTarget.CLASS, AnnotationTarget.TYPE, AnnotationTarget.FUNCTION, AnnotationTarget.VALUE_PARAMETER)
 annotation class TutorialDslMarker
 
+/**
+ * Builds a move.
+ *
+ * @sample samples.MoveBuilderSamples.specifySeparately
+ * @sample samples.MoveBuilderSamples.naturally
+ */
+inline fun buildMove(action: MoveBuilder.() -> Unit): Pair<BoardPos, BoardPos> =
+    MoveBuilder().apply(action).build()
+
+/**
+ * A builder that builds a move. Use [buildMove] instead.
+ */
 @TutorialDslMarker
 class MoveBuilder {
     private var from: BoardPos? = null
