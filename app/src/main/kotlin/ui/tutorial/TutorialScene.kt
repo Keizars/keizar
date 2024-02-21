@@ -135,7 +135,8 @@ private fun TutorialSelectionPage(
                                     onClick = { n?.respond() },
                                     enabled = n != null && !n.isResponded
                                 ) {
-                                    Text(text = "Next")
+                                    val buttonName by vm.tutorialSession.presentation.buttonName.collectAsState()
+                                    Text(text = buttonName)
                                 }
                             }
                         }

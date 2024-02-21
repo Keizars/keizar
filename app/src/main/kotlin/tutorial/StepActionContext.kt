@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import org.keizar.android.tutorial.TutorialPresentation.Companion.DEFAULT_BUTTON_NAME
 import org.keizar.utils.communication.game.BoardPos
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -101,7 +102,7 @@ interface StepActionContext {
      *
      * Suspends until the player has clicked the "Next" button.
      */
-    suspend fun awaitNext()
+    suspend fun awaitNext(buttonName: String = DEFAULT_BUTTON_NAME)
 }
 
 /**

@@ -16,8 +16,18 @@ interface TutorialPresentation {
     val message: StateFlow<(@Composable () -> Unit)?>
 
     /**
+     * Name of the action button. "Next" by default
+     */
+    @Stable
+    val buttonName: StateFlow<String>
+
+    /**
      * The tooltip message displayed in the top center of the board.
      */
     @Stable
     val tooltip: StateFlow<(@Composable RowScope.() -> Unit)?>
+
+    companion object {
+        const val DEFAULT_BUTTON_NAME = "Next"
+    }
 }

@@ -14,6 +14,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
+import org.keizar.android.tutorial.TutorialPresentation.Companion.DEFAULT_BUTTON_NAME
 import org.keizar.game.GameSession
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.coroutines.childSupervisorScope
@@ -200,6 +201,7 @@ internal class TutorialSessionImpl(
 
     inner class TutorialPresentationImpl : TutorialPresentation {
         override val message: MutableStateFlow<(@Composable () -> Unit)?> = MutableStateFlow(null)
+        override val buttonName = MutableStateFlow(DEFAULT_BUTTON_NAME)
         override val tooltip: MutableStateFlow<(@Composable RowScope.() -> Unit)?> = MutableStateFlow(null)
     }
 
@@ -289,8 +291,13 @@ internal class TutorialSessionImpl(
                 logger.info { "Step '${step.name}': Displayed composable" }
             }
 
-            override suspend fun awaitNext() {
-                requests.issueAndAwait(TutorialRequest.ClickNext())
+            override suspend fun awaitNext(buttonName: String) {
+                presentation.buttonName.value = buttonName
+                try {
+                    requests.issueAndAwait(TutorialRequest.ClickNext())
+                } finally {
+                    presentation.buttonName.value = DEFAULT_BUTTON_NAME
+                }
             }
         }
 
