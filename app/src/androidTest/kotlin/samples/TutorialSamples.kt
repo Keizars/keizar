@@ -12,12 +12,14 @@ import kotlin.time.Duration.Companion.seconds
 
 class TutorialSamples {
     fun TutorialBuilder.stepThen() {
-        steps.step("welcome") {
-            message("Welcome to Keizar! A prawn can move one square forward!")
-            requestMovePlayer { "a2" to "a3" }
-        }.then {
-            message("Great!")
-            delay(2.seconds)
+        steps {
+            step("welcome") {
+                message("Welcome to Keizar! A prawn can move one square forward!")
+                requestMovePlayer { "a2" to "a3" }
+            }.then {
+                message("Great!")
+                delay(2.seconds)
+            }
         }
     }
 

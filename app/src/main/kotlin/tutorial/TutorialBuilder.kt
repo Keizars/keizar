@@ -64,48 +64,58 @@ class TutorialBuilder(
         internal val list: MutableList<Step> = mutableListOf()
 
         /**
-         * Adds a step to the tutorial.
+         * Adds a savepoint.
+         *
+         * [onRestored] is only invoked when the player clicks "Back", i.e. when the tutorial session goes back to the last savepoint.
+         */
+        @TutorialDslMarker
+        fun savepoint(name: String, onRestored: StepAction = { awaitNext() }): Savepoint {
+            val save = Savepoint(name, onRestored)
+            list.add(save)
+            return save
+        }
+
+        /**
+         * Adds a step.
          *
          * Steps are executed in the order they are added.
          *
          * @param name Name for debugging purposes. Not necessarily (but recommended) to be unique.
          */
         @TutorialDslMarker
-        fun step(name: String, action: StepAction): Step {
-            val step = Step(name, action)
+        fun step(
+            name: String,
+            savepoint: Boolean = true,
+            action: StepAction = {}
+        ): Step {
+            val step = Action(name, action)
+            if (savepoint) {
+                list.add(Savepoint("$name-savepoint") { awaitNext() })
+            }
             list.add(step)
+            list.add(Action("$name-awaitNext") { awaitNext() })
             return step
         }
 
         /**
-         * Adds a step to the executed just after this step has been successfully executed.
+         * Adds an action to the executed just after this step has been successfully executed.
          *
          * This is useful to add a message after a move has been requested, without specifying the name of the step.
          *
          * @sample samples.TutorialSamples.stepThen
+         * @see step
          */
         @TutorialDslMarker
         fun Step.then(
             name: String = this.name + "-then",
             execution: StepAction,
-        ): Step = step(name, execution)
+        ): Step {
+            list.removeIf { it.name == "$name-awaitNext" }
+            return step(name, savepoint = false, execution)
+        }
 
         internal fun toList() = list.toList()
     }
-
-
-    /**
-     * Adds a step to the executed just after this step has been successfully executed.
-     *
-     * This is useful to add a message after a move has been requested, without specifying the name of the step.
-     *
-     * @sample samples.TutorialSamples.stepThen
-     */
-    @TutorialDslMarker
-    fun Step.then(
-        name: String = this.name + "-then",
-        execution: StepAction,
-    ): Step = steps.run { then(name, execution) }
 
     fun build(): Tutorial {
         return Tutorial(

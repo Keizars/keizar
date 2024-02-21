@@ -93,46 +93,36 @@ internal class TutorialSessionImpl(
     private val started = atomic(false)
     override val game = GameSession.restore(tutorial.initialGameSnapshot)
 
-    private val stepStates = tutorial.steps.mapIndexed { index, step ->
+    private val stepSessions = tutorial.steps.mapIndexed { index, step ->
         StepSessionImpl(index = index, step = step)
     }
 
-    override val currentStep: MutableStateFlow<StepSessionImpl> = MutableStateFlow(stepStates.first())
+    override val currentStep: MutableStateFlow<StepSessionImpl> = MutableStateFlow(stepSessions.first())
     override val requests = TutorialRequestsImpl()
     override val presentation = TutorialPresentationImpl()
 
     private val executionLock = Mutex()
-    private var currentExecution: Job? = null
+    private var currentLoopJob: Job? = null
 
     private val logger = logger("TutorialSessionImpl")
 
     override suspend fun back() = executionLock.withLock {
         check(started.value) { "Cannot revoke steps when the tutorial has not yet started" }
 
-        val currentExecution = currentExecution
-        check(currentExecution != null)
+        this.currentLoopJob?.run {
+            cancel(CancellationException("Revoking tutorial due to `back`"))
+            join()
+        }
+        this.currentLoopJob = null
 
-        // Cancel execution
-        currentExecution.cancel(CancellationException("Revoking the current step"))
-        currentExecution.join()
-        this.currentExecution = null
+        val indexToRestart = getStepIndexToRestart()
 
-        // Revoke current step
-        val currentStep = currentStep.value
-        currentStep.revoke()
-
-        // Revoke previous step if it exists
-        val currentStepIndex = stepStates.indexOf(currentStep)
-        if (currentStepIndex > 0) {
-            val previousStep = stepStates[currentStepIndex - 1]
-            previousStep.revoke()
-            this.currentStep.value = previousStep
-        } else {
-            // No previous step, do nothing
+        for (i in currentStep.value.index downTo indexToRestart) {
+            stepSessions[i].revoke()
         }
 
         // Start again
-        launchSequentialExecution()
+        launchSequentialExecution(startIndex = indexToRestart, invokeSavepoint = true)
     }
 
     override suspend fun start() = executionLock.withLock {
@@ -140,20 +130,44 @@ internal class TutorialSessionImpl(
             return
         }
 
-        launchSequentialExecution()
+        launchSequentialExecution(startIndex = 0, invokeSavepoint = false)
     }
 
-    private fun launchSequentialExecution() {
-        check(currentExecution == null)
-        currentExecution = tutorialScope.launch {
-            for (step in stepStates) {
-                logger.info { "Executing step '${step.step.name}'" }
-                currentStep.value = step
-                try {
-                    step.invoke()
-                } catch (e: CancellationException) {
-                    // Revoked
-                    break
+    private fun getStepIndexToRestart(): Int {
+        val lastInvoked = stepSessions.indexOfLast { it.state.value.hasEffect }
+        if (lastInvoked == -1) {
+            return 0
+        }
+        return stepSessions.asSequence()
+            .take(lastInvoked + 1)
+            .lastOrNull { it.step is Savepoint }
+            ?.index
+            ?: 0
+    }
+
+    private fun launchSequentialExecution(
+        startIndex: Int,
+        invokeSavepoint: Boolean
+    ) {
+        check(currentLoopJob == null)
+
+        var savepointInvoked = false
+        currentLoopJob = tutorialScope.launch {
+            for (i in startIndex..stepSessions.lastIndex) {
+                val session = stepSessions[i]
+                logger.info { "Loop: current step '${session.step.name}'" }
+                currentStep.value = session
+                if (session.step !is Savepoint // a normal Action
+                    || (invokeSavepoint && !savepointInvoked) // not yet invoked any savepoint
+                ) {
+                    savepointInvoked = true
+                    try {
+                        session.invoke()
+                    } catch (e: CancellationException) {
+                        break
+                    }
+                } else {
+                    session.skip()
                 }
             }
         }
@@ -184,7 +198,7 @@ internal class TutorialSessionImpl(
     ) : StepSession {
         private val stepScope = this@TutorialSessionImpl.tutorialScope.childSupervisorScope()
 
-        override val state: MutableStateFlow<StepState> = MutableStateFlow(StepState.NOT_INVOKED)
+        override val state: MutableStateFlow<StepState> = MutableStateFlow(StepState.NotInvoked)
         private val revokers: MutableList<suspend () -> Unit> = mutableListOf()
 
         @Volatile
@@ -255,29 +269,52 @@ internal class TutorialSessionImpl(
             }
         }
 
-        suspend fun invoke() {
-            if (state.value == StepState.INVOKED) {
-                return
+        fun skip() {
+            logger.info { "Skipping step '${step.name}'" }
+            val step = step
+            check(state.compareAndSet(expect = StepState.NotInvoked, update = StepState.NothingInvoked)) {
+                "Internal error: attempting to invoke step '${step.name}' that is currently in the ${state.value} state."
             }
-            check(state.compareAndSet(expect = StepState.NOT_INVOKED, update = StepState.INVOKING)) {
+        }
+
+        /**
+         * Launches a job to execute the step action.
+         *
+         * The job is stored in [currentLoopJob].
+         *
+         * It is guaranteed that when the job completes, the state of the step will be updated to any of the INVOKED states, i.e. [StepState.FullyInvoked] or [StepState.PartiallyInvoked].
+         */
+        suspend fun invoke() {
+            logger.info { "Invoking step '${step.name}'" }
+
+            val step = step
+            check(state.compareAndSet(expect = StepState.NotInvoked, update = StepState.Invoking)) {
                 "Internal error: attempting to invoke step '${step.name}' that is currently in the ${state.value} state."
             }
 
             val job = stepScope.launch {
                 try {
-                    step.action(executionContext)
+                    when (step) {
+                        is Action -> step.action(executionContext)
+                        is Savepoint -> step.action(executionContext)
+                    }
                 } catch (e: CancellationException) {
                     // revoked
+                    state.value = StepState.PartiallyInvoked
                     throw e
                 } catch (e: Throwable) {
                     throw IllegalStateException("Exception in invoking step '${step.name}', see cause for details", e)
                 }
+
+                // normally succeed
+
+                check(state.value == StepState.Invoking) {
+                    "Step '${step.name}' check failed: ${state.value} != StepState.INVOKING"
+                }
+                state.value = StepState.FullyInvoked
             }
             currentInvocation = job
-            job.join()
-
-            check(state.value == StepState.INVOKING)
-            state.value = StepState.INVOKED
+            job.join() // does not throw on CancellationException
         }
 
         suspend fun revoke() {
@@ -285,10 +322,10 @@ internal class TutorialSessionImpl(
             // CAS update state to REVOKING
             while (true) {
                 val value = state.value
-                if (!(value == StepState.INVOKING || value == StepState.INVOKED)) {
+                if (value !is StepState.Invoked && value !is StepState.Invoking) {
                     error("Internal error: attempting to revoke step '${step.name}' that is currently in the ${state.value} state.")
                 }
-                if (state.compareAndSet(expect = value, update = StepState.REVOKING)) {
+                if (state.compareAndSet(expect = value, update = StepState.Revoking)) {
                     break
                 } // else: lost race, try again
             }
@@ -297,9 +334,11 @@ internal class TutorialSessionImpl(
             currentInvocation?.run {
                 cancel(CancellationException("Revoking step '${step.name}'"))
                 join()
-                if (currentStep.value != this@StepSessionImpl) {
-                    currentStep.value.state.value = StepState.NOT_INVOKED
-                }
+            }
+
+            val stateBeforeRevokers = state.value
+            check(!stateBeforeRevokers.isJobRunning) {
+                "Step ${step.name} check failed: $stateBeforeRevokers != StepState.REVOKING"
             }
 
             for (revoker in revokers) {
@@ -310,8 +349,10 @@ internal class TutorialSessionImpl(
                 }
             }
 
-            check(state.value == StepState.REVOKING)
-            state.value = StepState.NOT_INVOKED
+            check(state.value == stateBeforeRevokers) {
+                "Step ${step.name} check failed: concurrent modification: was ${stateBeforeRevokers}, now ${state.value}"
+            }
+            state.value = StepState.NotInvoked
         }
 
         override fun toString(): String {

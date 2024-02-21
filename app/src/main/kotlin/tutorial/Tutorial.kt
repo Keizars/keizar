@@ -54,8 +54,12 @@ fun Tutorial.newSession(
 ): TutorialSession = TutorialSessionImpl(this, parentCoroutineContext)
 
 
+sealed class Step(
+    val name: String,
+)
+
 /**
- * Represents a step in the tutorial.
+ * A step that invokes an [action].
  *
  * The [Step] is state-less: it describe what is going to happen in when the player plays the tutorial.
  * When the player plays the tutorial, a [TutorialSession] is created.
@@ -71,19 +75,26 @@ fun Tutorial.newSession(
  * When the [action] is invoked, the [TutorialSession] of which this step is a part of tracks what has been done in this step, i.e. piece movements.
  * By revoking the step, all the tracked actions should be undone.
  */
-class Step(
+class Action(
     /**
      * Name for debugging purposes. Not necessarily (but recommended) to be unique.
      */
-    val name: String,
+    name: String,
     /**
      * The action to be executed in this step.
      *
      * Note that when the steps are executed, they are executed in the order they are added.
      */
     val action: StepAction,
-) {
+) : Step(name) {
     override fun toString(): String = "Step(name=$name)"
+}
+
+class Savepoint(
+    name: String,
+    val action: StepAction,
+) : Step(name) {
+    override fun toString(): String = "Savepoint(name=$name)"
 }
 
 /**

@@ -50,9 +50,7 @@ object Tutorials {
         playerStartAsBlack()
 
         steps {
-            step("start") {
-                awaitNext()
-            }
+            step("start")
 
             step("move black") {
                 tooltip { Text("Pawn") }
@@ -61,42 +59,36 @@ object Tutorials {
                 showPossibleMovesThenMove { "g5" to "g4" }
                 delay(1.seconds)
                 removeTooltip()
-                awaitNext()
             }
 
             step("capture white") {
                 tooltip { Text("Pawn", color = PawnColors.Pawn) }
                 showPossibleMovesThenMove { "g4" to "f3" }
                 tooltip(3.seconds) { Text("Captured") }
-                awaitNext()
             }
 
             step("move as rook") {
                 tooltip { Text("Rook", color = PawnColors.Rook) }
                 showPossibleMovesThenMove { "f3" to "a3" }
                 removeTooltip()
-                awaitNext()
             }
 
             step("move as knight") {
                 tooltip { Text("Knight", color = PawnColors.Knight) }
                 showPossibleMovesThenMove { "a3" to "b5" }
                 removeTooltip()
-                awaitNext()
             }
 
             step("move as bishop") {
                 tooltip { Text("Bishop", color = PawnColors.Bishop) }
                 showPossibleMovesThenMove { "b5" to "e8" }
                 removeTooltip()
-                awaitNext()
             }
 
             step("move as queen") {
                 tooltip { Text("Queen", color = PawnColors.Queen) }
                 showPossibleMovesThenMove { "e8" to "e6" }
                 removeTooltip()
-                awaitNext()
             }
 
             step("move as king to keizar") {
@@ -115,7 +107,6 @@ object Tutorials {
                 showPossibleMovesThenMove { "e6" to "d5" }
                 tooltip { Text("KEIZÁR", color = PawnColors.Keizar) }
                 removeTooltip()
-                awaitNext()
             }
 
             step("show rules") {
