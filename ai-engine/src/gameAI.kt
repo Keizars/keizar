@@ -374,7 +374,7 @@ class AlgorithmAI(
             val reverseMove = move.second to move.first
             if (reverseMove == lastMove) {
                 true
-            } else move.first == lastMove.second && move.second == secondLastMove?.first
+            } else move.first == lastMove.second && move.second == secondLastMove?.first && lastMove.first == secondLastMove.second
         }
     }
 
