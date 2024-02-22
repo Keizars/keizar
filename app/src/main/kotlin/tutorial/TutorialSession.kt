@@ -204,7 +204,9 @@ internal class TutorialSessionImpl(
                     session.skip()
                 }
             }
-            onSuccess.complete(Unit)
+            if (currentStep.value.index == stepSessions.lastIndex) {
+                onSuccess.complete(Unit)
+            }
         }
     }
 
