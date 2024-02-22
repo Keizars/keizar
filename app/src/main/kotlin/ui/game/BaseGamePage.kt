@@ -95,8 +95,7 @@ fun BaseGamePage(
                     modifier = Modifier
                         .padding(vertical = 16.dp)
                         .size(min(maxWidth, maxHeight)),
-                    onClickHome = onClickHome,
-                    onClickGameConfig = onClickGameConfig,
+                    bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickGameConfig) },
                     actions = actions,
                 )
             }

@@ -108,8 +108,6 @@ private fun TutorialSelectionPage(
                     modifier = Modifier
                         .padding(vertical = 16.dp)
                         .size(min(maxWidth, maxHeight)),
-                    onClickHome = onClickHome,
-                    onClickGameConfig = {},
                     topBar = { GameBoardTopBar(vm = vm, turnStatusIndicator = null) },
                     actions = {
                         Box(

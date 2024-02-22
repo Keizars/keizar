@@ -98,9 +98,8 @@ fun GameBoardTopBar(
 fun GameBoard(
     vm: GameBoardViewModel,
     modifier: Modifier = Modifier,
-    onClickHome: () -> Unit,
-    onClickGameConfig: () -> Unit,
     topBar: @Composable () -> Unit = { GameBoardTopBar(vm) },
+    bottomBar: @Composable () -> Unit = { },
     actions: @Composable RowScope.() -> Unit = {},
     boardOverlay: @Composable BoxScope.() -> Unit = {},
 ) {
@@ -142,14 +141,16 @@ fun GameBoard(
             ) {
                 actions()
             }
-        }
 
-        DialogsAndBottomBar(vm, onClickHome, onClickGameConfig)
+            Row {
+                bottomBar()
+            }
+        }
     }
 }
 
 @Composable
-private fun DialogsAndBottomBar(
+fun DialogsAndBottomBar(
     vm: GameBoardViewModel,
     onClickHome: () -> Unit,
     onClickGameConfig: () -> Unit
@@ -620,8 +621,6 @@ private fun PreviewGameBoard() {
         GameBoard(
             vm,
             modifier = Modifier.size(min(maxWidth, maxHeight)),
-            onClickHome = { /* Navigate to home page*/ },
-            onClickGameConfig = { /* Navigate to game configuration page*/ }
         )
     }
 }

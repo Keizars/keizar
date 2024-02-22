@@ -122,7 +122,7 @@ fun BoardPieces(
                         remember {
                             MutableInteractionSource()
                         },
-                        indication = null
+                        indication = null,
                     ) { vm.onClickPiece(piece) }
                     .size(tileSize), // placement modifiers
                 contentAlignment = Alignment.Center,
