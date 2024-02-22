@@ -38,8 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import org.keizar.android.tutorial.Tutorial
 import org.keizar.android.tutorial.Tutorials
 import org.keizar.android.tutorial.respond
@@ -60,7 +62,9 @@ fun TutorialScene(
                 delay(2.seconds)
                 tutorialSession.start()
                 tutorialSession.awaitSuccess()
-                navController.popBackStack("home", false)
+                withContext(Dispatchers.Main) {
+                    navController.popBackStack("home", false)
+                }
             }
         }
     }
