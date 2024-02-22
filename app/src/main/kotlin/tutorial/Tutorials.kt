@@ -153,7 +153,7 @@ object Tutorials {
                 removeTooltip()
                 tooltip {Text("Opponent captured Keizar", color = PawnColors.Keizar)}
                 flashKeizarPiece()
-                delay(0.5.seconds)
+                delay(2.seconds)
                 removeTooltip()
             }
 
@@ -163,7 +163,7 @@ object Tutorials {
                 removeTooltip()
                 tooltip {Text("You captured Keizar", color = PawnColors.Keizar)}
                 flashKeizarPiece()
-                delay(0.5.seconds)
+                delay(2.seconds)
                 removeTooltip()
             }
 
@@ -184,7 +184,7 @@ object Tutorials {
                 showPossibleMovesThenMove { "e8" to "e6" }
                 removeTooltip()
                 tooltip {Text("You stopped opponent")}
-                delay(0.5.seconds)
+                delay(2.seconds)
                 removeTooltip()
             }
 
@@ -199,7 +199,7 @@ object Tutorials {
                 showPossibleMovesThenMove { "e6" to "f5" }
                 removeTooltip()
                 tooltip {Text("Capture")}
-                delay(0.5.seconds)
+                delay(2.seconds)
                 removeTooltip()
             }
 
@@ -209,7 +209,7 @@ object Tutorials {
                 removeTooltip()
                 tooltip {Text("You win !")}
                 flashKeizarPiece()
-                delay(0.5.seconds)
+                delay(2.seconds)
                 removeTooltip()
             }
 
