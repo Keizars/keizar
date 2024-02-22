@@ -258,6 +258,9 @@ abstract class BaseGameBoardViewModel(
     private val game: GameSession,
     @Stable override val selfPlayer: Player,
 ) : AbstractViewModel(), GameBoardViewModel {
+
+    open var arePiecesClickable: Boolean = true
+
     override val boardProperties = game.properties
 
     @Stable
@@ -386,6 +389,8 @@ abstract class BaseGameBoardViewModel(
     }
 
     override fun onClickPiece(piece: UiPiece) {
+        if (!arePiecesClickable) return
+
         val currentPick = currentPick.value
         if (currentPick == null) {
             if (piece.role != selfRole.value) return

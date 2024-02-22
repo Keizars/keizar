@@ -32,9 +32,10 @@ fun TutorialGameBoardViewModel(
 class TutorialGameBoardViewModel(
     @Stable
     val tutorialSession: TutorialSession,
-    game: GameSession = tutorialSession.game, selfPlayer: Player = tutorialSession.tutorial.player,
+    game: GameSession = tutorialSession.game, selfPlayer: Player = tutorialSession.tutorial.player
 ) : BaseGameBoardViewModel(game, selfPlayer) {
     override val startConfiguration: GameStartConfiguration = GameStartConfiguration.random()
+    override var arePiecesClickable: Boolean = false
 
     init {
         tutorialSession.requests.requestingShowPossibleMoves
