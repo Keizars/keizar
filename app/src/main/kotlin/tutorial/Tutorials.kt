@@ -7,7 +7,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -190,7 +189,7 @@ object Tutorials {
                 showPossibleMovesThenMove { "e8" to "e6" }
                 removeTooltip()
                 tooltip {Text("You stopped opponent")}
-                delay(0.5.seconds)
+                delay(2.seconds)
                 removeTooltip()
             }
 
@@ -205,7 +204,7 @@ object Tutorials {
                 showPossibleMovesThenMove { "e6" to "f5" }
                 removeTooltip()
                 tooltip {Text("Capture")}
-                delay(0.5.seconds)
+                delay(2.seconds)
                 removeTooltip()
             }
 
