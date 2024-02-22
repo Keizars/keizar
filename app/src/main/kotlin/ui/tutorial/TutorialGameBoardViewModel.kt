@@ -3,7 +3,9 @@ package org.keizar.android.ui.tutorial
 import androidx.compose.runtime.Stable
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.launch
 import org.keizar.android.tutorial.Tutorial
@@ -50,6 +52,13 @@ class TutorialGameBoardViewModel(
                     }
                 }
                 emit(Unit)
+            }.launchIn(backgroundScope)
+
+        tutorialSession.requests.requestingFlashKeizar
+            .filterNotNull()
+            .mapLatest { keizar ->
+                boardTransitionController.flashWiningPiece()
+                keizar.respond()
             }.launchIn(backgroundScope)
     }
 }

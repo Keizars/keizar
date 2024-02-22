@@ -61,6 +61,11 @@ interface StepActionContext {
     suspend fun requestMovePlayer(from: BoardPos, to: BoardPos)
 
     /**
+     * Requests the player to flash the Keizar.
+     */
+    suspend fun flashKeizarPiece()
+
+    /**
      * Update the tooltip message displayed in the top center of the board.
      *
      * If the [duration] is [Duration.INFINITE], this function returns as soon as the message it set, and does not wait for it to disappear.

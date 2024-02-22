@@ -272,6 +272,10 @@ internal class TutorialSessionImpl(
                 // TODO: check if move is correct, otherwise request again
             }
 
+            override suspend fun flashKeizarPiece() {
+                requests.issueAndAwait(TutorialRequest.FlashKeizar())
+            }
+
             override suspend fun tooltip(duration: Duration, content: @Composable() (RowScope.() -> Unit)) {
                 presentation.tooltip.value = content
                 if (duration == Duration.INFINITE) {

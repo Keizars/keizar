@@ -50,6 +50,9 @@ abstract class TutorialRequests {
 
     @Stable
     val requestingCompose: Flow<TutorialRequest.Compose?> by lazy { filterRequest<TutorialRequest.Compose>() }
+
+    @Stable
+    val requestingFlashKeizar: Flow<TutorialRequest.FlashKeizar?> by lazy { filterRequest<TutorialRequest.FlashKeizar>() }
 }
 
 /**
@@ -99,6 +102,8 @@ sealed interface TutorialRequest<R> {
     ) : CompletableTutorialRequest<Unit>()
 
     class ClickNext : CompletableTutorialRequest<Unit>()
+
+    class FlashKeizar : CompletableTutorialRequest<Unit>()
 
     class ShowPossibleMoves(val logicalPos: BoardPos, val duration: Duration) : CompletableTutorialRequest<Unit>()
 }

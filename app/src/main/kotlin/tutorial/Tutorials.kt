@@ -106,6 +106,7 @@ object Tutorials {
                 }
                 showPossibleMovesThenMove { "e6" to "d5" }
                 tooltip { Text("KEIZÁR", color = PawnColors.Keizar) }
+                flashKeizarPiece()
                 removeTooltip()
             }
 
