@@ -7,9 +7,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import org.keizar.android.ui.rules.RuleReferencesPage
 import org.keizar.game.Role
@@ -93,15 +95,8 @@ object Tutorials {
 
             step("move as king to keizar") {
                 tooltip {
-                    Text(
+                    ShadowedText(
                         "King", color = PawnColors.King,
-                        style = LocalTextStyle.current
-                            .copy(
-                                shadow = Shadow(
-                                    color = Color.Black,
-                                    blurRadius = 1.dp.value,
-                                ),
-                            )
                     )
                 }
                 showPossibleMovesThenMove { "e6" to "d5" }
@@ -176,7 +171,7 @@ object Tutorials {
                 tooltip { Text("Pawn") }
                 showPossibleMovesThenMove { "e5" to "e6" }
                 removeTooltip()
-                tooltip {Text("King", color = PawnColors.King)}
+                tooltip { ShadowedText("King", color = PawnColors.King) }
                 delay(1.seconds)
                 removeTooltip()
                 tooltip {Text("Opponent threatened Keizar")}
@@ -189,7 +184,7 @@ object Tutorials {
                 showPossibleMovesThenMove { "e8" to "e6" }
                 removeTooltip()
                 tooltip {Text("You stopped opponent")}
-                delay(2.seconds)
+                delay(0.5.seconds)
                 removeTooltip()
             }
 
@@ -200,11 +195,11 @@ object Tutorials {
             }
 
             step("capture") {
-                tooltip { Text("King", color = PawnColors.King) }
+                tooltip { ShadowedText("King", color = PawnColors.King) }
                 showPossibleMovesThenMove { "e6" to "f5" }
                 removeTooltip()
                 tooltip {Text("Capture")}
-                delay(2.seconds)
+                delay(0.5.seconds)
                 removeTooltip()
             }
 
@@ -255,6 +250,25 @@ object Tutorials {
     fun getById(id: String): Tutorial {
         return list.first { it.id == id }
     }
+}
+
+@Composable
+fun ShadowedText(
+    text: String,
+    color: Color,
+    shadowColor: Color = Color.Black,
+    style: TextStyle = LocalTextStyle.current,
+) {
+    Text(
+        text = text,
+        color = color,
+        style = style.copy(
+            shadow = Shadow(
+                color = shadowColor,
+                blurRadius = 5.dp.value,
+            )
+        ),
+    )
 }
 
 //@Composable
