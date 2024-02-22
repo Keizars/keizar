@@ -7,6 +7,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
+import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
@@ -124,6 +125,115 @@ object Tutorials {
         }
     }
 
+    val Refresher2 = buildTutorial("fresher-2") {
+        board {
+            tiles {
+                change("f3", TileType.ROOK)
+                change("a3", TileType.KNIGHT)
+                change("b5", TileType.BISHOP)
+                change("e8", TileType.QUEEN)
+                change("e6", TileType.KING)
+            }
+            round {
+                curRole { Role.WHITE }
+                resetPieces {
+                    white("d4")
+                    black("c6")
+                    black("e8")
+                    white("e5")
+                    white("f4")
+                    black("h8")
+                    white("h1")
+                }
+            }
+        }
+
+        playerStartAsBlack()
+
+        steps {
+            step("start")
+
+            step("move keizar") {
+                tooltip { Text("Pawn") }
+                showPossibleMovesThenMove { "d4" to "d5" }
+                removeTooltip()
+                tooltip {Text("Opponent captured Keizar", color = PawnColors.Keizar)}
+                flashKeizarPiece()
+                delay(0.5.seconds)
+                removeTooltip()
+            }
+
+            step("capture keizar") {
+                tooltip { Text("Capture") }
+                showPossibleMovesThenMove { "c6" to "d5" }
+                removeTooltip()
+                tooltip {Text("You captured Keizar", color = PawnColors.Keizar)}
+                flashKeizarPiece()
+                delay(0.5.seconds)
+                removeTooltip()
+            }
+
+            step("threat keizar") {
+                tooltip { Text("Pawn") }
+                showPossibleMovesThenMove { "e5" to "e6" }
+                removeTooltip()
+                tooltip {Text("King", color = PawnColors.King)}
+                delay(1.seconds)
+                removeTooltip()
+                tooltip {Text("Opponent threatened Keizar")}
+                delay(2.seconds)
+                removeTooltip()
+            }
+
+            step("stop opponent") {
+                tooltip { Text("Queen", color = PawnColors.Queen) }
+                showPossibleMovesThenMove { "e8" to "e6" }
+                removeTooltip()
+                tooltip {Text("You stopped opponent")}
+                delay(0.5.seconds)
+                removeTooltip()
+            }
+
+            step("white move") {
+                tooltip { Text("Pawn") }
+                showPossibleMovesThenMove { "f4" to "f5" }
+                removeTooltip()
+            }
+
+            step("capture") {
+                tooltip { Text("King", color = PawnColors.King) }
+                showPossibleMovesThenMove { "e6" to "f5" }
+                removeTooltip()
+                tooltip {Text("Capture")}
+                delay(0.5.seconds)
+                removeTooltip()
+            }
+
+            step("winning round") {
+                tooltip { Text("Pawn") }
+                showPossibleMovesThenMove { "h1" to "h2" }
+                removeTooltip()
+                tooltip {Text("You win !")}
+                flashKeizarPiece()
+                delay(0.5.seconds)
+                removeTooltip()
+            }
+
+            step("show rules") {
+                showBottomSheet {
+                    RuleReferencesPage(
+                        Modifier
+                            .padding(all = 16.dp)
+                            .verticalScroll(rememberScrollState())
+                    )
+                }
+            }.then(awaitNext = false) {
+                awaitNext("Finish")
+            }
+        }
+
+    }
+
     /**
      * Builds a move using the [moveBuilder], show the possible moves for the `from` position, then move the piece.
      *
@@ -140,6 +250,7 @@ object Tutorials {
 
     private val list = buildList {
         add(Refresher1)
+        add(Refresher2)
     }
 
     fun getById(id: String): Tutorial {

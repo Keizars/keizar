@@ -342,6 +342,7 @@ internal class TutorialSessionImpl(
                     when (step) {
                         is Action -> step.action(executionContext)
                         is Savepoint -> step.action(executionContext)
+                        else -> {}
                     }
                 } catch (e: CancellationException) {
                     // revoked

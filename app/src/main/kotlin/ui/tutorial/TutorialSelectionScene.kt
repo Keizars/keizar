@@ -73,7 +73,7 @@ fun TutorialSelectionPage(
 
             TutorialCard(
                 title = { Text(text = "Ending a Game") },
-                onClick = { onClickTutorial(Tutorials.Refresher1.id) },
+                onClick = { onClickTutorial(Tutorials.Refresher2.id) },
                 description = {
                     Text("Learn how to end the game by staying on the Keizar tile.")
                 },
