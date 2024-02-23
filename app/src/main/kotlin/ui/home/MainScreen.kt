@@ -13,6 +13,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,12 +33,18 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.get
 import androidx.navigation.navArgument
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.decodeFromHexString
+import kotlinx.serialization.encodeToHexString
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.keizar.android.R
+import org.keizar.android.data.SavedState
+import org.keizar.android.data.SavedStateRepository
 import org.keizar.android.tutorial.Tutorials
 import org.keizar.android.ui.game.configuration.GameConfigurationScene
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
+import org.keizar.android.ui.game.configuration.createBoard
 import org.keizar.android.ui.game.mp.MatchViewModel
 import org.keizar.android.ui.game.mp.MultiplayerGamePage
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
@@ -47,11 +54,34 @@ import org.keizar.android.ui.rules.RuleReferencesScene
 import org.keizar.android.ui.tutorial.TutorialScene
 import org.keizar.android.ui.tutorial.TutorialSelectionPage
 import org.keizar.android.ui.tutorial.TutorialSelectionScene
+import org.keizar.game.GameSession
+import org.keizar.game.snapshot.GameSnapshot
+import org.koin.core.context.GlobalContext
+
+private val json = Json { ignoreUnknownKeys = true }
 
 @Composable
 @Preview(showBackground = true)
 fun MainScreen() {
     val navController = rememberNavController()
+
+
+    LaunchedEffect(true) {
+        val repository = GlobalContext.get().get<SavedStateRepository>()
+        when (val savedState = repository.savedState.first()) {
+            SavedState.Empty -> {}
+            is SavedState.SinglePlayerGame -> {
+                val configuration = savedState.configuration
+                navController.navigate(navController.graph["game/single-player"].id, Bundle().apply {
+                    putString(
+                        "configuration",
+                        ProtoBuf.encodeToHexString(GameStartConfiguration.serializer(), configuration)
+                    )
+                    putString("savedSnapshot", json.encodeToString(GameSnapshot.serializer(), savedState.snapshot))
+                })
+            }
+        }
+    }
 
     val matchViewModel = remember {
         MatchViewModel()
@@ -65,16 +95,40 @@ fun MainScreen() {
         }
         composable(
             "game/single-player",
-            listOf(navArgument("configuration") {
-                nullable = false
-                type = NavType.StringType
-            })
+            listOf(
+                navArgument("configuration") {
+                    nullable = false
+                    type = NavType.StringType
+                },
+                navArgument("savedSnapshot") {
+                    nullable = true
+                    type = NavType.StringType
+                },
+            ),
         ) { entry ->
             entry.arguments?.getString("configuration")?.let {
-                val configuration = ProtoBuf.decodeFromHexString(GameStartConfiguration.serializer(), it)
+                val configuration = remember {
+                    ProtoBuf.decodeFromHexString(GameStartConfiguration.serializer(), it)
+                }
+
+                val session = remember(entry.arguments?.getString("savedSnapshot")) {
+                    val snapshot = entry.arguments?.getString("savedSnapshot")?.let {
+                        kotlin.runCatching { json.decodeFromString(GameSnapshot.serializer(), it) }
+                            .onFailure { it.printStackTrace() }
+                            .getOrNull()
+                    }
+
+                    if (snapshot == null) {
+                        GameSession.create(configuration.createBoard())
+                    } else {
+                        GameSession.restore(snapshot)
+                    }
+                }
+
                 SinglePlayerGameScene(
                     startConfiguration = configuration,
                     navController = navController,
+                    session = session,
                 )
             }
         }

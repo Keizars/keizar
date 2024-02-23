@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -25,6 +26,8 @@ import me.him188.ani.utils.logging.info
 import org.keizar.aiengine.AlgorithmAI
 import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.BuildConfig
+import org.keizar.android.data.SavedState
+import org.keizar.android.data.SavedStateRepository
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground
@@ -41,9 +44,11 @@ import org.keizar.game.RoundSession
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.seconds
 
-interface GameBoardViewModel {
+interface GameBoardViewModel : HasBackgroundScope {
     @Stable
     val startConfiguration: GameStartConfiguration
 
@@ -187,6 +192,9 @@ interface GameBoardViewModel {
     fun setGameOverReadyToBeAnnouncement(flag: Boolean)
 
     fun undo()
+
+
+    suspend fun removeSavedState() {}
 }
 
 @Composable
@@ -207,7 +215,9 @@ class SinglePlayerGameBoardViewModel(
 ) : BaseGameBoardViewModel(
     game,
     selfPlayer,
-) {
+), KoinComponent {
+    private val savedStateRepository: SavedStateRepository by inject()
+
     private val gameAi =
         when (difficulty) {
             Difficulty.EASY -> RandomGameAIImpl(
@@ -231,6 +241,20 @@ class SinglePlayerGameBoardViewModel(
             }
             gameAi.start()
         }
+
+        launchInBackground {
+            game.currentRound.flatMapLatest { it.curRole }.distinctUntilChanged().collect {
+                savedStateRepository.save(SavedState.SinglePlayerGame(startConfiguration, game.getSnapshot()))
+            }
+        }
+
+        launchInBackground {
+            game.currentRound.flatMapLatest { it.winner }.distinctUntilChanged().collect {
+                if (it != null) {
+                    savedStateRepository.save(SavedState.Empty)
+                }
+            }
+        }
     }
 
     override val startConfiguration: GameStartConfiguration
@@ -239,6 +263,10 @@ class SinglePlayerGameBoardViewModel(
             difficulty = difficulty,
             layoutSeed = boardProperties.seed ?: 0,
         )
+
+    override suspend fun removeSavedState() {
+        savedStateRepository.save(SavedState.Empty)
+    }
 }
 
 class MultiplayerGameBoardViewModel(
