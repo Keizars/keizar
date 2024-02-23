@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
@@ -243,13 +244,18 @@ class SinglePlayerGameBoardViewModel(
         }
 
         launchInBackground {
-            game.currentRound.flatMapLatest { it.curRole }.distinctUntilChanged().collect {
-                savedStateRepository.save(SavedState.SinglePlayerGame(startConfiguration, game.getSnapshot()))
-            }
+            game.currentRound.flatMapLatest { it.curRole }.distinctUntilChanged()
+                .combine(game.finalWinner) { role, winner ->
+                    role to winner
+                }
+                .filter { it.second == null }
+                .collect { (_, _) ->
+                    savedStateRepository.save(SavedState.SinglePlayerGame(startConfiguration, game.getSnapshot()))
+                }
         }
 
         launchInBackground {
-            game.currentRound.flatMapLatest { it.winner }.distinctUntilChanged().collect {
+            game.finalWinner.distinctUntilChanged().collect {
                 if (it != null) {
                     savedStateRepository.save(SavedState.Empty)
                 }
