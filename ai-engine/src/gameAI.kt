@@ -402,6 +402,8 @@ class ScoringAlgorithmAI(
                         }
                         if (bestPos != null) {
                             session.move(bestPos.first, bestPos.second)
+                        } else {
+                            println("No valid move found")
                         }
                     }
                 }
@@ -446,22 +448,14 @@ class ScoringAlgorithmAI(
         val tileArrangement = game.properties.tileArrangement
         // Initialize a internal game board for AI to maintain
         val tiles = initTiles()
-
         val board = createKeizarGraph(role, game)
-        board.forEach {
-            it.forEach { node ->
-                println(node.distance)
-            }
-        }
         val selfPieces = round.getAllPiecesPos(role).first()
         val opponentPieces = round.getAllPiecesPos(role.other()).first()
-        val highestScore = Int.MIN_VALUE
         val keizarCount =
             round.winningCounter.first()          // TODO: remember to update the keizarCount
         val keizarOpponentCapture =
             round.pieceAt(game.properties.keizarTilePos) != role // TODO: remember to update the keizarCapture
-        var chosenMove: Pair<BoardPos, BoardPos>? = null
-        chosenMove = findHighestScoreMove(
+        return findHighestScoreMove(
             selfPieces,
             tiles,
             opponentPieces,
@@ -469,13 +463,7 @@ class ScoringAlgorithmAI(
             board,
             keizarCount,
             keizarOpponentCapture,
-            highestScore,
-            chosenMove
         )
-        if (chosenMove == null) {
-            println("No valid move found")
-        }
-        return chosenMove
     }
 
     private fun findHighestScoreMove(
@@ -486,11 +474,9 @@ class ScoringAlgorithmAI(
         board: MutableList<MutableList<TileNode>>,
         keizarCount: Int,
         keizarCapture: Boolean,
-        highestScore: Int = Int.MIN_VALUE,
-        chosenMove: Pair<BoardPos, BoardPos>?
     ): Pair<BoardPos, BoardPos>? {
-        var highestScore1 = highestScore
-        var chosenMove1 = chosenMove
+        var highestScore1 = Int.MIN_VALUE
+        var chosenMove1: Pair<BoardPos, BoardPos>? = null
         selfPieces.forEach { pos ->
             // get the valid targets of the piece at pos
             val targets = ruleEngine.showValidMoves(tiles, pos) { index }
@@ -519,7 +505,7 @@ class ScoringAlgorithmAI(
                         keizarCapture
                     )
                 }
-                val newScore = selfScore - opponentScore
+                val newScore = selfScore - (opponentScore * 0.6).toInt()
                 if (newScore > highestScore1) {
                     highestScore1 = newScore
                     chosenMove1 = pos to target
