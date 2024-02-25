@@ -1,9 +1,8 @@
 package org.keizar.aiengine
 
-import kotlinx.coroutines.flow.first
-import org.keizar.game.GameSession
 import org.keizar.game.Role
 import org.keizar.game.TileType
+import org.keizar.game.internal.Tile
 import org.keizar.utils.communication.game.BoardPos
 import java.util.LinkedList
 import java.util.Queue
@@ -54,12 +53,13 @@ class NormalNode(
     distance,
     parents,
 )
+private val BoardPos.index get() = row * 8 + col
 
 suspend fun createKeizarGraph(
     role: Role,
-    game: GameSession = GameSession.create(0),
+    tiles: MutableList<Tile>,
+    tileArrangement: Map<BoardPos, TileType>,
 ):MutableList<MutableList<TileNode>> {
-    val tilesArrangement = game.properties.tileArrangement
     val board = mutableListOf(mutableListOf<TileNode>())
     for (i in 0 until 8) {
         val row = mutableListOf<TileNode>()
@@ -72,16 +72,18 @@ suspend fun createKeizarGraph(
             board.add(row)
         }
     }
-    val occupyKeizar = game.currentRound.first().pieceAt(BoardPos("d5"))
+    val occupyKeizar = tiles[BoardPos("d5").index].piece?.role
     val startFromKeizar = KeizarNode(occupyKeizar)
-    createNode(startFromKeizar, game, board, role)
+    board[4][3] = startFromKeizar
+    createNode(startFromKeizar, tiles, tileArrangement, board, role)
 
     return board
 }
 
-suspend fun createNode(
+fun createNode(
     root: TileNode,
-    game: GameSession,
+    tiles: MutableList<Tile>,
+    tileArrangement: Map<BoardPos, TileType>,
     board: MutableList<MutableList<TileNode>>,
     role: Role
 ) {
@@ -90,11 +92,11 @@ suspend fun createNode(
     while (queue.isNotEmpty()) {
         // the parent
         val node = queue.remove()
-        val fromTiles = getMoves(node.position, game, role)
+        val fromTiles = getMoves(node.position, tiles, tileArrangement, role)
 
         if (fromTiles.size > 0) {
             fromTiles.map {
-                val occupy = game.currentRound.first().pieceAt(it)
+                val occupy = tiles[it.index].piece?.role
                 if (board[it.row][it.col] !is NormalNode) {  // if the node has not been travelled
                     // create a new traversed node at this position, its parent list contains the current node
                     board[it.row][it.col] = NormalNode(it, occupy, node.distance + 1, mutableListOf(Pair(node, node.distance + 1)))
@@ -127,17 +129,17 @@ suspend fun createNode(
 
 }
 
-suspend fun getMoves (
+fun getMoves (
     target: BoardPos,
-    game: GameSession,
+    tiles: MutableList<Tile>,
+    tileArrangement: Map<BoardPos, TileType>,
     role:Role,
 ): MutableList<BoardPos> {
     val positionList = mutableListOf<BoardPos>()
-    val tileArrangement = game.properties.tileArrangement
 
     for (i in 0 until 8) {
         for (j in 0 until 8) {
-            when (game.properties.tileArrangement[BoardPos(i, j)]) {
+            when (tileArrangement[BoardPos(i, j)]) {
                 TileType.KING -> if (abs(target.col - j) <= 1
                     && abs(target.row - i) <= 1
                     && !(target.row == i && target.col == j)) {
@@ -147,7 +149,7 @@ suspend fun getMoves (
                 }
                 TileType.QUEEN -> if (!(target.row == i && target.col == j)
                     && (target.col == j || target.row == i || abs(target.col - j) == abs(target.row - i))) {
-                    val stopped = checkLines(target, j, i, game) || checkDiagonals(target, j, i, game)
+                    val stopped = checkLines(target, j, i, tiles) || checkDiagonals(target, j, i, tiles )
                     if (!stopped) {
                         positionList.add(
                             BoardPos(i, j)
@@ -156,7 +158,7 @@ suspend fun getMoves (
                 }
                 TileType.BISHOP -> if (!(target.row == i && target.col == j)
                     && (abs(target.col - j) == abs(target.row - i))) {
-                    val stopped = checkDiagonals(target, j, i, game)
+                    val stopped = checkDiagonals(target, j, i, tiles)
                     if (!stopped) {
                         positionList.add(
                             BoardPos(i, j)
@@ -171,7 +173,7 @@ suspend fun getMoves (
                 }
                 TileType.ROOK -> if (!(target.row == i && target.col == j)
                     && (target.col == j || target.row == i)) {
-                    val stopped = checkLines(target, j, i, game)
+                    val stopped = checkLines(target, j, i, tiles)
                     if (!stopped) {
                         positionList.add(
                             BoardPos(i, j)
@@ -181,9 +183,9 @@ suspend fun getMoves (
                 TileType.KEIZAR -> {}
                 TileType.PLAIN -> {
                     if (role == Role.WHITE) {
-                        checkForWhitePlain(i, target, j, positionList, game, tileArrangement, role)
+                        checkForWhitePlain(i, target, j, positionList, tiles, tileArrangement, role)
                     } else {
-                        checkForBlackPlain(i, j, target, positionList, game, tileArrangement, role)
+                        checkForBlackPlain(i, j, target, positionList, tiles, tileArrangement, role)
                     }
                 }
                 null -> {}
@@ -194,12 +196,12 @@ suspend fun getMoves (
     return positionList
 }
 
-private suspend fun checkForBlackPlain(
+private fun checkForBlackPlain(
     i: Int,
     j: Int,
     target: BoardPos,
     positionList: MutableList<BoardPos>,
-    game: GameSession,
+    tiles: MutableList<Tile>,
     tileArrangement: Map<BoardPos, TileType>,
     role: Role
 ) {
@@ -211,7 +213,7 @@ private suspend fun checkForBlackPlain(
                 )
             }
         } else {
-            checkValidForwardForPlain(target, j, i, positionList, game, tileArrangement, -1)
+            checkValidForwardForPlain(target, j, i, positionList, tiles, tileArrangement, -1)
         }
     } else {
         if (target.col == j && target.row - i == -1) {
@@ -220,20 +222,20 @@ private suspend fun checkForBlackPlain(
             )
         }
     }
-    checkPlainCapture(game, target, role, i, j, positionList, -1)
+    checkPlainCapture(tiles, target, role, i, j, positionList, -1)
 }
 
-private suspend fun checkForWhitePlain(
+private fun checkForWhitePlain(
     i: Int,
     target: BoardPos,
     j: Int,
     positionList: MutableList<BoardPos>,
-    game: GameSession,
+    tiles: MutableList<Tile>,
     tileArrangement: Map<BoardPos, TileType>,
     role: Role
 ) {
     if (i < 2) {
-        checkValidForwardForPlain(target, j, i, positionList, game, tileArrangement, 1)
+        checkValidForwardForPlain(target, j, i, positionList, tiles, tileArrangement, 1)
     } else {
         if (target.col == j && target.row - i == 1) {
             positionList.add(
@@ -241,14 +243,14 @@ private suspend fun checkForWhitePlain(
             )
         }
     }
-    checkPlainCapture(game, target, role, i, j, positionList, 1)
+    checkPlainCapture(tiles, target, role, i, j, positionList, 1)
 }
-private suspend fun checkValidForwardForPlain(
+private fun checkValidForwardForPlain(
     target: BoardPos,
     j: Int,
     i: Int,
     positionList: MutableList<BoardPos>,
-    game: GameSession,
+    tiles: MutableList<Tile>,
     tileArrangement: Map<BoardPos, TileType>,
     role: Int
 ) {
@@ -258,9 +260,8 @@ private suspend fun checkValidForwardForPlain(
                 BoardPos(i, j)
             )
         } else if (target.row - i == 2 * role) {
-            if (game.currentRound.first().pieceAt(
-                    BoardPos(target.row - role, target.col)
-                ) == null && tileArrangement[BoardPos(
+            if (tiles[BoardPos(target.row - role, target.col).index].piece?.role
+                 == null && tileArrangement[BoardPos(
                     target.row - role,
                     target.col
                 )] == TileType.PLAIN
@@ -273,8 +274,8 @@ private suspend fun checkValidForwardForPlain(
     }
 }
 
-private suspend fun checkPlainCapture(
-    game: GameSession,
+private fun checkPlainCapture(
+    tiles: MutableList<Tile>,
     target: BoardPos,
     role: Role,
     i: Int,
@@ -282,7 +283,7 @@ private suspend fun checkPlainCapture(
     positionList: MutableList<BoardPos>,
     offset: Int
 ) {
-    if (game.currentRound.first().pieceAt(target) == role.other()) {
+    if (tiles[target.index].piece?.role == role.other()) {
         if (target.row - i == offset && abs(target.col - j) == 1) {
             positionList.add(
                 BoardPos(i, j)
@@ -291,24 +292,24 @@ private suspend fun checkPlainCapture(
     }
 }
 
-private suspend fun checkLines(
+private fun checkLines(
     target: BoardPos,
     j: Int,
     i: Int,
-    game: GameSession
+    tiles: MutableList<Tile>,
 ): Boolean {
     var stopped = false
     if (target.col == j) {
         if (target.row > i) {
             for (row in i + 1 until target.row) {
-                if (game.currentRound.first().pieceAt(BoardPos(row, target.col)) != null) {
+                if (tiles[BoardPos(row, target.col).index].piece != null) {
                     stopped = true
                     break
                 }
             }
         } else if (target.row < i) {
             for (row in target.row + 1 until i) {
-                if (game.currentRound.first().pieceAt(BoardPos(row, target.col)) != null) {
+                if (tiles[BoardPos(row, target.col).index].piece != null) {
                     stopped = true
                     break
                 }
@@ -317,14 +318,14 @@ private suspend fun checkLines(
     } else if (target.row == i) {
         if (target.col > j) {
             for (col in j + 1 until target.col) {
-                if (game.currentRound.first().pieceAt(BoardPos(target.row, col)) != null) {
+                if (tiles[BoardPos(target.row, col).index].piece != null) {
                     stopped = true
                     break
                 }
             }
         } else if (target.col < j){
             for (col in target.col + 1 until j) {
-                if (game.currentRound.first().pieceAt(BoardPos(target.row, col)) != null) {
+                if (tiles[BoardPos(target.row, col).index].piece != null) {
                     stopped = true
                     break
                 }
@@ -334,17 +335,17 @@ private suspend fun checkLines(
     return stopped
 }
 
-private suspend fun checkDiagonals(
+private fun checkDiagonals(
     target: BoardPos,
     j: Int,
     i: Int,
-    game: GameSession
+    tiles: MutableList<Tile>,
 ): Boolean {
     var stopped = false
     if (target.row > i) {
         if (target.col > j) {
             for (offset in 1 until target.row - i) {
-                if (game.currentRound.first().pieceAt(BoardPos(target.row - offset, target.col - offset)) != null) {
+                if (tiles[BoardPos(target.row - offset, target.col - offset).index].piece != null) {
                     stopped = true
                     break
                 }
@@ -352,7 +353,7 @@ private suspend fun checkDiagonals(
         }
         else if (target.col < j) {
             for (offset in 1 until target.row - i) {
-                if (game.currentRound.first().pieceAt(BoardPos(target.row - offset, target.col + offset)) != null) {
+                if (tiles[BoardPos(target.row - offset, target.col + offset).index].piece != null) {
                     stopped = true
                     break
                 }
@@ -361,7 +362,7 @@ private suspend fun checkDiagonals(
     } else if (target.row < i) {
         if (target.col > j) {
             for (offset in 1 until target.row - i) {
-                if (game.currentRound.first().pieceAt(BoardPos(target.row + offset, target.col - offset)) != null) {
+                if (tiles[BoardPos(target.row + offset, target.col - offset).index].piece != null) {
                     stopped = true
                     break
                 }
@@ -369,7 +370,7 @@ private suspend fun checkDiagonals(
         }
         else if (target.col < j){
             for (offset in 1 until target.row - i) {
-                if (game.currentRound.first().pieceAt(BoardPos(target.row + offset, target.col + offset)) != null) {
+                if (tiles[BoardPos(target.row + offset, target.col + offset).index].piece != null) {
                     stopped = true
                     break
                 }
