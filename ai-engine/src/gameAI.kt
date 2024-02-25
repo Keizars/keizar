@@ -427,7 +427,7 @@ class ScoringAlgorithmAI(
 
     private val BoardPos.index get() = row * game.properties.width + col
 
-    private fun initTiles(): MutableList<Tile> {
+    private suspend fun initTiles(pieces: List<Piece>): MutableList<Tile> {
         val boardProperties = game.properties
         val tiles = MutableList(boardProperties.width * boardProperties.height) {
             Tile(TileType.PLAIN)
@@ -435,12 +435,9 @@ class ScoringAlgorithmAI(
         boardProperties.tileArrangement.toList().map { (pos, type) ->
             tiles[pos.index] = Tile(type)
         }
-        var index = 0
-        for ((color, startingPos) in boardProperties.piecesStartingPos) {
-            for (pos in startingPos) {
-                val piece = MutablePiece(index++, color, MutableStateFlow(pos))
-                tiles[pos.index].piece = piece.asPiece()
-            }
+        for (piece in pieces) {
+            val pos = piece.pos.first()
+            tiles[pos.index].piece = piece
         }
         return tiles
     }
@@ -449,7 +446,7 @@ class ScoringAlgorithmAI(
         // tile arrangement
         val tileArrangement = game.properties.tileArrangement
         // Initialize a internal game board for AI to maintain
-        val tiles = initTiles()
+        val tiles = initTiles(round.pieces)
         val board = createKeizarGraph(role, game)
         val boardOpposite = createKeizarGraph(role.other(), game)
         return findHighestScoreMove(
@@ -479,9 +476,9 @@ class ScoringAlgorithmAI(
             val pos = tile.piece?.pos?.first() ?: return@forEach
             val piece = tile.piece?: return@forEach
             val targets = ruleEngine.showValidMoves(tiles, piece) { index }
-//            for (target in targets) {
-//                println(target)
-//            }
+            for (target in targets) {
+                println(target)
+            }
 
             targets.forEach { target ->
                 val targetPiece = updateInternalMove(tiles, pos, target)
@@ -513,7 +510,7 @@ class ScoringAlgorithmAI(
                 }
                 val opponentScore = tiles.filter { tile -> tile.piece?.role == role.other() }.sumOf { tile ->
                     val tilePos = tile.piece?.pos?.first() ?: return@sumOf 0
-                    val node = board[tilePos.row][tilePos.col]
+                    val node = boardOpposite[tilePos.row][tilePos.col]
                     score(
                         node,
                         keizarCount,
