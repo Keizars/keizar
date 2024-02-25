@@ -32,8 +32,8 @@ suspend fun parameterComparison(keizarThreshold1 : Int,
             possibleMovesThreshold = possibleMovesThreshold2,
             noveltyLevel = noveltyLevel2
         )
-        val ai1 = AlgorithmAI(game, Player.FirstWhitePlayer, context, true, ai1Parameter)
-        val ai2 = AlgorithmAI(game, Player.FirstBlackPlayer, context, true, ai2Parameter)
+        val ai1 = ScoringAlgorithmAI(game, Player.FirstWhitePlayer, context, true)
+        val ai2 = ScoringAlgorithmAI(game, Player.FirstBlackPlayer, context, true)
         ai1.start()
         ai2.start()
         val winner = game.finalWinner.filterNotNull().first()
