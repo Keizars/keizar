@@ -5,19 +5,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
 import org.keizar.game.GameSession
-import org.keizar.game.MutablePiece
 import org.keizar.game.Piece
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import org.keizar.game.TileType
-import org.keizar.game.asPiece
 import org.keizar.game.internal.RuleEngineCore
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.Tile
@@ -436,8 +433,10 @@ class ScoringAlgorithmAI(
             tiles[pos.index] = Tile(type)
         }
         for (piece in pieces) {
-            val pos = piece.pos.first()
-            tiles[pos.index].piece = piece
+            if (!piece.isCaptured.first()) {
+                val pos = piece.pos.first()
+                tiles[pos.index].piece = piece
+            }
         }
         return tiles
     }
@@ -447,90 +446,174 @@ class ScoringAlgorithmAI(
         val tileArrangement = game.properties.tileArrangement
         // Initialize a internal game board for AI to maintain
         val tiles = initTiles(round.pieces)
-        val board = createKeizarGraph(role, tiles, tileArrangement)
-        val boardOpposite = createKeizarGraph(role.other(), tiles, tileArrangement)
-        return findHighestScoreMove(
+        var keizarCapture = round.pieceAt(game.properties.keizarTilePos)
+        var keizarCount = round.winningCounter.value
+        // selfMove1 is the first move of the AI
+        val selfMove1 = findHighestScoreMove(
             tiles,
-            board,
-            boardOpposite,
-            round,
+            tileArrangement,
+            keizarCount,
+            keizarCapture,
             role
         )
+        if (selfMove1 != null) {
+            // update the internal game board
+            updateInternalMove(tiles, selfMove1.first, selfMove1.second)
+            val updateKeizarPair1 = updateKeizarState(tiles, role, keizarCapture, keizarCount)
+            keizarCapture = updateKeizarPair1.first
+            keizarCount = updateKeizarPair1.second
+            // opponentMove1 is the first move of the opponent
+            val opponentMove1 = findHighestScoreMove(
+                tiles,
+                tileArrangement,
+                keizarCount,
+                keizarCapture,
+                role.other()
+            )
+            if (opponentMove1 != null) {
+                // update the internal game board
+                updateInternalMove(tiles, opponentMove1.first, opponentMove1.second)
+                val updateKeizarPair2 = updateKeizarState(tiles, role, keizarCapture, keizarCount)
+                keizarCapture = updateKeizarPair2.first
+                keizarCount = updateKeizarPair2.second
+                // selfMove2 is the second move of the AI
+                val selfMove2 = findHighestScoreMove(
+                    tiles,
+                    tileArrangement,
+                    keizarCount,
+                    keizarCapture,
+                    role
+                )
+                if (selfMove2 != null) {
+                    // update the internal game board
+                    updateInternalMove(tiles, selfMove2.first, selfMove2.second)
+                    val updateKeizarPair3 = updateKeizarState(tiles, role, keizarCapture, keizarCount)
+                    keizarCapture = updateKeizarPair3.first
+                    keizarCount = updateKeizarPair3.second
+                    // opponentMove2 is the second move of the opponent
+                    val opponentMove2 = findHighestScoreMove(
+                        tiles,
+                        tileArrangement,
+                        keizarCount,
+                        keizarCapture,
+                        role.other()
+                    )
+                    if (opponentMove2 != null) {
+                        // update the internal game board
+                        updateInternalMove(tiles, opponentMove2.first, opponentMove2.second)
+                        val updateKeizarPair4 = updateKeizarState(tiles, role, keizarCapture, keizarCount)
+                        keizarCapture = updateKeizarPair4.first
+                        keizarCount = updateKeizarPair4.second
+                        // selfMove3 is the third move of the AI
+                        val selfMove3 = findHighestScoreMove(
+                            tiles,
+                            tileArrangement,
+                            keizarCount,
+                            keizarCapture,
+                            role
+                        )
+                    }
+                }
+            }
+        }
+        return selfMove1
     }
 
     private suspend fun findHighestScoreMove(
         tiles: MutableList<Tile>,
-        board: MutableList<MutableList<TileNode>>,
-        boardOpposite: MutableList<MutableList<TileNode>>,
-        round: RoundSession,
+        tileArrangement: Map<BoardPos, TileType>,
+        keizarCount: Int,
+        keizarCapture: Role?,
         role: Role
     ): Pair<BoardPos, BoardPos>? {
-        println("Board:")
-        printBoard(board)
-        println("Opponent Board:")
-        printBoard(boardOpposite)
-        var highestScore1 = Int.MIN_VALUE
+        val board = createKeizarGraph(role, tiles, tileArrangement)
+        val boardOpposite = createKeizarGraph(role.other(), tiles, tileArrangement)
+//        println("Board:")
+//        printBoard(board)
+//        println("Opponent Board:")
+//        printBoard(boardOpposite)
+        var highestScore = Int.MIN_VALUE
         var chosenMove1: Pair<BoardPos, BoardPos>? = null
-        var keizarCount =
-            round.winningCounter.first()          // TODO: remember to update the keizarCount
-        var keizarCapture =
-            round.pieceAt(game.properties.keizarTilePos) // TODO: remember to update the keizarCapture
-        tiles.filter{tile -> tile.piece?.role == role}.forEach { tile ->
+        var keizarCount1 = keizarCount
+        var keizarCapture1 = keizarCapture
+        tiles.filter { tile -> tile.piece?.role == role }.forEach { tile ->
             // get the valid targets of the piece at pos
             val pos = tile.piece?.pos?.first() ?: return@forEach
-            val piece = tile.piece?: return@forEach
+            val piece = tile.piece ?: return@forEach
             val targets = ruleEngine.showValidMoves(tiles, piece) { index }
-            val opponentWeight = 0.4
-
+            val opponentWeight = 0.8
+            print("Piece pos: ${tile.piece?.pos?.value}  ")
+            print("Target size: ${targets.size}  ")
+            for (target in targets) {
+                print("Target: $target ")
+            }
+            println()
             targets.forEach { target ->
                 val targetPiece = updateInternalMove(tiles, pos, target)
-
+                val tempKeizarCapture = keizarCapture1
+                val tempKeizarCount = keizarCount1
                 /// check and update keizar capture state
-                if (tiles[game.properties.keizarTilePos.index].piece?.role == role) {
-                    if (keizarCapture == role) {
-                        keizarCount += 1
-                    } else {
-                        keizarCapture = role
-                        keizarCount = 1
-                    }
-                } else if (tiles[game.properties.keizarTilePos.index].piece?.role == role.other()) {
-                    if (keizarCapture == role) {
-                        keizarCount = 1
-                    } else {
-                        keizarCapture = role.other()
-                    }
-                }
+                val pair = updateKeizarState(tiles, role, keizarCapture1, keizarCount1)
+                keizarCapture1 = pair.first
+                keizarCount1 = pair.second
                 val selfScore = tiles.filter { tile -> tile.piece?.role == role }.sumOf { tile ->
                     val tilePos = tile.piece?.pos?.first() ?: return@sumOf 0
                     val node = board[tilePos.row][tilePos.col]
                     score(
                         node,
-                        keizarCount,
-                        keizarCapture,
+                        keizarCount1,
+                        keizarCapture1,
                         role
                     )
                 }
-                val opponentScore = tiles.filter { tile -> tile.piece?.role == role.other() }.sumOf { tile ->
-                    val tilePos = tile.piece?.pos?.first() ?: return@sumOf 0
-                    val node = boardOpposite[tilePos.row][tilePos.col]
-                    score(
-                        node,
-                        keizarCount,
-                        keizarCapture,
-                        role.other()
-                    )
-                }
+                val opponentScore =
+                    tiles.filter { tile -> tile.piece?.role == role.other() }.sumOf { tile ->
+                        val tilePos = tile.piece?.pos?.first() ?: return@sumOf 0
+                        val node = boardOpposite[tilePos.row][tilePos.col]
+                        score(
+                            node,
+                            keizarCount1,
+                            keizarCapture1,
+                            role.other()
+                        )
+                    }
                 val newScore = selfScore - (opponentScore * opponentWeight).toInt()
-                if (newScore > highestScore1) {
-                    highestScore1 = newScore
+                if (newScore > highestScore) {
+                    highestScore = newScore
                     chosenMove1 = pos to target
                 }
+                keizarCapture1 = tempKeizarCapture
+                keizarCount1 = tempKeizarCount
                 undoInternalMove(tiles, pos, target, targetPiece)
             }
         }
-        println(highestScore1)
         println(chosenMove1)
         return chosenMove1
+    }
+
+    private fun updateKeizarState(
+        tiles: MutableList<Tile>,
+        role: Role,
+        keizarCapture: Role?,
+        keizarCount: Int
+    ): Pair<Role?, Int> {
+        var keizarCapture1 = keizarCapture
+        var keizarCount1 = keizarCount
+        if (tiles[game.properties.keizarTilePos.index].piece?.role == role) {
+            if (keizarCapture1 == role) {
+                keizarCount1 += 1
+            } else {
+                keizarCapture1 = role
+                keizarCount1 = 1
+            }
+        } else if (tiles[game.properties.keizarTilePos.index].piece?.role == role.other()) {
+            if (keizarCapture1 == role) {
+                keizarCount1 = 1
+            } else {
+                keizarCapture1 = role.other()
+            }
+        }
+        return Pair(keizarCapture1, keizarCount1)
     }
 
     override suspend fun end() {
@@ -545,7 +628,12 @@ class ScoringAlgorithmAI(
             println()
         }
     }
-    private fun updateInternalMove(tiles: MutableList<Tile>, source: BoardPos, target: BoardPos): Piece? {
+
+    private fun updateInternalMove(
+        tiles: MutableList<Tile>,
+        source: BoardPos,
+        target: BoardPos
+    ): Piece? {
         val sourceIndex = source.index
         val targetIndex = target.index
         val targetPiece = tiles[targetIndex].piece
@@ -554,7 +642,12 @@ class ScoringAlgorithmAI(
         return targetPiece
     }
 
-    private fun undoInternalMove(tiles: MutableList<Tile>, source: BoardPos, target: BoardPos, originalPiece: Piece?) {
+    private fun undoInternalMove(
+        tiles: MutableList<Tile>,
+        source: BoardPos,
+        target: BoardPos,
+        originalPiece: Piece?
+    ) {
         val sourceIndex = source.index
         val targetIndex = target.index
         tiles[sourceIndex].piece = tiles[targetIndex].piece
@@ -567,20 +660,18 @@ class ScoringAlgorithmAI(
         keizarCapture: Role?,
         selfRole: Role
     ): Int {
-        if (node is KeizarNode) {
-            println(node.distance)
-        }
         return when (node.distance) {
             0 -> {
-                if (keizarCount == 1 && keizarCapture == selfRole.other()) {
+                if (keizarCount >= 0 && keizarCapture == selfRole.other()) {
                     Int.MAX_VALUE   // if distance is 0, and keizar is captured by the opponent, it means the piece is the most valuable
                 } else {
-                    12  // if distance is 0, it means the piece is on the keizar tile
+                    20  // if distance is 0, it means the piece is on the keizar tile
                 }
             }
+
             1 -> 10     // if distance is 1, it means the piece is one step away from the keizar tile
             2 -> 4      // if distance is 2, it means the piece is two steps away from the keizar tile
-            3 -> 2      // if distance is 3, it means the piece is three steps away from the keizar tile
+            3 -> 1      // if distance is 3, it means the piece is three steps away from the keizar tile
             else -> 0   // if distance is more than 3, it means the piece not valuable
         }
     }
