@@ -502,18 +502,20 @@ class ScoringAlgorithmAI(
                     }
                 }
                 val selfScore = tiles.filter { tile -> tile.piece?.role == role }.sumOf { tile ->
+                    val tilePos = tile.piece?.pos?.first() ?: return@sumOf 0
+                    val node = board[tilePos.row][tilePos.col]
                     score(
-                        tile,
-                        board,
+                        node,
                         keizarCount,
                         keizarCapture,
                         role
                     )
                 }
                 val opponentScore = tiles.filter { tile -> tile.piece?.role == role.other() }.sumOf { tile ->
+                    val tilePos = tile.piece?.pos?.first() ?: return@sumOf 0
+                    val node = board[tilePos.row][tilePos.col]
                     score(
-                        tile,
-                        boardOpposite,
+                        node,
                         keizarCount,
                         keizarCapture,
                         role.other()
@@ -552,48 +554,27 @@ class ScoringAlgorithmAI(
         tiles[targetIndex].piece = originalPiece
     }
 
-    private fun updateNewPieces(
-        selfPieces: MutableList<BoardPos>,
-        opponentPieces: MutableList<BoardPos>,
-        source: BoardPos,
-        target: BoardPos
-    ) {
-        selfPieces.remove(source)
-        selfPieces.add(target)
-        if (target in opponentPieces) {
-            opponentPieces.remove(target)
-        }
-    }
-
-
-    private suspend fun score(
-        tile: Tile,
-        board: MutableList<MutableList<TileNode>>,
+    private fun score(
+        node: TileNode,
         keizarCount: Int,
         keizarCapture: Role?,
         selfRole: Role
     ): Int {
-        val pos = tile.piece?.pos?.first()
-        if (pos != null) {
-            val node = board[pos.row][pos.col]
-            if (node is KeizarNode) {
-                println(node.distance)
-            }
-            return when (node.distance) {
-                0 -> {
-                    if (keizarCount == 1 && keizarCapture == selfRole.other()) {
-                        Int.MAX_VALUE   // if distance is 0, and keizar is captured by the opponent, it means the piece is the most valuable
-                    } else {
-                        12  // if distance is 0, it means the piece is on the keizar tile
-                    }
+        if (node is KeizarNode) {
+            println(node.distance)
+        }
+        return when (node.distance) {
+            0 -> {
+                if (keizarCount == 1 && keizarCapture == selfRole.other()) {
+                    Int.MAX_VALUE   // if distance is 0, and keizar is captured by the opponent, it means the piece is the most valuable
+                } else {
+                    12  // if distance is 0, it means the piece is on the keizar tile
                 }
-                1 -> 10     // if distance is 1, it means the piece is one step away from the keizar tile
-                2 -> 4      // if distance is 2, it means the piece is two steps away from the keizar tile
-                3 -> 2      // if distance is 3, it means the piece is three steps away from the keizar tile
-                else -> 0   // if distance is more than 3, it means the piece not valuable
             }
-        } else {
-            return 0
+            1 -> 10     // if distance is 1, it means the piece is one step away from the keizar tile
+            2 -> 4      // if distance is 2, it means the piece is two steps away from the keizar tile
+            3 -> 2      // if distance is 3, it means the piece is three steps away from the keizar tile
+            else -> 0   // if distance is more than 3, it means the piece not valuable
         }
     }
 
