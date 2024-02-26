@@ -254,7 +254,7 @@ private fun PreviewMatchPage(
 
 private open class BooleanProvider : CollectionPreviewParameterProvider<Boolean>(listOf(false, true))
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, heightDp = 250)
 @Composable
 private fun PreviewRoomsForJoin(
     @PreviewParameter(BooleanProvider::class) hasJoin: Boolean
@@ -274,7 +274,7 @@ private fun PreviewRoomsForJoin(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, heightDp = 250)
 @Composable
 private fun PreviewRoomsForHostingRoom(
     @PreviewParameter(BooleanProvider::class) roomCreated: Boolean
