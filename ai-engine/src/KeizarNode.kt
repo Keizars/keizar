@@ -382,3 +382,29 @@ private fun checkDiagonals(
 
 
 
+//                val selfScore = tiles.filter { tile -> tile.piece?.role == role }.sumOf { tile ->
+//                    val tilePos = tile.piece?.pos?.first() ?: return@sumOf 0
+//                    val node = board[tilePos.row][tilePos.col]
+//                    score(
+//                        node,
+//                        keizarCount1,
+//                        keizarCapture1,
+//                        role
+//                    )
+//                }
+//                val opponentScore =
+//                    tiles.filter { tile -> tile.piece?.role == role.other() }.sumOf { tile ->
+//                        val tilePos = tile.piece?.pos?.first() ?: return@sumOf 0
+//                        val node = boardOpposite[tilePos.row][tilePos.col]
+//                        score(
+//                            node,
+//                            keizarCount1,
+//                            keizarCapture1,
+//                            role.other()
+//                        )
+//                    }
+//                val newScore = selfScore - (opponentScore * opponentWeight).toInt()
+//                if (newScore > highestScore) {
+//                    highestScore = newScore
+//                    chosenMove1 = pos to target
+//                }
