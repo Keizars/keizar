@@ -26,11 +26,68 @@ import org.keizar.utils.communication.game.BoardPos
 interface RuleEngineCore {
     fun showValidMoves(tiles: List<Tile>, piece: Piece, index: BoardPos.() -> Int): List<BoardPos>
     fun showValidMoves(tiles: List<Tile>, pos: BoardPos, index: BoardPos.() -> Int): List<BoardPos>
+    fun showValidSource(
+        tiles: List<Tile>,
+        pos: BoardPos,
+        role: Role,
+        index: BoardPos.() -> Int
+    ): List<BoardPos>
 }
 
 class RuleEngineCoreImpl(
     private val boardProperties: BoardProperties,
 ) : RuleEngineCore {
+    override fun showValidSource(
+        tiles: List<Tile>,
+        pos: BoardPos,
+        role: Role,
+        index: BoardPos.() -> Int
+    ): List<BoardPos> {
+        val validSources = mutableListOf<BoardPos>()
+
+        val reverseSearchRoutes = listOf(
+            routesOf(TileType.ROOK, role) to listOf(TileType.ROOK, TileType.QUEEN),
+            routesOf(TileType.BISHOP, role) to listOf(TileType.BISHOP, TileType.QUEEN),
+            routesOf(TileType.KING, role) to listOf(TileType.KING),
+            routesOf(TileType.KNIGHT, role) to listOf(TileType.KNIGHT),
+        )
+
+        for ((routes, tileTypes) in reverseSearchRoutes) {
+            var curPos = pos
+            for (route in routes) {
+                for (step in 1..route.reach) {
+                    // take one step forward
+                    curPos = curPos.step(route.direction)
+
+                    // end this route if out of range
+                    if (curPos.outOfRange(boardProperties)) break
+
+                    // end this route if blocked by any piece
+                    if (tiles[curPos.index()].piece?.role != null) break
+
+                    // if the current tile is one of the target types, add it to the valid sources
+                    if (tiles[curPos.index()].type in tileTypes) {
+                        validSources.add(curPos)
+                    }
+                }
+            }
+        }
+
+        // special evaluation for pawns: diagonal blocks always seen as valid source, if the
+        // tile type is pawn; forward/backward one step only seen as valid source only if there
+        // is no piece on the target block.
+        val diagonalPos1 = pos.step(if (role == Role.WHITE) BL else FL)
+        val diagonalPos2 = pos.step(if (role == Role.WHITE) BR else FR)
+        if (tiles[diagonalPos1.index()].type == TileType.PLAIN) validSources.add(diagonalPos1)
+        if (tiles[diagonalPos2.index()].type == TileType.PLAIN) validSources.add(diagonalPos2)
+        if (tiles[pos.index()].piece == null) {
+            val oneStepPos = pos.step(if (role == Role.WHITE) B else F)
+            if (tiles[oneStepPos.index()].type == TileType.PLAIN) validSources.add(oneStepPos)
+        }
+
+        return validSources
+    }
+
     override fun showValidMoves(
         tiles: List<Tile>,
         piece: Piece,
@@ -188,7 +245,8 @@ class RuleEngineCoreImpl(
         // If it is a black piece that is the first 2 piece on a column next to the KEIZAR column,
         // it can't move 2 steps
         if (piece.role == Role.BLACK && abs(piece.pos.value.col - boardProperties.keizarTilePos.col)
-            == 1 && piece.pos.value.row == 7) {
+            == 1 && piece.pos.value.row == 7
+        ) {
             return false
         }
 
