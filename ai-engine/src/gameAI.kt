@@ -5,12 +5,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
 import org.keizar.game.GameSession
+import org.keizar.game.MutablePiece
 import org.keizar.game.Piece
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
@@ -558,10 +560,15 @@ class ScoringAlgorithmAI(
     ): Piece? {
         val sourceIndex = source.index
         val targetIndex = target.index
-        val targetPiece = tiles[targetIndex].piece
-        tiles[targetIndex].piece = tiles[sourceIndex].piece
+        val sourcePiece = tiles[sourceIndex].piece
+        val newSourcePiece = MutablePiece(
+            sourcePiece!!.index,
+            sourcePiece.role,
+            MutableStateFlow(target)
+        )
+        tiles[targetIndex].piece = newSourcePiece
         tiles[sourceIndex].piece = null
-        return targetPiece
+        return null
     }
 
     private fun undoInternalMove(
