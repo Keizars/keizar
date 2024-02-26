@@ -117,7 +117,7 @@ private fun OnlineMatchingSection(modifier: Modifier = Modifier) {
         )
 
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(text = "Not yet supported", style = MaterialTheme.typography.bodyMedium, fontStyle = FontStyle.Italic)
+            Text(text = "Coming soon", style = MaterialTheme.typography.bodyMedium, fontStyle = FontStyle.Italic)
         }
     }
 }
