@@ -50,6 +50,14 @@ class RuleEngineCoreImpl(
             routesOf(TileType.BISHOP, role) to listOf(TileType.BISHOP, TileType.QUEEN),
             routesOf(TileType.KING, role) to listOf(TileType.KING),
             routesOf(TileType.KNIGHT, role) to listOf(TileType.KNIGHT),
+
+            // special evaluation for pawns: diagonal blocks always seen as valid source, if the
+            // tile type is pawn; forward/backward one step only seen as valid source only if there
+            // is no piece on the target block.
+            listOf(
+                if (role == Role.WHITE) BL else FL,
+                if (role == Role.WHITE) BR else FR,
+            ).map { Route(it) } to listOf(TileType.PLAIN)
         )
 
         for ((routes, tileTypes) in reverseSearchRoutes) {
@@ -73,13 +81,6 @@ class RuleEngineCoreImpl(
             }
         }
 
-        // special evaluation for pawns: diagonal blocks always seen as valid source, if the
-        // tile type is pawn; forward/backward one step only seen as valid source only if there
-        // is no piece on the target block.
-        val diagonalPos1 = pos.step(if (role == Role.WHITE) BL else FL)
-        val diagonalPos2 = pos.step(if (role == Role.WHITE) BR else FR)
-        if (tiles[diagonalPos1.index()].type == TileType.PLAIN) validSources.add(diagonalPos1)
-        if (tiles[diagonalPos2.index()].type == TileType.PLAIN) validSources.add(diagonalPos2)
         if (tiles[pos.index()].piece == null) {
             val oneStepPos = pos.step(if (role == Role.WHITE) B else F)
             if (tiles[oneStepPos.index()].type == TileType.PLAIN) validSources.add(oneStepPos)
