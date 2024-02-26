@@ -1,7 +1,10 @@
 package org.keizar.aiengine
 
+import org.keizar.game.BoardProperties
 import org.keizar.game.Role
 import org.keizar.game.TileType
+import org.keizar.game.internal.RuleEngineCoreImpl
+import org.keizar.game.internal.RuleEngineImpl
 import org.keizar.game.internal.Tile
 import org.keizar.utils.communication.game.BoardPos
 import java.util.LinkedList
@@ -55,10 +58,9 @@ class NormalNode(
 )
 private val BoardPos.index get() = row * 8 + col
 
-suspend fun createKeizarGraph(
+fun createKeizarGraph(
     role: Role,
     tiles: MutableList<Tile>,
-    tileArrangement: Map<BoardPos, TileType>,
 ):MutableList<MutableList<TileNode>> {
     val board = mutableListOf(mutableListOf<TileNode>())
     for (i in 0 until 8) {
@@ -75,7 +77,7 @@ suspend fun createKeizarGraph(
     val occupyKeizar = tiles[BoardPos("d5").index].piece?.role
     val startFromKeizar = KeizarNode(occupyKeizar)
     board[4][3] = startFromKeizar
-    createNode(startFromKeizar, tiles, tileArrangement, board, role)
+    createNode(startFromKeizar, tiles, board, role)
 
     return board
 }
@@ -83,18 +85,19 @@ suspend fun createKeizarGraph(
 fun createNode(
     root: TileNode,
     tiles: MutableList<Tile>,
-    tileArrangement: Map<BoardPos, TileType>,
     board: MutableList<MutableList<TileNode>>,
     role: Role
 ) {
+    val ruleEngine = RuleEngineCoreImpl(BoardProperties.getStandardProperties())
     val queue: Queue<TileNode> = LinkedList()
     queue.add(root)
     while (queue.isNotEmpty()) {
         // the parent
         val node = queue.remove()
-        val fromTiles = getMoves(node.position, tiles, tileArrangement, role)
+//        val fromTiles = getMoves(node.position, tiles, tileArrangement, role)
+        val fromTiles = ruleEngine.showValidSource(tiles, node.position, role) { index }
 
-        if (fromTiles.size > 0) {
+        if (fromTiles.isNotEmpty()) {
             fromTiles.map {
                 val occupy = tiles[it.index].piece?.role
                 if (board[it.row][it.col] !is NormalNode) {  // if the node has not been travelled

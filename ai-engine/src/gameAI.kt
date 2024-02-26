@@ -121,109 +121,6 @@ class RandomGameAIImpl(
     }
 }
 
-//class QTableAI(
-//    override val game: GameSession = GameSession.create(0),
-//    override val myPlayer: Player,
-//    private val parentCoroutineContext: CoroutineContext,
-//    private val test: Boolean = false,
-//    private val endpoint: String = "http://home.him188.moe:4393"
-//) : GameAI {
-//
-//    private val client = HttpClient(CIO) {
-//        install(ContentNegotiation) {
-//            json()
-//        }
-//        Logging()
-//    }
-//
-//    private val myCoroutine: CoroutineScope =
-//        CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
-//
-//    override fun start() {
-//        myCoroutine.launch {
-//            game.currentRole(myPlayer).zip(game.currentRound) { myRole, session ->
-//                myRole to session
-//            }.collectLatest { (myRole, session) ->
-//                session.curRole.collect { currentRole ->
-//                    if (myRole == currentRole) {
-//                        val bestPos = findBestMove(session, currentRole)
-//                        if (!test) {
-//                            delay(Random.nextLong(1000L..1500L))
-//                        }
-//                        session.move(bestPos.first, bestPos.second)
-//                    }
-//                }
-//            }
-//        }
-//
-//        myCoroutine.launch {
-//            game.currentRound.flatMapLatest { it.winner }.collect {
-//                if (it != null) {
-//                    game.confirmNextRound(myPlayer)
-//                }
-//                if (!test) {
-//                    delay(Random.nextLong(1000L..1500L))
-//                }
-//            }
-//        }
-//    }
-//
-//    override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos> {
-//        val moves = round.getAllPiecesPos(role).first().flatMap { source ->
-//            round.getAvailableTargets(source).first().map { dest ->
-//                Move(source, dest, round.pieceAt(dest) != null)
-//            }
-//        }
-//
-//        val blackPiece = round.getAllPiecesPos(Role.BLACK).first()
-//        val whitePiece = round.getAllPiecesPos(Role.WHITE).first()
-//        val seed = game.properties.seed
-//        val resp = client.post(
-//            endpoint + "/AI/" + if (role == Role.BLACK) "black" else "white"
-//        ) {
-//            contentType(Application.Json)
-//            setBody(buildJsonObject {
-//                put("move", buildJsonArray {
-//                    for (m in moves) {
-//                        add(buildJsonArray {
-//                            add(m.source.row)
-//                            add(m.source.col)
-//                            add(m.dest.row)
-//                            add(m.dest.col)
-//                            add(m.isCapture)
-//                        })
-//                    }
-//                })
-//                put("black_pieces", buildJsonArray {
-//                    for (p in blackPiece) {
-//                        add(buildJsonArray {
-//                            add(p.row)
-//                            add(p.col)
-//                        })
-//                    }
-//                })
-//                put("white_pieces", buildJsonArray {
-//                    for (p in whitePiece) {
-//                        add(buildJsonArray {
-//                            add(p.row)
-//                            add(p.col)
-//                        })
-//                    }
-//                })
-//                put("seed", buildJsonArray { add(seed) })
-//            })
-//        }
-//        val move = resp.body<List<Int>>()
-//        return BoardPos(move[0], move[1]) to BoardPos(move[2], move[3])
-//    }
-//
-//    override suspend fun end() {
-//        myCoroutine.cancel()
-//    }
-//
-//}
-
-
 //class AlgorithmAI(
 //    override val game: GameSession = GameSession.create(0),
 //    override val myPlayer: Player,
@@ -457,6 +354,132 @@ class ScoringAlgorithmAI(
         )
     }
 
+    private suspend fun alphaBeta(
+        tiles: MutableList<Tile>,
+        tileArrangement: Map<BoardPos, TileType>,
+        maximizingPlayer: Role,
+        curRole: Role,
+        depth: Int,
+        alpha: MutableList<Int>,
+        beta: MutableList<Int>,
+        selfKeizarCount: Int,
+        selfKeizarCapture: Role?
+    ): Pair<Int, Pair<BoardPos, BoardPos>?> {
+        var selfKeizarCapture1 = selfKeizarCapture
+        var selfKeizarCount1 = selfKeizarCount
+        val opponentWeight = 0.8
+        if (depth == 0 || selfKeizarCount1 == 3) {
+            val board = createKeizarGraph(maximizingPlayer, tiles)
+            printBoard(board)
+            val boardOpposite =
+                createKeizarGraph(maximizingPlayer.other(), tiles)
+            var selfScore =
+                tiles.filter { tile -> tile.piece?.role == maximizingPlayer }
+                    .sumOf { tile ->
+                        val tilePos = tile.piece?.pos?.first() ?: return@sumOf 0
+                        val node = board[tilePos.row][tilePos.col]
+                        score(node, tileArrangement, maximizingPlayer)
+                    }
+            selfScore -= keizarBonus(selfKeizarCount1, selfKeizarCapture1, maximizingPlayer)
+            var opponentScore =
+                tiles.filter { tile -> tile.piece?.role == maximizingPlayer.other() }
+                    .sumOf { tile ->
+                        val tilePos = tile.piece?.pos?.first() ?: return@sumOf 0
+                        val node = boardOpposite[tilePos.row][tilePos.col]
+                        score(node, tileArrangement, maximizingPlayer.other())
+                    }
+            opponentScore -= keizarBonus(
+                selfKeizarCount1,
+                selfKeizarCapture1,
+                maximizingPlayer.other()
+            )
+            return Pair(selfScore - (opponentScore * opponentWeight).toInt(), null)
+        }
+        if (maximizingPlayer == curRole) {
+            var v = Int.MIN_VALUE
+            var bestMove: Pair<BoardPos, BoardPos>? = null
+            val possibleMoves = mutableListOf<Pair<BoardPos, BoardPos>>()
+            tiles.filter { tile -> tile.piece?.role == curRole }.forEach { tile ->
+                // get the valid targets of the piece at pos
+                val pos = tile.piece?.pos?.first() ?: return@forEach
+                val piece = tile.piece ?: return@forEach
+                val targets = ruleEngine.showValidMoves(tiles, piece) { index }
+                targets.forEach { target ->
+                    possibleMoves.add(pos to target)
+                }
+            }
+            for (move in possibleMoves) {
+                val pos = move.first
+                val target = move.second
+                updateInternalMove(tiles, pos, target)
+                /// check and update keizar capture state
+                val selfMove1 =
+                    updateKeizarState(tiles, curRole, selfKeizarCapture1, selfKeizarCount1)
+                selfKeizarCapture1 = selfMove1.first
+                selfKeizarCount1 = selfMove1.second
+                val pair =
+                    alphaBeta(
+                        tiles,
+                        tileArrangement,
+                        maximizingPlayer,
+                        curRole.other(),
+                        depth - 1,
+                        alpha,
+                        beta,
+                        selfKeizarCount1,
+                        selfKeizarCapture1
+                    )
+                if (pair.first > v) {
+                    v = pair.first
+                    bestMove = pos to target
+                }
+                alpha[0] = maxOf(alpha[0], v)
+                if (beta[0] <= alpha[0]) break
+            }
+            return Pair(v, bestMove)
+        } else {
+            var v = Int.MAX_VALUE
+            var bestMove: Pair<BoardPos, BoardPos>? = null
+            val possibleMoves = mutableListOf<Pair<BoardPos, BoardPos>>()
+            tiles.filter { tile -> tile.piece?.role == curRole }.forEach { tile ->
+                // get the valid targets of the piece at pos
+                val pos = tile.piece?.pos?.first() ?: return@forEach
+                val piece = tile.piece ?: return@forEach
+                val targets = ruleEngine.showValidMoves(tiles, piece) { index }
+                targets.forEach { target ->
+                    possibleMoves.add(pos to target)
+                }
+            }
+            for (move in possibleMoves) {
+                val pos = move.first
+                val target = move.second
+                updateInternalMove(tiles, pos, target)
+                val selfMoveOpposite =
+                    updateKeizarState(tiles, curRole.other(), selfKeizarCapture1, selfKeizarCount1)
+                selfKeizarCapture1 = selfMoveOpposite.first
+                selfKeizarCount1 = selfMoveOpposite.second
+                val pair = alphaBeta(
+                    tiles,
+                    tileArrangement,
+                    maximizingPlayer,
+                    curRole,
+                    depth - 1,
+                    alpha,
+                    beta,
+                    selfKeizarCount1,
+                    selfKeizarCapture1
+                )
+                if (pair.first < v) {
+                    v = pair.first
+                    bestMove = pos to target
+                }
+                beta[0] = minOf(beta[0], v)
+                if (beta[0] <= alpha[0]) break
+            }
+            return Pair(v, bestMove)
+        }
+    }
+
     private suspend fun findHighestScoreMove(
         tiles: MutableList<Tile>,
         tileArrangement: Map<BoardPos, TileType>,
@@ -464,103 +487,19 @@ class ScoringAlgorithmAI(
         keizarCapture: Role?,
         role: Role
     ): Pair<BoardPos, BoardPos>? {
-        var highestScore = Int.MIN_VALUE
-        var chosenMove1: Pair<BoardPos, BoardPos>? = null
-        var selfKeizarCount1 = keizarCount
-        var selfKeizarCapture1 = keizarCapture
-        val opponentWeight = 0.8
-
-        // Self first move
-        tiles.filter { tile -> tile.piece?.role == role }.forEach { tile ->
-            // get the valid targets of the piece at pos
-            val pos = tile.piece?.pos?.first() ?: return@forEach
-            val piece = tile.piece ?: return@forEach
-            val targets = ruleEngine.showValidMoves(tiles, piece) { index }
-            targets.forEach { target ->
-                val targetPiece = updateInternalMove(tiles, pos, target)
-                val selfTempKeizarCapture = selfKeizarCapture1
-                val selfTempKeizarCount = selfKeizarCount1
-                /// check and update keizar capture state
-                val selfMove1 = updateKeizarState(tiles, role, selfKeizarCapture1, selfKeizarCount1)
-                selfKeizarCapture1 = selfMove1.first
-                selfKeizarCount1 = selfMove1.second
-                var minScore = Int.MAX_VALUE
-                // Opponent first move
-                tiles.filter { it.piece?.role == role.other() }.forEach {
-                    val posOpposite = it.piece?.pos?.first() ?: return@forEach
-                    val pieceOpposite = it.piece ?: return@forEach
-                    val targetsOpposite = ruleEngine.showValidMoves(tiles, pieceOpposite) { index }
-                    targetsOpposite.forEach { targetOpposite ->
-                        val targetPieceOpposite = updateInternalMove(tiles, posOpposite, targetOpposite)
-                        val tempKeizarCaptureOpposite = selfKeizarCapture1
-                        val tempKeizarCountOpposite = selfKeizarCount1
-                        val selfMoveOpposite = updateKeizarState(tiles, role.other(), selfKeizarCapture1, selfKeizarCount1)
-                        selfKeizarCapture1 = selfMoveOpposite.first
-                        selfKeizarCount1 = selfMoveOpposite.second
-
-                        var highestScore2 = Int.MIN_VALUE
-                        tiles.filter { tile -> tile.piece?.role == role }.forEach { tile ->
-                            // get the valid targets of the piece at pos
-                            val selfPos2 = tile.piece?.pos?.first() ?: return@forEach
-                            val selfPiece2 = tile.piece ?: return@forEach
-                            val selfTargets2 = ruleEngine.showValidMoves(tiles, selfPiece2) { index }
-                            selfTargets2.forEach { target ->
-                                val selfTarget2 = updateInternalMove(tiles, selfPos2, target)
-                                val selfTempKeizarCapture2 = selfKeizarCapture1
-                                val selfTempKeizarCount2 = selfKeizarCount1
-                                /// check and update keizar capture state
-                                val selfMove2 = updateKeizarState(tiles, role, selfKeizarCapture1, selfKeizarCount1)
-                                selfKeizarCapture1 = selfMove2.first
-                                selfKeizarCount1 = selfMove2.second
-                                val board = createKeizarGraph(role, tiles, tileArrangement)
-                                val boardOpposite = createKeizarGraph(role.other(), tiles, tileArrangement)
-                                var selfScore =
-                                    tiles.filter { tile -> tile.piece?.role == role }.sumOf { tile ->
-                                        val tilePos = tile.piece?.pos?.first() ?: return@sumOf 0
-                                        val node = board[tilePos.row][tilePos.col]
-                                        score(node, tileArrangement, role)
-                                    }
-                                selfScore -= keizarBonus(selfKeizarCount1, selfKeizarCapture1, role)
-                                var opponentScore =
-                                    tiles.filter { tile -> tile.piece?.role == role.other() }
-                                        .sumOf { tile ->
-                                            val tilePos = tile.piece?.pos?.first() ?: return@sumOf 0
-                                            val node = boardOpposite[tilePos.row][tilePos.col]
-                                            score(node, tileArrangement, role.other())
-                                        }
-                                opponentScore -= keizarBonus(selfKeizarCount1, selfKeizarCapture1, role.other())
-                                val newScore = selfScore - (opponentScore * opponentWeight).toInt()
-//                                println("selfScore: $selfScore, opponentScore: $opponentScore, newScore: $newScore")
-
-                                if (newScore > highestScore2) {
-                                    highestScore2 = newScore
-                                }
-
-                                selfKeizarCapture1 = selfTempKeizarCapture2
-                                selfKeizarCount1 = selfTempKeizarCount2
-                                undoInternalMove(tiles, selfPos2, target, selfTarget2)
-                            }
-                        }
-                        if (highestScore2 < minScore) {
-                            minScore = highestScore2
-                        }
-
-                        selfKeizarCapture1 = tempKeizarCaptureOpposite
-                        selfKeizarCount1 = tempKeizarCountOpposite
-                        undoInternalMove(tiles, posOpposite, targetOpposite, targetPieceOpposite)
-                    }
-                }
-
-                if (minScore > highestScore) {
-                    highestScore = minScore
-                    chosenMove1 = pos to target
-                }
-
-                selfKeizarCapture1 = selfTempKeizarCapture
-                selfKeizarCount1 = selfTempKeizarCount
-                undoInternalMove(tiles, pos, target, targetPiece)
-            }
-        }
+        val pair = alphaBeta(
+            tiles,
+            tileArrangement,
+            role,
+            role,
+            5,
+            mutableListOf(Int.MIN_VALUE),
+            mutableListOf(Int.MAX_VALUE),
+            keizarCount,
+            keizarCapture
+        )
+        val highestScore = pair.first
+        val chosenMove1 = pair.second
         println(highestScore)
         println(chosenMove1)
         return chosenMove1
@@ -645,8 +584,8 @@ class ScoringAlgorithmAI(
         var score = when (node.distance) {
             0 -> 20
             1 -> 10     // if distance is 1, it means the piece is one step away from the keizar tile
-            2 -> 9      // if distance is 2, it means the piece is two steps away from the keizar tile
-            3 -> 8      // if distance is 3, it means the piece is three steps away from the keizar tile
+            2 -> 4      // if distance is 2, it means the piece is two steps away from the keizar tile
+            3 -> 1      // if distance is 3, it means the piece is three steps away from the keizar tile
             else -> 0   // if distance is more than 3, it means the piece not valuable
         }
         if (role == Role.BLACK) {
