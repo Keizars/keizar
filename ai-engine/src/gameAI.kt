@@ -11,9 +11,11 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
 import org.keizar.game.GameSession
+import org.keizar.game.Piece
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import org.keizar.game.TileType
+import org.keizar.game.internal.Tile
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
 import kotlin.coroutines.CoroutineContext
@@ -236,6 +238,7 @@ class AlgorithmAI(
 
     override fun start() {
         myCoroutine.launch {
+            val rememberStates = mutableListOf<Pair<BoardPos, BoardPos>>()
             game.currentRole(myPlayer).zip(game.currentRound) { myRole, session ->
                 myRole to session
             }.collectLatest { (myRole, session) ->
@@ -244,7 +247,6 @@ class AlgorithmAI(
                         if (!disableDelay) {
                             delay(Random.nextLong(1000L..1500L))
                         }
-                        val rememberStates = mutableListOf<Pair<BoardPos, BoardPos>>()
                         findBestMove(session, currentRole, rememberStates)
                     }
                 }
@@ -268,13 +270,32 @@ class AlgorithmAI(
         TODO("Not yet implemented")
     }
 
+    private val BoardPos.index get() = row * game.properties.width + col
+
+    private suspend fun initTiles(pieces: List<Piece>): MutableList<Tile> {
+        val boardProperties = game.properties
+        val tiles = MutableList(boardProperties.width * boardProperties.height) {
+            Tile(TileType.PLAIN)
+        }
+        boardProperties.tileArrangement.toList().map { (pos, type) ->
+            tiles[pos.index] = Tile(type)
+        }
+        for (piece in pieces) {
+            if (!piece.isCaptured.first()) {
+                val pos = piece.pos.first()
+                tiles[pos.index].piece = piece
+            }
+        }
+        return tiles
+    }
+
     private suspend fun findBestMove(
         round: RoundSession,
         role: Role,
         rememberStates: MutableList<Pair<BoardPos, BoardPos>>
     ): Pair<BoardPos, BoardPos>? {
-        val tiles = game.properties.tileArrangement
-        val board = createKeizarGraph(role, game)
+        val tiles = initTiles(round.pieces)
+        val board = createKeizarGraph(role, tiles)
         var minDistance = Int.MAX_VALUE
         var moves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf()
         val keizarMoves: MutableList<Pair<BoardPos, BoardPos>> = mutableListOf()
@@ -299,7 +320,8 @@ class AlgorithmAI(
 //                        val notRecOccupyPos = if (role == Role.WHITE) BoardPos("d4") else BoardPos("d6")
 //                        val notRecOccupy = tiles[notRecOccupyPos] == TileType.ROOK || tiles[notRecOccupyPos] == TileType.QUEEN || tiles[notRecOccupyPos] == TileType.KING
                         val checkCapture =
-                            tiles[node.position] != TileType.PLAIN || ((tiles[node.position] == TileType.PLAIN) && node.position.col != parent.first.position.col)
+                            tiles[node.position.index].type != TileType.PLAIN ||
+                                    ((tiles[node.position.index].type == TileType.PLAIN) && node.position.col != parent.first.position.col)
 //                        if (parent.first.position != notRecOccupyPos || notRecOccupy) {
                         if (parent.first.occupy == null || parent.first.occupy == role.other() && checkCapture) {
                             if (parent.second == 1) {
@@ -393,6 +415,7 @@ class AlgorithmAI(
             val lastMove = rememberState[size - 1]
             val secondLastMove = if (size > 1) rememberState[size - 2] else null
             val reverseMove = move.second to move.first
+            assert(move == move.first to move.second)
             if (reverseMove == lastMove) {
                 true
             } else move.first == lastMove.second && move.second == secondLastMove?.first && lastMove.first == secondLastMove.second
