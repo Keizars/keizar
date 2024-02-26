@@ -70,8 +70,13 @@ class RuleEngineCoreImpl(
                     // end this route if out of range
                     if (curPos.outOfRange(boardProperties)) break
 
-                    // end this route if blocked by any piece
-                    if (tiles[curPos.index()].piece?.role != null) break
+                    // end this route if blocked by any piece, and add it to valid source
+                    if (tiles[curPos.index()].piece?.role != null) {
+                        if (tiles[curPos.index()].type in tileTypes) {
+                            validSources.add(curPos)
+                        }
+                        break
+                    }
 
                     // if the current tile is one of the target types, add it to the valid sources
                     if (tiles[curPos.index()].type in tileTypes) {
