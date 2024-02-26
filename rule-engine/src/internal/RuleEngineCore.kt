@@ -81,9 +81,15 @@ class RuleEngineCoreImpl(
             }
         }
 
+        // special evaluation for pawns
         if (tiles[pos.index()].piece == null) {
             val oneStepPos = pos.step(if (role == Role.WHITE) B else F)
-            if (tiles[oneStepPos.index()].type == TileType.PLAIN) validSources.add(oneStepPos)
+            if (!oneStepPos.outOfRange(boardProperties) &&
+                tiles[oneStepPos.index()].piece?.role != null &&
+                tiles[oneStepPos.index()].type == TileType.PLAIN
+            ) {
+                validSources.add(oneStepPos)
+            }
         }
 
         return validSources
