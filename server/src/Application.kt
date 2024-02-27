@@ -16,7 +16,6 @@ import org.keizar.server.plugins.configureMultiplayerRouting
 import org.keizar.server.plugins.configureSecurity
 import org.keizar.server.plugins.configureSerialization
 import org.keizar.server.plugins.configureSockets
-import org.keizar.server.training.plugins.configureTrainingRouting
 
 fun main() {
     getServer().start(wait = true)
@@ -60,5 +59,4 @@ fun Application.module() {
     configureDatabases()
     configureSockets()
     configureMultiplayerRouting(context)
-    configureTrainingRouting(context)
 }

@@ -3,7 +3,7 @@ package org.keizar.server
 import kotlinx.coroutines.CoroutineScope
 import org.keizar.game.BoardProperties
 import org.keizar.server.database.DatabaseManagerImpl
-import org.keizar.server.gameroom.GameRoomManagerImpl
+import org.keizar.server.modules.GameRoomsModuleImpl
 import org.keizar.server.modules.AccountModuleImpl
 import org.keizar.server.utils.AesEncoder
 import org.keizar.server.utils.AuthTokenConfig
@@ -15,9 +15,7 @@ class ServerContext(
     parentCoroutineScope: CoroutineScope,
     logger: Logger,
 ) {
-    val gameRoomManager = GameRoomManagerImpl(parentCoroutineScope.coroutineContext, logger)
     private val databaseManager = DatabaseManagerImpl()
-
     val authTokenManager = AuthTokenManagerImpl(
         config = AuthTokenConfig(
             secret = "HolgerPirk", // TODO: Change this to a secure secret
@@ -25,10 +23,9 @@ class ServerContext(
         ),
         encoder = AesEncoder()
     )
+
     val accounts = AccountModuleImpl(databaseManager, authTokenManager)
-
-
-    var trainingBoardProperties = BoardProperties.getStandardProperties()
+    val gameRooms = GameRoomsModuleImpl(parentCoroutineScope.coroutineContext, logger)
 }
 
 fun setupServerContext(coroutineScope: CoroutineScope, logger: Logger): ServerContext {

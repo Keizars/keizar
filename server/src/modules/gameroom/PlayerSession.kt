@@ -1,4 +1,4 @@
-package org.keizar.server.gameroom
+package org.keizar.server.modules.gameroom
 
 import io.ktor.server.websocket.DefaultWebSocketServerSession
 import kotlinx.coroutines.cancel

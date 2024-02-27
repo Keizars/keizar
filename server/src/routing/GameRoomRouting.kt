@@ -17,9 +17,9 @@ import io.ktor.util.pipeline.PipelineContext
 import org.keizar.game.BoardProperties
 import org.keizar.game.RoomInfo
 import org.keizar.server.ServerContext
-import org.keizar.server.gameroom.GameRoom
-import org.keizar.server.gameroom.GameRoomManager
-import org.keizar.server.gameroom.PlayerSession
+import org.keizar.server.modules.gameroom.GameRoom
+import org.keizar.server.modules.GameRoomModule
+import org.keizar.server.modules.gameroom.PlayerSession
 import org.keizar.server.utils.checkUserId
 import org.keizar.server.utils.routeAuthenticated
 import org.keizar.utils.communication.message.UserInfo
@@ -27,7 +27,7 @@ import org.keizar.utils.communication.message.UserInfo
 fun Application.gameRoomRouting(context: ServerContext) {
     val logger = log
     routeAuthenticated {
-        val rooms: GameRoomManager = context.gameRoomManager
+        val rooms: GameRoomModule = context.gameRooms
         webSocket("/room/{roomNumber}") {
             val roomNumber: UInt = call.parameters["roomNumber"]?.toUIntOrNull()
                 ?: throw BadRequestException("Invalid room number")

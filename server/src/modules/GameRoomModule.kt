@@ -1,4 +1,4 @@
-package org.keizar.server.gameroom
+package org.keizar.server.modules
 
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.NotFoundException
@@ -8,6 +8,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.keizar.game.BoardProperties
+import org.keizar.server.modules.gameroom.GameRoom
+import org.keizar.server.modules.gameroom.PlayerSession
+import org.keizar.server.modules.gameroom.PlayerSessionImpl
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.message.UserInfo
 import org.slf4j.Logger
@@ -15,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentMap
 import kotlin.coroutines.CoroutineContext
 
-interface GameRoomManager {
+interface GameRoomModule {
     fun createRoom(roomNumber: UInt, properties: BoardProperties)
     fun getRoom(roomNumber: UInt): GameRoom
     fun joinRoom(roomNumber: UInt, userInfo: UserInfo)
@@ -28,10 +31,10 @@ interface GameRoomManager {
     suspend fun suspendUntilGameEnds(playerSession: PlayerSession)
 }
 
-class GameRoomManagerImpl(
+class GameRoomsModuleImpl(
     parentCoroutineContext: CoroutineContext,
     private val logger: Logger,
-) : GameRoomManager {
+) : GameRoomModule {
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
     private val gameRooms: ConcurrentMap<UInt, GameRoom> = ConcurrentHashMap()
