@@ -74,6 +74,7 @@ android {
         }
     }
     buildTypes {
+        val endpoint = getPropertyOrNull("keizar.server.endpoint") ?: "http://home.him188.moe:4392"
         release {
             isMinifyEnabled = true
             signingConfig = signingConfigs.getByName("debug")
@@ -82,10 +83,12 @@ android {
                 *sharedAndroidProguardRules(),
             )
             buildConfigField("boolean", "ENABLE_AI_DELAY", "true")
+            buildConfigField("String", "SERVER_ENDPOINT", "\"$endpoint\"")
         }
         debug {
             isMinifyEnabled = false
             buildConfigField("boolean", "ENABLE_AI_DELAY", "false")
+            buildConfigField("String", "SERVER_ENDPOINT", "\"$endpoint\"")
         }
     }
     buildFeatures {

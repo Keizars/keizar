@@ -9,7 +9,7 @@ import org.koin.dsl.module
 
 fun getKoinModule(): Module {
     return module {
-        single<KeizarClientFacade> { KeizarClientFacade() }
+        single<KeizarClientFacade> { KeizarClientFacade(BuildConfig.SERVER_ENDPOINT) }
         single<SavedStateRepository> { SavedStateRepository(androidContext().savedStateStore) }
     }
 }

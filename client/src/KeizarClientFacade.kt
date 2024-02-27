@@ -10,7 +10,7 @@ import org.keizar.utils.communication.message.UserInfo
 import kotlin.coroutines.CoroutineContext
 
 class KeizarClientFacade(
-    private val endpoint: String = "http://home.him188.moe:4392"
+    private val endpoint: String
 ) {
     private val client: KeizarHttpClient = KeizarHttpClientImpl(endpoint)
     private val room: GameRoomModule = GameRoomModuleImpl(client)
