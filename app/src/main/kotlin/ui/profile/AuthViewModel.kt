@@ -36,6 +36,7 @@ class AuthViewModel(
 
 
     val isProcessing: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    val agreementChecked: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     fun setUsername(username: String) {
         flushErrors()

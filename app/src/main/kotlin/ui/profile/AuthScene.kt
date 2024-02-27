@@ -6,13 +6,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalTextStyle
@@ -20,10 +23,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,6 +38,7 @@ import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -179,8 +186,89 @@ fun AuthPage(
             }
         }
 
+        var showTermsDialog by remember { mutableStateOf(false) }
+        if (showTermsDialog) {
+            AlertDialog(
+                onDismissRequest = { showTermsDialog = false },
+                dismissButton = {
+                    TextButton(onClick = {
+                        showTermsDialog = false
+                        viewModel.agreementChecked.value = false
+                    }) {
+                        Text("Disagree")
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        showTermsDialog = false
+                        viewModel.agreementChecked.value = true
+                    }) {
+                        Text("Agree")
+                    }
+                },
+                text = {
+                    Column {
+                        Text(text = "This is a test version of the KEIZÁR app.")
+                        Text(
+                            text = "By using this app some data regarding games played within this app will be shared anonymously with the publisher.",
+                            Modifier.padding(top = 8.dp)
+                        )
+                    }
+                }
+            )
+        }
+
+        AnimatedVisibility(isRegister) {
+            val agreementChecked by viewModel.agreementChecked.collectAsStateWithLifecycle()
+            Column(Modifier.fillMaxWidth()) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center,
+                ) {
+                    Checkbox(
+                        checked = agreementChecked,
+                        onCheckedChange = { viewModel.agreementChecked.value = it }
+                    )
+
+                    val text = buildAnnotatedString {
+//                        append(
+//                            """
+//                        I understand that by using this app some data regarding games played within this app will be shared anonymously with the publisher
+//                    """.trimIndent()
+//                        )
+                        append("I agree to the ")
+                        pushStyle(
+                            SpanStyle(
+                                color = MaterialTheme.colorScheme.primary,
+                                textDecoration = TextDecoration.Underline
+                            )
+                        )
+                        pushStringAnnotation("terms", "terms")
+                        append("terms and conditions")
+                        pop()
+                    }
+                    ClickableText(text = text, onClick = {
+                        if (text.getStringAnnotations("terms", 0, text.length).isEmpty()) {
+                            // Clicking "I agree to the"
+                            viewModel.agreementChecked.value = !agreementChecked
+                        } else {
+                            // Clicking "terms and conditions"
+                            showTermsDialog = true
+                        }
+                    })
+                }
+            }
+        }
+
         Button(
             onClick = {
+                if (!viewModel.agreementChecked.value) {
+                    showTermsDialog = true
+                    return@Button
+                }
                 println("Click Login: ${viewModel.isProcessing.value}")
                 if (viewModel.isProcessing.compareAndSet(expect = false, update = true)) {
                     viewModel.launchInBackground {
@@ -193,27 +281,27 @@ fun AuthPage(
                 }
             },
             enabled = !viewModel.isProcessing.collectAsStateWithLifecycle().value,
-            modifier = Modifier.padding(10.dp),
-            shape = RoundedCornerShape(8.dp)
+            modifier = Modifier.padding(8.dp),
         ) {
             Text(if (isRegister) "Sign up" else "Login")
         }
 
-        val highlightColor = MaterialTheme.colorScheme.secondary
-        val signUpMessage = remember(highlightColor) {
+        val highlightStyle =
+            SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)
+        val signUpMessage = remember(highlightStyle) {
             buildAnnotatedString {
                 append("Does not have an account? Please ")
-                pushStyle(SpanStyle(color = highlightColor))
+                pushStyle(highlightStyle)
                 append("sign up")
                 pop()
             }
         }
 
-        val loginMessage = remember(highlightColor) {
+        val loginMessage = remember(highlightStyle) {
             buildAnnotatedString {
                 append("Already have an account? Please ")
-                pushStyle(SpanStyle(color = highlightColor))
-                append("login")
+                pushStyle(highlightStyle)
+                append("log in")
                 pop()
             }
         }
@@ -222,15 +310,26 @@ fun AuthPage(
             text = if (!isRegister) signUpMessage else loginMessage,
             onClick = { viewModel.onClickSwitch() },
             style = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onBackground),
+            modifier = Modifier.padding(top = 8.dp)
         )
     }
 }
 
 @Preview
 @Composable
-private fun PreviewAuthScreen() {
+private fun PreviewLogin() {
     AuthScene(
         initialIsRegister = false,
+        onClickBack = {},
+        Modifier
+    )
+}
+
+@Preview
+@Composable
+private fun PreviewRegister() {
+    AuthScene(
+        initialIsRegister = true,
         onClickBack = {},
         Modifier
     )
