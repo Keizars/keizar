@@ -307,7 +307,7 @@ fun HomePage(navController: NavController) {
                 Text("Demo/Rules", textAlign = TextAlign.Center)
             }
 
-            Button(onClick = { }, modifier = Modifier.width(170.dp)) {
+            Button(onClick = { navController.navigate("about") }, modifier = Modifier.width(170.dp)) {
                 Text("About", textAlign = TextAlign.Center)
             }
 
