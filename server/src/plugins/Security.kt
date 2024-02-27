@@ -1,8 +1,10 @@
 package org.keizar.server.plugins
 
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.response.*
+import io.ktor.server.application.Application
+import io.ktor.server.auth.UserIdPrincipal
+import io.ktor.server.auth.authentication
+import io.ktor.server.auth.basic
+import io.ktor.server.auth.form
 
 fun Application.configureSecurity() {
     authentication {
@@ -18,7 +20,7 @@ fun Application.configureSecurity() {
         }
 
         form(name = "myauth2") {
-            userParamName = "user"
+            userParamName = "account"
             passwordParamName = "password"
             challenge {
                 /**/

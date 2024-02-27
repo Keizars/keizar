@@ -36,6 +36,8 @@ dependencies {
 
     implementation(libs.ktor.client.core)
     implementation(libs.koin.android)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.kotlinx.serialization)
     implementation(projects.aiEngine)
     implementation(projects.ruleEngine)
     implementation(projects.client)
