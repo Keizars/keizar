@@ -19,20 +19,5 @@ class LiteralChecker {
             }
             return AuthStatus.SUCCESS
         }
-
-        fun checkCourseCode(code: String): Boolean {
-            return code.length <= ModelConstraints.COURSE_CODE_MAX_LENGTH
-                    && check(code, ModelConstraints.CODE_REGEX)
-        }
-
-        fun checkArticleCode(code: String): Boolean {
-            return code.length <= ModelConstraints.ARTICLE_CODE_MAX_LENGTH
-                    && check(code, ModelConstraints.CODE_REGEX)
-        }
-
-        fun checkQuestionCode(code: String): Boolean {
-            return code.length <= ModelConstraints.QUESTION_CODE_MAX_LENGTH
-                    && check(code, ModelConstraints.CODE_REGEX)
-        }
     }
 }

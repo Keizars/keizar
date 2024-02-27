@@ -19,3 +19,8 @@ class AuthResponse(
 class UsernameValidityResponse(
     val validity: Boolean
 )
+
+@Serializable
+class ImageUrlExchange(
+    val url: String,
+)
