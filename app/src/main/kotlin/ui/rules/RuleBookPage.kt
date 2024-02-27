@@ -135,7 +135,7 @@ private fun PieceImage(
     ) {
         when (tileType) {
             TileType.KING -> Icon(
-                painter = painterResource(id = R.drawable.bishop_piece),
+                painter = painterResource(id = R.drawable.king_piece),
                 contentDescription = "King",
                 Modifier.matchParentSize(),
             )
