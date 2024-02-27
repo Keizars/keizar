@@ -34,9 +34,15 @@ import org.keizar.android.ui.game.Tile
 import org.keizar.android.ui.game.TileImage
 import org.keizar.game.TileType
 
+enum class RuleBookPage {
+    RULES,
+    SYMBOLS
+}
+
 @Composable
 fun RuleReferencesScene(
     onClickBack: () -> Unit,
+    page: RuleBookPage,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -60,7 +66,13 @@ fun RuleReferencesScene(
                 .padding(16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            RuleReferencesPage()
+            when (page) {
+                RuleBookPage.RULES ->
+                    RuleBookRules()
+
+                RuleBookPage.SYMBOLS ->
+                    RuleBookSymbols()
+            }
         }
     }
 }
@@ -69,6 +81,28 @@ fun RuleReferencesScene(
 fun RuleReferencesPage(
     modifier: Modifier = Modifier,
 ) {
+    Column(modifier) {
+        RuleBookRules()
+
+        RuleBookSymbols()
+    }
+}
+
+@Composable
+fun RuleBookSymbols(modifier: Modifier = Modifier) {
+    Column(modifier) {
+        Text(
+            text = "Symbols",
+            Modifier.padding(vertical = 16.dp),
+            style = MaterialTheme.typography.titleLarge
+        )
+
+        Symbols(Modifier.fillMaxWidth())
+    }
+}
+
+@Composable
+fun RuleBookRules(modifier: Modifier = Modifier) {
     Column(modifier) {
         Text(
             text = "Rules",
@@ -88,14 +122,6 @@ fun RuleReferencesPage(
                 }
             }
         }
-
-        Text(
-            text = "Symbols",
-            Modifier.padding(vertical = 16.dp),
-            style = MaterialTheme.typography.titleLarge
-        )
-
-        Symbols(Modifier.fillMaxWidth())
     }
 }
 

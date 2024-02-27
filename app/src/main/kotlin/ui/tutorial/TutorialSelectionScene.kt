@@ -1,5 +1,6 @@
 package org.keizar.android.ui.tutorial
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,14 +19,21 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import org.keizar.android.tutorial.Tutorials
+import org.keizar.android.ui.rules.RuleBookPage
 
 @Composable
 fun TutorialSelectionScene(
     onClickBack: () -> Unit,
+    onClickRuleBook: (page: RuleBookPage) -> Unit,
     onClickTutorial: (id: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -45,6 +53,7 @@ fun TutorialSelectionScene(
         },
     ) { contentPadding ->
         TutorialSelectionPage(
+            onClickRuleBook,
             onClickTutorial,
             Modifier
                 .padding(contentPadding)
@@ -55,15 +64,38 @@ fun TutorialSelectionScene(
 
 @Composable
 fun TutorialSelectionPage(
+    onClickRuleBook: (page: RuleBookPage) -> Unit,
     onClickTutorial: (id: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier) {
-        Text("Play a tutorial", style = MaterialTheme.typography.titleLarge)
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text("Rule Book", style = MaterialTheme.typography.titleLarge)
 
-        Column(Modifier.padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Column(Modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
             TutorialCard(
-                title = { Text(text = "Moving Pieces") },
+                title = { Text(text = "Symbols") },
+                onClick = { onClickRuleBook(RuleBookPage.SYMBOLS) },
+                description = {
+                    Text("See the meaning of the symbols on the game board.")
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            TutorialCard(
+                title = { Text(text = "Rules") },
+                onClick = { onClickRuleBook(RuleBookPage.RULES) },
+                description = {
+                    Text("Read detailed game rules.")
+                },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        Text("Demo", style = MaterialTheme.typography.titleLarge)
+
+        Column(Modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            TutorialCard(
+                title = { Text(text = "Moves Demo") },
                 onClick = { onClickTutorial(Tutorials.Refresher1.id) },
                 description = {
                     Text("Learn how to move pieces as a pawn, a rook, a knight, a bishop, a queen and a king. ")
@@ -72,7 +104,7 @@ fun TutorialSelectionPage(
             )
 
             TutorialCard(
-                title = { Text(text = "Ending a Game") },
+                title = { Text(text = "Win Demo") },
                 onClick = { onClickTutorial(Tutorials.Refresher2.id) },
                 description = {
                     Text("Learn how to end the game by staying on the Keizar tile.")
@@ -112,7 +144,46 @@ private fun TutorialCard(
 }
 
 @Composable
+fun TutorialSelectionDialog(
+    onDismissRequest: () -> Unit,
+    modifier: Modifier = Modifier,
+    properties: DialogProperties = DialogProperties(),
+    content: @Composable () -> Unit,
+) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = properties,
+    ) {
+        val shape = RoundedCornerShape(12.dp)
+        Column(
+            modifier
+                .clip(shape)
+                .shadow(4.dp)
+                .background(MaterialTheme.colorScheme.surface)
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            content()
+        }
+    }
+}
+
+@Composable
 @Preview
 private fun PreviewTutorialSelectionPage() {
-    TutorialSelectionScene({}, {})
+    TutorialSelectionScene({}, {}, {})
+}
+
+@Composable
+@Preview(showBackground = true)
+private fun PreviewTutorialSelectionDialog() {
+    TutorialSelectionDialog(onDismissRequest = { }) {
+        TutorialSelectionPage(
+            onClickTutorial = {
+            },
+            onClickRuleBook = {
+            },
+            modifier = Modifier.padding(all = 16.dp),
+        )
+    }
 }

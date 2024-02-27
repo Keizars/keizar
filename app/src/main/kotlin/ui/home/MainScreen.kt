@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,8 +49,10 @@ import org.keizar.android.ui.game.mp.MultiplayerGamePage
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
 import org.keizar.android.ui.game.mp.MultiplayerRoomScene
 import org.keizar.android.ui.game.sp.SinglePlayerGameScene
+import org.keizar.android.ui.rules.RuleBookPage
 import org.keizar.android.ui.rules.RuleReferencesScene
 import org.keizar.android.ui.tutorial.TutorialScene
+import org.keizar.android.ui.tutorial.TutorialSelectionDialog
 import org.keizar.android.ui.tutorial.TutorialSelectionPage
 import org.keizar.android.ui.tutorial.TutorialSelectionScene
 import org.keizar.game.GameSession
@@ -180,8 +181,21 @@ fun MainScreen() {
                 Modifier.fillMaxSize()
             )
         }
-        composable("rules") {
-            RuleReferencesScene(onClickBack = { navController.popBackStack() })
+        composable(
+            "rules/{page}",
+            arguments = listOf(navArgument("page") { type = NavType.StringType })
+        ) { entry ->
+            val page = entry.arguments?.getString("page").let {
+                when (it?.lowercase()) {
+                    "rules" -> RuleBookPage.RULES
+                    "symbols" -> RuleBookPage.SYMBOLS
+                    else -> RuleBookPage.RULES
+                }
+            }
+            RuleReferencesScene(
+                onClickBack = { navController.popBackStack() },
+                page = page,
+            )
         }
         composable(
             "tutorial/{tutorialId}",
@@ -198,6 +212,12 @@ fun MainScreen() {
             TutorialSelectionScene(
                 onClickBack = {
                     navController.popBackStack("home", false)
+                },
+                onClickRuleBook = {
+                    when (it) {
+                        RuleBookPage.RULES -> navController.navigate("rules/rules")
+                        RuleBookPage.SYMBOLS -> navController.navigate("rules/symbols")
+                    }
                 },
                 onClickTutorial = {
                     navController.navigate("tutorial/$it")
@@ -242,21 +262,30 @@ fun HomePage(navController: NavController) {
             }
 
             // Saved game Button
-            Button(onClick = { navController.navigate("rules") }, modifier = Modifier.width(170.dp)) {
-                Text("Rule Book", textAlign = TextAlign.Center)
+            Button(onClick = { navController.navigate("profile") }, modifier = Modifier.width(170.dp)) {
+                Text("Account", textAlign = TextAlign.Center)
             }
 
             // Tutorial Button
             var showTutorialSheet by remember { mutableStateOf(false) }
 
             if (showTutorialSheet) {
-                ModalBottomSheet(onDismissRequest = { showTutorialSheet = false }) {
+                TutorialSelectionDialog(onDismissRequest = {
+                    showTutorialSheet = false
+                }) {
                     TutorialSelectionPage(
                         onClickTutorial = {
                             showTutorialSheet = false
                             navController.navigate("tutorial/$it")
                         },
-                        Modifier.padding(all = 16.dp),
+                        onClickRuleBook = {
+                            showTutorialSheet = false
+                            when (it) {
+                                RuleBookPage.RULES -> navController.navigate("rules/rules")
+                                RuleBookPage.SYMBOLS -> navController.navigate("rules/symbols")
+                            }
+                        },
+                        modifier = Modifier.padding(all = 16.dp),
                     )
                 }
             }
@@ -264,7 +293,11 @@ fun HomePage(navController: NavController) {
             Button(onClick = {
                 showTutorialSheet = true
             }, modifier = Modifier.width(170.dp)) {
-                Text("Tutorial", textAlign = TextAlign.Center)
+                Text("Demo/Rules", textAlign = TextAlign.Center)
+            }
+
+            Button(onClick = { }, modifier = Modifier.width(170.dp)) {
+                Text("About", textAlign = TextAlign.Center)
             }
 
             val context = LocalContext.current
