@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -41,6 +42,7 @@ import org.keizar.android.R
 import org.keizar.android.data.SavedState
 import org.keizar.android.data.SavedStateRepository
 import org.keizar.android.tutorial.Tutorials
+import org.keizar.android.ui.about.AboutScene
 import org.keizar.android.ui.game.configuration.GameConfigurationScene
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
@@ -224,6 +226,15 @@ fun MainScreen() {
                 }
             )
         }
+        composable(
+            "about",
+        ) {
+            AboutScene(
+                onClickBack = {
+                    navController.popBackStack("home", false)
+                },
+            )
+        }
     }
 }
 
@@ -305,6 +316,19 @@ fun HomePage(navController: NavController) {
                 Text("Exit", textAlign = TextAlign.Center)
             }
         }
+
+        Column {
+            CopyrightText()
+        }
     }
+}
+
+@Composable
+fun CopyrightText() {
+    Text(
+        "© Zuboard Games 2024",
+        textAlign = TextAlign.Center,
+        style = MaterialTheme.typography.labelMedium
+    )
 }
 
