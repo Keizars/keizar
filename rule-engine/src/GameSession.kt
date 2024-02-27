@@ -10,6 +10,7 @@ import org.keizar.game.internal.RuleEngine
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
 import org.keizar.game.snapshot.GameSnapshot
+import org.keizar.game.statistics.PlayerStatistics
 import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
 import java.util.concurrent.atomic.AtomicInteger
@@ -38,8 +39,6 @@ interface GameSession {
     // The final winner. Emits a non-null value when the whole game ends.
     // Values could be GameResult.Winner(Player1/Player2) or GameResult.Draw.
     val finalWinner: Flow<GameResult?>
-
-    val playerStatistics: Map<Player, PlayerStatistics>
 
 
     // Returns the role (black/white) of the specified player in current round of game.
@@ -160,11 +159,6 @@ class GameSessionImpl(
 
     private val nextRoundAgreement: MutableList<Boolean>
     private val agreementCounter: AtomicInteger = AtomicInteger(0)
-
-    override val playerStatistics: Map<Player, PlayerStatistics> = mapOf(
-        Player.FirstBlackPlayer to PlayerStatistics(Player.FirstBlackPlayer),
-        Player.FirstWhitePlayer to PlayerStatistics(Player.FirstWhitePlayer),
-    )
 
     init {
         rounds = (0..<properties.rounds).map {
