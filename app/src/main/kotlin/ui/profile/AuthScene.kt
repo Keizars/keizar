@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
@@ -39,6 +40,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -102,7 +104,9 @@ fun AuthPage(
         val passwordError by viewModel.passwordError.collectAsStateWithLifecycle()
         val verifyPasswordError by viewModel.verifyPasswordError.collectAsStateWithLifecycle()
 
-        Box(modifier = Modifier.padding(bottom = 64.dp), contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier
+            .padding(bottom = 64.dp)
+            .widthIn(max = 256.dp), contentAlignment = Alignment.Center) {
             Icon(
                 painter = painterResource(id = R.drawable.keizar_icon),
                 contentDescription = "Keizar Icon",
@@ -316,6 +320,7 @@ fun AuthPage(
 }
 
 @Preview
+@Preview(device = Devices.TABLET)
 @Composable
 private fun PreviewLogin() {
     AuthScene(
@@ -326,6 +331,7 @@ private fun PreviewLogin() {
 }
 
 @Preview
+@Preview(device = Devices.TABLET)
 @Composable
 private fun PreviewRegister() {
     AuthScene(

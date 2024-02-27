@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -26,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -71,6 +73,7 @@ private val json = Json { ignoreUnknownKeys = true }
 
 @Composable
 @Preview(showBackground = true)
+@Preview(showBackground = true, device = Devices.TABLET)
 fun MainScreen() {
     val navController = rememberNavController()
 
@@ -286,7 +289,9 @@ fun HomePage(navController: NavController) {
         verticalArrangement = Arrangement.SpaceAround
     ) {
         // Title or logo can be added here
-        Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.Center) {
+        Box(modifier = Modifier
+            .weight(1f)
+            .widthIn(max = 256.dp), contentAlignment = Alignment.Center) {
             Icon(
                 painter = painterResource(id = R.drawable.keizar_icon),
                 contentDescription = "Keizar Icon",
