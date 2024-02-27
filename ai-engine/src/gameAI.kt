@@ -317,39 +317,50 @@ class AlgorithmAI(
                     }
                     node.parents.sortBy { parent -> parent.second }
                     for (parent in node.parents) {
-//                        val notRecOccupyPos = if (role == Role.WHITE) BoardPos("d4") else BoardPos("d6")
-//                        val notRecOccupy = tiles[notRecOccupyPos] == TileType.ROOK || tiles[notRecOccupyPos] == TileType.QUEEN || tiles[notRecOccupyPos] == TileType.KING
+                        val notRecOccupyPos =
+                            if (role == Role.WHITE) BoardPos("d4") else BoardPos("d6")
+                        val notRecOccupy =
+                            tiles[notRecOccupyPos.index].type == TileType.BISHOP || tiles[notRecOccupyPos.index].type == TileType.KNIGHT || tiles[notRecOccupyPos.index].type == TileType.PLAIN && keizarCapture != null
+                        val recOccupyPos =
+                            if (role == Role.WHITE) listOf(BoardPos("c4"), BoardPos("e4")) else listOf(BoardPos("c6"), BoardPos("e6"))
+                        val recOccupy = tiles[recOccupyPos[0].index].type == TileType.PLAIN || tiles[recOccupyPos[1].index].type == TileType.PLAIN
                         val checkCapture =
                             tiles[node.position.index].type != TileType.PLAIN ||
                                     ((tiles[node.position.index].type == TileType.PLAIN) && node.position.col != parent.first.position.col)
-//                        if (parent.first.position != notRecOccupyPos || notRecOccupy) {
-                        if (parent.first.occupy == null || parent.first.occupy == role.other() && checkCapture) {
-                            if (parent.second == 1) {
-                                keizarMoves.add(node.position to parent.first.position)
-                            }
-                            if (parent.second in 2..<minDistance && !checkCircle(
-                                    node.position to parent.first.position,
-                                    rememberStates
-                                )
-                            ) {
-                                minDistance = parent.second
-                                moves = mutableListOf(node.position to parent.first.position)
-                            } else if (parent.second == minDistance && !checkCircle(
-                                    node.position to parent.first.position,
-                                    rememberStates
-                                )
-                            ) {
+                        if ((parent.first.position == recOccupyPos[0] || parent.first.position == recOccupyPos[1]) && recOccupy) {
+                            if (parent.first.occupy == null || parent.first.occupy == role.other() && checkCapture) {
                                 moves.add(node.position to parent.first.position)
                             }
-                            if (parent.second in 2..aiParameters.possibleMovesThreshold && !checkCircle(
-                                    node.position to parent.first.position,
-                                    rememberStates
-                                )
-                            ) {
-                                candidateMoves.add(node.position to parent.first.position)
+                        } else {
+                            if (parent.first.position != notRecOccupyPos || !notRecOccupy) {
+                                if (parent.first.occupy == null || parent.first.occupy == role.other() && checkCapture) {
+                                    if (parent.second == 1) {
+                                        keizarMoves.add(node.position to parent.first.position)
+                                    }
+                                    if (parent.second in 2..<minDistance && !checkCircle(
+                                            node.position to parent.first.position,
+                                            rememberStates
+                                        )
+                                    ) {
+                                        minDistance = parent.second
+                                        moves = mutableListOf(node.position to parent.first.position)
+                                    } else if (parent.second == minDistance && !checkCircle(
+                                            node.position to parent.first.position,
+                                            rememberStates
+                                        )
+                                    ) {
+                                        moves.add(node.position to parent.first.position)
+                                    }
+                                    if (parent.second in 2..aiParameters.possibleMovesThreshold && !checkCircle(
+                                            node.position to parent.first.position,
+                                            rememberStates
+                                        )
+                                    ) {
+                                        candidateMoves.add(node.position to parent.first.position)
+                                    }
+                                }
                             }
                         }
-//                        }
                     }
                 }
             }
@@ -433,5 +444,5 @@ class AIParameters(
     val keizarThreshold: Int = 0,         // Allow capture keizar if keizarCount > keizarThreshold
     val possibleMovesThreshold: Int = 3,    // Collect all possible moves if distance < possibleMovesThreshold for novelty search (or not best move)
     val noveltyLevel: Double = 0.99,
-    val allowCaptureKeizarThreshold: Double = 0.5
+    val allowCaptureKeizarThreshold: Double = 0.3
 )    // The probability of not using novelty (or not best move) to enhance exploration of the game tree
