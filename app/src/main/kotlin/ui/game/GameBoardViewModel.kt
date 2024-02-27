@@ -132,6 +132,9 @@ interface GameBoardViewModel : HasBackgroundScope {
     val gameOverReadyToBeAnnounced: MutableStateFlow<Boolean>
 
     @Stable
+    val showGameOverResults: MutableStateFlow<Boolean>
+
+    @Stable
     val canUndo: StateFlow<Boolean>
 
     @Stable
@@ -210,6 +213,8 @@ interface GameBoardViewModel : HasBackgroundScope {
 
     fun setGameOverReadyToBeAnnouncement(flag: Boolean)
 
+    fun setShowGameOverResults(flag: Boolean)
+
     fun undo()
 
 
@@ -268,7 +273,12 @@ class SinglePlayerGameBoardViewModel(
                 }
                 .filter { it.second == null }
                 .collect { (_, _) ->
-                    savedStateRepository.save(SavedState.SinglePlayerGame(startConfiguration, game.getSnapshot()))
+                    savedStateRepository.save(
+                        SavedState.SinglePlayerGame(
+                            startConfiguration,
+                            game.getSnapshot()
+                        )
+                    )
                 }
         }
 
@@ -410,6 +420,11 @@ abstract class BaseGameBoardViewModel(
     @Stable
     override val gameOverReadyToBeAnnounced = _gameOverReadyToBeAnnounced
 
+    private val _showGameOverResults = MutableStateFlow(false)
+
+    @Stable
+    override val showGameOverResults = _showGameOverResults
+
     @Stable
     override val availablePositions: SharedFlow<List<BoardPos>?> =
         game.currentRound.flatMapLatest { turn ->
@@ -510,7 +525,8 @@ abstract class BaseGameBoardViewModel(
 
 
     suspend fun startPick(logicalPos: BoardPos) {
-        val piece = pieces.first().firstOrNull { it.pos.value == logicalPos } ?: error("No piece at $logicalPos")
+        val piece = pieces.first().firstOrNull { it.pos.value == logicalPos }
+            ?: error("No piece at $logicalPos")
         startPick(piece)
     }
 
@@ -565,6 +581,10 @@ abstract class BaseGameBoardViewModel(
 
     override fun setGameOverReadyToBeAnnouncement(flag: Boolean) {
         _gameOverReadyToBeAnnounced.value = flag
+    }
+
+    override fun setShowGameOverResults(flag: Boolean) {
+        _showGameOverResults.value = flag
     }
 
     override fun undo() {

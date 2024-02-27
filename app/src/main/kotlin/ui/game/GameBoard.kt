@@ -62,6 +62,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.flatMapLatest
 import org.keizar.android.ui.game.transition.CapturedPiecesHost
@@ -196,12 +197,12 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
         ActionButton(
             onClick = onClickHome,
             icon = { Icon(Icons.Default.Home, null) },
-            text = { Text("Home") })
+            text = { Text("Home", fontSize = 10.sp) })
 
         ActionButton(
             onClick = { vm.replayCurrentRound() },
             icon = { Icon(Icons.Default.Replay, null) },
-            text = { Text(text = "Replay") })
+            text = { Text(text = "Replay", fontSize = 10.sp) })
 
         var showDialog by remember { mutableStateOf(false) }
         val showResults = remember { mutableStateOf(true) }
@@ -211,7 +212,7 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
                 showResults.value = true
             },
             icon = { Icon(Icons.Default.Assessment, null) },
-            text = { Text(text = "Results") })
+            text = { Text(text = "Results", fontSize = 10.sp) })
 
         if (showDialog) {
             WinningRoundDialog(winner = vm.winner.collectAsState().value, vm, showResults)
@@ -221,7 +222,7 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
         ActionButton(
             onClick = { if (context is Activity) context.finish() },
             icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, null) },
-            text = { Text("Exit") })
+            text = { Text("Exit", fontSize = 10.sp) })
 
         ActionButton(
             onClick = {
@@ -229,7 +230,7 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
                 vm.setEndRoundAnnouncement(false)
             },
             icon = { Icon(Icons.Default.SkipNext, null) },
-            text = { Text("Next Round") }
+            text = { Text("Next Round", fontSize = 10.sp) }
         )
 
     }
@@ -254,7 +255,7 @@ fun RoundTwoBottomBar(
             ActionButton(
                 onClick = onClickHome,
                 icon = { Icon(Icons.Default.Home, null) },
-                text = { Text("Home") })
+                text = { Text("Home", fontSize = 10.sp) })
 
             ActionButton(
                 onClick = {
@@ -263,7 +264,7 @@ fun RoundTwoBottomBar(
                 },
 
                 icon = { Icon(Icons.Default.Replay, null) },
-                text = { Text(text = "Replay Round") })
+                text = { Text(text = "Replay Round", fontSize = 10.sp) })
 
             ActionButton(
                 onClick = {
@@ -272,13 +273,23 @@ fun RoundTwoBottomBar(
                 },
 
                 icon = { Icon(Icons.Default.Replay10, null) },
-                text = { Text(text = "Replay Game") })
+                text = { Text(text = "Replay Game", fontSize = 10.sp) })
 
 
             ActionButton(
                 onClick = { /*TODO*/ },
                 icon = { Icon(Icons.Default.Save, null) },
-                text = { Text("Save Game") })
+                text = { Text(text = "Save Game", fontSize = 10.sp) })
+
+            ActionButton(
+                onClick = { vm.setShowGameOverResults(true)},
+                icon = { Icon(Icons.Default.Assessment, null) },
+                text = {
+                    Text(
+                        text = "Results",
+                        fontSize = 10.sp
+                    )
+                })
         }
 
         Row(
@@ -313,7 +324,8 @@ fun RoundTwoBottomBar(
 @Composable
 fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome: () -> Unit) {
     val gameOverReadyToBeAnnounced by vm.gameOverReadyToBeAnnounced.collectAsState()
-    if (gameOverReadyToBeAnnounced) {
+    val showGameOverResults by vm.showGameOverResults.collectAsState()
+    if (gameOverReadyToBeAnnounced || showGameOverResults) {
         when (finalWinner) {
             null -> {
                 // do nothing
@@ -351,7 +363,10 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                         )
                     },
                     confirmButton = {
-                        Button(onClick = { vm.setGameOverReadyToBeAnnouncement(false) }) {
+                        Button(onClick = {
+                            vm.setGameOverReadyToBeAnnouncement(false)
+                            vm.setShowGameOverResults(false)
+                        }) {
                             Text(text = "OK")
                         }
                     })
@@ -363,7 +378,10 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                 AlertDialog(onDismissRequest = {},
                     title = { Text(text = "Game Over\n$winnerText") },
                     confirmButton = {
-                        Button(onClick = { vm.setGameOverReadyToBeAnnouncement(false) }) {
+                        Button(onClick = {
+                            vm.setGameOverReadyToBeAnnouncement(false)
+                            vm.setShowGameOverResults(false)
+                        }) {
                             Text(text = "Ok")
                         }
                     })
@@ -387,7 +405,8 @@ fun WinningRoundDialog(
 
     val numOfMovesFlow = if (currentRoundCount == 0) vm.round1NumOfMoves else vm.round2NumOfMoves
     val timeTakenFlow = if (currentRoundCount == 0) vm.round1TimeTaken else vm.round2TimeTaken
-    val averageTimeTakenFlow = if (currentRoundCount == 0) vm.round1AverageTimeTaken else vm.round2AverageTimeTaken
+    val averageTimeTakenFlow =
+        if (currentRoundCount == 0) vm.round1AverageTimeTaken else vm.round2AverageTimeTaken
 
     val numOfMoves by numOfMovesFlow.collectAsState()
     val timeTaken by timeTakenFlow.collectAsState()
