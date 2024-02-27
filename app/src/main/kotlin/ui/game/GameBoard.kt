@@ -11,11 +11,10 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -58,10 +57,10 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.flatMapLatest
@@ -100,53 +99,90 @@ fun GameBoardTopBar(
 fun GameBoard(
     vm: GameBoardViewModel,
     modifier: Modifier = Modifier,
+    boardOverlay: @Composable BoxScope.() -> Unit = { },
+) {
+    var boardGlobalCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
+
+    val tileSize by vm.pieceArranger.tileSize.collectAsStateWithLifecycle(DpSize.Zero)
+
+    CapturedPiecesHost(
+        capturedPieceHostState = vm.theirCapturedPieceHostState,
+        slotSize = tileSize,
+        sourceCoordinates = boardGlobalCoordinates,
+        Modifier.fillMaxWidth()
+    )
+
+    Box(modifier = modifier.onGloballyPositioned { boardGlobalCoordinates = it }) {
+        BoardBackground(vm, Modifier.matchParentSize())
+        BoardPieces(vm)
+        PossibleMovesOverlay(vm)
+        boardOverlay()
+    }
+
+    CapturedPiecesHost(
+        capturedPieceHostState = vm.myCapturedPieceHostState,
+        slotSize = tileSize,
+        sourceCoordinates = boardGlobalCoordinates,
+        Modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+fun GameBoardScaffold(
+    vm: GameBoardViewModel,
+    board: @Composable ColumnScope.() -> Unit,
+    modifier: Modifier = Modifier,
     topBar: @Composable () -> Unit = { GameBoardTopBar(vm) },
     bottomBar: @Composable () -> Unit = { },
     actions: @Composable RowScope.() -> Unit = {},
-    boardOverlay: @Composable BoxScope.() -> Unit = {},
 ) {
-    Column(modifier = Modifier.fillMaxSize()) {
-        Column(modifier = Modifier.weight(0.9f)) {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                topBar()
-            }
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            topBar()
+        }
 
-            var boardGlobalCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
+        board()
 
-            val tileSize by vm.pieceArranger.tileSize.collectAsStateWithLifecycle(DpSize.Zero)
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp), horizontalArrangement = Arrangement.End
+        ) {
+            actions()
+        }
 
-            CapturedPiecesHost(
-                capturedPieceHostState = vm.theirCapturedPieceHostState,
-                slotSize = tileSize,
-                sourceCoordinates = boardGlobalCoordinates,
-                Modifier.fillMaxWidth()
-            )
+        Row {
+            bottomBar()
+        }
+    }
+}
 
-            Box(modifier = modifier.onGloballyPositioned { boardGlobalCoordinates = it }) {
-                BoardBackground(vm, Modifier.matchParentSize())
-                BoardPieces(vm)
-                PossibleMovesOverlay(vm)
-                boardOverlay()
-            }
+@Composable
+fun GameBoardScaffoldLandscape(
+    vm: GameBoardViewModel,
+    board: @Composable ColumnScope.() -> Unit,
+    modifier: Modifier = Modifier,
+    topBar: @Composable () -> Unit = { GameBoardTopBar(vm) },
+    bottomBar: @Composable () -> Unit = { },
+    actions: @Composable RowScope.() -> Unit = {},
+) {
+    Column(modifier = modifier) {
+        Box(modifier = Modifier.fillMaxWidth()) {
+            topBar()
+        }
 
-            CapturedPiecesHost(
-                capturedPieceHostState = vm.myCapturedPieceHostState,
-                slotSize = tileSize,
-                sourceCoordinates = boardGlobalCoordinates,
-                Modifier.fillMaxWidth()
-            )
+        board()
 
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp), horizontalArrangement = Arrangement.End
-            ) {
-                actions()
-            }
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp), horizontalArrangement = Arrangement.End
+        ) {
+            actions()
+        }
 
-            Row {
-                bottomBar()
-            }
+        Row {
+            bottomBar()
         }
     }
 }
@@ -660,15 +696,16 @@ private fun ActionButton(
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, device = Devices.TABLET)
 @Composable
 private fun PreviewGameBoard() {
-    BoxWithConstraints {
-        val vm = rememberSinglePlayerGameBoardForPreview()
-        GameBoard(
-            vm,
-            modifier = Modifier.size(min(maxWidth, maxHeight)),
-        )
-    }
+    val vm = rememberSinglePlayerGameBoardForPreview()
+    GameBoardScaffold(
+        vm,
+        board = {
+            GameBoard(vm, Modifier.size(400.dp))
+        }
+    )
 }
 
 @Composable

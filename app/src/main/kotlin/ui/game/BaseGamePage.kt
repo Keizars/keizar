@@ -2,10 +2,12 @@ package org.keizar.android.ui.game
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.rounded.Home
@@ -25,11 +27,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import org.keizar.android.encode
 import org.keizar.android.ui.KeizarApp
+import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
 import org.keizar.game.Difficulty
@@ -89,21 +93,47 @@ fun BaseGamePage(
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            BoxWithConstraints {
-                GameBoard(
-                    vm,
-                    modifier = Modifier
-                        .padding(vertical = 16.dp)
-                        .size(min(maxWidth, maxHeight)),
-                    bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickGameConfig) },
-                    actions = actions,
-                )
+            if (isSystemInLandscape()) {
+                BoxWithConstraints(Modifier.padding(horizontal = 16.dp)) {
+                    val size = maxHeight - 200.dp
+                    GameBoardScaffold(
+                        vm,
+                        board = {
+                            GameBoard(
+                                vm = vm, Modifier
+                                    .padding(vertical = 16.dp)
+                                    .size(size)
+                            )
+                        },
+                        modifier = Modifier.width(IntrinsicSize.Min),
+                        bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickGameConfig) },
+                        actions = actions,
+                    )
+                }
+            } else {
+                BoxWithConstraints {
+                    val size = min(maxWidth, maxHeight)
+                    GameBoardScaffold(
+                        vm,
+                        board = {
+                            GameBoard(
+                                vm = vm, Modifier
+                                    .padding(vertical = 16.dp)
+                                    .size(size)
+                            )
+                        },
+                        modifier = Modifier.fillMaxSize(),
+                        bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickGameConfig) },
+                        actions = actions,
+                    )
+                }
             }
         }
     }
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, device = Devices.TABLET)
 @Composable
 private fun PreviewGamePage() {
     KeizarApp {

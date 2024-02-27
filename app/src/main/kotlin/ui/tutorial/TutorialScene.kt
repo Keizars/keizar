@@ -47,6 +47,7 @@ import org.keizar.android.tutorial.Tutorials
 import org.keizar.android.tutorial.respond
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.GameBoard
+import org.keizar.android.ui.game.GameBoardScaffold
 import org.keizar.android.ui.game.GameBoardTopBar
 import kotlin.time.Duration.Companion.seconds
 
@@ -103,11 +104,10 @@ private fun TutorialSelectionPage(
                     .weight(1f),
                 contentAlignment = Alignment.Center
             ) {
-                GameBoard(
+                val size = min(maxWidth, maxHeight)
+                GameBoardScaffold(
                     vm,
-                    modifier = Modifier
-                        .padding(vertical = 16.dp)
-                        .size(min(maxWidth, maxHeight)),
+                    modifier = Modifier.fillMaxSize(),
                     topBar = { GameBoardTopBar(vm = vm, turnStatusIndicator = null) },
                     actions = {
                         Box(
@@ -145,29 +145,37 @@ private fun TutorialSelectionPage(
                             }
                         }
                     },
-                    boardOverlay = {
-                        val tooltip by vm.tutorialSession.presentation.tooltip.collectAsState()
-                        Box(
-                            modifier = Modifier
-                                .align(Alignment.TopCenter)
-                                .padding(top = 16.dp)
-                        ) {
-                            androidx.compose.animation.AnimatedVisibility(
-                                visible = tooltip != null,
-                                enter = fadeIn(),
-                                exit = fadeOut(snap()),
-                            ) {
-                                Tooltip(
-                                    Modifier
+                    board = {
+                        GameBoard(
+                            vm,
+                            Modifier
+                                .padding(vertical = 16.dp)
+                                .size(size),
+                            boardOverlay = {
+                                val tooltip by vm.tutorialSession.presentation.tooltip.collectAsState()
+                                Box(
+                                    modifier = Modifier
                                         .align(Alignment.TopCenter)
+                                        .padding(top = 16.dp)
                                 ) {
-                                    ProvideTextStyle(value = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)) {
-                                        tooltip?.invoke(this)
+                                    androidx.compose.animation.AnimatedVisibility(
+                                        visible = tooltip != null,
+                                        enter = fadeIn(),
+                                        exit = fadeOut(snap()),
+                                    ) {
+                                        Tooltip(
+                                            Modifier
+                                                .align(Alignment.TopCenter)
+                                        ) {
+                                            ProvideTextStyle(value = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)) {
+                                                tooltip?.invoke(this)
+                                            }
+                                        }
                                     }
                                 }
                             }
-                        }
-                    }
+                        )
+                    },
                 )
             }
 
