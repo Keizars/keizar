@@ -1,29 +1,16 @@
 package org.keizar.server.plugins
 
 import io.ktor.server.application.Application
-import io.ktor.server.auth.UserIdPrincipal
 import io.ktor.server.auth.authentication
-import io.ktor.server.auth.basic
-import io.ktor.server.auth.form
+import io.ktor.server.auth.*
+import org.keizar.server.ServerContext
 
-fun Application.configureSecurity() {
+fun Application.configureSecurity(context: ServerContext) {
     authentication {
-        basic(name = "myauth1") {
-            realm = "Ktor Server"
-            validate { credentials ->
-                if (credentials.name == credentials.password) {
-                    UserIdPrincipal(credentials.name)
-                } else {
-                    null
-                }
-            }
-        }
-
-        form(name = "myauth2") {
-            userParamName = "account"
-            passwordParamName = "password"
-            challenge {
-                /**/
+        bearer("authBearer") {
+            authenticate { tokenCredential ->
+                context.authTokenManager.matchToken(tokenCredential.token)
+                    ?.let { UserIdPrincipal(it) }
             }
         }
     }

@@ -45,6 +45,9 @@ private fun getServer(): NettyApplicationEngine {
 }
 
 fun Application.module() {
+    val serverCoroutineScope = CoroutineScope(SupervisorJob())
+    val context = setupServerContext(serverCoroutineScope, log)
+
     install(CallLogging) {
         mdc("requestId") {
             it.request.queryParameters["requestId"]
@@ -52,12 +55,10 @@ fun Application.module() {
         level = org.slf4j.event.Level.INFO
     }
 
-    configureSecurity()
+    configureSecurity(context)
     configureSerialization()
     configureDatabases()
     configureSockets()
-    val serverCoroutineScope = CoroutineScope(SupervisorJob())
-    val context = setupServerContext(serverCoroutineScope, log)
     configureMultiplayerRouting(context)
     configureTrainingRouting(context)
 }

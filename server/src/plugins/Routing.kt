@@ -5,9 +5,9 @@ import io.ktor.server.application.call
 import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
-import kotlinx.coroutines.CoroutineScope
 import org.keizar.server.ServerContext
 import org.keizar.server.routing.gameRoomRouting
+import org.solvo.server.modules.authenticationRouting
 
 fun Application.configureMultiplayerRouting(context: ServerContext) {
     routing {
@@ -16,4 +16,5 @@ fun Application.configureMultiplayerRouting(context: ServerContext) {
         }
     }
     gameRoomRouting(context)
+    authenticationRouting(context)
 }
