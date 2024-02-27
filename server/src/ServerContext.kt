@@ -5,6 +5,7 @@ import org.keizar.game.BoardProperties
 import org.keizar.server.database.DatabaseManagerImpl
 import org.keizar.server.modules.GameRoomsModuleImpl
 import org.keizar.server.modules.AccountModuleImpl
+import org.keizar.server.modules.SeedBankModuleImpl
 import org.keizar.server.utils.AesEncoder
 import org.keizar.server.utils.AuthTokenConfig
 import org.keizar.server.utils.AuthTokenManagerImpl
@@ -18,7 +19,7 @@ class ServerContext(
     private val databaseManager = DatabaseManagerImpl()
     val authTokenManager = AuthTokenManagerImpl(
         config = AuthTokenConfig(
-            secret = "HolgerPirk", // TODO: Change this to a secure secret
+            secret = "d6yHBc5hXQrUjBKTK8Z3WFx7i6Zm6Ufm", // TODO: Change this to a secure secret
             expirationTime = 7.days.inWholeMilliseconds,
         ),
         encoder = AesEncoder()
@@ -26,6 +27,7 @@ class ServerContext(
 
     val accounts = AccountModuleImpl(databaseManager, authTokenManager)
     val gameRooms = GameRoomsModuleImpl(parentCoroutineScope.coroutineContext, logger)
+    val seedBank = SeedBankModuleImpl()
 }
 
 fun setupServerContext(coroutineScope: CoroutineScope, logger: Logger): ServerContext {
