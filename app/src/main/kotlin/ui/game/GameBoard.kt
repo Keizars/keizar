@@ -382,25 +382,39 @@ fun WinningRoundDialog(
     val blackCapturedPieces by vm.blackCapturedPieces.collectAsState()
     val currentRoundCount by vm.currentRoundCount.collectAsState()
     val endRoundAnnounced by vm.endRoundAnnounced.collectAsState()
+    val numOfMoves by vm.numOfMoves.collectAsState()
+    val timeTaken by vm.timeTaken.collectAsState()
+    val averageTimeTaken by vm.averageTimeTaken.collectAsState()
 
     when (winner) {
         null -> {}
 
         else -> {
-            val roundCountText = if (currentRoundCount == 0) "First" else "Second"
+            val roundCountText = if (currentRoundCount == 0) "First Round" else "Second Round"
+            val winningStatusText =
+                if (winner == vm.selfRole.collectAsState().value) "You Win" else "You Lose"
+            val selfCapturedPieces =
+                if (vm.selfRole.collectAsState().value == Role.WHITE) whiteCapturedPieces else blackCapturedPieces
+            val opponentCapturedPieces =
+                if (vm.selfRole.collectAsState().value == Role.WHITE) blackCapturedPieces else whiteCapturedPieces
             if (showFlag.value || !endRoundAnnounced) {
                 AlertDialog(onDismissRequest = {},
                     title = {
                         Text(
-                            text = "$roundCountText Round Winner: $winner",
+                            text = "$roundCountText \n" +
+                                    "$winningStatusText\n",
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center
                         )
                     },
                     text = {
+                        // TODO: Add more information
                         Text(
-                            text = "White player captured: $blackCapturedPieces\n" +
-                                    "Black player captured: $whiteCapturedPieces\n",
+                            text = "You captured: $selfCapturedPieces\n" +
+                                    "Opponent captured: $opponentCapturedPieces\n" +
+                                    "Number of moves: $numOfMoves\n" +
+                                    "Time: ${timeTaken / 60} m ${timeTaken % 60} \n" +
+                                    "Your moves' average time: ${averageTimeTaken / 60} m ${averageTimeTaken % 60}",
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center
                         )
@@ -679,3 +693,11 @@ private fun PreviewUndoButton() {
     )
 }
 
+@Preview(showBackground = true)
+@Composable
+private fun PreviewWinningRoundDialog() {
+    WinningRoundDialog(
+        Role.WHITE,
+        rememberSinglePlayerGameBoardForPreview()
+    )
+}
