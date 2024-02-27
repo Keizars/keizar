@@ -11,29 +11,27 @@ import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
-import io.ktor.server.routing.routing
 import io.ktor.server.websocket.receiveDeserialized
 import io.ktor.server.websocket.webSocket
 import io.ktor.util.pipeline.PipelineContext
-import kotlinx.coroutines.channels.ClosedReceiveChannelException
-import kotlinx.coroutines.flow.first
 import org.keizar.game.BoardProperties
 import org.keizar.game.RoomInfo
 import org.keizar.server.ServerContext
 import org.keizar.server.gameroom.GameRoom
 import org.keizar.server.gameroom.GameRoomManager
 import org.keizar.server.gameroom.PlayerSession
-import org.keizar.server.gameroom.PlayerSessionImpl
-import org.keizar.utils.communication.PlayerSessionState
+import org.keizar.server.utils.checkUserId
+import org.keizar.server.utils.routeAuthenticated
 import org.keizar.utils.communication.message.UserInfo
 
 fun Application.gameRoomRouting(context: ServerContext) {
     val logger = log
-    routing {
+    routeAuthenticated {
         val rooms: GameRoomManager = context.gameRoomManager
         webSocket("/room/{roomNumber}") {
             val roomNumber: UInt = call.parameters["roomNumber"]?.toUIntOrNull()
                 ?: throw BadRequestException("Invalid room number")
+            val userId = checkUserId() ?: return@webSocket
             val userInfo: UserInfo = try {
                 receiveDeserialized<UserInfo>()
             } catch (e: WebsocketDeserializeException) {
@@ -57,6 +55,7 @@ fun Application.gameRoomRouting(context: ServerContext) {
 
         post("/room/create/{roomNumber}") {
             val roomNumber: UInt = getRoomNumberOrBadRequest()
+            checkUserId() ?: return@post
             val properties = call.receive<BoardProperties>()
 
             logger.info("Creating room $roomNumber")
@@ -68,6 +67,7 @@ fun Application.gameRoomRouting(context: ServerContext) {
 
         get("/room/get/{roomNumber}") {
             val roomNumber: UInt = getRoomNumberOrBadRequest()
+            checkUserId() ?: return@get
 
             logger.info("Fetching room $roomNumber")
             val room: GameRoom = rooms.getRoom(roomNumber)
@@ -84,6 +84,7 @@ fun Application.gameRoomRouting(context: ServerContext) {
 
         post("/room/join/{roomNumber}") {
             val roomNumber: UInt = getRoomNumberOrBadRequest()
+            val userId = checkUserId() ?: return@post
             val userInfo = call.receive<UserInfo>()
 
             logger.info("User ${userInfo.username} trying to join room $roomNumber")

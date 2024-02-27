@@ -7,7 +7,7 @@ import org.keizar.server.ServerContext
 
 fun Application.configureSecurity(context: ServerContext) {
     authentication {
-        bearer("authBearer") {
+        bearer("auth-bearer") {
             authenticate { tokenCredential ->
                 context.authTokenManager.matchToken(tokenCredential.token)
                     ?.let { UserIdPrincipal(it) }

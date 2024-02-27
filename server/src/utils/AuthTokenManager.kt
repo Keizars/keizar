@@ -20,12 +20,20 @@ class AuthTokenManagerImpl(
         return try {
             val decodedString = encoder.decode(token, config.secret)
             if (!decodedString.contains(" ")) return null
-            val attributes = decodedString.split(" ")
-            if (attributes[1].toLong() > System.currentTimeMillis()) return null
-            return attributes[0]
+            val (userId, validUntil) = decodedString.split(" ")
+            if (validUntil.toLong() < System.currentTimeMillis()) return null
+            return userId
         } catch (e: Exception) {
             null
         }
+    }
+}
+
+fun String.formatToUuidOrNull(): UUID? {
+    return try {
+        UUID.fromString(this)
+    } catch (e: Exception) {
+        null
     }
 }
 
