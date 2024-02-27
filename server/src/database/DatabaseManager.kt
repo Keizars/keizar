@@ -30,7 +30,6 @@ interface DynamoDbDao<T> {
     fun getItem(key: Map<String, AttributeValue>): T?
     fun putItem(item: T)
     fun deleteItem(key: Map<String, AttributeValue>)
-    fun updateItem(key: Map<String, AttributeValue>, item: T)
 
     fun getAllItems(): List<T>
 }
@@ -88,10 +87,6 @@ class UserDao : DynamoDbDao<Users> {
     }
 
 
-    override fun updateItem(key: Map<String, AttributeValue>, item: Users) {
-        // no attribute to update
-    }
-
     override fun getAllItems(): List<Users> {
         val scanRequest = ScanRequest.builder()
             .tableName(tableName)
@@ -103,4 +98,92 @@ class UserDao : DynamoDbDao<Users> {
             )
         }
     }
+}
+
+class GamesDao : DynamoDbDao<Games> {
+    private val dynamoDbClient: DynamoDbClient = createClient()
+    private val tableName = "games"
+    override fun getItem(key: Map<String, AttributeValue>): Games? {
+        val request = GetItemRequest.builder()
+            .tableName(tableName)
+            .key(key)
+            .build()
+
+        val response = dynamoDbClient.getItem(request)
+        return if (response.hasItem()) {
+            Games(
+                gameId = response.item()["game_id"]!!.s(),
+                userName1 = response.item()["user_name1"]!!.s(),
+                userName2 = response.item()["user_name2"]!!.s()
+            )
+        } else {
+            null
+        }
+    }
+
+    override fun putItem(item: Games) {
+        val itemValues = mapOf(
+            "game_id" to AttributeValue.builder().s(item.gameId).build(),
+            "user_name1" to AttributeValue.builder().s(item.userName1).build(),
+            "user_name2" to AttributeValue.builder().s(item.userName2).build()
+        )
+
+        val request = PutItemRequest.builder()
+            .tableName(tableName)
+            .item(itemValues)
+            .build()
+
+        try {
+            dynamoDbClient.putItem(request)
+            println("Item with gameId $itemValues successfully added.")
+        } catch (e: Exception) {
+            println("Error deleting item: ${e.message}")
+        }
+    }
+
+    override fun deleteItem(key: Map<String, AttributeValue>) {
+
+        val deleteItemRequest = DeleteItemRequest.builder()
+            .tableName(tableName)
+            .key(key)
+            .build()
+
+        try {
+            dynamoDbClient.deleteItem(deleteItemRequest)
+            println("Item with gameId $key successfully deleted.")
+        } catch (e: Exception) {
+            println("Error deleting item: ${e.message}")
+        }
+    }
+
+    override fun getAllItems(): List<Games> {
+        val scanRequest = ScanRequest.builder()
+            .tableName(tableName)
+            .build()
+        val response = dynamoDbClient.scan(scanRequest)
+        return response.items().map {
+            Games(
+                gameId = it["game_id"]!!.s(),
+                userName1 = it["user_name1"]!!.s(),
+                userName2 = it["user_name2"]!!.s()
+            )
+        }
+    }
+
+    fun getGamesByUserId(userId: String): List<Games> {
+        val scanRequest = ScanRequest.builder()
+            .tableName(tableName)
+            .filterExpression("user_name1 = :user_name or user_name2 = :user_name")
+            .expressionAttributeValues(mapOf(":user_name" to AttributeValue.builder().s(userId).build()))
+            .build()
+        val response = dynamoDbClient.scan(scanRequest)
+        return response.items().map {
+            Games(
+                gameId = it["game_id"]!!.s(),
+                userName1 = it["user_name1"]!!.s(),
+                userName2 = it["user_name2"]!!.s()
+            )
+        }
+    }
+
 }

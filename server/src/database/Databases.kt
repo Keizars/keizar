@@ -5,7 +5,10 @@ data class Users(
 )
 
 data class Games(
-    val gameId: String // Primary Key
+    val gameId: String, // Primary Key
+    val userName1: String, // Foreign Key
+    val userName2: String // Foreign Key
+
 )
 
 data class GameCollections(
