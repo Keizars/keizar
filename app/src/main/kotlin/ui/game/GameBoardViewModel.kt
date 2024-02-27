@@ -135,13 +135,22 @@ interface GameBoardViewModel : HasBackgroundScope {
     val canUndo: StateFlow<Boolean>
 
     @Stable
-    val numOfMoves: StateFlow<Int>
+    val round1NumOfMoves: StateFlow<Int>
 
     @Stable
-    val timeTaken: StateFlow<Int>
+    val round1TimeTaken: StateFlow<Int>
 
     @Stable
-    val averageTimeTaken: StateFlow<Int>
+    val round1AverageTimeTaken: StateFlow<Int>
+
+    @Stable
+    val round2NumOfMoves: StateFlow<Int>
+
+    @Stable
+    val round2TimeTaken: StateFlow<Int>
+
+    @Stable
+    val round2AverageTimeTaken: StateFlow<Int>
 
 
     // clicking
@@ -420,10 +429,12 @@ abstract class BaseGameBoardViewModel(
     override val canUndo: StateFlow<Boolean> =
         game.currentRound.flatMapLatest { it.canUndo }.stateInBackground(false)
 
-    override val numOfMoves: StateFlow<Int> = MutableStateFlow(0) // TODO
-    override val timeTaken: StateFlow<Int> = MutableStateFlow(0) // TODO
-    override val averageTimeTaken: StateFlow<Int> = MutableStateFlow(0)// TODO
-
+    override val round1NumOfMoves: StateFlow<Int> = MutableStateFlow(0) // TODO
+    override val round1TimeTaken: StateFlow<Int> = MutableStateFlow(0) // TODO
+    override val round1AverageTimeTaken: StateFlow<Int> = MutableStateFlow(0)// TODO
+    override val round2NumOfMoves: StateFlow<Int> = MutableStateFlow(0) // TODO
+    override val round2TimeTaken: StateFlow<Int> = MutableStateFlow(0) // TODO
+    override val round2AverageTimeTaken: StateFlow<Int> = MutableStateFlow(0)// TODO
 
     init {
         backgroundScope.launch {

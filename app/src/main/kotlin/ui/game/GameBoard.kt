@@ -67,6 +67,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import org.keizar.android.ui.game.transition.CapturedPiecesHost
 import org.keizar.game.Role
 import org.keizar.utils.communication.game.GameResult
+import org.keizar.utils.communication.game.Player
 import kotlin.math.sqrt
 
 
@@ -358,9 +359,9 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
 
 
             is GameResult.Winner -> {
-                val winnerText = if (finalWinner.player == vm.selfPlayer) "win!" else "lose."
+                val winnerText = if (finalWinner.player == vm.selfPlayer) "You Win" else "You Lose"
                 AlertDialog(onDismissRequest = {},
-                    title = { Text(text = "Game Over, you $winnerText") },
+                    title = { Text(text = "Game Over\n$winnerText") },
                     confirmButton = {
                         Button(onClick = { vm.setGameOverReadyToBeAnnouncement(false) }) {
                             Text(text = "Ok")
@@ -382,9 +383,15 @@ fun WinningRoundDialog(
     val blackCapturedPieces by vm.blackCapturedPieces.collectAsState()
     val currentRoundCount by vm.currentRoundCount.collectAsState()
     val endRoundAnnounced by vm.endRoundAnnounced.collectAsState()
-    val numOfMoves by vm.numOfMoves.collectAsState()
-    val timeTaken by vm.timeTaken.collectAsState()
-    val averageTimeTaken by vm.averageTimeTaken.collectAsState()
+
+
+    val numOfMovesFlow = if (currentRoundCount == 0) vm.round1NumOfMoves else vm.round2NumOfMoves
+    val timeTakenFlow = if (currentRoundCount == 0) vm.round1TimeTaken else vm.round2TimeTaken
+    val averageTimeTakenFlow = if (currentRoundCount == 0) vm.round1AverageTimeTaken else vm.round2AverageTimeTaken
+
+    val numOfMoves by numOfMovesFlow.collectAsState()
+    val timeTaken by timeTakenFlow.collectAsState()
+    val averageTimeTaken by averageTimeTakenFlow.collectAsState()
 
     when (winner) {
         null -> {}
@@ -699,5 +706,15 @@ private fun PreviewWinningRoundDialog() {
     WinningRoundDialog(
         Role.WHITE,
         rememberSinglePlayerGameBoardForPreview()
+    )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewGameOverDialog() {
+    GameOverDialog(
+        rememberSinglePlayerGameBoardForPreview(),
+        GameResult.Winner(Player.FirstBlackPlayer),
+        onClickHome = { /* Navigate to home page*/ }
     )
 }
