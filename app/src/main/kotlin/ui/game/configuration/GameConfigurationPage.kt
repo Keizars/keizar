@@ -7,10 +7,12 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -36,7 +38,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.coerceAtLeast
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,6 +49,7 @@ import androidx.navigation.get
 import kotlinx.serialization.encodeToHexString
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.keizar.android.ui.external.placeholder.placeholder
+import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.game.BoardTileLabels
 import org.keizar.android.ui.game.BoardTiles
 import org.keizar.android.ui.game.transition.PieceArranger
@@ -94,41 +99,120 @@ private fun GameConfigurationPage(
                 .padding(horizontal = 16.dp, vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .weight(1f) // This makes the LazyColumn fill the available space, leaving space for the Button at the bottom
-                    .padding(horizontal = 16.dp)
-            ) {
-                item { BoardLayoutPreview(vm) }
-                item { BoardSeedTextField(vm) }
-                item { PlayAsSelector(vm) }
-                item {
-                    val selected by vm.difficulty.collectAsStateWithLifecycle(null)
-                    DifficultySelector(selected, setDifficulty = { vm.setDifficulty(it) })
-                }
-                item { Spacer(modifier = Modifier.height(16.dp)) }
-            }
-
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .height(50.dp), horizontalArrangement = Arrangement.End
-            ) {
-                Button(
-                    onClick = { onClickStart(vm.configuration.value) },
-                    Modifier
-                        .padding(top = 10.dp)
-                        .height(45.dp)
-                ) {
-                    Text("Start", style = MaterialTheme.typography.bodyLarge)
-                    Icon(
-                        Icons.AutoMirrored.Default.ArrowForward,
-                        contentDescription = "Start",
-                        Modifier.padding(start = 4.dp)
-                    )
-                }
+            if (isSystemInLandscape()) {
+                GameConfigurationPageLandscape(vm, onClickStart, Modifier.fillMaxSize())
+            } else {
+                GameConfigurationPagePortrait(vm, onClickStart, Modifier.fillMaxSize())
             }
         }
+    }
+}
+
+@Composable
+fun GameConfigurationPageLandscape(
+    vm: GameConfigurationViewModel,
+    onClickStart: (GameStartConfiguration) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    BoxWithConstraints(modifier, contentAlignment = Alignment.Center) {
+        Row(
+            Modifier
+                .widthIn(max = (maxWidth * 0.618f).coerceAtLeast(800.dp))
+//                .height(IntrinsicSize.Min)
+        ) {
+            Column(
+                Modifier
+                    .weight(1f)
+                    .padding(end = 16.dp)
+            ) {
+                BoardLayoutPreview(vm)
+            }
+
+            Column(
+                Modifier
+                    .weight(1f)
+                    .padding(start = 16.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                BoardSeedTextField(vm)
+
+                PlayAsSelector(vm)
+
+                val selected by vm.difficulty.collectAsStateWithLifecycle(null)
+                DifficultySelector(selected, setDifficulty = { vm.setDifficulty(it) })
+
+                Row(
+                    Modifier
+                        .padding(top = 16.dp)
+                        .fillMaxWidth()
+                        .height(50.dp), horizontalArrangement = Arrangement.End
+                ) {
+                    StartButton(
+                        { onClickStart(vm.configuration.value) },
+                        Modifier
+                            .padding(top = 10.dp)
+                            .height(45.dp)
+                    )
+                }
+
+            }
+        }
+
+    }
+}
+
+@Composable
+fun GameConfigurationPagePortrait(
+    vm: GameConfigurationViewModel,
+    onClickStart: (GameStartConfiguration) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier) {
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f) // This makes the LazyColumn fill the available space, leaving space for the Button at the bottom
+                .padding(horizontal = 16.dp)
+        ) {
+            item { BoardLayoutPreview(vm) }
+            item { BoardSeedTextField(vm) }
+            item { PlayAsSelector(vm) }
+            item {
+                val selected by vm.difficulty.collectAsStateWithLifecycle(null)
+                DifficultySelector(selected, setDifficulty = { vm.setDifficulty(it) })
+            }
+            item { Spacer(modifier = Modifier.height(16.dp)) }
+        }
+
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(50.dp), horizontalArrangement = Arrangement.End
+        ) {
+            StartButton(
+                { onClickStart(vm.configuration.value) },
+                Modifier
+                    .padding(top = 10.dp)
+                    .height(45.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun StartButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Button(
+        onClick = onClick,
+        modifier
+    ) {
+        Text("Start", style = MaterialTheme.typography.bodyLarge)
+        Icon(
+            Icons.AutoMirrored.Default.ArrowForward,
+            contentDescription = "Start",
+            Modifier.padding(start = 4.dp)
+        )
     }
 }
 
@@ -297,7 +381,8 @@ private fun renderPlayAs(entry: Role?) = when (entry) {
 }
 
 
-@Preview(heightDp = 400)
+@Preview(heightDp = 800, device = Devices.PHONE)
+@Preview(heightDp = 800, device = Devices.TABLET)
 @Composable
 private fun PreviewGameConfigurationPage() {
     GameConfigurationPage(
