@@ -1,6 +1,8 @@
 package org.keizar.game.internal
 
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.keizar.game.BoardProperties
+import org.keizar.game.MutablePiece
 import org.keizar.game.Piece
 import org.keizar.game.Role
 import org.keizar.game.TileType
@@ -50,19 +52,11 @@ class RuleEngineCoreImpl(
             routesOf(TileType.BISHOP, role) to listOf(TileType.BISHOP, TileType.QUEEN),
             routesOf(TileType.KING, role) to listOf(TileType.KING),
             routesOf(TileType.KNIGHT, role) to listOf(TileType.KNIGHT),
-
-            // special evaluation for pawns: diagonal blocks always seen as valid source, if the
-            // tile type is pawn; forward/backward one step only seen as valid source only if there
-            // is no piece on the target block.
-            listOf(
-                if (role == Role.WHITE) BL else FL,
-                if (role == Role.WHITE) BR else FR,
-            ).map { Route(it) } to listOf(TileType.PLAIN)
         )
 
         for ((routes, tileTypes) in reverseSearchRoutes) {
-            var curPos = pos
             for (route in routes) {
+                var curPos = pos
                 for (step in 1..route.reach) {
                     // take one step forward
                     curPos = curPos.step(route.direction)
@@ -86,18 +80,33 @@ class RuleEngineCoreImpl(
             }
         }
 
-        // special evaluation for pawns
-        if (tiles[pos.index()].piece == null) {
-            val oneStepPos = pos.step(if (role == Role.WHITE) B else F)
-            if (!oneStepPos.outOfRange(boardProperties) &&
-                tiles[oneStepPos.index()].piece?.role != null &&
-                tiles[oneStepPos.index()].type == TileType.PLAIN
-            ) {
-                validSources.add(oneStepPos)
+        // special evaluation for pawns: check the valid pawn sources by their showValidMoves
+        val reversePawnRoutes = listOf(
+            Route(if (role == Role.WHITE) B else F, 2),
+            Route(if (role == Role.WHITE) BL else FL, 1),
+            Route(if (role == Role.WHITE) BR else FR, 1),
+        )
+
+        for (route in reversePawnRoutes) {
+            var curPos = pos
+            for (step in 1..route.reach) {
+                // take one step forward
+                curPos = curPos.step(route.direction)
+
+                // end this route if out of range
+                if (curPos.outOfRange(boardProperties)) break
+
+                val piece = tiles[curPos.index()].piece
+                if (piece == null) {
+                    val tempPiece = MutablePiece(-1, role, MutableStateFlow(curPos))
+                    if (pos in showValidMoves(tiles, tempPiece, index)) validSources.add(curPos)
+                }  else {
+                    if (pos in showValidMoves(tiles, piece, index)) validSources.add(curPos)
+                }
             }
         }
 
-        return validSources
+        return validSources.distinct()
     }
 
     override fun showValidMoves(
