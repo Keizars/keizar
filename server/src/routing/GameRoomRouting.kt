@@ -20,7 +20,8 @@ import org.keizar.server.ServerContext
 import org.keizar.server.modules.gameroom.GameRoom
 import org.keizar.server.modules.GameRoomModule
 import org.keizar.server.modules.gameroom.PlayerSession
-import org.keizar.server.utils.checkUserId
+import org.keizar.server.utils.checkAuthentication
+import org.keizar.server.utils.getUserId
 import org.keizar.server.utils.routeAuthenticated
 import org.keizar.utils.communication.message.UserInfo
 
@@ -31,7 +32,7 @@ fun Application.gameRoomRouting(context: ServerContext) {
         webSocket("/room/{roomNumber}") {
             val roomNumber: UInt = call.parameters["roomNumber"]?.toUIntOrNull()
                 ?: throw BadRequestException("Invalid room number")
-            val userId = checkUserId() ?: return@webSocket
+            val userId = getUserId() ?: return@webSocket
             val userInfo: UserInfo = try {
                 receiveDeserialized<UserInfo>()
             } catch (e: WebsocketDeserializeException) {
@@ -55,7 +56,7 @@ fun Application.gameRoomRouting(context: ServerContext) {
 
         post("/room/create/{roomNumber}") {
             val roomNumber: UInt = getRoomNumberOrBadRequest()
-            checkUserId() ?: return@post
+            if (!checkAuthentication()) return@post
             val properties = call.receive<BoardProperties>()
 
             logger.info("Creating room $roomNumber")
@@ -67,7 +68,7 @@ fun Application.gameRoomRouting(context: ServerContext) {
 
         get("/room/get/{roomNumber}") {
             val roomNumber: UInt = getRoomNumberOrBadRequest()
-            checkUserId() ?: return@get
+            if (!checkAuthentication()) return@get
 
             logger.info("Fetching room $roomNumber")
             val room: GameRoom = rooms.getRoom(roomNumber)
@@ -84,7 +85,7 @@ fun Application.gameRoomRouting(context: ServerContext) {
 
         post("/room/join/{roomNumber}") {
             val roomNumber: UInt = getRoomNumberOrBadRequest()
-            val userId = checkUserId() ?: return@post
+            val userId = getUserId() ?: return@post
             val userInfo = call.receive<UserInfo>()
 
             logger.info("User ${userInfo.username} trying to join room $roomNumber")

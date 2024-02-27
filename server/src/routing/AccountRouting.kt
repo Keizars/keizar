@@ -10,7 +10,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.util.*
 import org.keizar.server.ServerContext
-import org.keizar.server.utils.checkUserId
+import org.keizar.server.utils.getUserId
 import org.keizar.utils.communication.account.ImageUrlExchange
 import java.util.*
 
@@ -21,12 +21,12 @@ fun Application.accountRouting(context: ServerContext) {
         route("/account") {
             authenticate("authBearer") {
                 get("/me") {
-                    val uid = checkUserId() ?: return@get
+                    val uid = getUserId() ?: return@get
                     val user = accounts.getUser(uid) ?: throw NotFoundException("Invalid user")
                     call.respond(user)
                 }
                 post("/newAvatar") {
-                    val uid = checkUserId() ?: return@post
+                    val uid = getUserId() ?: return@post
                     val contentType = call.request.contentType()
                     val path = call.receiveStream().use { input ->
                         accounts.uploadNewAvatar(uid, input, contentType)

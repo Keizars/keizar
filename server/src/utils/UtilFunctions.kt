@@ -24,7 +24,7 @@ inline fun Application.routeAuthenticated(crossinline block: Routing.() -> Unit)
     }
 }
 
-suspend fun PipelineContext<Unit, ApplicationCall>.checkUserId(): UUID? {
+suspend fun PipelineContext<Unit, ApplicationCall>.getUserId(): UUID? {
     val uidStr = call.principal<UserIdPrincipal>()?.name
     if (uidStr == null) {
         call.respond(HttpStatusCode.Unauthorized)
@@ -33,7 +33,13 @@ suspend fun PipelineContext<Unit, ApplicationCall>.checkUserId(): UUID? {
     return uidStr.formatToUuidOrNull()
 }
 
-suspend fun WebSocketServerSession.checkUserId(): UUID? {
+suspend fun PipelineContext<Unit, ApplicationCall>.checkAuthentication(): Boolean {
+    return (call.principal<UserIdPrincipal>() == null).also {
+        if (!it) call.respond(HttpStatusCode.Unauthorized)
+    }
+}
+
+suspend fun WebSocketServerSession.getUserId(): UUID? {
     val uidStr = call.principal<UserIdPrincipal>()?.name
     if (uidStr == null) {
         call.respond(HttpStatusCode.Unauthorized)
