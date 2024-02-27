@@ -282,7 +282,7 @@ fun RoundTwoBottomBar(
                 text = { Text(text = "Save Game", fontSize = 10.sp) })
 
             ActionButton(
-                onClick = { vm.setShowGameOverResults(true)},
+                onClick = { vm.setShowGameOverResults(true) },
                 icon = { Icon(Icons.Default.Assessment, null) },
                 text = {
                     Text(
@@ -333,33 +333,22 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
 
             is GameResult.Draw -> {
                 AlertDialog(onDismissRequest = {},
-                    title = { Text(text = "Game Over, Draw") },
+                    title = {
+                        Text(
+                            text = "Game Over\nDraw",
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    },
                     text = {
                         Text(
-                            text = "Round 1:\n" +
-                                    "   Winner: ${vm.round1Winner.collectAsState(null).value}\n" +
-                                    "   White captured: ${
-                                        vm.getRoundPieceCount(
-                                            0,
-                                            Role.WHITE
-                                        ).collectAsState().value
-                                    }\n" +
-                                    "   Black captured: ${
-                                        vm.getRoundPieceCount(
-                                            0,
-                                            Role.BLACK
-                                        ).collectAsState().value
-                                    }\n" +
-                                    "Round 2 Winner: ${vm.round2Winner.collectAsState(null).value}\n" +
-                                    "   White captured: ${
-                                        vm.getRoundPieceCount(
-                                            1,
-                                            Role.WHITE
-                                        ).collectAsState().value
-                                    }\n" +
-                                    "   Black captured: ${
-                                        vm.getRoundPieceCount(1, Role.BLACK).collectAsState().value
-                                    }"
+                            text = "You captured: \n" +
+                                    "Opponent captured: \n" +
+                                    "Number of moves: \n" +
+                                    "Time: \n" +
+                                    "Your moves' average time: \n",
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     },
                     confirmButton = {
@@ -376,7 +365,24 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
             is GameResult.Winner -> {
                 val winnerText = if (finalWinner.player == vm.selfPlayer) "You Win" else "You Lose"
                 AlertDialog(onDismissRequest = {},
-                    title = { Text(text = "Game Over\n$winnerText") },
+                    title = {
+                        Text(
+                            text = "Game Over\n$winnerText",
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = "You captured: \n" +
+                                    "Opponent captured: \n" +
+                                    "Number of moves: \n" +
+                                    "Time: \n" +
+                                    "Your moves' average time: \n",
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    },
                     confirmButton = {
                         Button(onClick = {
                             vm.setGameOverReadyToBeAnnouncement(false)
@@ -420,9 +426,9 @@ fun WinningRoundDialog(
             val winningStatusText =
                 if (winner == vm.selfRole.collectAsState().value) "You Win" else "You Lose"
             val selfCapturedPieces =
-                if (vm.selfRole.collectAsState().value == Role.WHITE) whiteCapturedPieces else blackCapturedPieces
-            val opponentCapturedPieces =
                 if (vm.selfRole.collectAsState().value == Role.WHITE) blackCapturedPieces else whiteCapturedPieces
+            val opponentCapturedPieces =
+                if (vm.selfRole.collectAsState().value == Role.WHITE) whiteCapturedPieces else blackCapturedPieces
             if (showFlag.value || !endRoundAnnounced) {
                 AlertDialog(onDismissRequest = {},
                     title = {
