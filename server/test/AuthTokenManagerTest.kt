@@ -8,19 +8,18 @@ import org.keizar.server.utils.AuthTokenConfig
 import org.keizar.server.utils.AuthTokenManagerImpl
 import java.util.UUID
 import kotlin.test.assertEquals
-import kotlin.time.Duration.Companion.days
 
 class AuthTokenManagerTest {
-    val authTokenManager = AuthTokenManagerImpl(
-        config = AuthTokenConfig(
-            secret = "HolgerPirk",
-            expirationTime = 7.days.inWholeMilliseconds,
-        ),
-        encoder = AesEncoder()
-    )
 
     @Test
     fun `can encode and decode a token`() {
+        val authTokenManager = AuthTokenManagerImpl(
+            config = AuthTokenConfig(
+                secret = "HolgerPirk",
+                expirationTime = -1,
+            ),
+            encoder = AesEncoder()
+        )
         val userId = UUID.randomUUID()
         val token = authTokenManager.createToken(userId)
         assertNotNull(token)
@@ -29,7 +28,31 @@ class AuthTokenManagerTest {
 
     @Test
     fun `decode null from an invalid token`() {
+        val authTokenManager = AuthTokenManagerImpl(
+            config = AuthTokenConfig(
+                secret = "HolgerPirk",
+                expirationTime = -1,
+            ),
+            encoder = AesEncoder()
+        )
         val token = "blah blah invalid token"
+        assertNull(authTokenManager.matchToken(token))
+    }
+
+    @Test
+    fun `decode null from an expired token`() {
+        val authTokenManager = AuthTokenManagerImpl(
+            config = AuthTokenConfig(
+                secret = "HolgerPirk",
+                expirationTime = 1,
+            ),
+            encoder = AesEncoder()
+        )
+        val userId = UUID.randomUUID()
+        val token = authTokenManager.createToken(userId)
+        assertNotNull(token)
+
+        Thread.sleep(2)
         assertNull(authTokenManager.matchToken(token))
     }
 }

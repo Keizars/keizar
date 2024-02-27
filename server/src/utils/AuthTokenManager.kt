@@ -10,9 +10,13 @@ interface AuthTokenManager {
 class AuthTokenManagerImpl(
     private val config: AuthTokenConfig,
     private val encoder: Encoder,
-): AuthTokenManager {
+) : AuthTokenManager {
     override fun createToken(userId: UUID): String {
-        val validUntil = System.currentTimeMillis() + config.expirationTime
+        val validUntil = if (config.expirationTime == (-1).toLong()) {
+            "never"
+        } else {
+            (System.currentTimeMillis() + config.expirationTime).toString()
+        }
         return encoder.encode("$userId $validUntil", config.secret)
     }
 
@@ -21,7 +25,7 @@ class AuthTokenManagerImpl(
             val decodedString = encoder.decode(token, config.secret)
             if (!decodedString.contains(" ")) return null
             val (userId, validUntil) = decodedString.split(" ")
-            if (validUntil.toLong() < System.currentTimeMillis()) return null
+            if (validUntil != "never" && validUntil.toLong() < System.currentTimeMillis()) return null
             return userId
         } catch (e: Exception) {
             null
