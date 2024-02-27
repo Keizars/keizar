@@ -20,6 +20,7 @@ postgres_version = "42.5.1"
 h2_version = "2.1.214"
 retrofit = "2.9.0"
 retrofit-kotlinx-serialization = "1.0.0"
+coil = "3.0.0-alpha04"
 
 [libraries]
 # Build
@@ -100,7 +101,7 @@ datastore-preferences-core = { module = "androidx.datastore:datastore-preference
 # Android Accompanist
 accompanist-placeholder = { module = "com.google.accompanist:accompanist-placeholder", version.ref = "accompanist" }
 accompanist-placeholder-material = { module = "com.google.accompanist:accompanist-placeholder-material", version.ref = "accompanist" }
-
+accompanist-pager-indicators = { module = "com.google.accompanist:accompanist-pager-indicators", version.ref = "accompanist" }
 
 # Navigation
 precompose = { module = "moe.tlaster:precompose", version = "1.5.10" }
@@ -143,8 +144,12 @@ androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 
+# Coil
+coil = { module = "io.coil-kt.coil3:coil", version.ref = "coil" }
+coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" }
+
 # compose-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "jetpackCompose" }
 
 # databases
-postgresql = { module = "org.postgresql:postgresql", version.ref = "postgres_version"}
-h2database = { module = "com.h2database:h2", version.ref = "h2_version"}
+postgresql = { module = "org.postgresql:postgresql", version.ref = "postgres_version" }
+h2database = { module = "com.h2database:h2", version.ref = "h2_version" }

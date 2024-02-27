@@ -4,7 +4,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.flow.MutableStateFlow
-import org.keizar.android.client.AuthService
+import org.keizar.android.client.UserService
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.utils.communication.LiteralChecker
 import org.keizar.utils.communication.account.AuthRequest
@@ -16,9 +16,9 @@ import org.koin.core.component.inject
 class AuthViewModel(
     isRegister: Boolean,
 ) : AbstractViewModel(), KoinComponent {
-    private val authService: AuthService by inject()
+    private val userService: UserService by inject()
 
-    private val isRegister = MutableStateFlow(isRegister)
+    val isRegister = MutableStateFlow(isRegister)
 
     private val _username: MutableState<String> = mutableStateOf("")
     val username: State<String> get() = _username
@@ -46,7 +46,7 @@ class AuthViewModel(
 
     suspend fun checkUsernameValidity() {
         if (isRegister.value) {
-            val response = authService.isAvailable(username.value)
+            val response = userService.isAvailable(username.value)
             if (!response.validity) {
                 usernameError.value = AuthStatus.DUPLICATED_USERNAME.render()
             } else {
@@ -76,8 +76,8 @@ class AuthViewModel(
         return doAuth(username, password, isRegister.value)
     }
 
-    private fun doAuth(username: String, password: String, isRegister: Boolean): Boolean {
-        val response = authService.register(AuthRequest(username, password))
+    private suspend fun doAuth(username: String, password: String, isRegister: Boolean): Boolean {
+        val response = userService.register(AuthRequest(username, password))
         when (response.status) {
             AuthStatus.SUCCESS -> {
                 return if (isRegister) {

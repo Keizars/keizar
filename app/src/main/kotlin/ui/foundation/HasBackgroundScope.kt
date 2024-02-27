@@ -4,6 +4,7 @@ import androidx.compose.runtime.MutableState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
@@ -23,6 +24,13 @@ import kotlinx.coroutines.supervisorScope
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.time.Duration.Companion.seconds
+
+class BackgroundScope(
+    coroutineContext: CoroutineContext = EmptyCoroutineContext
+) : HasBackgroundScope {
+    override val backgroundScope: CoroutineScope =
+        CoroutineScope(coroutineContext + SupervisorJob(coroutineContext[Job]))
+}
 
 interface HasBackgroundScope {
     val backgroundScope: CoroutineScope

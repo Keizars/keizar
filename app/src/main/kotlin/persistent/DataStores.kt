@@ -3,6 +3,7 @@ package org.keizar.android.persistent
 import android.content.Context
 import androidx.datastore.core.Serializer
 import androidx.datastore.dataStore
+import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import kotlinx.serialization.json.encodeToStream
@@ -28,3 +29,5 @@ val Context.savedStateStore by dataStore(
         }
     }
 )
+
+val Context.tokenStore by preferencesDataStore("token")

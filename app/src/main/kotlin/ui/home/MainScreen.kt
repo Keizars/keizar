@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -39,6 +40,7 @@ import kotlinx.serialization.encodeToHexString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.keizar.android.R
+import org.keizar.android.client.SessionManager
 import org.keizar.android.data.SavedState
 import org.keizar.android.data.SavedStateRepository
 import org.keizar.android.tutorial.Tutorials
@@ -51,6 +53,9 @@ import org.keizar.android.ui.game.mp.MultiplayerGamePage
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
 import org.keizar.android.ui.game.mp.MultiplayerRoomScene
 import org.keizar.android.ui.game.sp.SinglePlayerGameScene
+import org.keizar.android.ui.profile.AuthScene
+import org.keizar.android.ui.profile.ProfileScene
+import org.keizar.android.ui.profile.ProfileViewModel
 import org.keizar.android.ui.rules.RuleBookPage
 import org.keizar.android.ui.rules.RuleReferencesScene
 import org.keizar.android.ui.tutorial.TutorialScene
@@ -210,10 +215,10 @@ fun MainScreen() {
                 navController = navController,
             )
         }
-        composable("tutorials") { entry ->
+        composable("tutorials") {
             TutorialSelectionScene(
                 onClickBack = {
-                    navController.popBackStack("home", false)
+                    navController.popBackStack()
                 },
                 onClickRuleBook = {
                     when (it) {
@@ -231,8 +236,39 @@ fun MainScreen() {
         ) {
             AboutScene(
                 onClickBack = {
-                    navController.popBackStack("home", false)
+                    navController.popBackStack()
                 },
+            )
+        }
+        composable(
+            "auth/{mode}",
+            arguments = listOf(navArgument("mode") { type = NavType.StringType })
+        ) {
+            AuthScene(
+                initialIsRegister = it.arguments?.getString("mode") == "register",
+                onClickBack = {
+                    navController.popBackStack()
+                },
+            )
+        }
+        composable(
+            "profile",
+        ) {
+            SideEffect {
+                if (GlobalContext.get().get<SessionManager>().token.value == null) {
+                    navController.navigate("auth/login")
+                }
+            }
+            ProfileScene(
+                remember {
+                    ProfileViewModel()
+                },
+                onClickBack = {
+                    navController.popBackStack()
+                },
+                onClickEdit = {
+                    navController.navigate("profile/edit")
+                }
             )
         }
     }

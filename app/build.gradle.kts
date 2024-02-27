@@ -28,7 +28,10 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.accompanist.pager.indicators)
     implementation(libs.datastore.preferences)
+    implementation(libs.coil)
+    implementation(libs.coil.compose)
     implementation(projects.utils.slf4jKt)
     runtimeOnly(libs.slf4j.android)
 
