@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ColorScheme
@@ -17,10 +18,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import org.keizar.android.ui.theme.AppTheme
+import org.keizar.android.ui.theme.myDarkColorTheme
+import org.keizar.android.ui.theme.myLightColorTheme
 
 @Composable
 inline fun KeizarApp(
-    colorScheme: ColorScheme = MaterialTheme.colorScheme,
+    colorScheme: ColorScheme = if (isSystemInDarkTheme()) myDarkColorTheme() else myLightColorTheme(),
     crossinline content: @Composable () -> Unit
 ) {
     CompositionLocalProvider {
