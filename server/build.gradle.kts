@@ -4,6 +4,17 @@ plugins {
     application
 }
 
+java.toolchain {
+    languageVersion.set(JavaLanguageVersion.of(8))
+}
+kotlin {
+    sourceSets.all {
+        languageSettings.languageVersion = "1.9"
+    }
+
+}
+kotlin.jvmToolchain(8)
+
 dependencies {
     api(libs.kotlinx.serialization.json)
     implementation(project(":rule-engine"))
@@ -20,8 +31,7 @@ dependencies {
     implementation(libs.h2database)
     implementation(libs.ktor.server.call.logging)
     runtimeOnly(libs.slf4j.simple)
-    implementation(libs.dynamodb)
-
+    implementation(libs.mongodb.driver.kotlin.coroutine)
 }
 
 application {

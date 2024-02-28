@@ -1,13 +1,6 @@
 package org.keizar.server.database
 
 
-import software.amazon.awssdk.regions.Region
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient
-import software.amazon.awssdk.services.dynamodb.model.*
-import software.amazon.awssdk.auth.credentials.AwsBasicCredentials
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider
-import javax.xml.crypto.dsig.keyinfo.KeyName
-
 //create DynamoDbClient instance
 //suspend fun createClient(): DynamoDbClient {
 //
@@ -21,27 +14,27 @@ import javax.xml.crypto.dsig.keyinfo.KeyName
 //        .build()
 //}
 
-suspend fun scanItems(dynamoDbClient: DynamoDbClient, tableName: String) {
-    val scanRequest = ScanRequest.builder()
-        .tableName(tableName)
-        .build()
-    val response = dynamoDbClient.scan(scanRequest)
-    response.items().forEach { println(it) }
-}
-
-suspend fun main() {
-
-    val daotest = UserDao()
-    val user = User("testId", "test")
-    daotest.putItem(user)
-
-    //get all users
-    val users1 = daotest.getAllItems()
-    println(users1)
-
-    daotest.deleteItem(mapOf("user_name" to AttributeValue.builder().s("test").build()))
-    val users2 = daotest.getAllItems()
-    println(users2)
-}
-
+//suspend fun scanItems(dynamoDbClient: DynamoDbClient, tableName: String) {
+//    val scanRequest = ScanRequest.builder()
+//        .tableName(tableName)
+//        .build()
+//    val response = dynamoDbClient.scan(scanRequest)
+//    response.items().forEach { println(it) }
+//}
+//
+//suspend fun main() {
+//
+//    val daotest = UserDao()
+//    val user = User("testId", "test")
+//    daotest.putItem(user)
+//
+//    //get all users
+//    val users1 = daotest.getAllItems()
+//    println(users1)
+//
+//    daotest.deleteItem(mapOf("user_name" to AttributeValue.builder().s("test").build()))
+//    val users2 = daotest.getAllItems()
+//    println(users2)
+//}
+//
 
