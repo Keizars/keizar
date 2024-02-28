@@ -78,7 +78,12 @@ class AuthViewModel(
     }
 
     private suspend fun doAuth(username: String, password: String, isRegister: Boolean): Boolean {
-        val response = userService.register(AuthRequest(username, password))
+
+        val response = if (isRegister) {
+            userService.register(AuthRequest(username, password))
+        } else {
+            userService.login(AuthRequest(username, password))
+        }
         when (response.status) {
             AuthStatus.SUCCESS -> {
                 return if (isRegister) {
