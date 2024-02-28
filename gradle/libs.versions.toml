@@ -1,4 +1,5 @@
 [versions]
+dynamodb = "2.17.100"
 kotlin = "2.0.0-Beta1"
 jetpack-compose-compiler = "1.5.6-dev-k2.0.0-Beta1-06a03be2b42" # used by android
 coroutines = "1.7.3"
@@ -21,6 +22,7 @@ h2_version = "2.1.214"
 retrofit = "2.9.0"
 retrofit-kotlinx-serialization = "1.0.0"
 coil = "3.0.0-alpha04"
+dynamodb_version = "2.17.100"
 
 [libraries]
 # Build
@@ -153,3 +155,4 @@ coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" 
 # databases
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgres_version" }
 h2database = { module = "com.h2database:h2", version.ref = "h2_version" }
+dynamodb = { module = "software.amazon.awssdk:dynamodb", version.ref = "dynamodb_version" }

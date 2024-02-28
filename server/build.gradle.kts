@@ -20,7 +20,7 @@ dependencies {
     implementation(libs.h2database)
     implementation(libs.ktor.server.call.logging)
     runtimeOnly(libs.slf4j.simple)
-    implementation("software.amazon.awssdk:dynamodb:2.17.100")
+    implementation(libs.dynamodb)
 
 }
 
