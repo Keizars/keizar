@@ -10,4 +10,4 @@ COPY ./build/install/server /keizar-server
 
 EXPOSE $PORT
 
-ENTRYPOINT ["/keizar-server/bin/server"]
+ENTRYPOINT ["/bin/bash", "/keizar-server/bin/server"]
