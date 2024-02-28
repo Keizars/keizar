@@ -9,7 +9,7 @@ repositories {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(11)
 }
 
 kotlin.sourceSets.all {

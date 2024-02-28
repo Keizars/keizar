@@ -2,7 +2,9 @@ package org.keizar.server.modules
 
 import io.ktor.http.ContentType
 import org.keizar.server.database.DatabaseManager
+import org.keizar.server.database.models.UserModel
 import org.keizar.server.utils.AuthTokenManager
+import org.keizar.utils.communication.LiteralChecker
 import org.keizar.utils.communication.account.AuthResponse
 import org.keizar.utils.communication.account.AuthStatus
 import org.keizar.utils.communication.account.User
@@ -11,54 +13,81 @@ import java.io.InputStream
 import java.util.UUID
 
 interface AccountModule {
-    fun register(username: String, hash: ByteArray): AuthResponse
-    fun isUsernameTaken(username: String): Boolean
-    fun login(username: String, hash: ByteArray): AuthResponse
-    fun getUser(userId: UUID): User?
-    fun getUserByName(name: String): User?
-    fun getUserAvatar(uid: UUID): Pair<File, ContentType>?
-    fun uploadNewAvatar(uid: UUID, input: InputStream, contentType: ContentType): String
+    suspend fun register(username: String, hash: ByteArray): AuthResponse
+    suspend fun isUsernameTaken(username: String): Boolean
+    suspend fun login(username: String, hash: ByteArray): AuthResponse
+    suspend fun getUser(userId: UUID): User?
+    suspend fun getUserByName(name: String): User?
+    suspend fun getUserAvatar(uid: UUID): Pair<File, ContentType>?
+    suspend fun uploadNewAvatar(uid: UUID, input: InputStream, contentType: ContentType): String
 }
 
 class AccountModuleImpl(
     private val database: DatabaseManager,
     private val authTokenManager: AuthTokenManager,
 ) : AccountModule {
-    override fun register(username: String, hash: ByteArray): AuthResponse {
+    override suspend fun register(username: String, hash: ByteArray): AuthResponse {
         if (isUsernameTaken(username)) {
-            return AuthResponse(AuthStatus.INVALID_USERNAME)
+            return AuthResponse(AuthStatus.DUPLICATED_USERNAME)
         }
-        val userId = UUID.randomUUID()
-        // TODO: connect database
-        val token = authTokenManager.createToken(userId)
-        return AuthResponse(AuthStatus.SUCCESS, token)
+
+        val status = LiteralChecker.checkUsername(username)
+        return if (status == AuthStatus.SUCCESS) {
+            val userId = UUID.randomUUID()
+           database.user.addUser(
+               UserModel(
+               id = userId.toString(),
+               username = username,
+               hash = hash.toString(),
+           )
+           )
+
+            val token = authTokenManager.createToken(userId)
+            AuthResponse(status, token)
+        } else {
+            AuthResponse(status)
+        }
     }
 
-    override fun isUsernameTaken(username: String): Boolean {
-        // TODO: connect database
-        return false
+    override suspend fun isUsernameTaken(username: String): Boolean {
+        return database.user.containsUsername(username)
     }
 
-    override fun login(username: String, hash: ByteArray): AuthResponse {
-        val userId = UUID.randomUUID()
-        // TODO: connect database
-        val token = authTokenManager.createToken(userId)
-        return AuthResponse(AuthStatus.SUCCESS, token)
+    override suspend fun login(username: String, hash: ByteArray): AuthResponse {
+        val user = database.user.getUserByName(username) ?: return AuthResponse(AuthStatus.USER_NOT_FOUND)
+
+        return if (user.hash != hash.toString()) {
+            AuthResponse(AuthStatus.WRONG_PASSWORD)
+        } else {
+            val userId = UUID.fromString(user.id)
+            val token = authTokenManager.createToken(userId)
+            AuthResponse(AuthStatus.SUCCESS, token)
+        }
     }
 
-    override fun getUser(userId: UUID): User? {
-        TODO()
+    override suspend fun getUser(userId: UUID): User? {
+        val user = database.user.getUserById(userId.toString()) ?: return null
+        return User(
+            nickname = user.nickname ?: user.username,
+            username = user.username,
+            avatarUrl = "TODO: Not implemented yet",
+        )
     }
 
-    override fun getUserByName(name: String): User? {
+    override suspend fun getUserByName(name: String): User? {
+        val user = database.user.getUserByName(name) ?: return null
+        return User(
+            nickname = user.nickname ?: user.username,
+            username = user.username,
+            avatarUrl = "TODO: Not implemented yet",
+        )
+    }
+
+    override suspend fun getUserAvatar(uid: UUID): Pair<File, ContentType>? {
         TODO("Not yet implemented")
     }
 
-    override fun getUserAvatar(uid: UUID): Pair<File, ContentType>? {
-        TODO("Not yet implemented")
-    }
-
-    override fun uploadNewAvatar(uid: UUID, input: InputStream, contentType: ContentType): String {
+    override suspend fun uploadNewAvatar(uid: UUID, input: InputStream, contentType: ContentType): String {
         TODO("Not yet implemented")
     }
 }

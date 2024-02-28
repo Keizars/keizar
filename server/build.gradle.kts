@@ -20,8 +20,7 @@ dependencies {
     implementation(libs.h2database)
     implementation(libs.ktor.server.call.logging)
     runtimeOnly(libs.slf4j.simple)
-    implementation(libs.dynamodb)
-
+    implementation(libs.mongodb.driver.kotlin.coroutine)
 }
 
 application {

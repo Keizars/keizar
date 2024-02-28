@@ -1,8 +1,7 @@
 package org.keizar.server
 
 import kotlinx.coroutines.CoroutineScope
-import org.keizar.game.BoardProperties
-import org.keizar.server.database.DatabaseManagerImpl
+import org.keizar.server.database.InMemoryDatabaseManagerImpl
 import org.keizar.server.modules.GameRoomsModuleImpl
 import org.keizar.server.modules.AccountModuleImpl
 import org.keizar.server.modules.SeedBankModuleImpl
@@ -16,7 +15,7 @@ class ServerContext(
     parentCoroutineScope: CoroutineScope,
     logger: Logger,
 ) {
-    private val databaseManager = DatabaseManagerImpl()
+    private val databaseManager = InMemoryDatabaseManagerImpl()
     val authTokenManager = AuthTokenManagerImpl(
         config = AuthTokenConfig(
             secret = "d6yHBc5hXQrUjBKTK8Z3WFx7i6Zm6Ufm", // TODO: Change this to a secure secret
