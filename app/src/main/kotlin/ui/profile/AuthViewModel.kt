@@ -4,6 +4,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.flow.MutableStateFlow
+import org.keizar.android.client.SessionManager
 import org.keizar.android.client.UserService
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.utils.communication.LiteralChecker
@@ -17,6 +18,7 @@ class AuthViewModel(
     isRegister: Boolean,
 ) : AbstractViewModel(), KoinComponent {
     private val userService: UserService by inject()
+    private val sessionManager: SessionManager by inject()
 
     val isRegister = MutableStateFlow(isRegister)
 
@@ -90,6 +92,7 @@ class AuthViewModel(
                     // register OK, then log in
                     doAuth(username, password, isRegister = false)
                 } else {
+                    sessionManager.setToken(response.token!!)
                     //                    LocalSessionToken.value = response.token
                     //                    History.navigate { authReturnOrHome() }
                     true

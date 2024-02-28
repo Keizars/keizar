@@ -15,4 +15,8 @@ class SessionManager : KoinComponent, HasBackgroundScope by BackgroundScope() {
     suspend fun invalidateToken() {
         tokenRepository.setToken(null)
     }
+
+    suspend fun setToken(token: String) {
+        tokenRepository.setToken(token)
+    }
 }
