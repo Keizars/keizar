@@ -220,6 +220,9 @@ jobs:
       - name: Check
         run: ./gradlew check ${{ env.gradleArgs }}
 
+      - name: installDist
+        run: ./gradlew installDist ${{ env.gradleArgs }}
+
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
