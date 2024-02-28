@@ -3,7 +3,7 @@ package org.keizar.server.utils
 import java.util.*
 
 interface AuthTokenManager {
-    fun createToken(userId: UUID): String
+    fun createToken(userId: String): String
     fun matchToken(token: String): String?
 }
 
@@ -11,7 +11,7 @@ class AuthTokenManagerImpl(
     private val config: AuthTokenConfig,
     private val encoder: Encoder,
 ) : AuthTokenManager {
-    override fun createToken(userId: UUID): String {
+    override fun createToken(userId: String): String {
         val validUntil = if (config.expirationTime == (-1).toLong()) {
             "never"
         } else {

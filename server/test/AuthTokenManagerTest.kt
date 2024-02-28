@@ -21,7 +21,7 @@ class AuthTokenManagerTest {
             encoder = AesEncoder()
         )
         val userId = UUID.randomUUID()
-        val token = authTokenManager.createToken(userId)
+        val token = authTokenManager.createToken(userId.toString())
         assertNotNull(token)
         assertEquals(userId.toString(), authTokenManager.matchToken(token))
     }
@@ -49,10 +49,10 @@ class AuthTokenManagerTest {
             encoder = AesEncoder()
         )
         val userId = UUID.randomUUID()
-        val token = authTokenManager.createToken(userId)
+        val token = authTokenManager.createToken(userId.toString())
         assertNotNull(token)
 
-        Thread.sleep(2)
+        Thread.sleep(200)
         assertNull(authTokenManager.matchToken(token))
     }
 }
