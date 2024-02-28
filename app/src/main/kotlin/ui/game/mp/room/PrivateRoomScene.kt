@@ -163,8 +163,9 @@ private fun MultiplayerRoomPage(
 
 @Composable
 private fun Configurations(
-    vm: PrivateRoomViewModelImpl, roomId: UInt,
-    modifier: Modifier = Modifier
+    vm: PrivateRoomViewModelImpl,
+    roomId: UInt,
+    modifier: Modifier = Modifier,
 ) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
         Row(
@@ -192,21 +193,26 @@ private fun Configurations(
 
         HorizontalDivider(Modifier.padding(vertical = 16.dp))
 
-        Row(
-            Modifier
-                .padding(bottom = 16.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-        ) {
-            Text(text = "Waiting for other players", style = MaterialTheme.typography.titleMedium)
-        }
-
-        RoomIdTextField(
-            roomId, Modifier
-                .padding(vertical = 4.dp)
-                .fillMaxWidth()
-        )
+        ActionArea(roomId)
     }
+}
+
+@Composable
+private fun ActionArea(roomId: UInt) {
+    Row(
+        Modifier
+            .padding(bottom = 16.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        Text(text = "Waiting for other players", style = MaterialTheme.typography.titleMedium)
+    }
+
+    RoomIdTextField(
+        roomId, Modifier
+            .padding(vertical = 4.dp)
+            .fillMaxWidth()
+    )
 }
 
 @Composable
