@@ -15,29 +15,19 @@ class DatabaseManagerImpl : DatabaseManager {
 
 }
 
-fun createClient(): DynamoDbClient {
-    val awsAccessKeyId = System.getenv("AWS_ACCESS_KEY_ID")
-    val awsSecretAccessKey = System.getenv("AWS_SECRET_ACCESS_KEY")
-    val awsCreds = AwsBasicCredentials.create(awsAccessKeyId, awsSecretAccessKey)
 
-    return DynamoDbClient.builder()
-        .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
-        .region(Region.EU_WEST_1)
-        .build()
-}
 
 interface DynamoDbDao<T> {
     fun getItem(key: Map<String, AttributeValue>): T?
     fun putItem(item: T)
     fun deleteItem(key: Map<String, AttributeValue>)
-
     fun getAllItems(): List<T>
 }
 
-class UserDao : DynamoDbDao<Users> {
+class UserDao : DynamoDbDao<User> {
     private val dynamoDbClient: DynamoDbClient = createClient()
     private val tableName = "users"
-    override fun getItem(key: Map<String, AttributeValue>): Users? {
+    override fun getItem(key: Map<String, AttributeValue>): User? {
         val request = GetItemRequest.builder()
             .tableName(tableName)
             .key(key)
@@ -45,7 +35,8 @@ class UserDao : DynamoDbDao<Users> {
 
         val response = dynamoDbClient.getItem(request)
         return if (response.hasItem()) {
-            Users(
+            User(
+                userId = response.item()["user_id"]!!.s(),
                 userName = response.item()["user_name"]!!.s()
             )
         } else {
@@ -53,7 +44,7 @@ class UserDao : DynamoDbDao<Users> {
         }
     }
 
-    override fun putItem(item: Users) {
+    override fun putItem(item: User) {
         val itemValues = mapOf(
             "user_name" to AttributeValue.builder().s(item.userName).build()
         )
@@ -87,13 +78,14 @@ class UserDao : DynamoDbDao<Users> {
     }
 
 
-    override fun getAllItems(): List<Users> {
+    override fun getAllItems(): List<User> {
         val scanRequest = ScanRequest.builder()
             .tableName(tableName)
             .build()
         val response = dynamoDbClient.scan(scanRequest)
         return response.items().map {
-            Users(
+            User(
+                userId = it["user_id"]!!.s(),
                 userName = it["user_name"]!!.s()
             )
         }

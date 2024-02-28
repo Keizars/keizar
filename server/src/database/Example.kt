@@ -32,7 +32,7 @@ suspend fun scanItems(dynamoDbClient: DynamoDbClient, tableName: String) {
 suspend fun main() {
 
     val daotest = UserDao()
-    val user = Users("test")
+    val user = User("testId", "test")
     daotest.putItem(user)
 
     //get all users
@@ -42,9 +42,6 @@ suspend fun main() {
     daotest.deleteItem(mapOf("user_name" to AttributeValue.builder().s("test").build()))
     val users2 = daotest.getAllItems()
     println(users2)
-
-
-
 }
 
 
