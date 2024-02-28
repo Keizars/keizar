@@ -33,12 +33,9 @@ fun Application.gameRoomRouting(context: ServerContext) {
             val roomNumber: UInt = call.parameters["roomNumber"]?.toUIntOrNull()
                 ?: throw BadRequestException("Invalid room number")
             val userId = getUserId() ?: return@webSocket
-            val userInfo: UserInfo = try {
-                receiveDeserialized<UserInfo>()
-            } catch (e: WebsocketDeserializeException) {
-                throw BadRequestException("Invalid UserInfo")
-            }
-            val username = userInfo.username
+            val username = context.accounts.getUser(userId)?.username
+                ?: throw BadRequestException("Invalid user")
+            val userInfo = UserInfo(username)
 
             logger.info("$username connecting to room $roomNumber websocket")
             val playerSession: PlayerSession
@@ -86,11 +83,13 @@ fun Application.gameRoomRouting(context: ServerContext) {
         post("/room/join/{roomNumber}") {
             val roomNumber: UInt = getRoomNumberOrBadRequest()
             val userId = getUserId() ?: return@post
-            val userInfo = call.receive<UserInfo>()
+            val username = context.accounts.getUser(userId)?.username
+                ?: throw BadRequestException("Invalid user")
+            val userInfo = UserInfo(username)
 
-            logger.info("User ${userInfo.username} trying to join room $roomNumber")
+            logger.info("User $username trying to join room $roomNumber")
             rooms.joinRoom(roomNumber, userInfo)
-            logger.info("User ${userInfo.username} joined room $roomNumber")
+            logger.info("User $username joined room $roomNumber")
 
             call.respond(HttpStatusCode.OK)
         }

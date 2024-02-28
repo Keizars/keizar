@@ -51,7 +51,6 @@ fun MultiplayerGamePage(
                         clientFacade.createGameSession(
                             roomId,
                             backgroundScope.scope.coroutineContext,
-                            MyUserInfo
                         )
                     )
                 )

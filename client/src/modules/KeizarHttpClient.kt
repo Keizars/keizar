@@ -2,6 +2,8 @@ package org.keizar.client.modules
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
+import io.ktor.client.plugins.auth.Auth
+import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
@@ -9,6 +11,7 @@ import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.client.request.get
+import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -30,10 +33,13 @@ private val ClientJson = Json {
 }
 
 interface KeizarHttpClient : AutoCloseable {
-    suspend fun postRoomCreate(roomNumber: UInt, boardProperties: BoardProperties)
-    suspend fun getRoom(roomNumber: UInt): RoomInfo
-    suspend fun getRoomWebsocketSession(roomNumber: UInt): DefaultClientWebSocketSession
-    suspend fun postRoomJoin(roomNumber: UInt, userInfo: UserInfo): Boolean
+    suspend fun postRoomCreate(roomNumber: UInt, boardProperties: BoardProperties, token: String)
+    suspend fun getRoom(roomNumber: UInt, token: String): RoomInfo
+    suspend fun postRoomJoin(roomNumber: UInt, userInfo: UserInfo, token: String): Boolean
+    suspend fun getRoomWebsocketSession(
+        roomNumber: UInt,
+        token: String,
+    ): DefaultClientWebSocketSession
 }
 
 class KeizarHttpClientImpl(
@@ -54,10 +60,12 @@ class KeizarHttpClientImpl(
 
     override suspend fun postRoomCreate(
         roomNumber: UInt,
-        boardProperties: BoardProperties
+        boardProperties: BoardProperties,
+        token: String,
     ) {
         val respond: HttpResponse =
             client.post(urlString = "$endpoint/room/create/$roomNumber") {
+                header("Authorization", "Bearer $token")
                 contentType(ContentType.Application.Json)
                 setBody(boardProperties)
             }
@@ -68,8 +76,11 @@ class KeizarHttpClientImpl(
 
     override suspend fun getRoom(
         roomNumber: UInt,
+        token: String,
     ): RoomInfo {
-        val respond: HttpResponse = client.get(urlString = "$endpoint/room/get/$roomNumber")
+        val respond: HttpResponse = client.get(urlString = "$endpoint/room/get/$roomNumber") {
+            header("Authorization", "Bearer $token")
+        }
         if (respond.status != HttpStatusCode.OK) {
             throw NetworkFailureException("Failed getRoom")
         }
@@ -79,22 +90,25 @@ class KeizarHttpClientImpl(
     override suspend fun postRoomJoin(
         roomNumber: UInt,
         userInfo: UserInfo,
+        token: String,
     ): Boolean {
         val respond = client.post(
             urlString = "$endpoint/room/join/$roomNumber"
         ) {
-            contentType(ContentType.Application.Json)
-            setBody(userInfo)
+            header("Authorization", "Bearer $token")
         }
         return respond.status == HttpStatusCode.OK
     }
 
     override suspend fun getRoomWebsocketSession(
         roomNumber: UInt,
+        token: String,
     ): DefaultClientWebSocketSession {
         return client.webSocketSession(
             urlString = "ws:${endpoint.substringAfter(':')}/room/$roomNumber",
-        )
+        ) {
+            header("Authorization", "Bearer $token")
+        }
     }
 
     override fun close() {

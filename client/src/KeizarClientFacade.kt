@@ -1,5 +1,6 @@
 package org.keizar.client
 
+import kotlinx.coroutines.flow.StateFlow
 import org.keizar.client.modules.GameRoomModule
 import org.keizar.client.modules.GameRoomModuleImpl
 import org.keizar.client.modules.GameSessionModuleImpl
@@ -10,10 +11,11 @@ import org.keizar.utils.communication.message.UserInfo
 import kotlin.coroutines.CoroutineContext
 
 class KeizarClientFacade(
-    private val endpoint: String
+    private val endpoint: String,
+    private val clientToken: StateFlow<String?>,
 ) {
     private val client: KeizarHttpClient = KeizarHttpClientImpl(endpoint)
-    private val room: GameRoomModule = GameRoomModuleImpl(client)
+    private val room: GameRoomModule = GameRoomModuleImpl(client, clientToken)
 
     /**
      * Create a room with random room number.
@@ -67,14 +69,14 @@ class KeizarClientFacade(
     suspend fun createGameSession(
         roomNumber: UInt,
         parentCoroutineContext: CoroutineContext,
-        userInfo: UserInfo,
     ): RemoteGameSession {
         val roomInfo = room.getRoom(roomNumber)
-        val session = GameSessionModuleImpl(roomInfo.roomNumber, parentCoroutineContext, client)
-        return RemoteGameSession.createAndConnect(
-            parentCoroutineContext,
-            session,
-            userInfo,
+        val session = GameSessionModuleImpl(
+            roomNumber = roomInfo.roomNumber,
+            parentCoroutineContext = parentCoroutineContext,
+            client = client,
+            token = clientToken,
         )
+        return RemoteGameSession.createAndConnect(session)
     }
 }

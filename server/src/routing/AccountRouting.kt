@@ -25,7 +25,7 @@ fun Application.accountRouting(context: ServerContext) {
                     val user = accounts.getUser(uid) ?: throw NotFoundException("Invalid user")
                     call.respond(user)
                 }
-                post("/newAvatar") {
+                post("/avatar") {
                     val uid = getUserId() ?: return@post
                     val contentType = call.request.contentType()
                     val path = call.receiveStream().use { input ->
@@ -34,8 +34,8 @@ fun Application.accountRouting(context: ServerContext) {
                     call.respond(ImageUrlExchange(path))
                 }
             }
-            get("search") {
-                val name: String = call.parameters.getOrFail("name") // currently required
+            get("/search") {
+                val name: String = call.request.queryParameters.getOrFail("name")
                 val user = accounts.getUserByName(name) ?: throw NotFoundException("Invalid user")
                 call.respond(user)
             }

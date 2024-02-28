@@ -44,13 +44,14 @@ internal interface GameSessionModule : AutoCloseable {
     fun bind(remote: RemoteRoundSession, round: RoundSession)
     fun sendConfirmNextRound()
     fun sendMove(from: BoardPos, to: BoardPos)
-    suspend fun connect(userInfo: UserInfo)
+    suspend fun connect()
 }
 
 internal class GameSessionModuleImpl(
     private val roomNumber: UInt,
     parentCoroutineContext: CoroutineContext,
     private val client: KeizarHttpClient,
+    private val token: StateFlow<String?>,
 ) : GameSessionModule {
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
@@ -66,9 +67,9 @@ internal class GameSessionModuleImpl(
 
     private val outflowChannel: Channel<Request> = Channel()
 
-    override suspend fun connect(userInfo: UserInfo) {
+    override suspend fun connect() {
         try {
-            serverConnection(userInfo)
+            serverConnection(token.value ?: throw IllegalStateException("User token not available"))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -89,10 +90,8 @@ internal class GameSessionModuleImpl(
         }
     }
 
-    private suspend fun serverConnection(userInfo: UserInfo) {
-        val session = client.getRoomWebsocketSession(roomNumber)
-
-        session.sendSerialized(userInfo)
+    private suspend fun serverConnection(token: String) {
+        val session = client.getRoomWebsocketSession(roomNumber, token)
 
         myCoroutineScope.launch {
             session.messageInflow()
@@ -125,6 +124,7 @@ internal class GameSessionModuleImpl(
                         player.complete(respond.playerAllocation)
                         gameSnapshot.complete(Json.decodeFromJsonElement(respond.gameSnapshot))
                     }
+
                     ConfirmNextRound -> gameSession.confirmNextRound(player.await().opponent())
                     is Move -> {
                         val round = gameSession.currentRound.first()

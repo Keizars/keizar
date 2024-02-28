@@ -12,7 +12,12 @@ import org.koin.dsl.module
 
 fun getKoinModule(client: Client = Client(BuildConfig.SERVER_ENDPOINT)): Module {
     return module {
-        single<KeizarClientFacade> { KeizarClientFacade(BuildConfig.SERVER_ENDPOINT) }
+        single<KeizarClientFacade> {
+            KeizarClientFacade(
+                BuildConfig.SERVER_ENDPOINT,
+                get<SessionManager>().token
+            )
+        }
         single<SavedStateRepository> { SavedStateRepository(androidContext().savedStateStore) }
         single<SessionManager> { SessionManager() }
         single<Client> { client }

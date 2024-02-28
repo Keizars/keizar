@@ -1,5 +1,6 @@
 package org.keizar.client.modules
 
+import kotlinx.coroutines.flow.StateFlow
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
@@ -18,7 +19,11 @@ interface GameRoomModule {
 
 class GameRoomModuleImpl(
     private val client: KeizarHttpClient,
+    private val _token: StateFlow<String?>,
 ) : GameRoomModule {
+    private val token
+        get() = _token.value ?: throw IllegalStateException("User token not available")
+
     private companion object {
         private val logger = logger<GameRoomModuleImpl>()
     }
@@ -32,7 +37,7 @@ class GameRoomModuleImpl(
     override suspend fun createRoom(roomNumber: UInt?, boardProperties: BoardProperties): RoomInfo {
         val actualRoomNumber = roomNumber ?: Random.nextUInt(10000u, 99999u)
         runCatching {
-            client.postRoomCreate(actualRoomNumber, boardProperties)
+            client.postRoomCreate(actualRoomNumber, boardProperties, token)
         }.onSuccess {
             logger.info { "GameRoomModule.createRoom: successfully created $actualRoomNumber" }
         }.onFailure {
@@ -42,11 +47,11 @@ class GameRoomModuleImpl(
     }
 
     override suspend fun getRoom(roomNumber: UInt): RoomInfo {
-        return client.getRoom(roomNumber)
+        return client.getRoom(roomNumber, token)
     }
 
     override suspend fun joinRoom(roomNumber: UInt, userInfo: UserInfo): Boolean {
-        return kotlin.runCatching { client.postRoomJoin(roomNumber, userInfo) }
+        return kotlin.runCatching { client.postRoomJoin(roomNumber, userInfo, token) }
             .onSuccess {
                 logger.info { "GameRoomModule.joinRoom: successfully joined $roomNumber" }
             }.onFailure {

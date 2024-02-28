@@ -31,11 +31,9 @@ interface RemoteGameSession : GameSession {
     companion object {
         // use functions in KeizarClientFacade instead
         internal suspend fun createAndConnect(
-            parentCoroutineContext: CoroutineContext,
             session: GameSessionModule,
-            userInfo: UserInfo,
         ): RemoteGameSession {
-            session.connect(userInfo)
+            session.connect()
             val game = GameSession.restore(session.getGameSnapshot()) { ruleEngine ->
                 RemoteRoundSessionImpl(
                     RoundSessionImpl(ruleEngine),
@@ -47,7 +45,6 @@ interface RemoteGameSession : GameSession {
                 game = game,
                 gameSessionModule = session,
                 player = session.getPlayer(),
-                parentCoroutineContext = parentCoroutineContext
             )
         }
     }
@@ -57,10 +54,7 @@ class RemoteGameSessionImpl internal constructor(
     private val game: GameSession,
     private val gameSessionModule: GameSessionModule,
     player: Player,
-    parentCoroutineContext: CoroutineContext,
 ) : GameSession by game, RemoteGameSession {
-    private val myCoroutineScope: CoroutineScope =
-        CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
     override val state: Flow<PlayerSessionState> = gameSessionModule.getPlayerState()
 
