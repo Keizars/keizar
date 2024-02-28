@@ -4,17 +4,6 @@ plugins {
     application
 }
 
-java.toolchain {
-    languageVersion.set(JavaLanguageVersion.of(8))
-}
-kotlin {
-    sourceSets.all {
-        languageSettings.languageVersion = "1.9"
-    }
-
-}
-kotlin.jvmToolchain(8)
-
 dependencies {
     api(libs.kotlinx.serialization.json)
     implementation(project(":rule-engine"))

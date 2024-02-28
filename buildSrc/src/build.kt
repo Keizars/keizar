@@ -143,7 +143,7 @@ fun KotlinSourceSet.configureKotlinOptIns() {
     }
 }
 
-val DEFAULT_JVM_TARGET = JavaVersion.VERSION_1_8
+val DEFAULT_JVM_TARGET = JavaVersion.VERSION_11
 
 
 private fun Project.getProjectPreferredJvmTargetVersion() = extra.runCatching { get("ani.jvm.target") }.fold(

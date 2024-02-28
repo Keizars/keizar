@@ -1,6 +1,5 @@
 [versions]
-kotlin = "1.9.21"
-jetpack-compose-compiler = "1.6.2" # used by android
+kotlin = "2.0.0-Beta4"
 coroutines = "1.7.3"
 mongodb-driver-kotlin-coroutine = "4.10.1"
 serialization = "1.6.2"
@@ -10,9 +9,7 @@ ktor = "2.3.7"
 koin = "3.5.3"
 slf4j = "2.0.7"
 jsoup = "1.15.4"
-jetpack-compose = "1.6.2"
-compose-multiplatform = "1.6.0"
-android-gradle-plugin = "8.2.1"
+android-gradle-plugin = "8.2.2"
 accompanist = "0.33.2-alpha"
 datastore = "1.0.0"
 libtorrent4j = "2.1.0-31"
@@ -23,6 +20,15 @@ retrofit = "2.9.0"
 retrofit-kotlinx-serialization = "1.0.0"
 coil = "3.0.0-alpha04"
 dynamodb_version = "2.17.100"
+
+jetpack-compose = "1.6.2"
+# https://androidx.dev/storage/compose-compiler/repository
+jetpack-compose-compiler = "1.5.11-dev-k2.0.0-Beta4-21f5e479a96" # used by android
+# https://github.com/JetBrains/compose-multiplatform/releases
+# https://www.jetbrains.com/help/kotlin-multiplatform-dev/compose-compatibility-and-versioning.html#use-a-developer-version-of-compose-multiplatform-compiler
+compose-multiplatform = "1.6.0"
+# https://maven.pkg.jetbrains.space/public/p/compose/dev/org/jetbrains/compose/compiler/compiler/
+compose-multiplatform-compiler = "1.5.9-kt-2.0.0-Beta4"
 
 [libraries]
 # Build
