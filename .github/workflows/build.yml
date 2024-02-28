@@ -9,6 +9,11 @@ on:
     paths-ignore:
       - '**/*.md'
 
+env:
+  DEPLOY_IMAGE: ${{ secrets.AWS_ECR_REGISTRY }}/keizar:${{ github.sha }}
+  TEST_REVISION_NAME: test-${{ github.sha }}
+  # PROD_REVISION_NAME: production-${{ github.ref_name }}
+
 jobs:
   build:
     name: "Build (${{ matrix.os }})"
@@ -102,3 +107,117 @@ jobs:
 
       - name: Check
         run: ./gradlew check ${{ env.gradleArgs }}
+
+  push-image:
+    name: "Build Image (${{ matrix.os }})"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-20.04
+    env:
+      enableLocalPublishingTest: 'false'
+      gradleArgs: --scan "-Dorg.gradle.jvmargs=-Xmx4096m" "-Dfile.encoding=UTF-8"
+      isMac: ${{ startsWith(matrix.os, 'macos') }}
+      isWindows: ${{ startsWith(matrix.os, 'windows') }}
+      isUbuntu: ${{ startsWith(matrix.os, 'ubuntu') }}
+      isUnix: ${{ startsWith(matrix.os, 'macos') || startsWith(matrix.os, 'ubuntu') }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: 'recursive'
+
+      - name: install-aws-cli-action
+        uses: unfor19/install-aws-cli-action@v1
+
+      - name: Log in to Amazon ECR
+        run: echo "${{ secrets.AWS_LOGIN_CONFIGURATION }}" | aws configure
+
+      - run: docker context create builders
+      - uses: docker/setup-buildx-action@v1
+        with:
+          version: latest
+          endpoint: builders
+
+      - name: Log in to Docker
+        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR_REGISTRY }}
+
+      - uses: actions/setup-java@v2
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v2
+
+      - name: Cache Konan
+        uses: pat-s/always-upload-cache@v3
+        with:
+          path: ~/.konan
+          key: ${{ runner.os }}-konan-${{ hashFiles('*.gradle.kts') }}
+          restore-keys: |
+            ${{ runner.os }}-konan-
+
+      - name: Cache Gradle
+        uses: pat-s/always-upload-cache@v3
+        with:
+          path: ~/.gradle
+          key: ${{ runner.os }}-gradle-${{ hashFiles('*.gradle.kts') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Cache Maven
+        uses: pat-s/always-upload-cache@v3
+        with:
+          path: ~/.m2
+          key: ${{ runner.os }}-maven-${{ hashFiles('*.gradle.kts') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - if: ${{ env.isUnix == 'true' }}
+        run: chmod -R 777 *
+
+      - name: Clean and download dependencies
+        run: ./gradlew clean ${{ env.gradleArgs }}
+
+
+      - if: ${{ env.isMac == 'true' }}
+        name: Prepare signing key
+        id: android_signing_key
+        uses: timheuer/base64-to-file@v1.1
+        with:
+          fileName: 'android_signing_key'
+          fileDir: './'
+          encodedString: ${{ secrets.SIGNING_RELEASE_STOREFILE }}
+
+      - if: ${{ env.isMac == 'true' }}
+        name: Build Android APK
+        run: ./gradlew assembleRelease ${{ env.gradleArgs }}
+        env:
+          "signing_release_storeFileFromRoot": ${{ steps.android_signing_key.outputs.filePath }}
+          "signing_release_storePassword": ${{ secrets.SIGNING_RELEASE_STOREPASSWORD }}
+          "signing_release_keyAlias": ${{ secrets.SIGNING_RELEASE_KEYALIAS }}
+          "signing_release_keyPassword": ${{ secrets.SIGNING_RELEASE_KEYPASSWORD }}
+
+      - if: ${{ env.isMac == 'true' }}
+        name: Upload Android APK packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: keizar-android
+          path: app/build/outputs/apk/release/app-release.apk
+
+
+      - name: Assemble
+        run: ./gradlew assemble ${{ env.gradleArgs }}
+
+      - name: Check
+        run: ./gradlew check ${{ env.gradleArgs }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: ${{ env.DEPLOY_IMAGE }}
+          file: "server/Dockerfile"
+          
