@@ -32,7 +32,9 @@ private suspend fun main() {
     println(
         userModel.insertOne(
             UserModel(
-                username = ""
+                id = "test",
+                username = "",
+                hash = "",
             )
         )
     )
