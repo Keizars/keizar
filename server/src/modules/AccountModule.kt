@@ -10,6 +10,7 @@ import org.keizar.utils.communication.account.AuthStatus
 import org.keizar.utils.communication.account.User
 import java.io.File
 import java.io.InputStream
+import java.nio.charset.Charset
 import java.util.UUID
 
 interface AccountModule {
@@ -38,11 +39,11 @@ class AccountModuleImpl(
                UserModel(
                id = userId.toString(),
                username = username,
-               hash = hash.toString(),
+               hash = hash.toString(Charsets.UTF_8),
            )
            )
 
-            val token = authTokenManager.createToken(userId)
+            val token = authTokenManager.createToken(userId.toString())
             AuthResponse(status, token)
         } else {
             AuthResponse(status)
@@ -56,11 +57,11 @@ class AccountModuleImpl(
     override suspend fun login(username: String, hash: ByteArray): AuthResponse {
         val user = database.user.getUserByName(username) ?: return AuthResponse(AuthStatus.USER_NOT_FOUND)
 
-        return if (user.hash != hash.toString()) {
+        return if (user.hash != hash.toString(Charsets.UTF_8)) {
             AuthResponse(AuthStatus.WRONG_PASSWORD)
         } else {
             val userId = UUID.fromString(user.id)
-            val token = authTokenManager.createToken(userId)
+            val token = authTokenManager.createToken(userId.toString())
             AuthResponse(AuthStatus.SUCCESS, token)
         }
     }
