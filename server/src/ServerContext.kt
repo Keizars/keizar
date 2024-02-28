@@ -1,6 +1,7 @@
 package org.keizar.server
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import org.keizar.server.database.InMemoryDatabaseManagerImpl
 import org.keizar.server.modules.GameRoomsModuleImpl
 import org.keizar.server.modules.AccountModuleImpl
@@ -23,6 +24,10 @@ class ServerContext(
         ),
         encoder = AesEncoder()
     )
+
+    init {
+        parentCoroutineScope.launch { databaseManager.initialize() }
+    }
 
     val gameRooms = GameRoomsModuleImpl(parentCoroutineScope.coroutineContext, logger)
     val accounts = AccountModuleImpl(databaseManager, authTokenManager)

@@ -13,7 +13,12 @@ class InMemorySeedBankDbControl : SeedBankDbControl {
     }
 
     override suspend fun addSeed(userId: String, seed: String): Boolean {
-        return data { add(SeedBankModel(userId, seed)) }
+        return data {
+            val seedBankModel = SeedBankModel(userId, seed)
+            if (contains(seedBankModel)) return@data false
+            add(seedBankModel)
+            return@data true
+        }
     }
 
     override suspend fun removeSeed(userId: String, seed: String): Boolean {

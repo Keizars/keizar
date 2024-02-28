@@ -1,10 +1,5 @@
 package org.keizar.server
 
-import junit.framework.TestCase.assertEquals
-import junit.framework.TestCase.assertFalse
-import junit.framework.TestCase.assertNotNull
-import junit.framework.TestCase.assertNull
-import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.keizar.server.database.InMemoryDatabaseManagerImpl
 import org.keizar.server.modules.AccountModuleImpl
@@ -12,6 +7,11 @@ import org.keizar.server.utils.AuthTokenManager
 import org.keizar.utils.communication.account.AuthStatus
 import java.util.UUID
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.test.assertNotNull
 
 class AccountModuleTest {
     private val plainAuthTokenManager = object : AuthTokenManager {
