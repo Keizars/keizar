@@ -19,6 +19,7 @@ enum class ColumnType {
 }
 
 data class ColumnValue(
+    val name: String,
     val type: ColumnType,
     val value: Any,
 )
