@@ -24,9 +24,11 @@ class InMemoryDatabaseManagerImpl : DatabaseManager {
     override val seedBank: SeedBankDbControl = InMemorySeedBankDbControl()
 }
 
-class MongoDatabaseManagerImpl : DatabaseManager {
+class MongoDatabaseManagerImpl(
+    connection: String
+) : DatabaseManager {
     private val client = MongoClient.create(MongoClientSettings.builder().apply {
-        applyConnectionString(ConnectionString(System.getenv("MONGODB_CONNECTION_STRING")))
+        applyConnectionString(ConnectionString(connection))
         uuidRepresentation(UuidRepresentation.STANDARD)
     }.build())
 

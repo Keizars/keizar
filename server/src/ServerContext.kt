@@ -3,6 +3,7 @@ package org.keizar.server
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.keizar.server.database.InMemoryDatabaseManagerImpl
+import org.keizar.server.database.MongoDatabaseManagerImpl
 import org.keizar.server.modules.GameRoomsModuleImpl
 import org.keizar.server.modules.AccountModuleImpl
 import org.keizar.server.modules.SeedBankModuleImpl
@@ -16,7 +17,12 @@ class ServerContext(
     parentCoroutineScope: CoroutineScope,
     logger: Logger,
 ) {
-    private val databaseManager = InMemoryDatabaseManagerImpl()
+    private val databaseManager = if (System.getenv("TESTING") != null) {
+        InMemoryDatabaseManagerImpl()
+    } else {
+        MongoDatabaseManagerImpl(connection = System.getenv("MONGODB_CONNECTION_STRING"))
+    }
+
     val authTokenManager = AuthTokenManagerImpl(
         config = AuthTokenConfig(
             secret = "d6yHBc5hXQrUjBKTK8Z3WFx7i6Zm6Ufm", // TODO: Change this to a secure secret
