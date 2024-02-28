@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -235,8 +236,17 @@ private fun BoardSeedTextField(
         },
         isError = isError,
         trailingIcon = {
-            IconButton(onClick = { vm.updateRandomSeed() }) {
-                Icon(Icons.Default.Refresh, contentDescription = "Generate random seed")
+            Row {
+                // TODO: add save seed effect
+                IconButton(onClick = { }) {
+                    Icon(
+                        imageVector = Icons.Default.Save,
+                        contentDescription = "Save seed",
+                    )
+                }
+                IconButton(onClick = { vm.updateRandomSeed() }) {
+                    Icon(Icons.Default.Refresh, contentDescription = "Generate random seed")
+                }
             }
         },
         shape = RoundedCornerShape(ROUND_CORNER_RADIUS),

@@ -235,10 +235,12 @@ fun RoundOneBottomBar(vm: GameBoardViewModel, onClickHome: () -> Unit) {
             icon = { Icon(Icons.Default.Home, null) },
             text = { Text("Home", fontSize = 10.sp) })
 
-        ActionButton(
-            onClick = { vm.replayCurrentRound() },
-            icon = { Icon(Icons.Default.Replay, null) },
-            text = { Text(text = "Replay", fontSize = 10.sp) })
+        if (vm.singlePlayerMode) {
+            ActionButton(
+                onClick = { vm.replayCurrentRound() },
+                icon = { Icon(Icons.Default.Replay, null) },
+                text = { Text(text = "Replay", fontSize = 10.sp) })
+        }
 
         var showDialog by remember { mutableStateOf(false) }
         val showResults = remember { mutableStateOf(true) }
@@ -293,24 +295,26 @@ fun RoundTwoBottomBar(
                 icon = { Icon(Icons.Default.Home, null) },
                 text = { Text("Home", fontSize = 10.sp) })
 
-            ActionButton(
-                onClick = {
-                    vm.replayCurrentRound()
-                    vm.setGameOverReadyToBeAnnouncement(false)
-                },
+            if (vm.singlePlayerMode) {
+                ActionButton(
+                    onClick = {
+                        vm.replayCurrentRound()
+                        vm.setGameOverReadyToBeAnnouncement(false)
+                    },
 
-                icon = { Icon(Icons.Default.Replay, null) },
-                text = { Text(text = "Replay Round", fontSize = 10.sp) })
+                    icon = { Icon(Icons.Default.Replay, null) },
+                    text = { Text(text = "Replay Round", fontSize = 10.sp) })
 
-            ActionButton(
-                onClick = {
-                    vm.replayGame()
-                    vm.setGameOverReadyToBeAnnouncement(false)
-                },
 
-                icon = { Icon(Icons.Default.Replay10, null) },
-                text = { Text(text = "Replay Game", fontSize = 10.sp) })
+                ActionButton(
+                    onClick = {
+                        vm.replayGame()
+                        vm.setGameOverReadyToBeAnnouncement(false)
+                    },
 
+                    icon = { Icon(Icons.Default.Replay10, null) },
+                    text = { Text(text = "Replay Game", fontSize = 10.sp) })
+            }
 
             ActionButton(
                 onClick = { /*TODO*/ },

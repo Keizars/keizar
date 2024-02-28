@@ -140,22 +140,8 @@ interface GameBoardViewModel : HasBackgroundScope {
     val canUndo: StateFlow<Boolean>
 
     @Stable
-    val round1NumOfMoves: StateFlow<Int>
+    val singlePlayerMode: Boolean
 
-    @Stable
-    val round1TimeTaken: StateFlow<Int>
-
-    @Stable
-    val round1AverageTimeTaken: StateFlow<Int>
-
-    @Stable
-    val round2NumOfMoves: StateFlow<Int>
-
-    @Stable
-    val round2TimeTaken: StateFlow<Int>
-
-    @Stable
-    val round2AverageTimeTaken: StateFlow<Int>
 
 
     // clicking
@@ -317,6 +303,8 @@ class MultiplayerGameBoardViewModel(
             difficulty = Difficulty.EASY,
             layoutSeed = boardProperties.seed ?: 0,
         )
+
+    override val singlePlayerMode = false
 }
 
 @Suppress("LeakingThis")
@@ -430,6 +418,9 @@ abstract class BaseGameBoardViewModel(
     override val showGameOverResults = _showGameOverResults
 
     @Stable
+    override val singlePlayerMode = true
+
+    @Stable
     override val availablePositions: SharedFlow<List<BoardPos>?> =
         game.currentRound.flatMapLatest { turn ->
             currentPick.flatMapLatest { pick ->
@@ -447,13 +438,6 @@ abstract class BaseGameBoardViewModel(
 
     override val canUndo: StateFlow<Boolean> =
         game.currentRound.flatMapLatest { it.canUndo }.stateInBackground(false)
-
-    override val round1NumOfMoves: StateFlow<Int> = MutableStateFlow(0) // TODO
-    override val round1TimeTaken: StateFlow<Int> = MutableStateFlow(0) // TODO
-    override val round1AverageTimeTaken: StateFlow<Int> = MutableStateFlow(0)// TODO
-    override val round2NumOfMoves: StateFlow<Int> = MutableStateFlow(0) // TODO
-    override val round2TimeTaken: StateFlow<Int> = MutableStateFlow(0) // TODO
-    override val round2AverageTimeTaken: StateFlow<Int> = MutableStateFlow(0)// TODO
 
     init {
         backgroundScope.launch {
