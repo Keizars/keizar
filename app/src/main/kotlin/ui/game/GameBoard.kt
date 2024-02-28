@@ -317,7 +317,7 @@ fun RoundTwoBottomBar(
             }
 
             ActionButton(
-                onClick = { /*TODO*/ },
+                onClick = { vm.saveResults() },
                 icon = { Icon(Icons.Default.Save, null) },
                 text = { Text(text = "Save Game", fontSize = 10.sp) })
 

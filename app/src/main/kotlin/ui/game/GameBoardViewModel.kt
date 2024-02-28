@@ -207,6 +207,8 @@ interface GameBoardViewModel : HasBackgroundScope {
 
     fun getPlayerStatistics(player: Player): PlayerStatistics
 
+    fun saveResults()
+
 
     suspend fun removeSavedState() {}
 }
@@ -585,6 +587,11 @@ abstract class BaseGameBoardViewModel(
 
     override fun getPlayerStatistics(player: Player): PlayerStatistics {
         return game.getStatistics(player)
+    }
+
+    override fun saveResults() {
+        // TODO: Implement
+        return
     }
 
 }
