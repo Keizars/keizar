@@ -229,4 +229,5 @@ jobs:
           push: true
           tags: ${{ env.DEPLOY_IMAGE }}
           file: "server/Dockerfile"
-          
+          context: server
+  
