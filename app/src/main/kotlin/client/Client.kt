@@ -104,6 +104,7 @@ class Client(
      */
     val module: Module = module {
         single<UserService> { retrofit.create(UserService::class.java) }
+        single<RoomService> { retrofit.create(RoomService::class.java) }
     }
 }
 

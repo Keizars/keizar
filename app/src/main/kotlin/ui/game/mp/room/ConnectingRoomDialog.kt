@@ -1,4 +1,4 @@
-package org.keizar.android.ui.game.mp
+package org.keizar.android.ui.game.mp.room
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column

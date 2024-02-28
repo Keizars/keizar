@@ -16,6 +16,9 @@ interface UserService {
     @POST("users/login")
     suspend fun login(@Body request: AuthRequest): AuthResponse
 
+    /**
+     * Check if a username is available or already taken.
+     */
     @POST("users/available")
     suspend fun isAvailable(@Query("username") username: String): UsernameValidityResponse
 

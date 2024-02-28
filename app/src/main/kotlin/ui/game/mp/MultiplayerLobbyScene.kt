@@ -46,6 +46,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.launchInBackground
+import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
 
 @Composable
 fun MultiplayerLobbyScene(

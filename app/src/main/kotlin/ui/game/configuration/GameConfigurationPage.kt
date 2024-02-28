@@ -1,6 +1,7 @@
 package org.keizar.android.ui.game.configuration
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -18,6 +19,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
@@ -35,10 +37,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.coerceAtLeast
@@ -47,6 +52,7 @@ import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.get
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.serialization.encodeToHexString
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.keizar.android.ui.external.placeholder.placeholder
@@ -54,6 +60,7 @@ import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.game.BoardTileLabels
 import org.keizar.android.ui.game.BoardTiles
 import org.keizar.android.ui.game.transition.PieceArranger
+import org.keizar.game.BoardProperties
 import org.keizar.game.Difficulty
 import org.keizar.game.Role
 import org.keizar.game.Role.BLACK
@@ -135,7 +142,7 @@ fun GameConfigurationPageLandscape(
                     .padding(start = 16.dp),
                 verticalArrangement = Arrangement.SpaceBetween
             ) {
-                BoardSeedTextField(vm)
+                BoardSeedTextField(vm, Modifier.fillMaxWidth())
 
                 PlayAsSelector(vm)
 
@@ -175,7 +182,7 @@ fun GameConfigurationPagePortrait(
                 .padding(horizontal = 16.dp)
         ) {
             item { BoardLayoutPreview(vm) }
-            item { BoardSeedTextField(vm) }
+            item { BoardSeedTextField(vm, Modifier.fillMaxWidth()) }
             item { PlayAsSelector(vm) }
             item {
                 val selected by vm.difficulty.collectAsStateWithLifecycle(null)
@@ -217,61 +224,100 @@ private fun StartButton(
     }
 }
 
+
 @Composable
 private fun BoardSeedTextField(
     vm: GameConfigurationViewModel,
+    modifier: Modifier = Modifier,
 ) {
     val text by vm.configurationSeedText.collectAsStateWithLifecycle()
     val isError by vm.isConfigurationSeedTextError.collectAsStateWithLifecycle(false)
+
+    BoardSeedTextField(
+        text = text,
+        onValueChange = { vm.setConfigurationSeedText(it) },
+        onClickRandom = { vm.updateRandomSeed() },
+        isError = isError,
+        modifier = modifier,
+    )
+}
+
+@Composable
+fun BoardSeedTextField(
+    text: String,
+    onValueChange: (String) -> Unit,
+    onClickRandom: () -> Unit,
+    isError: Boolean,
+    modifier: Modifier = Modifier,
+    supportingText: @Composable () -> Unit = {
+        Text(text = "Explore new board layouts by changing the seed")
+    },
+) {
+    val clipboardManager = LocalClipboardManager.current
+    val context = LocalContext.current
     OutlinedTextField(
         value = text,
-        onValueChange = { vm.setConfigurationSeedText(it) },
+        onValueChange = onValueChange,
         label = { Text(text = "Seed") },
         supportingText = {
             if (isError) {
-                Text(text = "Error: Invalid seed")
+                Text(text = "Error: Invalid seed. Please correct or regenerate one")
             } else {
-                Text(text = "Explore new board layouts by changing the seed")
+                supportingText()
             }
         },
         isError = isError,
         trailingIcon = {
-            Row {
-                // TODO: add save seed effect
-                IconButton(onClick = { }) {
-                    Icon(
-                        imageVector = Icons.Default.Save,
-                        contentDescription = "Save seed",
-                    )
+            if (clipboardManager.getText()?.text?.startsWith("P-") == true) {
+                IconButton(onClick = {
+                    onValueChange(clipboardManager.getText()?.text ?: "")
+                    Toast.makeText(context, "Seed pasted", Toast.LENGTH_SHORT).show()
+                }) {
+                    Icon(Icons.Default.ContentPaste, contentDescription = "Paste seed")
                 }
-                IconButton(onClick = { vm.updateRandomSeed() }) {
+            } else {
+                IconButton(onClick = onClickRandom) {
                     Icon(Icons.Default.Refresh, contentDescription = "Generate random seed")
                 }
             }
         },
         shape = RoundedCornerShape(ROUND_CORNER_RADIUS),
-        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        modifier = modifier,
+    )
+}
+
+
+@Composable
+private fun BoardLayoutPreview(
+    vm: GameConfigurationViewModel
+) {
+    BoardLayoutPreview(
+        boardProperties = vm.boardProperties.collectAsStateWithLifecycle(null).value,
+        playAs = vm.playAs.collectAsStateWithLifecycle(null).value,
+        Modifier.padding(bottom = 16.dp)
     )
 }
 
 @Composable
-private fun BoardLayoutPreview(vm: GameConfigurationViewModel) {
-    BoxWithConstraints {
-        val boardProperties by vm.boardProperties.collectAsStateWithLifecycle(null)
+fun BoardLayoutPreview(
+    boardProperties: BoardProperties?,
+    playAs: Role?,
+    modifier: Modifier = Modifier,
+) {
+    BoxWithConstraints(modifier) {
         val boardSize = min(maxWidth, maxHeight)
-        val playAs by vm.playAs.collectAsStateWithLifecycle(initialValue = null)
 
         val sizeFactor = 1f
         val adjustedBoardSize = boardSize * sizeFactor
         Box(
             Modifier
-                .padding(bottom = 16.dp)
                 .size(adjustedBoardSize)
-                .clip(RoundedCornerShape(ROUND_CORNER_RADIUS))
+                .clip(RoundedCornerShape(4.dp))
                 .placeholder(boardProperties == null || playAs == null),
         ) {
             boardProperties?.let { prop ->
-                val pieceArranger = remember(prop, vm) { PieceArranger(prop, vm.playAs) }
+                val pieceArranger = remember(prop) { PieceArranger(prop, snapshotFlow { playAs }.filterNotNull()) }
                 BoardTiles(
                     rotationDegrees = if (playAs == WHITE) 0f else 180f,
                     properties = prop,

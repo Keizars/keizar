@@ -12,7 +12,11 @@ import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.logging.trace
 
-abstract class AbstractViewModel : RememberObserver, ViewModel(), HasBackgroundScope {
+interface Disposable {
+    fun dispose()
+}
+
+abstract class AbstractViewModel : RememberObserver, ViewModel(), HasBackgroundScope, Disposable {
     protected val logger by lazy { logger(this::class) }
 
     private val closed = atomic(false)
@@ -31,7 +35,8 @@ abstract class AbstractViewModel : RememberObserver, ViewModel(), HasBackgroundS
         dispose()
     }
 
-    fun dispose() {
+    @CallSuper
+    override fun dispose() {
         if (!closed.compareAndSet(expect = false, update = true)) {
             return
         }

@@ -54,7 +54,7 @@ import org.keizar.android.ui.game.configuration.createBoard
 import org.keizar.android.ui.game.mp.MatchViewModel
 import org.keizar.android.ui.game.mp.MultiplayerGamePage
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
-import org.keizar.android.ui.game.mp.MultiplayerRoomScene
+import org.keizar.android.ui.game.mp.room.MultiplayerRoomScene
 import org.keizar.android.ui.game.sp.SinglePlayerGameScene
 import org.keizar.android.ui.profile.AuthScene
 import org.keizar.android.ui.profile.ProfileScene

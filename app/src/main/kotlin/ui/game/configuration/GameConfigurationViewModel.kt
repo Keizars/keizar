@@ -14,11 +14,12 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 import org.keizar.android.GameStartConfigurationEncoder
 import org.keizar.android.ui.foundation.AbstractViewModel
+import org.keizar.android.ui.foundation.Disposable
 import org.keizar.game.BoardProperties
 import org.keizar.game.Difficulty
 import org.keizar.game.Role
 
-interface GameConfigurationViewModel {
+interface GameConfigurationViewModel : Disposable {
     val configuration: StateFlow<GameStartConfiguration>
     val configurationSeed: Flow<String>
     fun updateRandomSeed()
@@ -46,6 +47,8 @@ interface GameConfigurationViewModel {
 fun rememberGameConfigurationViewModel(): GameConfigurationViewModel = remember {
     GameConfigurationViewModelImpl()
 }
+
+fun GameConfigurationViewModel(): GameConfigurationViewModel = GameConfigurationViewModelImpl()
 
 @Serializable
 data class GameStartConfiguration(

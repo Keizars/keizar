@@ -17,6 +17,7 @@ import org.keizar.android.BuildConfig
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.game.BaseGamePage
 import org.keizar.android.ui.game.MultiplayerGameBoardViewModel
+import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
 import org.keizar.client.KeizarClientFacade
 import org.keizar.client.RemoteGameSession
 import org.keizar.client.exception.NetworkFailureException
