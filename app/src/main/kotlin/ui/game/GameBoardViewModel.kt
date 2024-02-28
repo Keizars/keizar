@@ -42,6 +42,8 @@ import org.keizar.game.GameSession
 import org.keizar.game.Piece
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
+import org.keizar.game.statistics.PlayerStatistics
+import org.keizar.game.statistics.getStatistics
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
@@ -216,6 +218,8 @@ interface GameBoardViewModel : HasBackgroundScope {
     fun setShowGameOverResults(flag: Boolean)
 
     fun undo()
+
+    fun getPlayerStatistics(player: Player): PlayerStatistics
 
 
     suspend fun removeSavedState() {}
@@ -593,6 +597,10 @@ abstract class BaseGameBoardViewModel(
                 roundSession.undo(selfRole.value)
             }
         }
+    }
+
+    override fun getPlayerStatistics(player: Player): PlayerStatistics {
+        return game.getStatistics(player)
     }
 
 }

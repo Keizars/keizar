@@ -29,5 +29,18 @@ data class PlayerStatistics(
  * TODO: add comments
  */
 fun GameSession.getStatistics(player: Player): PlayerStatistics {
-    TODO("Not yet implemented")
+    // TODO("Not yet implemented")
+    return PlayerStatistics(
+        player,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+    )
 }

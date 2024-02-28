@@ -368,6 +368,8 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
             }
 
             is GameResult.Draw -> {
+                val playerStatistics = vm.getPlayerStatistics(vm.selfPlayer)
+
                 AlertDialog(onDismissRequest = {},
                     title = {
                         Text(
@@ -378,11 +380,11 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                     },
                     text = {
                         Text(
-                            text = "You captured: \n" +
-                                    "Opponent captured: \n" +
-                                    "Number of moves: \n" +
-                                    "Time: \n" +
-                                    "Your moves' average time: \n",
+                            text = "You captured: ${playerStatistics.round1Captured} + ${playerStatistics.round2Captured} = ${playerStatistics.round1Captured + playerStatistics.round2Captured}\n" +
+                                    "Opponent captured:  ${playerStatistics.round1OpponentCaptured} + ${playerStatistics.round2OpponentCaptured} = ${playerStatistics.round1OpponentCaptured + playerStatistics.round2OpponentCaptured}\n" +
+                                    "Number of moves: ${playerStatistics.round1Moves} + ${playerStatistics.round2Moves} = ${playerStatistics.round1Moves + playerStatistics.round2Moves}\n" +
+                                    "Time: ${playerStatistics.round1Time / 60} m ${playerStatistics.round1Time % 60} s + ${playerStatistics.round2Time / 60} m ${playerStatistics.round2Time % 60} s = ${(playerStatistics.round1Time + playerStatistics.round2Time) / 60} m ${(playerStatistics.round1Time + playerStatistics.round2Time) % 60} s\n" +
+                                    "Your moves' average time: ${playerStatistics.round1AverageTime / 60} m ${playerStatistics.round1AverageTime % 60} s + ${playerStatistics.round2AverageTime / 60} m ${playerStatistics.round2AverageTime % 60} s = ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) / 60} m ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) % 60} s\n",
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -399,6 +401,7 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
 
 
             is GameResult.Winner -> {
+                val playerStatistics = vm.getPlayerStatistics(vm.selfPlayer)
                 val winnerText = if (finalWinner.player == vm.selfPlayer) "You Win" else "You Lose"
                 AlertDialog(onDismissRequest = {},
                     title = {
@@ -410,11 +413,11 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                     },
                     text = {
                         Text(
-                            text = "You captured: \n" +
-                                    "Opponent captured: \n" +
-                                    "Number of moves: \n" +
-                                    "Time: \n" +
-                                    "Your moves' average time: \n",
+                            text = "You captured: ${playerStatistics.round1Captured} + ${playerStatistics.round2Captured} = ${playerStatistics.round1Captured + playerStatistics.round2Captured}\n" +
+                                    "Opponent captured:  ${playerStatistics.round1OpponentCaptured} + ${playerStatistics.round2OpponentCaptured} = ${playerStatistics.round1OpponentCaptured + playerStatistics.round2OpponentCaptured}\n" +
+                                    "Number of moves: ${playerStatistics.round1Moves} + ${playerStatistics.round2Moves} = ${playerStatistics.round1Moves + playerStatistics.round2Moves}\n" +
+                                    "Time: ${playerStatistics.round1Time / 60} m ${playerStatistics.round1Time % 60} s + ${playerStatistics.round2Time / 60} m ${playerStatistics.round2Time % 60} s = ${(playerStatistics.round1Time + playerStatistics.round2Time) / 60} m ${(playerStatistics.round1Time + playerStatistics.round2Time) % 60} s\n" +
+                                    "Your moves' average time: ${playerStatistics.round1AverageTime / 60} m ${playerStatistics.round1AverageTime % 60} s + ${playerStatistics.round2AverageTime / 60} m ${playerStatistics.round2AverageTime % 60} s = ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) / 60} m ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) % 60} s\n",
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -439,32 +442,37 @@ fun WinningRoundDialog(
     vm: GameBoardViewModel,
     showFlag: MutableState<Boolean> = mutableStateOf(false)
 ) {
-    val whiteCapturedPieces by vm.whiteCapturedPieces.collectAsState()
-    val blackCapturedPieces by vm.blackCapturedPieces.collectAsState()
     val currentRoundCount by vm.currentRoundCount.collectAsState()
     val endRoundAnnounced by vm.endRoundAnnounced.collectAsState()
-
-
-    val numOfMovesFlow = if (currentRoundCount == 0) vm.round1NumOfMoves else vm.round2NumOfMoves
-    val timeTakenFlow = if (currentRoundCount == 0) vm.round1TimeTaken else vm.round2TimeTaken
-    val averageTimeTakenFlow =
-        if (currentRoundCount == 0) vm.round1AverageTimeTaken else vm.round2AverageTimeTaken
-
-    val numOfMoves by numOfMovesFlow.collectAsState()
-    val timeTaken by timeTakenFlow.collectAsState()
-    val averageTimeTaken by averageTimeTakenFlow.collectAsState()
 
     when (winner) {
         null -> {}
 
         else -> {
+            val playerStatistics = vm.getPlayerStatistics(vm.selfPlayer)
+            val timeTaken: Int
+            val numOfMoves: Int
+            val selfCapturedPieces: Int
+            val opponentCapturedPieces: Int
+            val averageTimeTaken: Long
+
+            if (currentRoundCount == 0) {
+                timeTaken = playerStatistics.round1Time
+                numOfMoves = playerStatistics.round1Moves
+                selfCapturedPieces = playerStatistics.round1Captured
+                opponentCapturedPieces = playerStatistics.round1OpponentCaptured
+                averageTimeTaken = playerStatistics.round1AverageTime
+            } else {
+                timeTaken = playerStatistics.round2Time
+                numOfMoves = playerStatistics.round2Moves
+                selfCapturedPieces = playerStatistics.round2Captured
+                opponentCapturedPieces = playerStatistics.round2OpponentCaptured
+                averageTimeTaken = playerStatistics.round2AverageTime
+            }
+
             val roundCountText = if (currentRoundCount == 0) "First Round" else "Second Round"
             val winningStatusText =
                 if (winner == vm.selfRole.collectAsState().value) "You Win" else "You Lose"
-            val selfCapturedPieces =
-                if (vm.selfRole.collectAsState().value == Role.WHITE) blackCapturedPieces else whiteCapturedPieces
-            val opponentCapturedPieces =
-                if (vm.selfRole.collectAsState().value == Role.WHITE) whiteCapturedPieces else blackCapturedPieces
             if (showFlag.value || !endRoundAnnounced) {
                 AlertDialog(onDismissRequest = {},
                     title = {
@@ -476,13 +484,12 @@ fun WinningRoundDialog(
                         )
                     },
                     text = {
-                        // TODO: Add more information
                         Text(
                             text = "You captured: $selfCapturedPieces\n" +
                                     "Opponent captured: $opponentCapturedPieces\n" +
                                     "Number of moves: $numOfMoves\n" +
                                     "Time: ${timeTaken / 60} m ${timeTaken % 60} \n" +
-                                    "Your moves' average time: ${averageTimeTaken / 60} m ${averageTimeTaken % 60}",
+                                    "Your moves' average time: ${averageTimeTaken / 60} m ${averageTimeTaken % 60} s",
                             modifier = Modifier.fillMaxWidth(),
                             textAlign = TextAlign.Center
                         )
