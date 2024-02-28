@@ -24,9 +24,9 @@ class ServerContext(
         encoder = AesEncoder()
     )
 
-    val accounts = AccountModuleImpl(databaseManager, authTokenManager)
     val gameRooms = GameRoomsModuleImpl(parentCoroutineScope.coroutineContext, logger)
-    val seedBank = SeedBankModuleImpl()
+    val accounts = AccountModuleImpl(databaseManager, authTokenManager)
+    val seedBank = SeedBankModuleImpl(databaseManager)
 }
 
 fun setupServerContext(coroutineScope: CoroutineScope, logger: Logger): ServerContext {

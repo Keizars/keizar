@@ -1,24 +1,27 @@
 package org.keizar.server.modules
 
 import org.keizar.server.ServerContext
+import org.keizar.server.database.DatabaseManager
 import java.util.UUID
 
 interface SeedBankModule {
-    fun getSeeds(userId: UUID): List<String>
-    fun addSeed(userId: UUID, seed: String): Boolean
-    fun removeSeed(userId: UUID, seed: String): Boolean
+    suspend fun getSeeds(userId: UUID): List<String>
+    suspend fun addSeed(userId: UUID, seed: String): Boolean
+    suspend fun removeSeed(userId: UUID, seed: String): Boolean
 }
 
-class SeedBankModuleImpl() : SeedBankModule {
-    override fun getSeeds(userId: UUID): List<String> {
-        TODO("Not yet implemented")
+class SeedBankModuleImpl(
+    private val database: DatabaseManager,
+) : SeedBankModule {
+    override suspend fun getSeeds(userId: UUID): List<String> {
+        return database.seedBank.getSeeds(userId.toString())
     }
 
-    override fun addSeed(userId: UUID, seed: String): Boolean {
-        TODO("Not yet implemented")
+    override suspend fun addSeed(userId: UUID, seed: String): Boolean {
+        return database.seedBank.addSeed(userId.toString(), seed)
     }
 
-    override fun removeSeed(userId: UUID, seed: String): Boolean {
-        TODO("Not yet implemented")
+    override suspend fun removeSeed(userId: UUID, seed: String): Boolean {
+        return database.seedBank.removeSeed(userId.toString(), seed)
     }
 }
