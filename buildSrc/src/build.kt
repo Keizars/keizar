@@ -18,9 +18,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import java.io.File
 
 /**
- * 扁平化源集目录结构, 减少文件树层级 by 2
+ * Flatten the source set directory structure and reduce the file tree level by 2
  *
- * 变化:
+ * Changes:
  * ```
  * src/${targetName}Main/kotlin -> ${targetName}Main
  * src/${targetName}Main/resources -> ${targetName}Resources
@@ -28,7 +28,7 @@ import java.io.File
  * src/${targetName}Test/resources -> ${targetName}TestResources
  * ```
  *
- * `${targetName}` 可以是 `common`, `android` `desktop` 等.
+ * `${targetName}` can be `common`, `android` `desktop`, etc.
  */
 fun Project.configureFlattenSourceSets() {
     val flatten = extra.runCatching { get("flatten.sourceset") }.getOrNull()?.toString()?.toBoolean() ?: true
@@ -46,9 +46,9 @@ fun Project.configureFlattenSourceSets() {
 }
 
 /**
- * 扁平化多平台项目的源集目录结构, 减少文件树层级 by 2
+ * Flatten the source set directory structure of multi-platform projects and reduce the file tree level by 2
  *
- * 变化:
+ * Changes:
  * ```
  * src/androidMain/res -> androidRes
  * src/androidMain/assets -> androidAssets
@@ -59,7 +59,7 @@ fun Project.configureFlattenSourceSets() {
  * src/${targetName}Test/resources -> ${targetName}TestResources
  * ```
  *
- * `${targetName}` 可以是 `common`, `android` `desktop` 等.
+ * `${targetName}` can be `common`, `android` `desktop`, etc.
  */
 fun Project.configureFlattenMppSourceSets() {
     kotlinSourceSets?.invoke {
