@@ -30,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -144,6 +145,7 @@ fun MainScreen() {
             }
         }
         composable("game/lobby") {
+            LoginChecker(navController)
             MultiplayerLobbyScene(
                 onClickHome = { navController.navigate("home") },
                 onJoinGame = { roomId ->
@@ -161,6 +163,7 @@ fun MainScreen() {
             )
         }
         composable("game/room") { backStackEntry ->
+            LoginChecker(navController)
             val roomId = backStackEntry.arguments!!.getString("roomId")!!.toUInt()
             MultiplayerRoomScene(
                 roomId = roomId,
@@ -174,6 +177,7 @@ fun MainScreen() {
             )
         }
         composable("game/multiplayer") { backStackEntry ->
+            LoginChecker(navController)
             MultiplayerGamePage(
                 roomId = backStackEntry.arguments!!.getString("roomId")!!.toUInt(),
                 goBack = {
@@ -260,11 +264,7 @@ fun MainScreen() {
         composable(
             "profile",
         ) {
-            LaunchedEffect(true) {
-                if (GlobalContext.get().get<SessionManager>().token.first() == null) {
-                    navController.navigate("auth/login")
-                }
-            }
+            LoginChecker(navController)
             ProfileScene(
                 remember {
                     ProfileViewModel()
@@ -276,6 +276,15 @@ fun MainScreen() {
                     navController.navigate("profile/edit")
                 }
             )
+        }
+    }
+}
+
+@Composable
+private fun LoginChecker(navController: NavHostController) {
+    LaunchedEffect(true) {
+        if (GlobalContext.get().get<SessionManager>().token.first() == null) {
+            navController.navigate("auth/login")
         }
     }
 }
