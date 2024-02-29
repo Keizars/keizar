@@ -286,7 +286,7 @@ fun AuthPage(
 
         Button(
             onClick = {
-                if (!viewModel.agreementChecked.value) {
+                if (viewModel.isRegister.value && !viewModel.agreementChecked.value) {
                     showTermsDialog = true
                     return@Button
                 }
