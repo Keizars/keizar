@@ -471,6 +471,8 @@ abstract class BaseGameBoardViewModel(
     }
 
     override fun onClickTile(logicalPos: BoardPos) {
+        if (!arePiecesClickable) return
+        
         val pick = currentPick.value ?: return
         completePick(isDrag = false)
         launchInBackground(start = CoroutineStart.UNDISPATCHED) {
