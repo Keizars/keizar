@@ -17,7 +17,7 @@ class ServerContext(
     parentCoroutineScope: CoroutineScope,
     logger: Logger,
 ) {
-    private val databaseManager = if (System.getenv("TESTING") != null) {
+    private val databaseManager = if (System.getenv("TESTING") == "true") {
         InMemoryDatabaseManagerImpl()
     } else {
         MongoDatabaseManagerImpl(connection = System.getenv("MONGODB_CONNECTION_STRING"))

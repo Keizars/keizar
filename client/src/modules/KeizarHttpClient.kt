@@ -12,6 +12,7 @@ import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.client.request.get
 import io.ktor.client.request.header
+import io.ktor.client.request.patch
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
@@ -40,6 +41,9 @@ interface KeizarHttpClient : AutoCloseable {
         roomNumber: UInt,
         token: String,
     ): DefaultClientWebSocketSession
+
+    suspend fun setSeed(roomNumber: UInt, seed: UInt, token: String): Boolean
+    suspend fun acceptChange(roomNumber: UInt, seed: UInt, token: String): Boolean
 }
 
 class KeizarHttpClientImpl(
@@ -64,7 +68,7 @@ class KeizarHttpClientImpl(
         token: String,
     ) {
         val respond: HttpResponse =
-            client.post(urlString = "$endpoint/room/create/$roomNumber") {
+            client.post(urlString = "$endpoint/room/$roomNumber/create") {
                 header("Authorization", "Bearer $token")
                 contentType(ContentType.Application.Json)
                 setBody(boardProperties)
@@ -78,7 +82,7 @@ class KeizarHttpClientImpl(
         roomNumber: UInt,
         token: String,
     ): RoomInfo {
-        val respond: HttpResponse = client.get(urlString = "$endpoint/room/get/$roomNumber") {
+        val respond: HttpResponse = client.get(urlString = "$endpoint/room/$roomNumber") {
             header("Authorization", "Bearer $token")
         }
         if (respond.status != HttpStatusCode.OK) {
@@ -93,7 +97,7 @@ class KeizarHttpClientImpl(
         token: String,
     ): Boolean {
         val respond = client.post(
-            urlString = "$endpoint/room/join/$roomNumber"
+            urlString = "$endpoint/room/$roomNumber/join"
         ) {
             header("Authorization", "Bearer $token")
         }
@@ -109,6 +113,24 @@ class KeizarHttpClientImpl(
         ) {
             header("Authorization", "Bearer $token")
         }
+    }
+
+    override suspend fun setSeed(roomNumber: UInt, seed: UInt, token: String): Boolean {
+        val respond = client.patch(
+            urlString = "$endpoint/room/$roomNumber/seed/$seed"
+        ) {
+            header("Authorization", "Bearer $token")
+        }
+        return respond.status == HttpStatusCode.OK
+    }
+
+    override suspend fun acceptChange(roomNumber: UInt, seed: UInt, token: String): Boolean {
+        val respond = client.post(
+            urlString = "$endpoint/room/$roomNumber/agree"
+        ) {
+            header("Authorization", "Bearer $token")
+        }
+        return respond.status == HttpStatusCode.OK
     }
 
     override fun close() {

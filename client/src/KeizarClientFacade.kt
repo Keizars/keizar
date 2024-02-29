@@ -63,6 +63,20 @@ class KeizarClientFacade(
     }
 
     /**
+     * Changes the seed of the room
+     */
+    suspend fun setSeed(roomNumber: UInt, seed: UInt): Boolean {
+        return room.setSeed(roomNumber, seed)
+    }
+
+    /**
+     * Accepts the seed change made by other user
+     */
+    suspend fun acceptChange(roomNumber: UInt, seed: UInt): Boolean {
+        return room.acceptChange(roomNumber, seed)
+    }
+
+    /**
      * Create and return a RemoteGameSession for the room specified by its room number.
      * Should be called only when the players in the room are ready to start.
      */

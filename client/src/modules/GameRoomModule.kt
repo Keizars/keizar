@@ -15,6 +15,8 @@ interface GameRoomModule {
     suspend fun createRoom(roomNumber: UInt? = null, boardProperties: BoardProperties): RoomInfo
     suspend fun getRoom(roomNumber: UInt): RoomInfo
     suspend fun joinRoom(roomNumber: UInt, userInfo: UserInfo): Boolean
+    suspend fun setSeed(roomNumber: UInt, seed: UInt): Boolean
+    suspend fun acceptChange(roomNumber: UInt, seed: UInt): Boolean
 }
 
 class GameRoomModuleImpl(
@@ -56,6 +58,24 @@ class GameRoomModuleImpl(
                 logger.info { "GameRoomModule.joinRoom: successfully joined $roomNumber" }
             }.onFailure {
                 logger.error(it) { "GameRoomModule.joinRoom: failed to join $roomNumber" }
+            }.getOrThrow()
+    }
+
+    override suspend fun setSeed(roomNumber: UInt, seed: UInt): Boolean {
+        return kotlin.runCatching { client.setSeed(roomNumber, seed, token) }
+            .onSuccess {
+                logger.info { "GameRoomModule.setSeed: successfully set seed $seed for $roomNumber" }
+            }.onFailure {
+                logger.error(it) { "GameRoomModule.setSeed: failed to set seed $seed for $roomNumber" }
+            }.getOrThrow()
+    }
+
+    override suspend fun acceptChange(roomNumber: UInt, seed: UInt): Boolean {
+        return kotlin.runCatching { client.acceptChange(roomNumber, seed, token) }
+            .onSuccess {
+                logger.info { "GameRoomModule.acceptChange: successfully accepted seed $seed for $roomNumber" }
+            }.onFailure {
+                logger.error(it) { "GameRoomModule.acceptChange: failed to accept seed $seed for $roomNumber" }
             }.getOrThrow()
     }
 }

@@ -51,7 +51,7 @@ fun Application.gameRoomRouting(context: ServerContext) {
             logger.info("$username exiting room $roomNumber")
         }
 
-        post("/room/create/{roomNumber}") {
+        post("/room/{roomNumber}/create") {
             val roomNumber: UInt = getRoomNumberOrBadRequest()
             if (!checkAuthentication()) return@post
             val properties = call.receive<BoardProperties>()
@@ -63,7 +63,7 @@ fun Application.gameRoomRouting(context: ServerContext) {
             call.respond(HttpStatusCode.OK)
         }
 
-        get("/room/get/{roomNumber}") {
+        get("/room/{roomNumber}") {
             val roomNumber: UInt = getRoomNumberOrBadRequest()
             if (!checkAuthentication()) return@get
 
@@ -80,7 +80,7 @@ fun Application.gameRoomRouting(context: ServerContext) {
             call.respond(info)
         }
 
-        post("/room/join/{roomNumber}") {
+        post("/room/{roomNumber}/join") {
             val roomNumber: UInt = getRoomNumberOrBadRequest()
             val userId = getUserId() ?: return@post
             val username = context.accounts.getUser(userId)?.username

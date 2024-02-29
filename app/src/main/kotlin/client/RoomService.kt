@@ -10,7 +10,7 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface RoomService {
-    @POST("room/create/{roomNumber}")
+    @POST("room/{roomNumber}/create")
     suspend fun createRoom(
         @Path("roomNumber") roomNumber: UInt,
         @Body properties: BoardProperties
@@ -19,7 +19,7 @@ interface RoomService {
     @GET("room/{roomNumber}")
     suspend fun getRoom(@Path("roomNumber") roomNumber: UInt): RoomInfo
 
-    @POST("room/join/{roomNumber}")
+    @POST("room/{roomNumber}/join")
     suspend fun joinRoom(roomNumber: UInt, @Body userInfo: UserInfo): Boolean
 
     /**
