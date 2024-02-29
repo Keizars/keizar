@@ -69,6 +69,9 @@ class MultiplayerRoomViewModel(
     }.flowOn(Dispatchers.IO)
         .distinctUntilChanged()
         .shareInBackground()
+    suspend fun setSeed(seed: String) {
+        facade.setSeed(roomId, seed.toUInt())
+    }
 }
 
 @Composable
@@ -108,7 +111,7 @@ private fun AcceptArea(
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.End,
     ) {
-        Button(onClick = { /*TODO:Add accept button control*/}) {
+        Button(onClick = { vm.clickAccept()}) {
             Text(text = "Accept")
         }
     }

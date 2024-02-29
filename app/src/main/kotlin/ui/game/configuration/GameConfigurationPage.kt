@@ -275,7 +275,7 @@ fun BoardSeedTextField(
                 IconButton(onClick = {
                     onValueChange(clipboardManager.getText()?.text ?: "")
                     Toast.makeText(context, "Seed pasted", Toast.LENGTH_SHORT).show()
-                }) {
+                }, enabled = refreshEnable) {
                     Icon(Icons.Default.ContentPaste, contentDescription = "Paste seed")
                 }
             } else {

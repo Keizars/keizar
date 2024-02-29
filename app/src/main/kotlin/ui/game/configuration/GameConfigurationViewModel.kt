@@ -18,6 +18,8 @@ import org.keizar.android.ui.foundation.Disposable
 import org.keizar.game.BoardProperties
 import org.keizar.game.Difficulty
 import org.keizar.game.Role
+import java.util.Timer
+import java.util.TimerTask
 
 interface GameConfigurationViewModel : Disposable {
     val configuration: StateFlow<GameStartConfiguration>
@@ -42,7 +44,10 @@ interface GameConfigurationViewModel : Disposable {
     val difficulty: Flow<Difficulty>
     fun setDifficulty(difficulty: Difficulty)
 
-    val freshButtonEnable: StateFlow<Boolean>
+    @Stable
+    val freshButtonEnable: Flow<Boolean>
+
+    fun setFreshButtonEnable(value: Boolean)
 }
 
 @Composable
@@ -106,7 +111,10 @@ private class GameConfigurationViewModelImpl(
         }
     }
 
-    override val freshButtonEnable: StateFlow<Boolean> = MutableStateFlow(true)
+    override val freshButtonEnable: MutableStateFlow<Boolean> = MutableStateFlow(true)
+    override fun setFreshButtonEnable(value: Boolean) {
+        freshButtonEnable.value = value
+    }
 
     override fun setConfigurationSeedText(value: String) {
         _configurationSeedText.value = value
@@ -120,9 +128,17 @@ private class GameConfigurationViewModelImpl(
     }
 
     override fun updateRandomSeed() {
+        // TODO: Enable single player not to disable the button
+        setFreshButtonEnable(false)
         updateConfiguration {
             GameStartConfiguration.random()
         }
+        val timer = Timer()
+        timer.schedule(object : TimerTask() {
+            override fun run() {
+                setFreshButtonEnable(true)
+            }
+        }, 3000)
     }
 
     private inline fun updateConfiguration(block: GameStartConfiguration.() -> GameStartConfiguration) {
