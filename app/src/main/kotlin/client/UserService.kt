@@ -22,6 +22,6 @@ interface UserService {
     @POST("users/available")
     suspend fun isAvailable(@Query("username") username: String): UsernameValidityResponse
 
-    @GET("users/self")
+    @GET("users/me")
     suspend fun self(): User
 }
