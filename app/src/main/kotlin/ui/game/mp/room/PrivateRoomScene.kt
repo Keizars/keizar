@@ -177,7 +177,7 @@ private fun MultiplayerRoomPage(
                     playAs = Role.WHITE,
                 )
 
-                Configurations(vm, roomId)
+                Configurations(vm, roomId, Modifier.padding(top = 8.dp))
 
                 AcceptArea(vm)
             }
