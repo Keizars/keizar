@@ -232,12 +232,14 @@ private fun BoardSeedTextField(
 ) {
     val text by vm.configurationSeedText.collectAsStateWithLifecycle()
     val isError by vm.isConfigurationSeedTextError.collectAsStateWithLifecycle(false)
+    val refreshEnable by vm.freshButtonEnable.collectAsStateWithLifecycle(true)
 
     BoardSeedTextField(
         text = text,
         onValueChange = { vm.setConfigurationSeedText(it) },
         onClickRandom = { vm.updateRandomSeed() },
         isError = isError,
+        refreshEnable = refreshEnable,
         modifier = modifier,
     )
 }
@@ -248,6 +250,7 @@ fun BoardSeedTextField(
     onValueChange: (String) -> Unit,
     onClickRandom: () -> Unit,
     isError: Boolean,
+    refreshEnable: Boolean,
     modifier: Modifier = Modifier,
     supportingText: @Composable () -> Unit = {
         Text(text = "Explore new board layouts by changing the seed")
@@ -276,7 +279,7 @@ fun BoardSeedTextField(
                     Icon(Icons.Default.ContentPaste, contentDescription = "Paste seed")
                 }
             } else {
-                IconButton(onClick = onClickRandom) {
+                IconButton(onClick = onClickRandom, enabled = refreshEnable) {
                     Icon(Icons.Default.Refresh, contentDescription = "Generate random seed")
                 }
             }

@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -97,6 +98,23 @@ fun MultiplayerRoomScene(
 }
 
 @Composable
+private fun AcceptArea(
+    vm: PrivateRoomViewModelImpl,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier
+            .padding(bottom = 16.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.End,
+    ) {
+        Button(onClick = { /*TODO:Add accept button control*/}) {
+            Text(text = "Accept")
+        }
+    }
+}
+
+@Composable
 private fun MultiplayerRoomPage(
     roomId: UInt,
     onClickHome: () -> Unit,
@@ -137,6 +155,8 @@ private fun MultiplayerRoomPage(
                 Column(Modifier.wrapContentWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Column(Modifier.widthIn(max = 360.dp)) {
                         Configurations(vm, roomId)
+
+                        AcceptArea(vm)
                     }
                 }
             }
@@ -155,6 +175,8 @@ private fun MultiplayerRoomPage(
                 )
 
                 Configurations(vm, roomId)
+
+                AcceptArea(vm)
             }
 
         }
@@ -185,6 +207,7 @@ private fun Configurations(
             onValueChange = { vm.configuration.setConfigurationSeedText(it) },
             onClickRandom = { vm.configuration.updateRandomSeed() },
             isError = vm.configuration.isConfigurationSeedTextError.collectAsStateWithLifecycle(false).value,
+            refreshEnable = vm.configuration.freshButtonEnable.collectAsStateWithLifecycle(true).value,
             supportingText = {
                 Text(text = "Explore new board layouts by changing the seed. Other player can also see this board.")
             },

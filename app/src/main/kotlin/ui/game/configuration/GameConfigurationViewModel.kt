@@ -41,6 +41,8 @@ interface GameConfigurationViewModel : Disposable {
     @Stable
     val difficulty: Flow<Difficulty>
     fun setDifficulty(difficulty: Difficulty)
+
+    val freshButtonEnable: StateFlow<Boolean>
 }
 
 @Composable
@@ -103,6 +105,8 @@ private class GameConfigurationViewModelImpl(
             copy(difficulty = difficulty)
         }
     }
+
+    override val freshButtonEnable: StateFlow<Boolean> = MutableStateFlow(true)
 
     override fun setConfigurationSeedText(value: String) {
         _configurationSeedText.value = value
