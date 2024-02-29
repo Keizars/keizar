@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
 import me.him188.ani.utils.logging.error
@@ -71,7 +72,7 @@ abstract class AbstractViewModel : RememberObserver, ViewModel(), HasBackgroundS
     private fun createBackgroundScope(): CoroutineScope {
         return CoroutineScope(CoroutineExceptionHandler { _, throwable ->
             logger.error(throwable) { "Unhandled exception in background scope" }
-        })
+        } + SupervisorJob())
     }
 
     /**

@@ -45,13 +45,17 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.keizar.android.R
 import org.keizar.android.ui.foundation.launchInBackground
+import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
 
 @Composable
 fun AuthScene(
     initialIsRegister: Boolean,
     onClickBack: () -> Unit,
+    onSuccess: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val vm = remember(initialIsRegister) { AuthViewModel(initialIsRegister) }
@@ -80,6 +84,7 @@ fun AuthScene(
         ) {
             AuthPage(
                 viewModel = vm,
+                onSuccess = onSuccess,
                 Modifier.fillMaxSize()
             )
         }
@@ -90,8 +95,18 @@ fun AuthScene(
 @Composable
 fun AuthPage(
     viewModel: AuthViewModel,
+    onSuccess: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isProcessing by viewModel.isProcessing.collectAsStateWithLifecycle()
+    if (isProcessing) {
+        ConnectingRoomDialog(
+            text = {
+                Text(text = "Processing")
+            }
+        )
+    }
+
     val errorFontSize = 14.sp
     Column(
         modifier = modifier.fillMaxSize(),
@@ -104,9 +119,11 @@ fun AuthPage(
         val passwordError by viewModel.passwordError.collectAsStateWithLifecycle()
         val verifyPasswordError by viewModel.verifyPasswordError.collectAsStateWithLifecycle()
 
-        Box(modifier = Modifier
-            .padding(bottom = 64.dp)
-            .widthIn(max = 256.dp), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .padding(bottom = 64.dp)
+                .widthIn(max = 256.dp), contentAlignment = Alignment.Center
+        ) {
             Icon(
                 painter = painterResource(id = R.drawable.keizar_icon),
                 contentDescription = "Keizar Icon",
@@ -273,13 +290,17 @@ fun AuthPage(
                     showTermsDialog = true
                     return@Button
                 }
-                println("Click Login: ${viewModel.isProcessing.value}")
                 if (viewModel.isProcessing.compareAndSet(expect = false, update = true)) {
                     viewModel.launchInBackground {
-                        try {
+                        val result = try {
                             viewModel.proceedLogin()
                         } finally {
                             viewModel.isProcessing.compareAndSet(expect = true, update = false)
+                        }
+                        if (result) {
+                            withContext(Dispatchers.Main) {
+                                onSuccess()
+                            }
                         }
                     }
                 }
@@ -326,6 +347,7 @@ private fun PreviewLogin() {
     AuthScene(
         initialIsRegister = false,
         onClickBack = {},
+        onSuccess = {},
         Modifier
     )
 }
@@ -337,6 +359,7 @@ private fun PreviewRegister() {
     AuthScene(
         initialIsRegister = true,
         onClickBack = {},
+        onSuccess = {},
         Modifier
     )
 }

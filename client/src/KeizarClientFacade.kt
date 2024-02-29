@@ -1,6 +1,6 @@
 package org.keizar.client
 
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import org.keizar.client.modules.GameRoomModule
 import org.keizar.client.modules.GameRoomModuleImpl
 import org.keizar.client.modules.GameSessionModuleImpl
@@ -12,7 +12,7 @@ import kotlin.coroutines.CoroutineContext
 
 class KeizarClientFacade(
     private val endpoint: String,
-    private val clientToken: StateFlow<String?>,
+    private val clientToken: SharedFlow<String?>,
 ) {
     private val client: KeizarHttpClient = KeizarHttpClientImpl(endpoint)
     private val room: GameRoomModule = GameRoomModuleImpl(client, clientToken)

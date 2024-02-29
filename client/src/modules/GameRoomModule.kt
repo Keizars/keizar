@@ -1,6 +1,7 @@
 package org.keizar.client.modules
 
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.first
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
@@ -21,10 +22,9 @@ interface GameRoomModule {
 
 class GameRoomModuleImpl(
     private val client: KeizarHttpClient,
-    private val _token: StateFlow<String?>,
+    private val _token: SharedFlow<String?>,
 ) : GameRoomModule {
-    private val token
-        get() = _token.value ?: throw IllegalStateException("User token not available")
+    private suspend fun getToken() = _token.first() ?: throw IllegalStateException("User token not available")
 
     private companion object {
         private val logger = logger<GameRoomModuleImpl>()
@@ -39,7 +39,7 @@ class GameRoomModuleImpl(
     override suspend fun createRoom(roomNumber: UInt?, boardProperties: BoardProperties): RoomInfo {
         val actualRoomNumber = roomNumber ?: Random.nextUInt(10000u, 99999u)
         runCatching {
-            client.postRoomCreate(actualRoomNumber, boardProperties, token)
+            client.postRoomCreate(actualRoomNumber, boardProperties, getToken())
         }.onSuccess {
             logger.info { "GameRoomModule.createRoom: successfully created $actualRoomNumber" }
         }.onFailure {
@@ -49,11 +49,11 @@ class GameRoomModuleImpl(
     }
 
     override suspend fun getRoom(roomNumber: UInt): RoomInfo {
-        return client.getRoom(roomNumber, token)
+        return client.getRoom(roomNumber, getToken())
     }
 
     override suspend fun joinRoom(roomNumber: UInt, userInfo: UserInfo): Boolean {
-        return kotlin.runCatching { client.postRoomJoin(roomNumber, userInfo, token) }
+        return kotlin.runCatching { client.postRoomJoin(roomNumber, userInfo, getToken()) }
             .onSuccess {
                 logger.info { "GameRoomModule.joinRoom: successfully joined $roomNumber" }
             }.onFailure {
@@ -62,7 +62,7 @@ class GameRoomModuleImpl(
     }
 
     override suspend fun setSeed(roomNumber: UInt, seed: UInt): Boolean {
-        return kotlin.runCatching { client.setSeed(roomNumber, seed, token) }
+        return kotlin.runCatching { client.setSeed(roomNumber, seed, getToken()) }
             .onSuccess {
                 logger.info { "GameRoomModule.setSeed: successfully set seed $seed for $roomNumber" }
             }.onFailure {
@@ -71,7 +71,7 @@ class GameRoomModuleImpl(
     }
 
     override suspend fun acceptChange(roomNumber: UInt, seed: UInt): Boolean {
-        return kotlin.runCatching { client.acceptChange(roomNumber, seed, token) }
+        return kotlin.runCatching { client.acceptChange(roomNumber, seed, getToken()) }
             .onSuccess {
                 logger.info { "GameRoomModule.acceptChange: successfully accepted seed $seed for $roomNumber" }
             }.onFailure {

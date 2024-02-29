@@ -96,7 +96,7 @@ fun MultiplayerGamePage(
                 modifier = modifier
             )
         } ?: run {
-            ConnectingRoomDialog({
+            ConnectingRoomDialog(extra = {
                 if (BuildConfig.DEBUG) {
                     Text(text = "Debug info: RemoteGameSession.player is still null")
                 }

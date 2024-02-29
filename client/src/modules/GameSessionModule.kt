@@ -12,6 +12,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -32,7 +33,6 @@ import org.keizar.utils.communication.message.RemoteSessionSetup
 import org.keizar.utils.communication.message.Request
 import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.StateChange
-import org.keizar.utils.communication.message.UserInfo
 import kotlin.coroutines.CoroutineContext
 
 internal interface GameSessionModule : AutoCloseable {
@@ -51,7 +51,7 @@ internal class GameSessionModuleImpl(
     private val roomNumber: UInt,
     parentCoroutineContext: CoroutineContext,
     private val client: KeizarHttpClient,
-    private val token: StateFlow<String?>,
+    private val token: SharedFlow<String?>,
 ) : GameSessionModule {
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
@@ -69,7 +69,7 @@ internal class GameSessionModuleImpl(
 
     override suspend fun connect() {
         try {
-            serverConnection(token.value ?: throw IllegalStateException("User token not available"))
+            serverConnection(token.first() ?: throw IllegalStateException("User token not available"))
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

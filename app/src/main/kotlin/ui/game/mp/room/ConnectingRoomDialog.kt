@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,6 +23,7 @@ import androidx.compose.ui.window.DialogProperties
 
 @Composable
 fun ConnectingRoomDialog(
+    text: @Composable () -> Unit = { Text("Connecting...") },
     extra: @Composable ColumnScope.() -> Unit = {},
     properties: DialogProperties = DialogProperties(
         dismissOnBackPress = false,
@@ -41,7 +43,9 @@ fun ConnectingRoomDialog(
                 .padding(36.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "Connecting...", style = MaterialTheme.typography.titleMedium)
+            ProvideTextStyle(value = MaterialTheme.typography.titleMedium) {
+                text()
+            }
             LinearProgressIndicator(
                 Modifier
                     .padding(top = 32.dp)

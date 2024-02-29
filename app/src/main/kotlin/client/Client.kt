@@ -1,6 +1,8 @@
 package org.keizar.android.client
 
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
@@ -38,7 +40,7 @@ class Client(
     }
     private val authorizationInterceptor: (Interceptor.Chain) -> Response = { chain ->
         val request = chain.request().newBuilder().apply {
-            sessionManager.token.value?.let {
+            runBlocking { sessionManager.token.first() }?.let {
                 addHeader("Authorization", "Bearer $it")
             }
         }.build()
@@ -66,6 +68,7 @@ class Client(
 //                )
 //            )
 //        }
+
         if (response.code() == 401) {
             sessionManager.launchInBackground { invalidateToken() }
         }

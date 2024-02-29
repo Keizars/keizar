@@ -4,6 +4,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.withTimeout
 import org.keizar.android.client.SessionManager
 import org.keizar.android.client.UserService
 import org.keizar.android.ui.foundation.AbstractViewModel
@@ -76,7 +77,9 @@ class AuthViewModel(
         val username = username.value
         val password = password.value
 
-        return doAuth(username, password, isRegister.value)
+        return withTimeout(5000) {
+            doAuth(username, password, isRegister.value)
+        }
     }
 
     private suspend fun doAuth(username: String, password: String, isRegister: Boolean): Boolean {

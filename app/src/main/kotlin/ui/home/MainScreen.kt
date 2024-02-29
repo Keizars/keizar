@@ -16,7 +16,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -253,13 +252,16 @@ fun MainScreen() {
                 onClickBack = {
                     navController.popBackStack("profile", true)
                 },
+                onSuccess = {
+                    navController.popBackStack()
+                },
             )
         }
         composable(
             "profile",
         ) {
-            SideEffect {
-                if (GlobalContext.get().get<SessionManager>().token.value == null) {
+            LaunchedEffect(true) {
+                if (GlobalContext.get().get<SessionManager>().token.first() == null) {
                     navController.navigate("auth/login")
                 }
             }
