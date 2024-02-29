@@ -45,6 +45,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
+import org.keizar.android.client.RoomService
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.isSystemInLandscape
@@ -69,9 +70,6 @@ class MultiplayerRoomViewModel(
     }.flowOn(Dispatchers.IO)
         .distinctUntilChanged()
         .shareInBackground()
-    suspend fun setSeed(seed: String) {
-        facade.setSeed(roomId, seed.toUInt())
-    }
 }
 
 @Composable
@@ -111,8 +109,8 @@ private fun AcceptArea(
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.End,
     ) {
-        Button(onClick = { vm.clickAccept()}) {
-            Text(text = "Accept")
+        Button(onClick = { vm.clickAccept() }) {
+            Text(text = vm.acceptButtonText.value)
         }
     }
 }
@@ -137,7 +135,7 @@ private fun MultiplayerRoomPage(
         },
     ) { contentPadding ->
         val vm = remember {
-            PrivateRoomViewModelImpl()
+            PrivateRoomViewModelImpl(roomId)
         }
         if (isSystemInLandscape()) {
             Row(

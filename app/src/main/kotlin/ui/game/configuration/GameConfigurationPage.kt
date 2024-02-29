@@ -279,7 +279,9 @@ fun BoardSeedTextField(
                     Icon(Icons.Default.ContentPaste, contentDescription = "Paste seed")
                 }
             } else {
-                IconButton(onClick = onClickRandom, enabled = refreshEnable) {
+                IconButton(onClick = {
+                    onClickRandom()
+                }, enabled = refreshEnable) {
                     Icon(Icons.Default.Refresh, contentDescription = "Generate random seed")
                 }
             }
