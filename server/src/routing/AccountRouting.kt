@@ -1,24 +1,29 @@
 package org.keizar.server.routing
 
-import io.ktor.client.content.*
-import io.ktor.http.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
+import io.ktor.client.content.LocalFileContent
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.Application
+import io.ktor.server.application.call
+import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.NotFoundException
-import io.ktor.server.request.*
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
-import io.ktor.server.util.*
+import io.ktor.server.request.contentType
+import io.ktor.server.request.receiveStream
+import io.ktor.server.response.respond
+import io.ktor.server.routing.get
+import io.ktor.server.routing.post
+import io.ktor.server.routing.route
+import io.ktor.server.routing.routing
+import io.ktor.server.util.getOrFail
 import org.keizar.server.ServerContext
 import org.keizar.server.utils.getUserId
 import org.keizar.utils.communication.account.ImageUrlExchange
-import java.util.*
+import java.util.UUID
 
 fun Application.accountRouting(context: ServerContext) {
     val accounts = context.accounts
 
     routing {
-        route("/account") {
+        route("/users") {
             authenticate("auth-bearer") {
                 get("/me") {
                     val uid = getUserId() ?: return@get
