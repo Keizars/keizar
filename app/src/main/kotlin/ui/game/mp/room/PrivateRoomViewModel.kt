@@ -24,7 +24,7 @@ interface PrivateRoomViewModel {
 }
 
 class PrivateRoomViewModelImpl : PrivateRoomViewModel, AbstractViewModel() {
-    override val configuration: GameConfigurationViewModel = GameConfigurationViewModel()
+    override val configuration: GameConfigurationViewModel = GameConfigurationViewModel(false)
     override val accept: MutableState<Boolean> = mutableStateOf(false)
 
     override fun clickAccept() {

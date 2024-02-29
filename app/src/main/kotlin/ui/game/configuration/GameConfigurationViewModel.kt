@@ -24,6 +24,7 @@ import java.util.TimerTask
 interface GameConfigurationViewModel : Disposable {
     val configuration: StateFlow<GameStartConfiguration>
     val configurationSeed: Flow<String>
+    val isSingle: Boolean
     fun updateRandomSeed()
 
     @Stable
@@ -52,10 +53,10 @@ interface GameConfigurationViewModel : Disposable {
 
 @Composable
 fun rememberGameConfigurationViewModel(): GameConfigurationViewModel = remember {
-    GameConfigurationViewModelImpl()
+    GameConfigurationViewModelImpl(isSingle = true)
 }
 
-fun GameConfigurationViewModel(): GameConfigurationViewModel = GameConfigurationViewModelImpl()
+fun GameConfigurationViewModel(isSingle: Boolean): GameConfigurationViewModel = GameConfigurationViewModelImpl(isSingle = isSingle)
 
 @Serializable
 data class GameStartConfiguration(
@@ -78,7 +79,8 @@ fun GameStartConfiguration.createBoard(): BoardProperties =
     BoardProperties.getStandardProperties(layoutSeed)
 
 private class GameConfigurationViewModelImpl(
-    initialConfiguration: GameStartConfiguration = GameStartConfiguration.random()
+    initialConfiguration: GameStartConfiguration = GameStartConfiguration.random(),
+    override val isSingle: Boolean
 ) : GameConfigurationViewModel, AbstractViewModel() {
     override val configuration: MutableStateFlow<GameStartConfiguration> =
         MutableStateFlow(initialConfiguration)
@@ -128,17 +130,23 @@ private class GameConfigurationViewModelImpl(
     }
 
     override fun updateRandomSeed() {
-        // TODO: Enable single player not to disable the button
-        setFreshButtonEnable(false)
-        updateConfiguration {
-            GameStartConfiguration.random()
-        }
-        val timer = Timer()
-        timer.schedule(object : TimerTask() {
-            override fun run() {
-                setFreshButtonEnable(true)
+        if (!isSingle) {
+            setFreshButtonEnable(false)
+            updateConfiguration {
+                GameStartConfiguration.random()
             }
-        }, 3000)
+            val timer = Timer()
+            timer.schedule(object : TimerTask() {
+                override fun run() {
+                    setFreshButtonEnable(true)
+                }
+            }, 3000)
+        }
+        else {
+            updateConfiguration {
+                GameStartConfiguration.random()
+            }
+        }
     }
 
     private inline fun updateConfiguration(block: GameStartConfiguration.() -> GameStartConfiguration) {
