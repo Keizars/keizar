@@ -17,14 +17,14 @@ class MongoUserDbControl(
 
     override suspend fun updateUsername(userId: String, newUsername: String): Boolean {
         return userTable.updateOne(
-            filter = Filters.eq("id", userId),
+            filter = Filters.eq("_id", userId),
             update = Updates.set("username", newUsername)
         ).matchedCount > 0
     }
 
     override suspend fun updateNickname(userId: String, newNickname: String): Boolean {
         return userTable.updateOne(
-            filter = Filters.eq("id", userId),
+            filter = Filters.eq("_id", userId),
             update = Updates.set("nickname", newNickname)
         ).matchedCount > 0
     }
@@ -37,7 +37,7 @@ class MongoUserDbControl(
 
     override suspend fun getUserById(userId: String): UserModel? {
         return userTable.find(
-            Filters.eq("id", userId)
+            Filters.eq("_id", userId)
         ).firstOrNull()
     }
 

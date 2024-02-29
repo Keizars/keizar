@@ -25,7 +25,7 @@ fun Application.accountRouting(context: ServerContext) {
     routing {
         route("/users") {
             authenticate("auth-bearer") {
-                get("/me") {
+                get("me") {
                     val uid = getUserId() ?: return@get
                     val user = accounts.getUser(uid) ?: throw NotFoundException("Invalid user")
                     call.respond(user)
