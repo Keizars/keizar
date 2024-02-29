@@ -44,7 +44,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.foundation.pagerTabIndicatorOffset
@@ -74,7 +76,15 @@ fun ProfileScene(
                     }
                     DropdownMenu(expanded = showDropdown, onDismissRequest = { showDropdown = false }) {
                         DropdownMenuItem(
-                            onClick = { vm.launchInBackground { logout() } },
+                            onClick = {
+                                showDropdown = false
+                                vm.launchInBackground {
+                                    logout()
+                                    withContext(Dispatchers.Main) {
+                                        onClickBack()
+                                    }
+                                }
+                            },
                             text = { Text(text = "Log out") },
                             leadingIcon = {
                                 Icon(
