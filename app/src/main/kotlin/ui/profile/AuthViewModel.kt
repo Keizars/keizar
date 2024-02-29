@@ -140,7 +140,7 @@ class AuthViewModel(
     }
 
     fun onClickSwitch() {
-        flush()
+        flushErrors()
         if (isProcessing.value) return
 
         isRegister.value = !isRegister.value
