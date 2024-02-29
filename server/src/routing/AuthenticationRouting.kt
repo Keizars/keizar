@@ -56,6 +56,7 @@ private suspend fun ApplicationCall.respondAuth(authResponse: AuthResponse) {
     if (authResponse.status == AuthStatus.SUCCESS) {
         respond(authResponse)
     } else {
-        respond(HttpStatusCode.BadRequest, authResponse)
+        // respond(HttpStatusCode.BadRequest, authResponse)
+        respond(authResponse)
     }
 }
