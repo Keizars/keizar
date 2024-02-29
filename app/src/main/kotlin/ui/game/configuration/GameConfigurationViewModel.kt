@@ -119,9 +119,23 @@ private class GameConfigurationViewModelImpl(
     }
 
     override fun setConfigurationSeedText(value: String) {
-        _configurationSeedText.value = value
-        GameStartConfigurationEncoder.decode(value)?.let {
-            updateConfiguration { it }
+        if (!isSingle) {
+            setFreshButtonEnable(false)
+            _configurationSeedText.value = value
+            GameStartConfigurationEncoder.decode(value)?.let {
+                updateConfiguration { it }
+            }
+            val timer = Timer()
+            timer.schedule(object : TimerTask() {
+                override fun run() {
+                    setFreshButtonEnable(true)
+                }
+            }, 3000)
+        } else {
+            _configurationSeedText.value = value
+            GameStartConfigurationEncoder.decode(value)?.let {
+                updateConfiguration { it }
+            }
         }
     }
 
