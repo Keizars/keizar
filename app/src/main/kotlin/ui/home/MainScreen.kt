@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,6 +30,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -145,22 +147,49 @@ fun MainScreen() {
             }
         }
         composable("game/lobby") {
-            LoginChecker(navController)
-            MultiplayerLobbyScene(
-                onClickHome = { navController.navigate("home") },
-                onJoinGame = { roomId ->
-                    navController.navigate(navController.graph["game/multiplayer"].id, Bundle().apply {
-                        putString("roomId", roomId)
-                    })
-                },
-                onRoomCreated = { roomId ->
-                    navController.navigate(navController.graph["game/room"].id, Bundle().apply {
-                        putString("roomId", roomId)
-                    })
-                },
-                Modifier.fillMaxSize(),
-                vm = matchViewModel,
-            )
+            val isLoggedIn by GlobalContext.get().get<SessionManager>().isLoggedIn.collectAsStateWithLifecycle(null)
+            when (isLoggedIn) {
+                null -> {}
+                false -> {
+                    SideEffect {
+                        navController.navigate("auth/login")
+                    }
+//                    AlertDialog(
+//                        onDismissRequest = { navController.popBackStack() },
+//                        confirmButton = {
+//                            Button(onClick = { navController.navigate("auth/login") }) {
+//                                Text("OK")
+//                            }
+//                        },
+//                        dismissButton = {
+//                            TextButton(onClick = { navController.popBackStack() }) {
+//                                Text(text = "Cancel")
+//                            }
+//                        },
+//                        text = {
+//                            Text(text = "Please log in to play online")
+//                        }
+//                    )
+                }
+
+                true -> {
+                    MultiplayerLobbyScene(
+                        onClickHome = { navController.navigate("home") },
+                        onJoinGame = { roomId ->
+                            navController.navigate(navController.graph["game/multiplayer"].id, Bundle().apply {
+                                putString("roomId", roomId)
+                            })
+                        },
+                        onRoomCreated = { roomId ->
+                            navController.navigate(navController.graph["game/room"].id, Bundle().apply {
+                                putString("roomId", roomId)
+                            })
+                        },
+                        Modifier.fillMaxSize(),
+                        vm = matchViewModel,
+                    )
+                }
+            }
         }
         composable("game/room") { backStackEntry ->
             LoginChecker(navController)
