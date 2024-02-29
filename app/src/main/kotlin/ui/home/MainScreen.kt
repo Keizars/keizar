@@ -251,7 +251,7 @@ fun MainScreen() {
             AuthScene(
                 initialIsRegister = it.arguments?.getString("mode") == "register",
                 onClickBack = {
-                    navController.popBackStack()
+                    navController.popBackStack("profile", true)
                 },
             )
         }
@@ -289,9 +289,11 @@ fun HomePage(navController: NavController) {
         verticalArrangement = Arrangement.SpaceAround
     ) {
         // Title or logo can be added here
-        Box(modifier = Modifier
-            .weight(1f)
-            .widthIn(max = 256.dp), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .widthIn(max = 256.dp), contentAlignment = Alignment.Center
+        ) {
             Icon(
                 painter = painterResource(id = R.drawable.keizar_icon),
                 contentDescription = "Keizar Icon",
