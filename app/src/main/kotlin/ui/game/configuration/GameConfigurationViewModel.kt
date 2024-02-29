@@ -3,6 +3,7 @@ package org.keizar.android.ui.game.configuration
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.remember
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -10,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 import org.keizar.android.GameStartConfigurationEncoder
@@ -18,8 +20,6 @@ import org.keizar.android.ui.foundation.Disposable
 import org.keizar.game.BoardProperties
 import org.keizar.game.Difficulty
 import org.keizar.game.Role
-import java.util.Timer
-import java.util.TimerTask
 
 interface GameConfigurationViewModel : Disposable {
     val configuration: StateFlow<GameStartConfiguration>
@@ -120,17 +120,15 @@ private class GameConfigurationViewModelImpl(
 
     override fun setConfigurationSeedText(value: String) {
         if (!isSingle) {
-            setFreshButtonEnable(false)
-            _configurationSeedText.value = value
-            GameStartConfigurationEncoder.decode(value)?.let {
-                updateConfiguration { it }
-            }
-            val timer = Timer()
-            timer.schedule(object : TimerTask() {
-                override fun run() {
-                    setFreshButtonEnable(true)
+            backgroundScope.launch {
+                setFreshButtonEnable(false)
+                _configurationSeedText.value = value
+                GameStartConfigurationEncoder.decode(value)?.let {
+                    updateConfiguration { it }
                 }
-            }, 3000)
+                delay(3000)
+                setFreshButtonEnable(true)
+            }
         } else {
             _configurationSeedText.value = value
             GameStartConfigurationEncoder.decode(value)?.let {
@@ -145,16 +143,14 @@ private class GameConfigurationViewModelImpl(
 
     override fun updateRandomSeed() {
         if (!isSingle) {
-            setFreshButtonEnable(false)
-            updateConfiguration {
-                GameStartConfiguration.random()
-            }
-            val timer = Timer()
-            timer.schedule(object : TimerTask() {
-                override fun run() {
-                    setFreshButtonEnable(true)
+            backgroundScope.launch {
+                setFreshButtonEnable(false)
+                updateConfiguration {
+                    GameStartConfiguration.random()
                 }
-            }, 3000)
+                delay(3000)
+                setFreshButtonEnable(true)
+            }
         }
         else {
             updateConfiguration {
