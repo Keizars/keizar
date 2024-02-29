@@ -10,7 +10,7 @@ on:
       - '**/*.md'
 
 env:
-  DEPLOY_IMAGE: ${{ secrets.AWS_ECR_REGISTRY }}/keizar:${{ github.sha }}
+  DEPLOY_IMAGE: keizar.azurecr.io/keizar:${{ github.sha }}
   TEST_REVISION_NAME: test-${{ github.sha }}
   # PROD_REVISION_NAME: production-${{ github.ref_name }}
 
@@ -128,14 +128,18 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: 'recursive'
-
-      - name: install-aws-cli-action
-        uses: unfor19/install-aws-cli-action@v1
+      
+      #      - name: install-aws-cli-action
+      #        uses: unfor19/install-aws-cli-action@v1
       
       #      - name: Log in to Amazon ECR
       #        run: echo $AWS_LOGIN_CONFIGURATION | aws configure
       #        env:
       #          AWS_LOGIN_CONFIGURATION: ${{ secrets.AWS_LOGIN_CONFIGURATION }}
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - run: docker context create builders
       - uses: docker/setup-buildx-action@v1
@@ -144,10 +148,17 @@ jobs:
           endpoint: builders
 
       - name: Log in to Docker
-        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR_REGISTRY }}
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        uses: azure/CLI@v1
+        with:
+          azcliversion: 2.30.0
+          inlineScript: |
+            az acr login --name keizar
+      
+      #      - name: Log in to Docker
+      #        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR_REGISTRY }}
+      #        env:
+      #          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       - uses: actions/setup-java@v2
         with:
