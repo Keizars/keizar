@@ -19,4 +19,8 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     val self: SharedFlow<User> = sessionManager.token.mapLatest {
         userService.self()
     }.shareInBackground()
+
+    suspend fun logout() {
+        sessionManager.invalidateToken()
+    }
 }

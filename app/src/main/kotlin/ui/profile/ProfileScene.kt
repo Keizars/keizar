@@ -15,8 +15,12 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,7 +32,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.launch
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
+import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.foundation.pagerTabIndicatorOffset
 
 @Composable
@@ -61,12 +69,27 @@ fun ProfileScene(
                     }
                 },
                 actions = {
-//                    IconButton(onClick = onClickEdit) {
-//                        Icon(
-//                            Icons.Default.Edit,
-//                            contentDescription = "Edit",
-//                        )
-//                    }
+                    var showDropdown by remember {
+                        mutableStateOf(false)
+                    }
+                    DropdownMenu(expanded = showDropdown, onDismissRequest = { showDropdown = false }) {
+                        DropdownMenuItem(
+                            onClick = { vm.launchInBackground { logout() } },
+                            text = { Text(text = "Log out") },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.Logout,
+                                    contentDescription = "Log out",
+                                )
+                            }
+                        )
+                    }
+                    IconButton(onClick = { showDropdown = !showDropdown }) {
+                        Icon(
+                            Icons.Default.MoreVert,
+                            contentDescription = "More",
+                        )
+                    }
                 }
             )
         },
