@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.flowOf
 import org.keizar.game.internal.RuleEngine
 import org.keizar.game.snapshot.RoundSnapshot
 import org.keizar.utils.communication.game.BoardPos
-import org.keizar.utils.communication.game.spRoundStatistics
+import org.keizar.utils.communication.game.NeutralStats
 import java.time.Instant
 
 interface RoundSession {
@@ -56,14 +56,7 @@ interface RoundSession {
 
     fun pieceAt(pos: BoardPos): Role?
 
-    fun getStatistics(): spRoundStatistics = spRoundStatistics(
-        whiteMoves = whitePlayerMoves.value,
-        blackMoves = blackPlayerMoves.value,
-        whiteCaptured = whitePlayerCaptures.value,
-        blackCaptured = blackPlayerCaptures.value,
-        moveDuration = moveDurations.value,
-        userPlayer = null
-    )
+    fun getNeutralStatistics(): NeutralStats
 }
 
 class RoundSessionImpl(
@@ -159,6 +152,16 @@ class RoundSessionImpl(
 
     override fun getLostPiecesCount(role: Role): StateFlow<Int> {
         return ruleEngine.getLostPiecesCount(role)
+    }
+
+    override fun getNeutralStatistics(): NeutralStats {
+        return NeutralStats(
+            whiteMoves = whitePlayerMoves.value,
+            blackMoves = blackPlayerMoves.value,
+            whiteCaptured = whitePlayerCaptures.value,
+            blackCaptured = blackPlayerCaptures.value,
+            moveDuration = moveDurations.value,
+        )
     }
 
     override fun reset() {
