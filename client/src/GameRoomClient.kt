@@ -97,6 +97,7 @@ interface GameRoomClient : AutoCloseable {
 
     /**
      * Connect to the websocket session and start receiving updates
+     * Automatically called when the client is created.
      */
     suspend fun start()
 
@@ -128,6 +129,9 @@ class GameRoomClientImpl internal constructor(
     override val self: User,
     override val roomNumber: UInt,
     override val players: List<ClientPlayer>,
+    /**
+     * Websocket session for the game room
+     */
     private val session: DefaultClientWebSocketSession,
     parentCoroutineContext: CoroutineContext
 ) : GameRoomClient {
@@ -139,6 +143,10 @@ class GameRoomClientImpl internal constructor(
     private val _state: MutableStateFlow<GameRoomState> = MutableStateFlow(GameRoomState.STARTED)
     override val state: StateFlow<GameRoomState> = _state
 
+    /**
+     *  These two variables are set by RemoteSessionSetup message from the server.
+     *  The values are guaranteed to be non-null when the room state changes to [GameRoomState.ALL_CONNECTED].
+     */
     private val playerAllocation: MutableStateFlow<Player?> = MutableStateFlow(null)
     private val gameSnapshot: MutableStateFlow<GameSnapshot?> = MutableStateFlow(null)
 
@@ -218,6 +226,7 @@ class ClientPlayer(
     private val _state: MutableStateFlow<PlayerSessionState> = MutableStateFlow(
         if (initialIsReady) PlayerSessionState.READY else PlayerSessionState.STARTED
     )
+
     /**
      * State of the player: one of [PlayerSessionState.STARTED], [PlayerSessionState.READY],
      * [PlayerSessionState.PLAYING], [PlayerSessionState.DISCONNECTED],
