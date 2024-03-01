@@ -26,7 +26,7 @@ class ServerContext(
     logger: Logger,
     env: EnvironmentVariables,
 ) {
-    private val databaseManager = if (env.testing == "true") {
+    private val databaseManager = if (env.testing) {
         InMemoryDatabaseManagerImpl()
     } else {
         MongoDatabaseManagerImpl(
@@ -52,7 +52,7 @@ class ServerContext(
     } else {
         AwsAvatarStorage()
     }
-    
+
     val gameRooms = GameRoomsModuleImpl(parentCoroutineScope.coroutineContext, logger)
     val seedBank = SeedBankModuleImpl(databaseManager)
     val accounts = AccountModuleImpl(databaseManager, authTokenManager, avatarStorage)
