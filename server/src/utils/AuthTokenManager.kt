@@ -42,6 +42,6 @@ fun String.formatToUuidOrNull(): UUID? {
 }
 
 class AuthTokenConfig(
-    val secret: String,
+    val secret: ByteArray,
     val expirationTime: Long
 )

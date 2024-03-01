@@ -15,7 +15,7 @@ class AuthTokenManagerTest {
     fun `can encode and decode a token`() {
         val authTokenManager = AuthTokenManagerImpl(
             config = AuthTokenConfig(
-                secret = "HolgerPirk",
+                secret = "HolgerPirk".toByteArray(),
                 expirationTime = -1,
             ),
             encoder = AesEncoder()
@@ -30,7 +30,7 @@ class AuthTokenManagerTest {
     fun `decode null from an invalid token`() {
         val authTokenManager = AuthTokenManagerImpl(
             config = AuthTokenConfig(
-                secret = "HolgerPirk",
+                secret = "HolgerPirk".toByteArray(),
                 expirationTime = -1,
             ),
             encoder = AesEncoder()
@@ -43,7 +43,7 @@ class AuthTokenManagerTest {
     fun `decode null from an expired token`() {
         val authTokenManager = AuthTokenManagerImpl(
             config = AuthTokenConfig(
-                secret = "HolgerPirk",
+                secret = "HolgerPirk".toByteArray(),
                 expirationTime = 1,
             ),
             encoder = AesEncoder()

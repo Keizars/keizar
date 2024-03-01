@@ -33,7 +33,7 @@ class ServerContext(
 
     val authTokenManager = AuthTokenManagerImpl(
         config = AuthTokenConfig(
-            secret = System.getenv("TOKEN_SECRET") ?: generateSecureRandomString(),
+            secret = System.getenv("TOKEN_SECRET")?.toByteArray() ?: generateSecureRandomBytes(),
             expirationTime = 7.days.inWholeMilliseconds,
         ),
         encoder = AesEncoder()
@@ -52,8 +52,8 @@ fun setupServerContext(coroutineScope: CoroutineScope, logger: Logger): ServerCo
     return ServerContext(coroutineScope, logger)
 }
 
-private fun generateSecureRandomString(): String {
+private fun generateSecureRandomBytes(): ByteArray {
     val bytes = ByteArray(32)
     SecureRandom().nextBytes(bytes)
-    return bytes.toString(Charsets.UTF_8)
+    return bytes
 }
