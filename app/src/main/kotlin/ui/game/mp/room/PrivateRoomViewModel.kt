@@ -6,8 +6,11 @@ import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
@@ -16,10 +19,17 @@ import org.keizar.android.client.RoomService
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.game.configuration.GameConfigurationViewModel
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
-import org.keizar.client.KeizarClientFacade
+import org.keizar.client.GameRoomClient
+import org.keizar.client.KeizarWebsocketClientFacade
+import org.keizar.client.RoomFullException
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.seconds
+
+enum class ConnectRoomError {
+    ROOM_FULL,
+    NETWORK_ERROR,
+}
 
 /**
  * View model for the [MultiplayerLobbyScene]
@@ -27,6 +37,9 @@ import kotlin.time.Duration.Companion.seconds
 interface PrivateRoomViewModel {
     @Stable
     val roomId: UInt
+
+    @Stable
+    val connectRoomError: MutableStateFlow<ConnectRoomError?>
 
     @Stable
     val playersReady: SharedFlow<Boolean>
@@ -52,22 +65,42 @@ interface PrivateRoomViewModel {
 class PrivateRoomViewModelImpl(
     override val roomId: UInt
 ) : PrivateRoomViewModel, AbstractViewModel(), KoinComponent {
-    private val facade: KeizarClientFacade by inject()
+    private val facade: KeizarWebsocketClientFacade by inject()
+    private val roomService: RoomService by inject()
+
     override val playersReady: SharedFlow<Boolean> = flow {
         while (currentCoroutineContext().isActive) {
-            emit(facade.getRoom(roomId).playerInfo.all { it.isReady })
+            emit(roomService.getRoom(roomId).playerInfo.all { it.isReady })
             delay(2.seconds)
         }
     }.flowOn(Dispatchers.IO)
         .distinctUntilChanged()
         .shareInBackground()
 
+    private val client: Flow<GameRoomClient> = flow {
+        while (currentCoroutineContext().isActive) {
+            val client = try {
+                facade.connect(roomId, parentCoroutineContext = backgroundScope.coroutineContext)
+            } catch (e: RoomFullException) {
+                e.printStackTrace()
+                connectRoomError.value = ConnectRoomError.ROOM_FULL
+                continue
+            } catch (e: Throwable) {
+                e.printStackTrace()
+                connectRoomError.value = ConnectRoomError.NETWORK_ERROR
+                delay(5.seconds)
+                continue
+            }
+            emit(client)
+        }
+    }
+
+    override val connectRoomError: MutableStateFlow<ConnectRoomError?> = MutableStateFlow(null)
 
     override val configuration: GameConfigurationViewModel = GameConfigurationViewModel(false)
     override val accept: MutableState<Boolean> = mutableStateOf(false)
     override val acceptButtonText: MutableState<String> = mutableStateOf("Ready!")
 
-    private val roomService: RoomService by inject()
     private val showToast = mutableStateOf(false)
 
     init {
@@ -81,7 +114,7 @@ class PrivateRoomViewModelImpl(
     }
 
     private suspend fun setSeed(roomId: UInt, seed: UInt) {
-        roomService.setSeed(roomId, seed)
+        client.first().changeSeed(roomId, seed)
     }
 
     override fun clickAccept() {

@@ -13,7 +13,6 @@ import kotlinx.serialization.json.Json
 import org.keizar.client.internal.AbstractWebsocketSessionHandler
 import org.keizar.client.internal.GameSessionWsHandlerImpl
 import org.keizar.game.BoardProperties
-import org.keizar.game.RoomInfo
 import org.keizar.game.snapshot.GameSnapshot
 import org.keizar.utils.communication.GameRoomState
 import org.keizar.utils.communication.PlayerSessionState
@@ -56,12 +55,12 @@ interface GameRoomClient : AutoCloseable {
 
     companion object {
         internal fun create(
-            roomInfo: RoomInfo,
+            roomNumber: UInt,
             websocketSession: DefaultClientWebSocketSession,
             parentCoroutineContext: CoroutineContext
         ): GameRoomClient {
             return GameRoomClientImpl(
-                roomNumber = roomInfo.roomNumber,
+                roomNumber = roomNumber,
                 players = roomInfo.playerInfo.map {
                     ClientPlayer(
                         it.user.username,

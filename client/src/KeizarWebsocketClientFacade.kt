@@ -4,7 +4,6 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.first
 import org.keizar.client.internal.KeizarHttpClient
 import org.keizar.client.internal.KeizarHttpClientImpl
-import org.keizar.game.RoomInfo
 import kotlin.coroutines.CoroutineContext
 
 class KeizarWebsocketClientFacade(
@@ -17,14 +16,19 @@ class KeizarWebsocketClientFacade(
      * Connect to server by websocket and create a game room session
      */
     suspend fun connect(
-        roomInfo: RoomInfo,
+        roomNumber: UInt,
         parentCoroutineContext: CoroutineContext,
-    ): GameRoomClient? {
+    ): GameRoomClient {
         val token = clientToken.first() ?: throw IllegalStateException("User token not available")
-        if (!client.postRoomJoin(roomInfo.roomNumber, token)) return null
-        val websocketSession = client.getRoomWebsocketSession(roomInfo.roomNumber, token)
-        return GameRoomClient.create(roomInfo, websocketSession, parentCoroutineContext).apply {
+        if (!client.postRoomJoin(roomNumber, token)) {
+            throw RoomFullException()
+        }
+        val websocketSession = client.getRoomWebsocketSession(roomNumber, token)
+        return GameRoomClient.create(roomNumber, websocketSession, parentCoroutineContext).apply {
             start()
         }
     }
 }
+
+
+class RoomFullException : Exception("The room is full")
