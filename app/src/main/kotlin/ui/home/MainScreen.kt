@@ -54,6 +54,7 @@ import org.keizar.android.data.SavedState
 import org.keizar.android.data.SavedStateRepository
 import org.keizar.android.tutorial.Tutorials
 import org.keizar.android.ui.about.AboutScene
+import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.game.configuration.GameConfigurationScene
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
@@ -78,8 +79,6 @@ import org.koin.core.context.GlobalContext
 private val json = Json { ignoreUnknownKeys = true }
 
 @Composable
-@Preview(showBackground = true)
-@Preview(showBackground = true, device = Devices.TABLET)
 fun MainScreen() {
     val navController = rememberNavController()
 
@@ -462,3 +461,10 @@ fun CopyrightText() {
     )
 }
 
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, device = Devices.TABLET)
+@Composable
+private fun PreviewMainScreen() = ProvideCompositionalLocalsForPreview {
+    MainScreen()
+}
