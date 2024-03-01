@@ -57,12 +57,12 @@ fun Application.usersRouting(context: ServerContext) {
             get("/{username}") {
                 val username = call.parameters.getOrFail("username")
                 val user =
-                    accounts.getUserByName(username) ?: throw NotFoundException("No such user")
+                    accounts.getUserByUsername(username) ?: throw NotFoundException("No such user")
                 call.respond(user)
             }
             get("/search") {
                 val name: String = call.request.queryParameters.getOrFail("name")
-                val user = accounts.getUserByName(name) ?: throw NotFoundException("Invalid user")
+                val user = accounts.getUserByUsername(name) ?: throw NotFoundException("Invalid user")
                 call.respond(user)
             }
             post("/available") {

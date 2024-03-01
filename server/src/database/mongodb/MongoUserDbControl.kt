@@ -4,15 +4,15 @@ import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import kotlinx.coroutines.flow.firstOrNull
-import org.keizar.server.database.UserDbControl
+import org.keizar.server.database.AbstractUserDbControl
 import org.keizar.server.database.models.UserModel
 
 class MongoUserDbControl(
     private val userTable: MongoCollection<UserModel>
-) : UserDbControl {
+) : AbstractUserDbControl() {
 
     override suspend fun addUser(userModel: UserModel): Boolean {
-        return userTable.insertOne(userModel).wasAcknowledged()
+        return userTable.insertOne(userModel.sanitized()).wasAcknowledged()
     }
 
     override suspend fun update(
@@ -25,7 +25,7 @@ class MongoUserDbControl(
             filter = Filters.eq("_id", userId),
             update = Updates.combine(listOfNotNull(
                 newUsername?.let {
-                    Updates.set("username", it)
+                    Updates.set("username", it.lowercase())
                 },
                 newNickname?.let {
                     Updates.set("nickname", it)
@@ -39,7 +39,7 @@ class MongoUserDbControl(
 
     override suspend fun containsUsername(username: String): Boolean {
         return userTable.find(
-            Filters.eq("username", username)
+            Filters.eq("username", username.lowercase())
         ).firstOrNull() != null
     }
 
@@ -49,9 +49,9 @@ class MongoUserDbControl(
         ).firstOrNull()
     }
 
-    override suspend fun getUserByName(username: String): UserModel? {
+    override suspend fun getUserByUsername(username: String): UserModel? {
         return userTable.find(
-            Filters.eq("username", username)
+            Filters.eq("username", username.lowercase())
         ).firstOrNull()
     }
 }

@@ -20,7 +20,7 @@ interface AccountModule {
     suspend fun isUsernameTaken(username: String): Boolean
     suspend fun login(username: String, hash: ByteArray): AuthResponse
     suspend fun getUser(userId: UUID): User?
-    suspend fun getUserByName(name: String): User?
+    suspend fun getUserByUsername(name: String): User?
     suspend fun uploadNewAvatar(uid: UUID, input: InputStream, contentType: ContentType)
 }
 
@@ -40,7 +40,7 @@ class AccountModuleImpl(
             database.user.addUser(
                 UserModel(
                     id = userId.toString(),
-                    username = username,
+                    username = username.lowercase(),
                     hash = hash.toString(Charsets.UTF_8),
                 )
             )
@@ -57,7 +57,7 @@ class AccountModuleImpl(
     }
 
     override suspend fun login(username: String, hash: ByteArray): AuthResponse {
-        val user = database.user.getUserByName(username) ?: return AuthResponse(AuthStatus.USER_NOT_FOUND)
+        val user = database.user.getUserByUsername(username) ?: return AuthResponse(AuthStatus.USER_NOT_FOUND)
 
         return if (user.hash != hash.toString(Charsets.UTF_8)) {
             AuthResponse(AuthStatus.WRONG_PASSWORD)
@@ -77,8 +77,8 @@ class AccountModuleImpl(
         )
     }
 
-    override suspend fun getUserByName(name: String): User? {
-        val user = database.user.getUserByName(name) ?: return null
+    override suspend fun getUserByUsername(name: String): User? {
+        val user = database.user.getUserByUsername(name) ?: return null
         return User(
             nickname = user.nickname ?: user.username,
             username = user.username,

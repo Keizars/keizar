@@ -88,7 +88,7 @@ class AccountModuleTest {
         )
 
         assertNull(accountModule.getUser(UUID.randomUUID()))
-        assertNull(accountModule.getUserByName("blah"))
+        assertNull(accountModule.getUserByUsername("blah"))
 
         val respond = accountModule.register("test", byteArrayOf(1))
         assertEquals(AuthStatus.SUCCESS, respond.status)

@@ -2,10 +2,10 @@ package org.keizar.server.database.local
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.keizar.server.database.UserDbControl
+import org.keizar.server.database.AbstractUserDbControl
 import org.keizar.server.database.models.UserModel
 
-class InMemoryUserDbControl : UserDbControl {
+class InMemoryUserDbControl : AbstractUserDbControl() {
     private val _data: MutableList<UserModel> = mutableListOf()
     private val mutex = Mutex()
     private suspend inline fun <T> data(crossinline block: MutableList<UserModel>.() -> T): T {
@@ -13,7 +13,7 @@ class InMemoryUserDbControl : UserDbControl {
     }
 
     override suspend fun addUser(userModel: UserModel): Boolean {
-        return data { add(userModel) }
+        return data { add(userModel.sanitized()) }
     }
 
     override suspend fun update(
@@ -38,14 +38,14 @@ class InMemoryUserDbControl : UserDbControl {
     }
 
     override suspend fun containsUsername(username: String): Boolean {
-        return data { any { it.username == username } }
+        return data { any { it.username.equals(username, ignoreCase = true) } }
     }
 
     override suspend fun getUserById(userId: String): UserModel? {
         return data { find { it.id == userId } }
     }
 
-    override suspend fun getUserByName(username: String): UserModel? {
-        return data { find { it.username == username } }
+    override suspend fun getUserByUsername(username: String): UserModel? {
+        return data { find { it.username.equals(username, ignoreCase = true) } }
     }
 }

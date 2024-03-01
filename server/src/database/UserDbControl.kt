@@ -13,5 +13,9 @@ interface UserDbControl {
 
     suspend fun containsUsername(username: String): Boolean
     suspend fun getUserById(userId: String): UserModel?
-    suspend fun getUserByName(username: String): UserModel?
+    suspend fun getUserByUsername(username: String): UserModel?
+}
+
+abstract class AbstractUserDbControl : UserDbControl {
+    protected open fun UserModel.sanitized() = copy(username = username.lowercase())
 }
