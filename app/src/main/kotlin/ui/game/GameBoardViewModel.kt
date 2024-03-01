@@ -29,9 +29,11 @@ import org.keizar.aiengine.AlgorithmAI
 import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.BuildConfig
 import org.keizar.android.client.GameDataService
+import org.keizar.android.client.SessionManager
 import org.keizar.android.client.UserService
 import org.keizar.android.data.SavedState
 import org.keizar.android.data.SavedStateRepository
+import org.keizar.android.encode
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground
@@ -49,11 +51,14 @@ import org.keizar.game.RoundSession
 import org.keizar.game.statistics.getStatistics
 import org.keizar.utils.communication.account.User
 import org.keizar.utils.communication.game.BoardPos
+import org.keizar.utils.communication.game.GameData
 import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.game.PlayerStatistics
+import org.keizar.utils.communication.game.RoundStatistics
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
 interface GameBoardViewModel : HasBackgroundScope {
@@ -146,6 +151,16 @@ interface GameBoardViewModel : HasBackgroundScope {
 
     @Stable
     val singlePlayerMode: Boolean
+    
+    @Stable
+    val sessionManager: SessionManager
+    
+    @Stable
+    val round1Statistics: RoundStatistics
+    
+    @Stable
+    val round2Statistics: RoundStatistics
+    
 
 
     // clicking
@@ -234,7 +249,26 @@ fun rememberSinglePlayerGameBoardViewModel(
 sealed class PlayableGameBoardViewModel(
     game: GameSession,
     selfPlayer: Player,
-) : BaseGameBoardViewModel(game, selfPlayer)
+) : BaseGameBoardViewModel(game, selfPlayer) {
+    
+    override fun saveResults() {
+        var opponentName : String = ""
+        val userName = sessionManager.self.value?.username ?: ""
+        val gameDataService: GameDataService by inject()
+        if (this is MultiplayerGameBoardViewModel) {
+            this.launchInBackground {
+                opponentName = opponentUser.first().username
+            }
+        } else {
+            opponentName = "Computer"
+        }
+        val gameData = GameData(round1Statistics, round2Statistics, startConfiguration.encode(), opponentName, userName, Instant.now().toString())
+        this.launchInBackground {
+            gameDataService.sendGameData(gameData)
+        }
+    }
+    
+}
 
 class SinglePlayerGameBoardViewModel(
     game: GameSession,
@@ -322,6 +356,7 @@ class MultiplayerGameBoardViewModel(
             difficulty = Difficulty.EASY,
             layoutSeed = boardProperties.seed ?: 0,
         )
+    
 
     override val singlePlayerMode = false
 
@@ -340,7 +375,7 @@ class MultiplayerGameBoardViewModel(
 abstract class BaseGameBoardViewModel(
     private val game: GameSession,
     @Stable override val selfPlayer: Player,
-) : AbstractViewModel(), GameBoardViewModel {
+) : AbstractViewModel(), GameBoardViewModel, KoinComponent{
 
     open var arePiecesClickable: Boolean = true
 
@@ -448,6 +483,13 @@ abstract class BaseGameBoardViewModel(
 
     @Stable
     override val singlePlayerMode = true
+    
+    @Stable
+    override val sessionManager: SessionManager by inject()
+    
+    // TODO: Implement this
+    override val round1Statistics: RoundStatistics = RoundStatistics(0)
+    override val round2Statistics: RoundStatistics = RoundStatistics(0)
 
     @Stable
     override val availablePositions: SharedFlow<List<BoardPos>?> =
@@ -617,11 +659,7 @@ abstract class BaseGameBoardViewModel(
     override fun getPlayerStatistics(player: Player): PlayerStatistics {
         return game.getStatistics(player)
     }
-
-    override fun saveResults() {
-        // TODO: Implement
-        return
-    }
+    
 
 }
 

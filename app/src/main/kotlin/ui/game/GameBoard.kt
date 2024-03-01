@@ -64,7 +64,9 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.transition.CapturedPiecesHost
 import org.keizar.game.Role
 import org.keizar.utils.communication.game.GameResult
@@ -205,7 +207,8 @@ fun GameBoardScaffoldLandscape(
 fun DialogsAndBottomBar(
     vm: GameBoardViewModel,
     onClickHome: () -> Unit,
-    onClickGameConfig: () -> Unit
+    onClickGameConfig: () -> Unit,
+    onClickLogin: () -> Unit
 ) {
     val winner by vm.winner.collectAsState()
     val finalWinner by vm.finalWinner.collectAsState()
@@ -229,7 +232,7 @@ fun DialogsAndBottomBar(
 
         if (showRoundTwoBottomBar) {
             Column {
-                RoundTwoBottomBar(vm, onClickHome, onClickGameConfig)
+                RoundTwoBottomBar(vm, onClickHome, onClickGameConfig, onClickLogin)
             }
         }
     }
@@ -294,6 +297,7 @@ fun RoundTwoBottomBar(
     vm: GameBoardViewModel,
     onClickHome: () -> Unit,
     onClickGameConfig: () -> Unit,
+    onClickLogin:() -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column {
@@ -331,7 +335,15 @@ fun RoundTwoBottomBar(
             }
 
             ActionButton(
-                onClick = { vm.saveResults() },
+                onClick = { 
+                    vm.launchInBackground {
+                        val isLoggedIn = vm.sessionManager.isLoggedIn.first()
+                        if (isLoggedIn) {
+                            vm.saveResults()
+                        } else {
+                            onClickLogin()
+                        }
+                        } },
                 icon = { Icon(Icons.Default.Save, null) },
                 text = { Text(text = "Save Game", fontSize = 10.sp) })
 
@@ -584,7 +596,7 @@ fun WinningCounter(
     Row(
         modifier = modifier,
         horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment = CenterVertically
     ) {
         // Create a token for each number
         (1..3).forEach { number ->
@@ -733,7 +745,7 @@ private fun ActionButton(
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
         icon()
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = CenterVertically) {
             ProvideTextStyle(MaterialTheme.typography.labelMedium) {
                 text()
             }
@@ -775,7 +787,7 @@ fun UndoButton(vm: GameBoardViewModel) {
                 .padding(16.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.End,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = CenterVertically
         ) {
             Button(
                 onClick = { vm.undo() },
@@ -806,7 +818,8 @@ private fun PreviewRoundTwoBottomBar() {
     RoundTwoBottomBar(
         rememberSinglePlayerGameBoardForPreview(),
         onClickHome = { /* Navigate to home page*/ },
-        onClickGameConfig = { /* Navigate to game configuration page*/ }
+        onClickGameConfig = { /* Navigate to game configuration page*/ },
+        onClickLogin = { /* Navigate to login page*/ }
     )
 }
 

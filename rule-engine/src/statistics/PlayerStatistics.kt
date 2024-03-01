@@ -1,6 +1,5 @@
 package org.keizar.game.statistics
 
-import kotlinx.serialization.Serializable
 import org.keizar.game.GameSession
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.game.PlayerStatistics

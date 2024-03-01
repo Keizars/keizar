@@ -47,6 +47,7 @@ fun BaseGamePage(
     vm: GameBoardViewModel,
     onClickHome: () -> Unit,
     onClickGameConfig: () -> Unit,
+    onClickLogin: () -> Unit = {},
     modifier: Modifier = Modifier,
     board: @Composable (Dp) -> Unit = @Composable { size ->
         GameBoard(
@@ -109,7 +110,7 @@ fun BaseGamePage(
                         vm,
                         board = { board(size) },
                         modifier = Modifier.width(IntrinsicSize.Min),
-                        bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickGameConfig) },
+                        bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickGameConfig, onClickLogin) },
                         actions = actions,
                     )
                 }
@@ -120,7 +121,7 @@ fun BaseGamePage(
                         vm,
                         board = { board(size) },
                         modifier = Modifier.fillMaxSize(),
-                        bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickGameConfig) },
+                        bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickGameConfig, onClickLogin) },
                         actions = actions,
                     )
                 }
@@ -137,7 +138,8 @@ private fun PreviewGamePage() {
         BaseGamePage(
             vm = rememberSinglePlayerGameBoardForPreview(),
             onClickHome = {},
-            onClickGameConfig = {}
+            onClickGameConfig = {},
+            onClickLogin = {},
         )
     }
 }
