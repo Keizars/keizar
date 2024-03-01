@@ -28,9 +28,9 @@ class KeizarClientFacade(
      */
     suspend fun createRoomAndJoin(
         parentCoroutineContext: CoroutineContext,
-    ): GameRoomClient {
+    ): Boolean {
         val roomInfo = room.createRoom()
-        return joinRoom(roomInfo, parentCoroutineContext)!!
+        return room.joinRoom(roomInfo.roomNumber)
     }
 
     /**
@@ -40,19 +40,19 @@ class KeizarClientFacade(
     suspend fun joinRoom(
         roomNumber: UInt,
         parentCoroutineContext: CoroutineContext,
-    ): GameRoomClient? {
+    ): Boolean {
         val roomInfo = room.getRoom(roomNumber)
-        return joinRoom(roomInfo, parentCoroutineContext)
+        return room.joinRoom(roomInfo.roomNumber)
     }
 
-    private suspend fun joinRoom(
+    /**
+     * Connect to server by websocket and create a game room session
+     */
+    suspend fun connect(
         roomInfo: RoomInfo,
         parentCoroutineContext: CoroutineContext,
     ): GameRoomClient? {
-        return if (room.joinRoom(roomInfo.roomNumber)) {
-            room.createClientRoom(roomInfo, parentCoroutineContext)
-        } else {
-            null
-        }
+        if (!room.joinRoom(roomInfo.roomNumber)) return null
+        return room.createClientRoom(roomInfo, parentCoroutineContext)
     }
 }
