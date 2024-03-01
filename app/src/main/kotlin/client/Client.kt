@@ -10,6 +10,8 @@ import okhttp3.Interceptor
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Response
+import org.keizar.android.ui.foundation.BackgroundScope
+import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.utils.communication.CommunicationModule
 import org.koin.core.component.KoinComponent
@@ -23,7 +25,7 @@ import retrofit2.Retrofit
  */
 class Client(
     baseUrl: String,
-) : KoinComponent {
+) : KoinComponent, HasBackgroundScope by BackgroundScope() {
     private val sessionManager: SessionManager by inject()
 
     private val logger = logger("Client")
@@ -70,7 +72,7 @@ class Client(
 //        }
 
         if (response.code() == 401) {
-            sessionManager.launchInBackground { invalidateToken() }
+            launchInBackground { sessionManager.invalidateToken() }
         }
         response
     }

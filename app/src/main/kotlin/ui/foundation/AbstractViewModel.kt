@@ -17,6 +17,9 @@ interface Disposable {
     fun dispose()
 }
 
+/**
+ * A view model that provides a background scope and automatically disposes of it when it is no longer needed.
+ */
 abstract class AbstractViewModel : RememberObserver, ViewModel(), HasBackgroundScope, Disposable {
     protected val logger by lazy { logger(this::class) }
 
@@ -24,18 +27,23 @@ abstract class AbstractViewModel : RememberObserver, ViewModel(), HasBackgroundS
     private val isClosed get() = closed.value
 
     private var _backgroundScope = createBackgroundScope()
-    override val backgroundScope: CoroutineScope
+    final override val backgroundScope: CoroutineScope
         get() {
             return _backgroundScope
         }
 
 
     @CallSuper
-    override fun onAbandoned() {
+    final override fun onAbandoned() {
         logger.trace { "${this::class.simpleName} onAbandoned" }
         dispose()
     }
 
+    /**
+     * Disposes this view model, cancelling the background scope.
+     *
+     * If you override this method, you must call `super.dispose()`.
+     */
     @CallSuper
     override fun dispose() {
         if (!closed.compareAndSet(expect = false, update = true)) {
@@ -49,7 +57,7 @@ abstract class AbstractViewModel : RememberObserver, ViewModel(), HasBackgroundS
     private var referenceCount = 0
 
     @CallSuper
-    override fun onForgotten() {
+    final override fun onForgotten() {
         referenceCount--
         logger.trace { "${this::class.simpleName} onForgotten, remaining refCount=$referenceCount" }
         if (referenceCount == 0) {
@@ -58,7 +66,7 @@ abstract class AbstractViewModel : RememberObserver, ViewModel(), HasBackgroundS
     }
 
     @CallSuper
-    override fun onRemembered() {
+    final override fun onRemembered() {
         referenceCount++
         logger.trace { "${this::class.simpleName} onRemembered, refCount=$referenceCount" }
         if (!_backgroundScope.isActive) {

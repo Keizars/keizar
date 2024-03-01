@@ -5,12 +5,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import org.keizar.android.client.RoomService
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
-import org.keizar.client.KeizarClientFacade
-import org.keizar.utils.communication.message.UserInfo
+import org.keizar.game.BoardProperties
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import kotlin.random.Random
+import kotlin.random.nextUInt
 
 interface MatchViewModel : HasBackgroundScope {
     @Stable
@@ -32,12 +34,10 @@ interface MatchViewModel : HasBackgroundScope {
     fun removeSelfRoom()
 }
 
-val MyUserInfo = UserInfo(Math.random().toString()) // TODO: temp user name
-
 fun MatchViewModel(): MatchViewModel = MatchViewModelImpl()
 
 internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinComponent {
-    private val keizarClientFacade by inject<KeizarClientFacade>()
+    private val roomService: RoomService by inject()
 
     override val joinRoomIdEditing: MutableStateFlow<String> = MutableStateFlow("")
 
@@ -46,7 +46,7 @@ internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinCom
     }
 
     override suspend fun joinRoom() {
-        keizarClientFacade.joinRoom(joinRoomIdEditing.value.toUInt(), MyUserInfo)
+        roomService.joinRoom(joinRoomIdEditing.value.toUInt())
     }
 
     override val selfRoomId: MutableStateFlow<String?> = MutableStateFlow(null)
@@ -59,7 +59,7 @@ internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinCom
             selfRoomId.value?.let { return it }
             creatingRoom.value = true
             try {
-                val roomId = keizarClientFacade.createRoomAndJoin(MyUserInfo).roomNumber
+                val roomId = roomService.createRoom(Random.nextUInt(), BoardProperties.getStandardProperties())
                 selfRoomId.value = roomId.toString()
                 return roomId.toString()
             } finally {

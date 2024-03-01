@@ -55,6 +55,7 @@ import androidx.navigation.get
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.serialization.encodeToHexString
 import kotlinx.serialization.protobuf.ProtoBuf
+import org.keizar.android.client.SessionManager
 import org.keizar.android.ui.external.placeholder.placeholder
 import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.game.BoardTileLabels
@@ -65,6 +66,7 @@ import org.keizar.game.Difficulty
 import org.keizar.game.Role
 import org.keizar.game.Role.BLACK
 import org.keizar.game.Role.WHITE
+import org.koin.java.KoinJavaComponent.inject
 
 @Composable
 fun GameConfigurationScene(
@@ -240,6 +242,7 @@ private fun BoardSeedTextField(
         onClickRandom = { vm.updateRandomSeed() },
         isError = isError,
         refreshEnable = refreshEnable,
+        readOnly = false,
         modifier = modifier,
     )
 }
@@ -251,6 +254,7 @@ fun BoardSeedTextField(
     onClickRandom: () -> Unit,
     isError: Boolean,
     refreshEnable: Boolean,
+    readOnly: Boolean,
     modifier: Modifier = Modifier,
     supportingText: @Composable () -> Unit = {
         Text(text = "Explore new board layouts by changing the seed")
@@ -270,6 +274,7 @@ fun BoardSeedTextField(
             }
         },
         isError = isError,
+        readOnly = readOnly,
         trailingIcon = {
             if (clipboardManager.getText()?.text?.startsWith("P-") == true) {
                 IconButton(onClick = {

@@ -5,21 +5,35 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import org.keizar.utils.communication.PlayerSessionState
+import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.message.UserInfo
 
 interface PlayerSession {
-    val session: DefaultWebSocketServerSession
+    val session: StateFlow<DefaultWebSocketServerSession?>
     val state: StateFlow<PlayerSessionState>
     val user: UserInfo
+    val isHost: Boolean
+    val playerAllocation: Player
     fun setState(newState: PlayerSessionState)
     fun cancel(message: String)
+    fun checkConnection()
+    fun connect(newSession: DefaultWebSocketServerSession)
+
+    companion object {
+        fun create(user: UserInfo, playerAllocation: Player, isHost: Boolean = false): PlayerSession {
+            return PlayerSessionImpl(user, playerAllocation, isHost)
+        }
+    }
 }
 
 class PlayerSessionImpl(
-    override val session: DefaultWebSocketServerSession,
-    override val user: UserInfo
+    override val user: UserInfo,
+    override val playerAllocation: Player,
+    override val isHost: Boolean,
 ) : PlayerSession {
+    override var session: MutableStateFlow<DefaultWebSocketServerSession?> = MutableStateFlow(null)
     private val _state = MutableStateFlow(PlayerSessionState.STARTED)
     override val state: StateFlow<PlayerSessionState> = _state.asStateFlow()
 
@@ -27,7 +41,27 @@ class PlayerSessionImpl(
         _state.value = newState
     }
 
+    override fun checkConnection() {
+        if (session.value?.isActive != true) {
+            if (state.value == PlayerSessionState.READY) {
+                setState(PlayerSessionState.STARTED)
+            } else if (state.value == PlayerSessionState.PLAYING) {
+                setState(PlayerSessionState.DISCONNECTED)
+            }
+            session.value = null
+        }
+    }
+
+    override fun connect(newSession: DefaultWebSocketServerSession) {
+        session.value?.cancel("Session expired")
+        session.value = newSession
+        if (state.value == PlayerSessionState.DISCONNECTED) {
+            setState(PlayerSessionState.PLAYING)
+        }
+
+    }
+
     override fun cancel(message: String) {
-        session.cancel(message)
+        session.value?.cancel(message)
     }
 }

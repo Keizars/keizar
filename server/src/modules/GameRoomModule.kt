@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.keizar.game.BoardProperties
 import org.keizar.server.modules.gameroom.GameRoom
+import org.keizar.server.modules.gameroom.ServerGameRoomState
 import org.keizar.server.modules.gameroom.PlayerSession
-import org.keizar.server.modules.gameroom.PlayerSessionImpl
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.message.UserInfo
 import org.slf4j.Logger
@@ -21,7 +21,7 @@ import kotlin.coroutines.CoroutineContext
 interface GameRoomModule {
     fun createRoom(roomNumber: UInt, properties: BoardProperties)
     fun getRoom(roomNumber: UInt): GameRoom
-    fun joinRoom(roomNumber: UInt, userInfo: UserInfo)
+    suspend fun joinRoom(roomNumber: UInt, userInfo: UserInfo)
     suspend fun connectToWebsocketSession(
         roomNumber: UInt,
         userInfo: UserInfo,
@@ -62,9 +62,9 @@ class GameRoomsModuleImpl(
         return room
     }
 
-    override fun joinRoom(roomNumber: UInt, userInfo: UserInfo) {
+    override suspend fun joinRoom(roomNumber: UInt, userInfo: UserInfo) {
         val room = getRoom(roomNumber)
-        if (!room.addPlayer(userInfo)) {
+        if (!room.join(userInfo)) {
             // Room already full
             logger.info("Failure: room $roomNumber already full")
             throw NotFoundException("Room already full")
@@ -80,11 +80,8 @@ class GameRoomsModuleImpl(
         if (!room.containsPlayer(userInfo)) {
             throw BadRequestException("User ${userInfo.username} did not join room $roomNumber")
         }
-        val player = PlayerSessionImpl(session, userInfo)
-        if (!room.connect(userInfo, player)) {
-            throw BadRequestException("Room $roomNumber connection to websocket failed")
-        }
-        return player
+        return room.connect(userInfo, session)
+            ?: throw BadRequestException("Room $roomNumber connection to websocket failed")
     }
 
     override suspend fun suspendUntilGameEnds(playerSession: PlayerSession) {
@@ -94,7 +91,7 @@ class GameRoomsModuleImpl(
     }
 
     private suspend fun roomGarbageCollectionRoutine(room: GameRoom) {
-        room.finished.first { it }
+        room.state.first { it is ServerGameRoomState.Finished }
         logger.info("Destroying room ${room.roomNumber}")
         gameRooms.remove(room.roomNumber)
         room.close()

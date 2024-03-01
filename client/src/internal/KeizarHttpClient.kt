@@ -1,9 +1,7 @@
-package org.keizar.client.modules
+package org.keizar.client.internal
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
@@ -26,6 +24,7 @@ import org.keizar.client.exception.NetworkFailureException
 import org.keizar.game.BoardProperties
 import org.keizar.game.RoomInfo
 import org.keizar.utils.communication.CommunicationModule
+import org.keizar.utils.communication.account.User
 import org.keizar.utils.communication.message.UserInfo
 
 private val ClientJson = Json {
@@ -33,20 +32,17 @@ private val ClientJson = Json {
     serializersModule = CommunicationModule
 }
 
-interface KeizarHttpClient : AutoCloseable {
-    suspend fun postRoomCreate(roomNumber: UInt, boardProperties: BoardProperties, token: String)
+internal interface KeizarHttpClient : AutoCloseable {
     suspend fun getRoom(roomNumber: UInt, token: String): RoomInfo
-    suspend fun postRoomJoin(roomNumber: UInt, userInfo: UserInfo, token: String): Boolean
+    suspend fun postRoomJoin(roomNumber: UInt, token: String): Boolean
+    suspend fun getSelf(token: String): User
     suspend fun getRoomWebsocketSession(
         roomNumber: UInt,
         token: String,
     ): DefaultClientWebSocketSession
-
-    suspend fun setSeed(roomNumber: UInt, seed: UInt, token: String): Boolean
-    suspend fun acceptChange(roomNumber: UInt, seed: UInt, token: String): Boolean
 }
 
-class KeizarHttpClientImpl(
+internal class KeizarHttpClientImpl(
     private val endpoint: String,
 ) : KeizarHttpClient {
 
@@ -59,22 +55,6 @@ class KeizarHttpClientImpl(
         }
         Logging {
             level = LogLevel.INFO
-        }
-    }
-
-    override suspend fun postRoomCreate(
-        roomNumber: UInt,
-        boardProperties: BoardProperties,
-        token: String,
-    ) {
-        val respond: HttpResponse =
-            client.post(urlString = "$endpoint/room/$roomNumber/create") {
-                header("Authorization", "Bearer $token")
-                contentType(ContentType.Application.Json)
-                setBody(boardProperties)
-            }
-        if (respond.status != HttpStatusCode.OK) {
-            throw NetworkFailureException("Failed postRoomCreate")
         }
     }
 
@@ -93,7 +73,6 @@ class KeizarHttpClientImpl(
 
     override suspend fun postRoomJoin(
         roomNumber: UInt,
-        userInfo: UserInfo,
         token: String,
     ): Boolean {
         val respond = client.post(
@@ -102,6 +81,12 @@ class KeizarHttpClientImpl(
             header("Authorization", "Bearer $token")
         }
         return respond.status == HttpStatusCode.OK
+    }
+
+    override suspend fun getSelf(token: String): User {
+        return client.get(urlString = "$endpoint/users/me") {
+            header("Authorization", "Bearer $token")
+        }.body()
     }
 
     override suspend fun getRoomWebsocketSession(
@@ -113,24 +98,6 @@ class KeizarHttpClientImpl(
         ) {
             header("Authorization", "Bearer $token")
         }
-    }
-
-    override suspend fun setSeed(roomNumber: UInt, seed: UInt, token: String): Boolean {
-        val respond = client.patch(
-            urlString = "$endpoint/room/$roomNumber/seed/$seed"
-        ) {
-            header("Authorization", "Bearer $token")
-        }
-        return respond.status == HttpStatusCode.OK
-    }
-
-    override suspend fun acceptChange(roomNumber: UInt, seed: UInt, token: String): Boolean {
-        val respond = client.post(
-            urlString = "$endpoint/room/$roomNumber/agree"
-        ) {
-            header("Authorization", "Bearer $token")
-        }
-        return respond.status == HttpStatusCode.OK
     }
 
     override fun close() {

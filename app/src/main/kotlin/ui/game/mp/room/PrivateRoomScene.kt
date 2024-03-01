@@ -38,49 +38,23 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.currentCoroutineContext
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.isActive
-import org.keizar.android.client.RoomService
-import org.keizar.android.ui.foundation.AbstractViewModel
+import kotlinx.coroutines.launch
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.game.configuration.BoardLayoutPreview
 import org.keizar.android.ui.game.configuration.BoardSeedTextField
-import org.keizar.client.KeizarClientFacade
 import org.keizar.game.Role
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
-import kotlin.time.Duration.Companion.seconds
 
-
-class MultiplayerRoomViewModel(
-    private val roomId: UInt,
-) : AbstractViewModel(), KoinComponent {
-    private val facade: KeizarClientFacade by inject()
-    val playersReady = flow {
-        while (currentCoroutineContext().isActive) {
-            emit(facade.getRoom(roomId).playersReady)
-            delay(2.seconds)
-        }
-    }.flowOn(Dispatchers.IO)
-        .distinctUntilChanged()
-        .shareInBackground()
-}
 
 @Composable
-fun MultiplayerRoomScene(
+fun PrivateRoomScene(
     roomId: UInt,
     onClickHome: () -> Unit,
     onPlayersReady: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val vm = remember(roomId) {
-        MultiplayerRoomViewModel(roomId)
+        PrivateRoomViewModelImpl(roomId)
     }
 
     val playersReady by vm.playersReady.collectAsStateWithLifecycle(false)
@@ -95,12 +69,12 @@ fun MultiplayerRoomScene(
         clipboardManager.setText(AnnotatedString("P-$roomId"))
     }
 
-    MultiplayerRoomPage(roomId, onClickHome, modifier)
+    PrivateRoomPage(vm, onClickHome, modifier)
 }
 
 @Composable
 private fun AcceptArea(
-    vm: PrivateRoomViewModelImpl,
+    vm: PrivateRoomViewModel,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -111,7 +85,8 @@ private fun AcceptArea(
     ) {
         Button(
             modifier = if (!isSystemInLandscape()) modifier.padding(end = 12.dp) else modifier,
-            onClick = { vm.clickAccept() }
+            onClick = { vm.backgroundScope.launch { vm.accept() }
+            }
         ) {
             Text(text = vm.acceptButtonText.value)
         }
@@ -119,8 +94,8 @@ private fun AcceptArea(
 }
 
 @Composable
-private fun MultiplayerRoomPage(
-    roomId: UInt,
+private fun PrivateRoomPage(
+    vm: PrivateRoomViewModel,
     onClickHome: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -163,7 +138,7 @@ private fun MultiplayerRoomPage(
                 }
                 Column(Modifier.wrapContentWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Column(Modifier.widthIn(max = 360.dp)) {
-                        Configurations(vm, roomId)
+                        Configurations(vm)
                         AcceptArea(vm, modifier)
                     }
                 }
@@ -182,7 +157,7 @@ private fun MultiplayerRoomPage(
                     playAs = Role.WHITE,
                 )
 
-                Configurations(vm, roomId, Modifier.padding(top = 8.dp))
+                Configurations(vm, Modifier.padding(top = 8.dp))
             }
 
         }
@@ -191,8 +166,7 @@ private fun MultiplayerRoomPage(
 
 @Composable
 private fun Configurations(
-    vm: PrivateRoomViewModelImpl,
-    roomId: UInt,
+    vm: PrivateRoomViewModel,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -208,6 +182,7 @@ private fun Configurations(
             )
         }
 
+
         BoardSeedTextField(
             text = vm.configuration.configurationSeedText.collectAsStateWithLifecycle().value,
             onValueChange = { vm.configuration.setConfigurationSeedText(it) },
@@ -217,12 +192,13 @@ private fun Configurations(
             supportingText = {
                 Text(text = "Explore new board layouts by changing the seed. Other player can also see this board.")
             },
+            readOnly = vm.selfIsHost.collectAsStateWithLifecycle(false).value,
             modifier = Modifier.fillMaxWidth(),
         )
 
         HorizontalDivider(Modifier.padding(vertical = 16.dp))
 
-        ActionArea(roomId)
+        ActionArea(vm.roomId)
     }
 }
 
@@ -273,6 +249,11 @@ private fun RoomIdTextField(roomId: UInt, modifier: Modifier = Modifier) {
 @Composable
 private fun PreviewMultiplayerRoomPage() {
     ProvideCompositionalLocalsForPreview {
-        MultiplayerRoomPage(roomId = 12345u, onClickHome = { })
+        PrivateRoomPage(vm = remember {
+            PrivateRoomViewModelImpl(
+                roomId = 123u,
+            )
+        },
+            onClickHome = { })
     }
 }
