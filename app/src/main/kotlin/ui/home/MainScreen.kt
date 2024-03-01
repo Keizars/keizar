@@ -322,7 +322,7 @@ fun MainScreen() {
 @Composable
 private fun LoginChecker(navController: NavHostController) {
     LaunchedEffect(true) {
-        if (GlobalContext.get().get<SessionManager>().token.first() == null) {
+        if (GlobalContext.get().get<SessionManager>().self.first() == null) {
             navController.navigate("auth/login")
         }
     }
