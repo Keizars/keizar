@@ -11,6 +11,7 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -50,7 +51,6 @@ import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.game.PlayerStatistics
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
 interface GameBoardViewModel : HasBackgroundScope {
@@ -143,6 +143,12 @@ interface GameBoardViewModel : HasBackgroundScope {
 
     @Stable
     val singlePlayerMode: Boolean
+
+    @Stable
+    val myName: SharedFlow<String>
+
+    @Stable
+    val opponentName: SharedFlow<String>
 
 
 
@@ -443,6 +449,11 @@ abstract class BaseGameBoardViewModel(
 
     override val canUndo: StateFlow<Boolean> =
         game.currentRound.flatMapLatest { it.canUndo }.stateInBackground(false)
+
+    // TODO: Implement
+    override val myName: SharedFlow<String> = MutableSharedFlow<String>()
+
+    override val opponentName: SharedFlow<String> = MutableSharedFlow<String>()
 
     init {
         backgroundScope.launch {
