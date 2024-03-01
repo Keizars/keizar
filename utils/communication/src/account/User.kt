@@ -7,4 +7,8 @@ data class User(
     val nickname: String,
     val username: String,
     val avatarUrl: String,
-)
+) {
+    fun avatarUrlOrDefault(): String {
+        return avatarUrl.ifBlank { "https://ui-avatars.com/api/?name=${nickname}" }
+    }
+}

@@ -10,7 +10,6 @@ import org.keizar.utils.communication.account.AuthStatus
 import org.keizar.utils.communication.account.User
 import java.io.File
 import java.io.InputStream
-import java.nio.charset.Charset
 import java.util.UUID
 
 interface AccountModule {
@@ -71,7 +70,7 @@ class AccountModuleImpl(
         return User(
             nickname = user.nickname ?: user.username,
             username = user.username,
-            avatarUrl = "TODO: Not implemented yet",
+            avatarUrl = "",
         )
     }
 
@@ -80,7 +79,7 @@ class AccountModuleImpl(
         return User(
             nickname = user.nickname ?: user.username,
             username = user.username,
-            avatarUrl = "TODO: Not implemented yet",
+            avatarUrl = "",
         )
     }
 

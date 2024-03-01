@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
@@ -28,6 +29,7 @@ import org.keizar.aiengine.AlgorithmAI
 import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.BuildConfig
 import org.keizar.android.client.GameDataService
+import org.keizar.android.client.UserService
 import org.keizar.android.data.SavedState
 import org.keizar.android.data.SavedStateRepository
 import org.keizar.android.ui.foundation.AbstractViewModel
@@ -37,6 +39,7 @@ import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.transition.BoardTransitionController
 import org.keizar.android.ui.game.transition.CapturedPieceHostState
 import org.keizar.android.ui.game.transition.PieceArranger
+import org.keizar.client.ClientPlayer
 import org.keizar.game.BoardProperties
 import org.keizar.game.Difficulty
 import org.keizar.game.GameSession
@@ -44,6 +47,7 @@ import org.keizar.game.Piece
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import org.keizar.game.statistics.getStatistics
+import org.keizar.utils.communication.account.User
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
@@ -299,8 +303,11 @@ class SinglePlayerGameBoardViewModel(
 class MultiplayerGameBoardViewModel(
     game: GameSession,
     selfPlayer: Player,
+    selfClientPlayer: ClientPlayer,
+    opponentClientPlayer: ClientPlayer,
+) : BaseGameBoardViewModel(game, selfPlayer), KoinComponent {
+    private val userService: UserService by inject()
 
-    ) : BaseGameBoardViewModel(game, selfPlayer) {
     override val startConfiguration: GameStartConfiguration
         get() = GameStartConfiguration(
             playAs = selfRole.value,
@@ -311,11 +318,14 @@ class MultiplayerGameBoardViewModel(
     override val singlePlayerMode = false
 
     @Stable
-    val myName: SharedFlow<String> = MutableStateFlow("")
+    val myUser: SharedFlow<User> = flow {
+        emit(userService.getUser(selfClientPlayer.username))
+    }.shareInBackground()
 
     @Stable
-    val opponentName: SharedFlow<String> = MutableStateFlow("")
-
+    val opponentUser: SharedFlow<User> = flow {
+        emit(userService.getUser(opponentClientPlayer.username))
+    }.shareInBackground()
 }
 
 @Suppress("LeakingThis")

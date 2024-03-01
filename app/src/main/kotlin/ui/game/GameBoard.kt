@@ -389,8 +389,8 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                 val playerStatistics = vm.getPlayerStatistics(vm.selfPlayer)
                 val text: String
                 if (vm is MultiplayerGameBoardViewModel) {
-                    val myName by vm.myName.collectAsState(initial = "")
-                    val opponentName by vm.opponentName.collectAsState(initial = "")
+                    val myName by vm.myUser.collectAsState(initial = "")
+                    val opponentName by vm.opponentUser.collectAsState(initial = "")
                     val opponentStatistics =
                         vm.getPlayerStatistics(if (vm.selfPlayer == Player.FirstBlackPlayer) Player.FirstWhitePlayer else Player.FirstBlackPlayer)
                     text =
@@ -439,8 +439,8 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                 val winnerText = if (finalWinner.player == vm.selfPlayer) "You Win" else "You Lose"
                 val text: String
                 if (vm is MultiplayerGameBoardViewModel) {
-                    val myName by vm.myName.collectAsState(initial = "")
-                    val opponentName by vm.opponentName.collectAsState(initial = "")
+                    val myName by vm.myUser.collectAsState(initial = "")
+                    val opponentName by vm.opponentUser.collectAsState(initial = "")
                     val opponentStatistics =
                         vm.getPlayerStatistics(if (vm.selfPlayer == Player.FirstBlackPlayer) Player.FirstWhitePlayer else Player.FirstBlackPlayer)
                     text =

@@ -157,8 +157,8 @@ fun ProfilePage(
                     .clip(CircleShape)
             ) {
                 AsyncImage(
-                    model = self?.avatarUrl,
-                    contentDescription = "",
+                    model = self?.avatarUrlOrDefault(),
+                    contentDescription = "Avatar",
                     Modifier.size(64.dp),
                     placeholder = rememberVectorPainter(Icons.Default.Person),
                     error = rememberVectorPainter(Icons.Default.Person)
@@ -248,6 +248,17 @@ fun ProfilePage(
 }
 
 @Composable
+fun AvatarImage(url: String?, modifier: Modifier = Modifier) {
+    AsyncImage(
+        model = url,
+        contentDescription = "Avatar",
+        modifier,
+        placeholder = rememberVectorPainter(Icons.Default.Person),
+        error = rememberVectorPainter(Icons.Default.Person)
+    )
+}
+
+@Composable
 fun SavedBoards(modifier: Modifier = Modifier, vm: ProfileViewModel) {
     val allSeeds by vm.allSeeds.collectAsState()
     LazyVerticalGrid(
@@ -278,7 +289,8 @@ fun SavedBoardCard(modifier: Modifier = Modifier, layoutSeedText: String, vm: Pr
             Box(
                 Modifier
                     .size(150.dp)
-                    .clip(RoundedCornerShape(4.dp))) {
+                    .clip(RoundedCornerShape(4.dp))
+            ) {
                 BoardTiles(
                     rotationDegrees = 0f,
                     properties = boardProperties,
@@ -313,8 +325,8 @@ fun SavedBoardCard(modifier: Modifier = Modifier, layoutSeedText: String, vm: Pr
                         .fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    
-                    Text(
+
+                Text(
                         text = "Game board seed: $layoutSeedText",
                         Modifier.padding(bottom = 8.dp),
                         textAlign = TextAlign.Center

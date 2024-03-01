@@ -1,8 +1,10 @@
 package org.keizar.android.ui.game.mp
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -13,6 +15,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -25,6 +28,7 @@ import kotlinx.coroutines.flow.mapLatest
 import me.him188.ani.utils.logging.error
 import org.keizar.android.BuildConfig
 import org.keizar.android.client.SessionManager
+import org.keizar.android.ui.external.placeholder.placeholder
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.game.BaseGamePage
@@ -32,10 +36,12 @@ import org.keizar.android.ui.game.GameBoard
 import org.keizar.android.ui.game.MultiplayerGameBoardViewModel
 import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
 import org.keizar.android.ui.game.transition.CapturedPiecesHost
+import org.keizar.android.ui.profile.AvatarImage
+import org.keizar.client.ClientPlayer
 import org.keizar.client.GameRoomClient
 import org.keizar.client.KeizarWebsocketClientFacade
 import org.keizar.client.exception.RoomFullException
-import org.keizar.game.GameSession
+import org.keizar.game.snapshot.buildGameSession
 import org.keizar.utils.communication.game.Player
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -136,13 +142,16 @@ fun MultiplayerGameScene(
         )
     }
 
+    val client by connector.client.collectAsStateWithLifecycle(null)
     val session by connector.session.collectAsStateWithLifecycle(null)
 
     session?.let { s ->
-        val vm = remember {
-            MultiplayerGameBoardViewModel(s, s.player)
+        client?.let { c ->
+            val vm = remember {
+                MultiplayerGameBoardViewModel(s, s.player, c.selfPlayer, c.opponentPlayer)
+            }
+            MultiplayerGamePage(vm, onClickHome, onClickGameConfig, modifier)
         }
-        MultiplayerGamePage(vm, onClickHome, onClickGameConfig, modifier)
     } ?: run {
         ConnectingRoomDialog(extra = {
             if (BuildConfig.DEBUG) {
@@ -171,18 +180,48 @@ private fun MultiplayerGamePage(
                     .padding(vertical = 16.dp)
                     .size(size),
                 opponentCapturedPieces = { tileSize, sourceCoordinates ->
-//                        AsyncImage(
-//                            null,
-//                            
-//                        )
-                    val opponentName by vm.opponentName.collectAsState("Opponent")
-                    Text(text = opponentName, style = MaterialTheme.typography.bodyMedium)
+                    val opponentName by vm.opponentUser.collectAsState(null)
+                    Box(modifier = Modifier.clip(CircleShape)) {
+                        AvatarImage(
+                            url = opponentName?.avatarUrlOrDefault(),
+                            modifier = Modifier.size(tileSize),
+                        )
+                    }
+
+                    Text(
+                        text = opponentName?.nickname ?: "placeholder",
+                        Modifier
+                            .padding(horizontal = 8.dp)
+                            .placeholder(opponentName == null),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
 
                     CapturedPiecesHost(
                         capturedPieceHostState = vm.theirCapturedPieceHostState,
                         slotSize = tileSize,
                         sourceCoordinates = sourceCoordinates,
                     )
+                },
+                myCapturedPieces = { tileSize, sourceCoordinates ->
+                    val selfName by vm.myUser.collectAsState(null)
+                    CapturedPiecesHost(
+                        capturedPieceHostState = vm.myCapturedPieceHostState,
+                        slotSize = tileSize,
+                        sourceCoordinates = sourceCoordinates,
+                    )
+                    Text(
+                        text = selfName?.nickname ?: "placeholder",
+                        Modifier
+                            .padding(horizontal = 8.dp)
+                            .placeholder(selfName == null),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Box(modifier = Modifier.clip(CircleShape)) {
+                        AvatarImage(
+                            url = selfName?.avatarUrlOrDefault(),
+                            modifier = Modifier.size(tileSize),
+                        )
+                    }
                 },
             )
         }
@@ -197,7 +236,12 @@ class CoroutineScopeOwner : RememberObserver, AbstractViewModel() {
 @Composable
 private fun PreviewMultiplayerGame() {
     val vm = remember {
-        MultiplayerGameBoardViewModel(GameSession.create(), Player.FirstWhitePlayer)
+        MultiplayerGameBoardViewModel(
+            buildGameSession {},
+            Player.FirstWhitePlayer,
+            selfClientPlayer = ClientPlayer("me", isHost = true, initialIsReady = true),
+            opponentClientPlayer = ClientPlayer("other", isHost = false, initialIsReady = true),
+        )
     }
     ProvideCompositionalLocalsForPreview {
         MultiplayerGamePage(
