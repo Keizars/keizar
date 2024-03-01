@@ -15,13 +15,18 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 import org.keizar.android.GameStartConfigurationEncoder
+import org.keizar.android.client.SeedBankService
+import org.keizar.android.client.SessionManager
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.Disposable
+import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.game.BoardProperties
 import org.keizar.game.Difficulty
 import org.keizar.game.Role
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-interface GameConfigurationViewModel : Disposable {
+interface GameConfigurationViewModel : Disposable, HasBackgroundScope {
     val configuration: StateFlow<GameStartConfiguration>
     val configurationSeed: Flow<String>
     val isSingle: Boolean
@@ -39,6 +44,13 @@ interface GameConfigurationViewModel : Disposable {
 
     @Stable
     val playAs: Flow<Role>
+    
+    @Stable
+    val seedBankService: SeedBankService
+    
+    @Stable
+    val sessionManagerService: SessionManager
+            
     fun setPlayAs(role: Role)
 
     @Stable
@@ -81,7 +93,7 @@ fun GameStartConfiguration.createBoard(): BoardProperties =
 private class GameConfigurationViewModelImpl(
     initialConfiguration: GameStartConfiguration = GameStartConfiguration.random(),
     override val isSingle: Boolean
-) : GameConfigurationViewModel, AbstractViewModel() {
+) : GameConfigurationViewModel, AbstractViewModel(), KoinComponent {
     override val configuration: MutableStateFlow<GameStartConfiguration> =
         MutableStateFlow(initialConfiguration)
     override val configurationSeed: Flow<String> = configuration.map { GameStartConfigurationEncoder.encode(it) }
@@ -114,6 +126,10 @@ private class GameConfigurationViewModelImpl(
     }
 
     override val freshButtonEnable: MutableStateFlow<Boolean> = MutableStateFlow(true)
+    
+    override val seedBankService: SeedBankService by inject()
+    
+    override val sessionManagerService: SessionManager by inject()
     override fun setFreshButtonEnable(value: Boolean) {
         freshButtonEnable.value = value
     }

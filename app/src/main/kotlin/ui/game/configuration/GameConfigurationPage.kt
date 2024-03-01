@@ -21,7 +21,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,6 +31,7 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -44,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.coerceAtLeast
@@ -52,12 +53,15 @@ import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.get
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToHexString
 import kotlinx.serialization.protobuf.ProtoBuf
-import org.keizar.android.client.SessionManager
 import org.keizar.android.ui.external.placeholder.placeholder
 import org.keizar.android.ui.foundation.isSystemInLandscape
+import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.BoardTileLabels
 import org.keizar.android.ui.game.BoardTiles
 import org.keizar.android.ui.game.transition.PieceArranger
@@ -66,7 +70,6 @@ import org.keizar.game.Difficulty
 import org.keizar.game.Role
 import org.keizar.game.Role.BLACK
 import org.keizar.game.Role.WHITE
-import org.koin.java.KoinJavaComponent.inject
 
 @Composable
 fun GameConfigurationScene(
@@ -80,6 +83,7 @@ fun GameConfigurationScene(
                 putString("configuration", configuration)
             })
         },
+        onClickLogin = { navController.navigate("auth/login") }
     )
 }
 
@@ -89,6 +93,7 @@ private val ROUND_CORNER_RADIUS = 12.dp
 private fun GameConfigurationPage(
     onClickGoBack: () -> Unit,
     onClickStart: (GameStartConfiguration) -> Unit,
+    onClickLogin: () -> Unit
 ) {
     val vm = rememberGameConfigurationViewModel()
     Scaffold(
@@ -112,7 +117,7 @@ private fun GameConfigurationPage(
             if (isSystemInLandscape()) {
                 GameConfigurationPageLandscape(vm, onClickStart, Modifier.fillMaxSize())
             } else {
-                GameConfigurationPagePortrait(vm, onClickStart, Modifier.fillMaxSize())
+                GameConfigurationPagePortrait(vm, onClickStart, onClickLogin, Modifier.fillMaxSize())
             }
         }
     }
@@ -175,6 +180,7 @@ fun GameConfigurationPageLandscape(
 fun GameConfigurationPagePortrait(
     vm: GameConfigurationViewModel,
     onClickStart: (GameStartConfiguration) -> Unit,
+    onClickLogin: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(modifier) {
@@ -196,8 +202,27 @@ fun GameConfigurationPagePortrait(
         Row(
             Modifier
                 .fillMaxWidth()
-                .height(50.dp), horizontalArrangement = Arrangement.End
+                .height(50.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically
         ) {
+            TextButton(
+                onClick = {
+                    vm.launchInBackground {
+                        val isLoggedIn = vm.sessionManagerService.isLoggedIn.first()
+                        if (isLoggedIn) {
+                            vm.seedBankService.addSeed(vm.configurationSeed.first())
+                        } else {
+                            withContext(Dispatchers.Main) {
+                                onClickLogin()
+                            }
+                        }
+                    }
+                }, modifier = Modifier
+                    .padding(top = 10.dp)
+                    .height(45.dp)
+            ) {
+                Text("Save Seed", modifier = Modifier, textAlign = TextAlign.Center)
+            }
+
             StartButton(
                 { onClickStart(vm.configuration.value) },
                 Modifier
@@ -308,6 +333,7 @@ private fun BoardLayoutPreview(
         Modifier.padding(bottom = 16.dp)
     )
 }
+
 
 @Composable
 fun BoardLayoutPreview(
@@ -454,5 +480,6 @@ private fun PreviewGameConfigurationPage() {
     GameConfigurationPage(
         onClickGoBack = {},
         onClickStart = {},
+        onClickLogin = {}
     )
 }
