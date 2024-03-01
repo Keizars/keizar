@@ -27,6 +27,7 @@ import me.him188.ani.utils.logging.info
 import org.keizar.aiengine.AlgorithmAI
 import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.BuildConfig
+import org.keizar.android.client.GameDataService
 import org.keizar.android.data.SavedState
 import org.keizar.android.data.SavedStateRepository
 import org.keizar.android.ui.foundation.AbstractViewModel
@@ -42,13 +43,14 @@ import org.keizar.game.GameSession
 import org.keizar.game.Piece
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
-import org.keizar.game.statistics.PlayerStatistics
 import org.keizar.game.statistics.getStatistics
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
+import org.keizar.utils.communication.game.PlayerStatistics
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import kotlin.random.Random
 import kotlin.time.Duration.Companion.seconds
 
 interface GameBoardViewModel : HasBackgroundScope {
@@ -233,6 +235,7 @@ class SinglePlayerGameBoardViewModel(
     selfPlayer,
 ), KoinComponent {
     private val savedStateRepository: SavedStateRepository by inject()
+    private val GameDataService: GameDataService by inject()
 
     private val gameAi =
         when (difficulty) {

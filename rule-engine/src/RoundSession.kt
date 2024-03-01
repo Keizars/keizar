@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.flowOf
 import org.keizar.game.internal.RuleEngine
 import org.keizar.game.snapshot.RoundSnapshot
 import org.keizar.utils.communication.game.BoardPos
+import java.time.Instant
 
 interface RoundSession {
     val pieces: List<Piece>
@@ -45,6 +46,10 @@ interface RoundSession {
     )
 
     fun pieceAt(pos: BoardPos): Role?
+
+    fun getStartTime(): Instant?
+
+    fun getEndTime(): Instant?
 }
 
 class RoundSessionImpl(
@@ -53,6 +58,13 @@ class RoundSessionImpl(
     override val pieces: List<Piece> = ruleEngine.pieces
 
     override val winner: StateFlow<Role?> = ruleEngine.winner
+        get() {
+            val winner = field.value
+            if (winner != null && endTime == null) {
+                endTime = Instant.now()
+        }
+            return field
+        }
 
     override val winningCounter: StateFlow<Int> = ruleEngine.winningCounter
 
@@ -61,6 +73,14 @@ class RoundSessionImpl(
     override val canUndo: StateFlow<Boolean> = ruleEngine.canUndo
 
     override val canRedo: StateFlow<Boolean> = ruleEngine.canRedo
+
+    private var startTime: Instant? = null
+    private var endTime: Instant? = null
+
+    init {
+        // Set the start time when the round starts
+        startTime = Instant.now()
+    }
 
     override suspend fun undo(role: Role): Boolean {
         return ruleEngine.undo2Steps(role)
@@ -108,5 +128,13 @@ class RoundSessionImpl(
 
     override fun reset() {
         ruleEngine.reset()
+    }
+
+    override fun getStartTime(): Instant? {
+        return startTime
+    }
+
+    override fun getEndTime(): Instant? {
+        return endTime
     }
 }

@@ -3,33 +3,14 @@ package org.keizar.game.statistics
 import kotlinx.serialization.Serializable
 import org.keizar.game.GameSession
 import org.keizar.utils.communication.game.Player
-
-@Serializable
-data class PlayerStatistics(
-    val player: Player,
-
-    val round1Captured: Int,
-    val round2Captured: Int,
-
-    val round1OpponentCaptured: Int,
-    val round2OpponentCaptured: Int,
-
-    val round1Moves: Int,
-    val round2Moves: Int,
-
-    val round1Time: Int,
-    val round2Time: Int,
-
-    val round1AverageTime: Long,
-    val round2AverageTime: Long,
-)
-
+import org.keizar.utils.communication.game.PlayerStatistics
 
 /**
  * TODO: add comments
  */
 fun GameSession.getStatistics(player: Player): PlayerStatistics {
-    // TODO("Not yet implemented")
+    val round1Time = getRoundTime(0)  ?: -1
+    val round2Time = getRoundTime(1)  ?: -1
     return PlayerStatistics(
         player,
         0,
@@ -38,8 +19,8 @@ fun GameSession.getStatistics(player: Player): PlayerStatistics {
         0,
         0,
         0,
-        0,
-        0,
+        round1Time,
+        round2Time,
         0,
         0
     )

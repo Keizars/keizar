@@ -10,10 +10,12 @@ import org.keizar.game.internal.RuleEngine
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
 import org.keizar.game.snapshot.GameSnapshot
-import org.keizar.game.statistics.PlayerStatistics
+import org.keizar.utils.communication.game.PlayerStatistics
 import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
 import java.util.concurrent.atomic.AtomicInteger
+import java.time.Duration
+import java.time.Instant
 
 /***
  * API for the backend. Representation of a complete game that may contain multiple rounds
@@ -73,6 +75,8 @@ interface GameSession {
     fun getPlayer(role: Role, roundNo: Int): Player
     fun getRole(player: Player, roundNo: Int): Role
     fun getRoundWinner(roundNo: Int): Flow<Player?>
+
+    fun getRoundTime(roundNo: Int): Int?
 
     companion object {
         // Create a standard GameSession using the seed provided.
@@ -159,6 +163,8 @@ class GameSessionImpl(
 
     private val nextRoundAgreement: MutableList<Boolean>
     private val agreementCounter: AtomicInteger = AtomicInteger(0)
+    private var round1Time: Instant? = null
+    private var round2Time: Instant? = null
 
     init {
         rounds = (0..<properties.rounds).map {
@@ -268,6 +274,16 @@ class GameSessionImpl(
 
     override fun getPlayer(role: Role, roundNo: Int): Player {
         return Player.fromOrdinal((role.ordinal + roundNo) % 2)
+    }
+
+    override fun getRoundTime(roundNo: Int): Int? {
+        val startTime:Instant = rounds[roundNo].getStartTime() ?: return null
+        val endTime:Instant = rounds[roundNo].getEndTime() ?: return null
+        return if (roundNo == 0) {
+            Duration.between(startTime, endTime).seconds.toInt()
+        } else {
+            Duration.between(startTime, endTime).seconds.toInt()  - getRoundTime(roundNo - 1)!!
+        }
     }
 }
 
