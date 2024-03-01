@@ -163,7 +163,7 @@ class ClientPlayer(
     )
     val state: StateFlow<PlayerSessionState> = _state
 
-    fun setState(newState: PlayerSessionState) {
+    internal fun setState(newState: PlayerSessionState) {
         _state.value = newState
     }
 }
