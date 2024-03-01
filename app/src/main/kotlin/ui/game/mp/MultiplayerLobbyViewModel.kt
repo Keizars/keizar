@@ -59,7 +59,8 @@ internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinCom
             selfRoomId.value?.let { return it }
             creatingRoom.value = true
             try {
-                val roomId = roomService.createRoom(Random.nextUInt(), BoardProperties.getStandardProperties())
+                val roomId = Random.nextUInt()
+                roomService.createRoom(roomId, BoardProperties.getStandardProperties())
                 selfRoomId.value = roomId.toString()
                 return roomId.toString()
             } finally {
