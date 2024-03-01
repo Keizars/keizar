@@ -228,11 +228,19 @@ fun rememberSinglePlayerGameBoardViewModel(
     }
 }
 
+/**
+ * Can be [SinglePlayerGameBoardViewModel] or [MultiplayerGameBoardViewModel].
+ */
+sealed class PlayableGameBoardViewModel(
+    game: GameSession,
+    selfPlayer: Player,
+) : BaseGameBoardViewModel(game, selfPlayer)
+
 class SinglePlayerGameBoardViewModel(
     game: GameSession,
     selfPlayer: Player,
     private val difficulty: Difficulty,
-) : BaseGameBoardViewModel(
+) : PlayableGameBoardViewModel(
     game,
     selfPlayer,
 ), KoinComponent {
@@ -305,7 +313,7 @@ class MultiplayerGameBoardViewModel(
     selfPlayer: Player,
     selfClientPlayer: ClientPlayer,
     opponentClientPlayer: ClientPlayer,
-) : BaseGameBoardViewModel(game, selfPlayer), KoinComponent {
+) : PlayableGameBoardViewModel(game, selfPlayer), KoinComponent {
     private val userService: UserService by inject()
 
     override val startConfiguration: GameStartConfiguration
