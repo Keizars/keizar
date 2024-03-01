@@ -339,7 +339,7 @@ fun RoundTwoBottomBar(
                     vm.launchInBackground {
                         val isLoggedIn = vm.sessionManager.isLoggedIn.first()
                         if (isLoggedIn) {
-                            if (vm is MultiplayerGameBoardViewModel) {
+                            if (vm is PlayableGameBoardViewModel) {
                                 vm.saveResults()
                             }
                         } else {
