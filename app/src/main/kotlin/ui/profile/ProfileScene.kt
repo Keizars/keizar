@@ -179,13 +179,11 @@ fun ProfilePage(
                             .size(20.dp)
                             .clickable(onClick = onClickEdit)
                     ) {
-                        IconButton(onClick = { /*TODO*/ }) {
-                            Icon(
-                                Icons.Default.Edit,
-                                contentDescription = "Edit",
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        }
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = "Edit",
+                            tint = MaterialTheme.colorScheme.primary,
+                        )
                     }
                 }
 
