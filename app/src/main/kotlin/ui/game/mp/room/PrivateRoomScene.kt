@@ -99,9 +99,6 @@ private fun PrivateRoomPage(
     onClickHome: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val vm = remember {
-        PrivateRoomViewModelImpl(roomId)
-    }
     Scaffold(
         modifier.fillMaxSize(),
         topBar = {
