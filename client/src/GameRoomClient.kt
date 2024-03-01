@@ -28,17 +28,50 @@ import kotlin.coroutines.CoroutineContext
 
 
 interface GameRoomClient : AutoCloseable {
+    /**
+     * Room number of the game room
+     */
     val roomNumber: UInt
+
+    /**
+     * List of information of each player in the room.
+     *
+     * Information contains the username of the player, whether the player is the host,
+     * and the state of player: one of [PlayerSessionState.STARTED], [PlayerSessionState.READY],
+     * [PlayerSessionState.PLAYING], [PlayerSessionState.DISCONNECTED],
+     * and [PlayerSessionState.TERMINATING].
+     */
     val players: List<ClientPlayer>
+
+    /**
+     * State of the game room: one of [GameRoomState.STARTED], [GameRoomState.ALL_CONNECTED],
+     * [GameRoomState.PLAYING],and [GameRoomState.FINISHED].
+     *
+     * State is set to [GameRoomState.STARTED] when the room is created.
+     * When both player connects to the same room on the server,
+     * the state changes to [GameRoomState.ALL_CONNECTED].
+     * When all players are ready and the game starts, the state changes to [GameRoomState.PLAYING].
+     * When the game is finished, the state changes to [GameRoomState.FINISHED].
+     */
     val state: StateFlow<GameRoomState>
 
     /**
-     * Changes the seed of the room
+     * Send a request to server attempting to change the seed of the room.
+     *
+     * When called in state [GameRoomState.STARTED] or [GameRoomState.ALL_CONNECTED],
+     * room seed will be changed to the new seed.
+     * Otherwise, it will have no effect.
+     * Only the host can change the seed. If a non-host player calls this method,
+     * it will have no effect.
      */
     suspend fun changeSeed(roomNumber: UInt, seed: UInt)
 
     /**
-     * Set the player's state to ready
+     * Send a request to server attempting to set the player's state to ready.
+     *
+     * Call to this method will succeed when the room is in state [GameRoomState.STARTED] or
+     * [GameRoomState.ALL_CONNECTED] and the player's state is [PlayerSessionState.STARTED].
+     * Otherwise, it will have no effect.
      */
     suspend fun setReady()
 
@@ -154,13 +187,24 @@ class GameRoomClientImpl internal constructor(
 }
 
 class ClientPlayer(
+    /**
+     * Username of the player
+     */
     val username: String,
+    /**
+     * Whether the player is the host of the room, i.e. the player who created the room
+     */
     val isHost: Boolean,
     initialIsReady: Boolean,
 ) {
     private val _state: MutableStateFlow<PlayerSessionState> = MutableStateFlow(
         if (initialIsReady) PlayerSessionState.READY else PlayerSessionState.STARTED
     )
+    /**
+     * State of the player: one of [PlayerSessionState.STARTED], [PlayerSessionState.READY],
+     * [PlayerSessionState.PLAYING], [PlayerSessionState.DISCONNECTED],
+     * and [PlayerSessionState.TERMINATING].
+     */
     val state: StateFlow<PlayerSessionState> = _state
 
     internal fun setState(newState: PlayerSessionState) {
