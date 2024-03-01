@@ -2,13 +2,16 @@ package org.keizar.android.ui.game.mp
 
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -37,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.datasource.CollectionPreviewParameterProvider
@@ -45,6 +49,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
+import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
 
@@ -99,10 +104,32 @@ fun MultiplayerLobbyScene(
 //                }
 //            }
 
-            Column(Modifier.padding(16.dp)) {
-                OnlineMatchingSection(Modifier.weight(1f))
+            if (isSystemInLandscape()) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    Row(
+                        Modifier
+                            .padding(16.dp)
+                            .widthIn(max = 400.dp)
+                    ) {
+//                        OnlineMatchingSection(Modifier.weight(1f))
 
-                PlayWithFriendsSection(vm, onJoinGame, onRoomCreated)
+                        Box(
+                            Modifier
+                                .fillMaxHeight()
+                                .weight(1f), contentAlignment = Alignment.Center
+                        ) {
+                            PlayWithFriendsSection(vm, onJoinGame, onRoomCreated, Modifier)
+                        }
+                    }
+                }
+            } else {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(Modifier.padding(16.dp)) {
+//                    OnlineMatchingSection(Modifier.weight(1f))
+
+                        PlayWithFriendsSection(vm, onJoinGame, onRoomCreated)
+                    }
+                }
             }
         }
     }
@@ -233,6 +260,7 @@ private fun PlayWithFriendsSection(
 }
 
 @Preview
+@Preview(device = Devices.TABLET)
 @Composable
 private fun PreviewMatchPage(
     @PreviewParameter(BooleanProvider::class) roomCreated: Boolean
