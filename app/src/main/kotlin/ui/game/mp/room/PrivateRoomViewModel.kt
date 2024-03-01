@@ -2,6 +2,7 @@ package org.keizar.android.ui.game.mp.room
 
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
@@ -19,6 +20,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.keizar.android.client.RoomService
 import org.keizar.android.ui.foundation.AbstractViewModel
+import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.game.configuration.GameConfigurationViewModel
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
 import org.keizar.client.GameRoomClient
@@ -36,7 +38,7 @@ enum class ConnectRoomError {
 /**
  * View model for the [MultiplayerLobbyScene]
  */
-interface PrivateRoomViewModel {
+interface PrivateRoomViewModel : HasBackgroundScope {
     @Stable
     val roomId: UInt
 
@@ -56,9 +58,9 @@ interface PrivateRoomViewModel {
 //    @Stable
 //    val boardProperties: StateFlow<BoardProperties>
     @Stable
-    val accept: MutableState<Boolean>
+    val accept: State<Boolean>
 
-    fun clickAccept()
+    suspend fun accept()
 
     @Stable
     val acceptButtonText: MutableState<String>
@@ -119,9 +121,10 @@ class PrivateRoomViewModelImpl(
         client.first().changeSeed(roomId, seed)
     }
 
-    override fun clickAccept() {
+    override suspend fun accept() {
         if (accept.value) {
             accept.value = false
+            client.first().setReady()
         }
         if (accept.value) {
             acceptButtonText.value = "Ready!"

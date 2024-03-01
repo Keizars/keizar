@@ -38,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.game.configuration.BoardLayoutPreview
@@ -82,7 +83,11 @@ private fun AcceptArea(
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.End,
     ) {
-        Button(onClick = { vm.clickAccept() }) {
+        Button(
+            onClick = {
+                vm.backgroundScope.launch { vm.accept() }
+            }
+        ) {
             Text(text = vm.acceptButtonText.value)
         }
     }
