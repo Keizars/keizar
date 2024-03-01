@@ -32,6 +32,7 @@ dependencies {
     implementation(libs.datastore.preferences)
     implementation(libs.coil)
     implementation(libs.coil.compose)
+    implementation(libs.coil.network.ktor)
     implementation(projects.utils.slf4jKt)
     runtimeOnly(libs.slf4j.android)
 
