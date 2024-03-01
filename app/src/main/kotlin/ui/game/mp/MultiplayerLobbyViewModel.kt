@@ -8,7 +8,6 @@ import kotlinx.coroutines.sync.withLock
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.client.KeizarClientFacade
-import org.keizar.utils.communication.message.UserInfo
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -32,8 +31,6 @@ interface MatchViewModel : HasBackgroundScope {
     fun removeSelfRoom()
 }
 
-val MyUserInfo = UserInfo(Math.random().toString()) // TODO: temp user name
-
 fun MatchViewModel(): MatchViewModel = MatchViewModelImpl()
 
 internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinComponent {
@@ -46,7 +43,7 @@ internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinCom
     }
 
     override suspend fun joinRoom() {
-        keizarClientFacade.joinRoom(joinRoomIdEditing.value.toUInt(), MyUserInfo)
+        keizarClientFacade.joinRoom(joinRoomIdEditing.value.toUInt())
     }
 
     override val selfRoomId: MutableStateFlow<String?> = MutableStateFlow(null)
@@ -59,7 +56,7 @@ internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinCom
             selfRoomId.value?.let { return it }
             creatingRoom.value = true
             try {
-                val roomId = keizarClientFacade.createRoomAndJoin(MyUserInfo).roomNumber
+                val roomId = keizarClientFacade.createRoomAndJoin()
                 selfRoomId.value = roomId.toString()
                 return roomId.toString()
             } finally {
