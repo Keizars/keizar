@@ -57,6 +57,11 @@ interface GameRoomClient : AutoCloseable {
     val selfPlayer: ClientPlayer
 
     /**
+     * Player information of the the self user.
+     */
+    val opponentPlayer: ClientPlayer
+
+    /**
      * State of the game room: one of [GameRoomState.STARTED], [GameRoomState.ALL_CONNECTED],
      * [GameRoomState.PLAYING],and [GameRoomState.FINISHED].
      *
@@ -139,6 +144,7 @@ class GameRoomClientImpl internal constructor(
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
     override val selfPlayer: ClientPlayer = players.first { it.username == self.username }
+    override val opponentPlayer: ClientPlayer = players.first { it.username != self.username }
 
     private val _state: MutableStateFlow<GameRoomState> = MutableStateFlow(GameRoomState.STARTED)
     override val state: StateFlow<GameRoomState> = _state

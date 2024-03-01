@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -63,7 +62,7 @@ interface PrivateRoomViewModel : HasBackgroundScope {
 //    @Stable
 //    val boardProperties: StateFlow<BoardProperties>
     @Stable
-    val accept: State<Boolean>
+    val accept: Flow<Boolean>
 
     suspend fun accept()
 
@@ -71,7 +70,7 @@ interface PrivateRoomViewModel : HasBackgroundScope {
     val selfIsHost: Flow<Boolean>
 
     @Stable
-    val acceptButtonText: MutableState<String>
+    val opponentName: Flow<String>
 
 }
 
@@ -81,7 +80,6 @@ class PrivateRoomViewModelImpl(
     private val facade: KeizarWebsocketClientFacade by inject()
     private val roomService: RoomService by inject()
     private val sessionManager: SessionManager by inject()
-    private val self = sessionManager.self
 
     override val playersReady: SharedFlow<Boolean> = flow {
         while (currentCoroutineContext().isActive) {
@@ -112,11 +110,12 @@ class PrivateRoomViewModelImpl(
 
     private val selfPlayer = client.map { it.selfPlayer }
 
+    private val opponentPlayer = client.map { it.opponentPlayer}
+
     override val connectRoomError: MutableStateFlow<ConnectRoomError?> = MutableStateFlow(null)
 
     override val configuration: GameConfigurationViewModel = GameConfigurationViewModel(false)
-    override val accept: MutableState<Boolean> = mutableStateOf(false)
-    override val acceptButtonText: MutableState<String> = mutableStateOf("Ready!")
+    override val accept: Flow<Boolean> = selfPlayer.map { it.state.value == PlayerSessionState.READY }
 
     private val showToast = mutableStateOf(false)
 
@@ -127,28 +126,19 @@ class PrivateRoomViewModelImpl(
                 showToast.value = true
             }
         }
-        backgroundScope.launch {
-            selfPlayer.flatMapLatest { it.state }.collect {
-                accept.value = it != PlayerSessionState.READY
-            }
-        }
     }
 
     override val selfIsHost: Flow<Boolean> = selfPlayer.mapLatest { it.isHost }
+
+    override val opponentName: Flow<String> = opponentPlayer.mapLatest { it.username }
 
     private suspend fun setSeed(roomId: UInt, seed: UInt) {
         client.first().changeSeed(roomId, seed)
     }
 
     override suspend fun accept() {
-        if (accept.value) {
-            accept.value = false
+        if (accept.first()) {
             client.first().setReady()
-        }
-        if (accept.value) {
-            acceptButtonText.value = "Ready!"
-        } else {
-            acceptButtonText.value = "Waiting for the opponent..."
         }
     }
 

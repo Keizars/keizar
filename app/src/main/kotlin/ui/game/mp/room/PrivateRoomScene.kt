@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
@@ -83,13 +84,18 @@ private fun AcceptArea(
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.End,
     ) {
-        Button(
-            modifier = if (!isSystemInLandscape()) Modifier.padding(end = 12.dp) else Modifier,
-            onClick = { vm.backgroundScope.launch { vm.accept() }
+        val accept by vm.accept.collectAsStateWithLifecycle(false)
+        if (accept) {
+            Text(text = "Waiting for the other player...", style = MaterialTheme.typography.titleMedium)
+        } else {
+            Button(
+                modifier = if (!isSystemInLandscape()) modifier.padding(end = 12.dp) else modifier,
+                onClick = { vm.backgroundScope.launch { vm.accept() } }
+            ) {
+                Text(text = "Ready!")
             }
-        ) {
-            Text(text = vm.acceptButtonText.value)
         }
+
     }
 }
 
@@ -195,26 +201,38 @@ private fun Configurations(
 
         HorizontalDivider(Modifier.padding(vertical = 16.dp))
 
-        ActionArea(vm.roomId)
+        ActionArea(vm.roomId, vm.opponentName.collectAsStateWithLifecycle("").value)
     }
 }
 
 @Composable
-private fun ActionArea(roomId: UInt) {
-    Row(
-        Modifier
-            .padding(bottom = 16.dp)
-            .fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-    ) {
-        Text(text = "Waiting for other players", style = MaterialTheme.typography.titleMedium)
-    }
+private fun ActionArea(roomId: UInt, value: String) {
+    if (value == "") {
+        Row(
+            Modifier
+                .padding(bottom = 16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Text(text = "Waiting for the other player...", style = MaterialTheme.typography.titleMedium)
+        }
 
-    RoomIdTextField(
-        roomId, Modifier
-            .padding(vertical = 4.dp)
-            .fillMaxWidth()
-    )
+        RoomIdTextField(
+            roomId, Modifier
+                .padding(vertical = 4.dp)
+                .fillMaxWidth()
+        )
+    } else {
+        Row(
+            Modifier
+                .padding(bottom = 16.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Text(text = "Opponent: $value", style = MaterialTheme.typography.titleMedium)
+        }
+
+    }
 }
 
 @Composable
