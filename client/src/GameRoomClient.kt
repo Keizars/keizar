@@ -190,6 +190,7 @@ class GameRoomClientImpl internal constructor(
                             respond.gameSnapshot
                         )
                     }
+
                     else -> {
                         // ignore
                     }
@@ -232,13 +233,29 @@ class GameRoomClientImpl internal constructor(
         createGameMutex.withLock {
             if (game == null) {
                 state.first { it == GameRoomState.PLAYING }
+
+                /**
+                 * Retrieve the non-null values of playerAllocation and gameSnapshot before
+                 * closing the websocketSessionHandler: if the player reconnects to the room
+                 * halfway through the game, the playerAllocation and gameSnapshot should
+                 * still be able to be set up properly.
+                 */
+                val selfPlayer = playerAllocation.first { it != null }!!
+                val gameSnapshot = gameSnapshot.first { it != null }!!
                 websocketSessionHandler.close()
+
                 val wsHandler = GameSessionWsHandlerImpl(
                     parentCoroutineContext = myCoroutineScope.coroutineContext,
                     session = session,
-                    selfPlayer = playerAllocation.first { it != null }!!,
+                    selfPlayer = selfPlayer,
+                    onPlayerStateChange = { respond ->
+                        players.firstOrNull { it.username == respond.username }
+                            ?.setState(respond.newState)
+                    },
+                    onRoomStateChange = { respond ->
+                        _state.value = respond.newState
+                    },
                 )
-                val gameSnapshot = gameSnapshot.first { it != null }!!
                 game = RemoteGameSession.createAndConnect(gameSnapshot, wsHandler)
             }
         }

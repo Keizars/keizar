@@ -17,7 +17,10 @@ import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.message.ConfirmNextRound
 import org.keizar.utils.communication.message.Move
+import org.keizar.utils.communication.message.PlayerStateChange
+import org.keizar.utils.communication.message.RemoteSessionSetup
 import org.keizar.utils.communication.message.Respond
+import org.keizar.utils.communication.message.RoomStateChange
 import kotlin.coroutines.CoroutineContext
 
 internal interface GameSessionWsHandler : AutoCloseable {
@@ -34,11 +37,15 @@ internal interface GameSessionWsHandler : AutoCloseable {
  * The websocket handler for a ongoing game.
  * Used by a [RemoteGameSession] to communication with server.
  * Created by a [GameRoomClient] whose state changes to [GameRoomState.PLAYING].
+ *
+ * Accepts two callback functions [onPlayerStateChange] and [onRoomStateChange] to handle state changes.
  */
 internal class GameSessionWsHandlerImpl(
     parentCoroutineContext: CoroutineContext,
     private val session: DefaultClientWebSocketSession,
     private val selfPlayer: Player,
+    private val onPlayerStateChange: suspend (respond: PlayerStateChange) -> Unit,
+    private val onRoomStateChange: suspend (respond: RoomStateChange) -> Unit,
 ) : GameSessionWsHandler {
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
@@ -61,6 +68,8 @@ internal class GameSessionWsHandlerImpl(
                         getUnderlyingRound(round).move(respond.from, respond.to)
                     }
 
+                    is PlayerStateChange -> onPlayerStateChange(respond)
+                    is RoomStateChange -> onRoomStateChange(respond)
                     else -> {
                         // ignore
                     }
