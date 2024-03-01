@@ -1,4 +1,4 @@
-package org.keizar.client.modules
+package org.keizar.client.internal
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -31,9 +31,7 @@ private val ClientJson = Json {
     serializersModule = CommunicationModule
 }
 
-interface KeizarHttpClient : AutoCloseable {
-    suspend fun postRoomCreate(roomNumber: UInt, boardProperties: BoardProperties, token: String)
-    suspend fun getRoom(roomNumber: UInt, token: String): RoomInfo
+internal interface KeizarHttpClient : AutoCloseable {
     suspend fun postRoomJoin(roomNumber: UInt, token: String): Boolean
     suspend fun getRoomWebsocketSession(
         roomNumber: UInt,
@@ -41,7 +39,7 @@ interface KeizarHttpClient : AutoCloseable {
     ): DefaultClientWebSocketSession
 }
 
-class KeizarHttpClientImpl(
+internal class KeizarHttpClientImpl(
     private val endpoint: String,
 ) : KeizarHttpClient {
 
@@ -55,35 +53,6 @@ class KeizarHttpClientImpl(
         Logging {
             level = LogLevel.INFO
         }
-    }
-
-    override suspend fun postRoomCreate(
-        roomNumber: UInt,
-        boardProperties: BoardProperties,
-        token: String,
-    ) {
-        val respond: HttpResponse =
-            client.post(urlString = "$endpoint/room/$roomNumber/create") {
-                header("Authorization", "Bearer $token")
-                contentType(ContentType.Application.Json)
-                setBody(boardProperties)
-            }
-        if (respond.status != HttpStatusCode.OK) {
-            throw NetworkFailureException("Failed postRoomCreate")
-        }
-    }
-
-    override suspend fun getRoom(
-        roomNumber: UInt,
-        token: String,
-    ): RoomInfo {
-        val respond: HttpResponse = client.get(urlString = "$endpoint/room/$roomNumber") {
-            header("Authorization", "Bearer $token")
-        }
-        if (respond.status != HttpStatusCode.OK) {
-            throw NetworkFailureException("Failed getRoom")
-        }
-        return respond.body<RoomInfo>()
     }
 
     override suspend fun postRoomJoin(

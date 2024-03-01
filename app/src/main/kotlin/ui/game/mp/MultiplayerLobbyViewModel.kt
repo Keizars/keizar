@@ -7,7 +7,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
-import org.keizar.client.KeizarClientFacade
+import org.keizar.client.KeizarWebsocketClientFacade
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -34,7 +34,7 @@ interface MatchViewModel : HasBackgroundScope {
 fun MatchViewModel(): MatchViewModel = MatchViewModelImpl()
 
 internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinComponent {
-    private val keizarClientFacade by inject<KeizarClientFacade>()
+    private val keizarWebsocketClientFacade by inject<KeizarWebsocketClientFacade>()
 
     override val joinRoomIdEditing: MutableStateFlow<String> = MutableStateFlow("")
 
@@ -43,7 +43,7 @@ internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinCom
     }
 
     override suspend fun joinRoom() {
-        keizarClientFacade.joinRoom(joinRoomIdEditing.value.toUInt())
+        keizarWebsocketClientFacade.joinRoom(joinRoomIdEditing.value.toUInt())
     }
 
     override val selfRoomId: MutableStateFlow<String?> = MutableStateFlow(null)
@@ -56,7 +56,7 @@ internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinCom
             selfRoomId.value?.let { return it }
             creatingRoom.value = true
             try {
-                val roomId = keizarClientFacade.createRoomAndJoin()
+                val roomId = keizarWebsocketClientFacade.createRoomAndJoin()
                 selfRoomId.value = roomId.toString()
                 return roomId.toString()
             } finally {

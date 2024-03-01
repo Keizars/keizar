@@ -1,4 +1,4 @@
-package org.keizar.client.modules
+package org.keizar.client.internal
 
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.receiveDeserialized
@@ -16,12 +16,12 @@ import org.keizar.utils.communication.message.Respond
 import kotlin.coroutines.CoroutineContext
 
 
-interface WebsocketSessionHandler : AutoCloseable {
+internal interface WebsocketSessionHandler : AutoCloseable {
     suspend fun start()
     fun sendRequest(request: Request)
 }
 
-abstract class AbstractWebsocketSessionHandler(
+internal abstract class AbstractWebsocketSessionHandler(
     private val session: DefaultClientWebSocketSession,
     parentCoroutineContext: CoroutineContext,
 ) : WebsocketSessionHandler {

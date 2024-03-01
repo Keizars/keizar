@@ -1,6 +1,6 @@
 package org.keizar.client
 
-import org.keizar.client.modules.GameSessionWsHandler
+import org.keizar.client.internal.GameSessionWsHandler
 import org.keizar.game.GameSession
 import org.keizar.game.RoundSessionImpl
 import org.keizar.utils.communication.game.Player

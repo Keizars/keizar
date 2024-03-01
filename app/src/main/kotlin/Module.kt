@@ -5,15 +5,15 @@ import org.keizar.android.client.SessionManager
 import org.keizar.android.data.SavedStateRepository
 import org.keizar.android.persistent.RepositoryModules
 import org.keizar.android.persistent.savedStateStore
-import org.keizar.client.KeizarClientFacade
+import org.keizar.client.KeizarWebsocketClientFacade
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
 fun getKoinModule(client: Client = Client(BuildConfig.SERVER_ENDPOINT)): Module {
     return module {
-        single<KeizarClientFacade> {
-            KeizarClientFacade(
+        single<KeizarWebsocketClientFacade> {
+            KeizarWebsocketClientFacade(
                 BuildConfig.SERVER_ENDPOINT,
                 get<SessionManager>().token
             )

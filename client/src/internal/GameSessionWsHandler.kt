@@ -1,4 +1,4 @@
-package org.keizar.client.modules
+package org.keizar.client.internal
 
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import kotlinx.coroutines.CoroutineScope

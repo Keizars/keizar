@@ -10,8 +10,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
-import org.keizar.client.modules.AbstractWebsocketSessionHandler
-import org.keizar.client.modules.GameSessionWsHandlerImpl
+import org.keizar.client.internal.AbstractWebsocketSessionHandler
+import org.keizar.client.internal.GameSessionWsHandlerImpl
 import org.keizar.game.BoardProperties
 import org.keizar.game.RoomInfo
 import org.keizar.game.snapshot.GameSnapshot
