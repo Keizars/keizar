@@ -24,6 +24,7 @@ import org.keizar.client.exception.NetworkFailureException
 import org.keizar.game.BoardProperties
 import org.keizar.game.RoomInfo
 import org.keizar.utils.communication.CommunicationModule
+import org.keizar.utils.communication.account.User
 import org.keizar.utils.communication.message.UserInfo
 
 private val ClientJson = Json {
@@ -34,11 +35,11 @@ private val ClientJson = Json {
 internal interface KeizarHttpClient : AutoCloseable {
     suspend fun getRoom(roomNumber: UInt, token: String): RoomInfo
     suspend fun postRoomJoin(roomNumber: UInt, token: String): Boolean
+    suspend fun getSelf(token: String): User
     suspend fun getRoomWebsocketSession(
         roomNumber: UInt,
         token: String,
     ): DefaultClientWebSocketSession
-
 }
 
 internal class KeizarHttpClientImpl(
@@ -80,6 +81,12 @@ internal class KeizarHttpClientImpl(
             header("Authorization", "Bearer $token")
         }
         return respond.status == HttpStatusCode.OK
+    }
+
+    override suspend fun getSelf(token: String): User {
+        return client.get(urlString = "$endpoint/users/me") {
+            header("Authorization", "Bearer $token")
+        }.body()
     }
 
     override suspend fun getRoomWebsocketSession(

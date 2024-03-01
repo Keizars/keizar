@@ -17,6 +17,7 @@ import org.keizar.game.RoomInfo
 import org.keizar.game.snapshot.GameSnapshot
 import org.keizar.utils.communication.GameRoomState
 import org.keizar.utils.communication.PlayerSessionState
+import org.keizar.utils.communication.account.User
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.message.ChangeBoard
 import org.keizar.utils.communication.message.PlayerStateChange
@@ -24,6 +25,7 @@ import org.keizar.utils.communication.message.RemoteSessionSetup
 import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.RoomStateChange
 import org.keizar.utils.communication.message.SetReady
+import org.keizar.utils.communication.message.UserInfo
 import kotlin.coroutines.CoroutineContext
 
 
@@ -34,7 +36,13 @@ interface GameRoomClient : AutoCloseable {
     val roomNumber: UInt
 
     /**
-     * List of information of each player in the room.
+     * Information of the user who is using this client, including the username,
+     * the nickname, and the avatarUrl of the user.
+     */
+    val self: User
+
+    /**
+     * List of player information of each user in the room.
      *
      * Information contains the username of the player, whether the player is the host,
      * and the state of player: one of [PlayerSessionState.STARTED], [PlayerSessionState.READY],
@@ -42,6 +50,11 @@ interface GameRoomClient : AutoCloseable {
      * and [PlayerSessionState.TERMINATING].
      */
     val players: List<ClientPlayer>
+
+    /**
+     * Player information of the the self user.
+     */
+    val selfPlayer: ClientPlayer
 
     /**
      * State of the game room: one of [GameRoomState.STARTED], [GameRoomState.ALL_CONNECTED],
@@ -89,11 +102,13 @@ interface GameRoomClient : AutoCloseable {
 
     companion object {
         internal fun create(
+            self: User,
             roomInfo: RoomInfo,
             websocketSession: DefaultClientWebSocketSession,
             parentCoroutineContext: CoroutineContext
         ): GameRoomClient {
             return GameRoomClientImpl(
+                self = self,
                 roomNumber = roomInfo.roomNumber,
                 players = roomInfo.playerInfo.map {
                     ClientPlayer(
@@ -110,6 +125,7 @@ interface GameRoomClient : AutoCloseable {
 }
 
 class GameRoomClientImpl internal constructor(
+    override val self: User,
     override val roomNumber: UInt,
     override val players: List<ClientPlayer>,
     private val session: DefaultClientWebSocketSession,
@@ -117,6 +133,8 @@ class GameRoomClientImpl internal constructor(
 ) : GameRoomClient {
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
+
+    override val selfPlayer: ClientPlayer = players.first { it.username == self.username }
 
     private val _state: MutableStateFlow<GameRoomState> = MutableStateFlow(GameRoomState.STARTED)
     override val state: StateFlow<GameRoomState> = _state

@@ -17,6 +17,7 @@ import io.ktor.server.util.getOrFail
 import org.keizar.server.ServerContext
 import org.keizar.server.utils.getUserId
 import org.keizar.utils.communication.account.ImageUrlExchange
+import org.keizar.utils.communication.account.User
 import java.util.UUID
 
 fun Application.accountRouting(context: ServerContext) {
@@ -27,7 +28,7 @@ fun Application.accountRouting(context: ServerContext) {
             authenticate("auth-bearer") {
                 get("me") {
                     val uid = getUserId() ?: return@get
-                    val user = accounts.getUser(uid) ?: throw NotFoundException("Invalid user")
+                    val user: User = accounts.getUser(uid) ?: throw NotFoundException("Invalid user")
                     call.respond(user)
                 }
                 post("/avatar") {

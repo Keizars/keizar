@@ -26,8 +26,14 @@ class KeizarWebsocketClientFacade(
         if (!client.postRoomJoin(roomNumber, token)) {
             throw RoomFullException()
         }
+        val self = client.getSelf(token)
         val websocketSession = client.getRoomWebsocketSession(roomNumber, token)
-        return GameRoomClient.create(roomInfo, websocketSession, parentCoroutineContext).apply {
+        return GameRoomClient.create(
+            self = self,
+            roomInfo = roomInfo,
+            websocketSession = websocketSession,
+            parentCoroutineContext = parentCoroutineContext
+        ).apply {
             start()
         }
     }
