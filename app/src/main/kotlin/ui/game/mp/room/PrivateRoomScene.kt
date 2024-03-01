@@ -109,7 +109,10 @@ private fun AcceptArea(
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.End,
     ) {
-        Button(onClick = { vm.clickAccept() }) {
+        Button(
+            modifier = if (!isSystemInLandscape()) modifier.padding(end = 12.dp) else modifier,
+            onClick = { vm.clickAccept() }
+        ) {
             Text(text = vm.acceptButtonText.value)
         }
     }
@@ -121,6 +124,9 @@ private fun MultiplayerRoomPage(
     onClickHome: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val vm = remember {
+        PrivateRoomViewModelImpl(roomId)
+    }
     Scaffold(
         modifier.fillMaxSize(),
         topBar = {
@@ -133,10 +139,12 @@ private fun MultiplayerRoomPage(
                 },
             )
         },
-    ) { contentPadding ->
-        val vm = remember {
-            PrivateRoomViewModelImpl(roomId)
+        bottomBar = {
+            if (!isSystemInLandscape()) {
+                AcceptArea(vm, modifier)
+            }
         }
+    ) { contentPadding ->
         if (isSystemInLandscape()) {
             Row(
                 Modifier
@@ -156,8 +164,7 @@ private fun MultiplayerRoomPage(
                 Column(Modifier.wrapContentWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Column(Modifier.widthIn(max = 360.dp)) {
                         Configurations(vm, roomId)
-
-                        AcceptArea(vm)
+                        AcceptArea(vm, modifier)
                     }
                 }
             }
@@ -176,8 +183,6 @@ private fun MultiplayerRoomPage(
                 )
 
                 Configurations(vm, roomId, Modifier.padding(top = 8.dp))
-
-                AcceptArea(vm)
             }
 
         }
