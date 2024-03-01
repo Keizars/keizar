@@ -226,8 +226,6 @@ interface GameBoardViewModel : HasBackgroundScope {
 
     fun getPlayerStatistics(player: Player): PlayerStatistics
 
-    fun saveResults()
-
 
     suspend fun removeSavedState() {}
 }
@@ -251,7 +249,7 @@ sealed class PlayableGameBoardViewModel(
     selfPlayer: Player,
 ) : BaseGameBoardViewModel(game, selfPlayer) {
     
-    override fun saveResults() {
+    fun saveResults() {
         var opponentName : String = ""
         val userName = sessionManager.self.value?.username ?: ""
         val gameDataService: GameDataService by inject()
