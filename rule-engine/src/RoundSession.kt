@@ -1,11 +1,14 @@
 package org.keizar.game
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.flowOf
 import org.keizar.game.internal.RuleEngine
 import org.keizar.game.snapshot.RoundSnapshot
 import org.keizar.utils.communication.game.BoardPos
+import org.keizar.utils.communication.game.spRoundStatistics
 import java.time.Instant
 
 interface RoundSession {
@@ -16,6 +19,12 @@ interface RoundSession {
     val curRole: StateFlow<Role>
     val canUndo: StateFlow<Boolean>
     val canRedo: StateFlow<Boolean>
+    // statistics
+    val moveDurations: StateFlow<List<Instant>>
+    val whitePlayerMoves: StateFlow<Int>
+    val blackPlayerMoves: StateFlow<Int>
+    val whitePlayerCaptures: StateFlow<Int>
+    val blackPlayerCaptures: StateFlow<Int>
 
     // undo/redo: only available when playing against computer.
     // Players can only undo in their own turn before they make a move.
@@ -47,9 +56,14 @@ interface RoundSession {
 
     fun pieceAt(pos: BoardPos): Role?
 
-    fun getStartTime(): Instant?
-
-    fun getEndTime(): Instant?
+    fun getStatistics(): spRoundStatistics = spRoundStatistics(
+        whiteMoves = whitePlayerMoves.value,
+        blackMoves = blackPlayerMoves.value,
+        whiteCaptured = whitePlayerCaptures.value,
+        blackCaptured = blackPlayerCaptures.value,
+        moveDuration = moveDurations.value,
+        userPlayer = null
+    )
 }
 
 class RoundSessionImpl(
@@ -58,13 +72,6 @@ class RoundSessionImpl(
     override val pieces: List<Piece> = ruleEngine.pieces
 
     override val winner: StateFlow<Role?> = ruleEngine.winner
-        get() {
-            val winner = field.value
-            if (winner != null && endTime == null) {
-                endTime = Instant.now()
-        }
-            return field
-        }
 
     override val winningCounter: StateFlow<Int> = ruleEngine.winningCounter
 
@@ -74,12 +81,23 @@ class RoundSessionImpl(
 
     override val canRedo: StateFlow<Boolean> = ruleEngine.canRedo
 
-    private var startTime: Instant? = null
-    private var endTime: Instant? = null
+    // statistics
+    private val _moveDurations = MutableStateFlow<List<Instant>>(emptyList())
+    override val moveDurations: StateFlow<List<Instant>> = _moveDurations.asStateFlow()
+    private val _whitePlayerMoves = MutableStateFlow<Int>(0)
+    override val whitePlayerMoves: StateFlow<Int> = _whitePlayerMoves.asStateFlow()
+
+    private val _blackPlayerMoves = MutableStateFlow<Int>(0)
+    override val blackPlayerMoves: StateFlow<Int> = _blackPlayerMoves.asStateFlow()
+
+    private val _whitePlayerCaptures = MutableStateFlow<Int>(0)
+    override val whitePlayerCaptures: StateFlow<Int> = _whitePlayerCaptures.asStateFlow()
+
+    private val _blackPlayerCaptures = MutableStateFlow<Int>(0)
+    override val blackPlayerCaptures: StateFlow<Int> = _blackPlayerCaptures.asStateFlow()
 
     init {
-        // Set the start time when the round starts
-        startTime = Instant.now()
+        _moveDurations.value = _moveDurations.value + Instant.now()
     }
 
     override suspend fun undo(role: Role): Boolean {
@@ -115,10 +133,27 @@ class RoundSessionImpl(
     }
 
     override suspend fun move(from: BoardPos, to: BoardPos): Boolean {
-        return if (winner.value != null) {
-            false
+        if (winner.value != null) {
+            return false
         } else {
-            ruleEngine.move(from, to)
+            val moveSuccess = ruleEngine.move(from, to)
+            if (moveSuccess) {
+                _moveDurations.value = _moveDurations.value + Instant.now()
+                if (curRole.value == Role.WHITE) {
+                    _whitePlayerMoves.value++
+                } else {
+                    _blackPlayerMoves.value++
+                }
+                if (ruleEngine.pieceAt(to) != null) {
+                    if (curRole.value == Role.WHITE) {
+                        _whitePlayerCaptures.value++
+                    } else {
+                        _blackPlayerCaptures.value++
+                    }
+                }
+                else{}
+            }
+            return moveSuccess
         }
     }
 
@@ -128,13 +163,5 @@ class RoundSessionImpl(
 
     override fun reset() {
         ruleEngine.reset()
-    }
-
-    override fun getStartTime(): Instant? {
-        return startTime
-    }
-
-    override fun getEndTime(): Instant? {
-        return endTime
     }
 }

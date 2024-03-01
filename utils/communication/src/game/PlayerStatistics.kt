@@ -1,5 +1,6 @@
 package org.keizar.utils.communication.game
 import kotlinx.serialization.Serializable
+import java.time.Instant
 
 @Serializable
 data class PlayerStatistics(
@@ -19,4 +20,13 @@ data class PlayerStatistics(
 
     val round1AverageTime: Long,
     val round2AverageTime: Long,
+)
+
+data class spRoundStatistics(
+    val whiteCaptured: Int,
+    val blackCaptured: Int,
+    val moveDuration: List<Instant>,
+    val whiteMoves: Int,
+    val blackMoves: Int,
+    val userPlayer: Player?,
 )

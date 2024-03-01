@@ -75,8 +75,7 @@ interface GameSession {
     fun getPlayer(role: Role, roundNo: Int): Player
     fun getRole(player: Player, roundNo: Int): Role
     fun getRoundWinner(roundNo: Int): Flow<Player?>
-
-    fun getRoundTime(roundNo: Int): Int?
+    fun getMoveDurations(roundNo: Int): StateFlow<List<Instant>>
 
     companion object {
         // Create a standard GameSession using the seed provided.
@@ -163,8 +162,6 @@ class GameSessionImpl(
 
     private val nextRoundAgreement: MutableList<Boolean>
     private val agreementCounter: AtomicInteger = AtomicInteger(0)
-    private var round1Time: Instant? = null
-    private var round2Time: Instant? = null
 
     init {
         rounds = (0..<properties.rounds).map {
@@ -268,6 +265,10 @@ class GameSessionImpl(
         return rounds[roundNo].winner.map { it?.let { role -> getPlayer(role, roundNo) } }
     }
 
+    override fun getMoveDurations(roundNo: Int): StateFlow<List<Instant>> {
+        return rounds[roundNo].moveDurations
+    }
+
     override fun getRole(player: Player, roundNo: Int): Role {
         return if ((player.ordinal + roundNo) % 2 == 0) Role.WHITE else Role.BLACK
     }
@@ -276,14 +277,6 @@ class GameSessionImpl(
         return Player.fromOrdinal((role.ordinal + roundNo) % 2)
     }
 
-    override fun getRoundTime(roundNo: Int): Int? {
-        val startTime:Instant = rounds[roundNo].getStartTime() ?: return null
-        val endTime:Instant = rounds[roundNo].getEndTime() ?: return null
-        return if (roundNo == 0) {
-            Duration.between(startTime, endTime).seconds.toInt()
-        } else {
-            Duration.between(startTime, endTime).seconds.toInt()  - getRoundTime(roundNo - 1)!!
-        }
-    }
+
 }
 
