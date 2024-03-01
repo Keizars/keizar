@@ -7,11 +7,12 @@ import aws.smithy.kotlin.runtime.content.FileContent
 import java.io.File
 
 interface AvatarStorage {
-    suspend fun uploadAvatar(username: String, file: File, contentType: String): String
+    suspend fun uploadAvatar(username: String, file: File, filename: String, contentType: String): String
 }
 
 class InMemoryAvatarStorage : AvatarStorage {
-    override suspend fun uploadAvatar(username: String, file: File, contentType: String): String = file.absolutePath
+    override suspend fun uploadAvatar(username: String, file: File, filename: String, contentType: String): String =
+        file.absolutePath
 }
 
 class AwsAvatarStorage(
@@ -22,9 +23,7 @@ class AwsAvatarStorage(
         credentialsProvider = EnvironmentCredentialsProvider()
     }
 
-    override suspend fun uploadAvatar(username: String, file: File, contentType: String): String {
-        @Suppress("UnnecessaryVariable", "RedundantSuppression") // IDE bug
-        val filename = username
+    override suspend fun uploadAvatar(username: String, file: File, filename: String, contentType: String): String {
         val request = PutObjectRequest {
             bucket = bucketName
             key = "avatars/$filename"

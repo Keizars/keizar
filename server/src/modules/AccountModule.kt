@@ -12,6 +12,7 @@ import org.keizar.utils.communication.account.AuthStatus
 import org.keizar.utils.communication.account.User
 import java.io.File
 import java.io.InputStream
+import java.security.MessageDigest
 import java.util.UUID
 
 interface AccountModule {
@@ -90,6 +91,7 @@ class AccountModuleImpl(
 //        return avatarStorage.uploadAvatar()
 //    }
 
+    @OptIn(ExperimentalStdlibApi::class)
     override suspend fun uploadNewAvatar(uid: UUID, input: InputStream, contentType: ContentType) {
         val user = database.user.getUserById(uid.toString()) ?: throw IllegalArgumentException("User not found")
         val file = withContext(Dispatchers.IO) {
@@ -97,7 +99,9 @@ class AccountModuleImpl(
                 this.outputStream().use { input.copyTo(it) }
             }
         }
-        val newUrl = avatarStorage.uploadAvatar(uid.toString(), file, contentType.toString())
+
+        val digest = MessageDigest.getInstance("SHA-256").digest(file.readBytes()).toHexString()
+        val newUrl = avatarStorage.uploadAvatar(uid.toString(), file, filename = digest, contentType.toString())
         withContext(Dispatchers.IO) {
             file.delete()
         }

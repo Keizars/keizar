@@ -50,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -169,12 +170,9 @@ fun ProfilePage(
                         imagePicker.launchPhotoPicker()
                     }
             ) {
-                AsyncImage(
-                    model = self?.avatarUrlOrDefault(),
-                    contentDescription = "Avatar",
+                AvatarImage(
+                    url = self?.avatarUrlOrDefault(),
                     Modifier.size(64.dp),
-                    placeholder = rememberVectorPainter(Icons.Default.Person),
-                    error = rememberVectorPainter(Icons.Default.Person)
                 )
             }
 
@@ -265,7 +263,8 @@ fun AvatarImage(url: String?, modifier: Modifier = Modifier) {
         contentDescription = "Avatar",
         modifier,
         placeholder = rememberVectorPainter(Icons.Default.Person),
-        error = rememberVectorPainter(Icons.Default.Person)
+        error = rememberVectorPainter(Icons.Default.Person),
+        contentScale = ContentScale.Crop,
     )
 }
 
