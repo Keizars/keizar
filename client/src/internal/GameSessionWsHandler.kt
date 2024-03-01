@@ -50,6 +50,10 @@ internal class GameSessionWsHandlerImpl(
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
+    /**
+     * The underlying [GameSession] and [RoundSession]s of the [RemoteGameSession] bound to this handler.
+     * Used by the handler to reproduce the opponent's operations (moves, confirm next rounds, etc.)
+     */
     private lateinit var gameSession: GameSession
     private val underlyingRoundSessionMap: MutableMap<RoundSession, RoundSession> = mutableMapOf()
     private val currentSelfRole: MutableStateFlow<Role> = MutableStateFlow(Role.WHITE)

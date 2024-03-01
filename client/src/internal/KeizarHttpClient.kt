@@ -42,6 +42,10 @@ internal interface KeizarHttpClient : AutoCloseable {
     ): DefaultClientWebSocketSession
 }
 
+
+/**
+ * HTTP client used to send actual HTTP requests to the Keizar server
+ */
 internal class KeizarHttpClientImpl(
     private val endpoint: String,
 ) : KeizarHttpClient {
