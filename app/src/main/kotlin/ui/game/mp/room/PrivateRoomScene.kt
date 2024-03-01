@@ -177,6 +177,7 @@ private fun Configurations(
             )
         }
 
+
         BoardSeedTextField(
             text = vm.configuration.configurationSeedText.collectAsStateWithLifecycle().value,
             onValueChange = { vm.configuration.setConfigurationSeedText(it) },
@@ -186,6 +187,7 @@ private fun Configurations(
             supportingText = {
                 Text(text = "Explore new board layouts by changing the seed. Other player can also see this board.")
             },
+            readOnly = vm.selfIsHost.value,
             modifier = Modifier.fillMaxWidth(),
         )
 

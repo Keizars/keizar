@@ -65,6 +65,10 @@ interface PrivateRoomViewModel : HasBackgroundScope {
     suspend fun accept()
 
     @Stable
+    val selfIsHost: State<Boolean>
+    suspend fun isHost()
+
+    @Stable
     val acceptButtonText: MutableState<String>
 
 }
@@ -75,6 +79,7 @@ class PrivateRoomViewModelImpl(
     private val facade: KeizarWebsocketClientFacade by inject()
     private val roomService: RoomService by inject()
     private val sessionManager: SessionManager by inject()
+    private val self = sessionManager.self
 
     override val playersReady: SharedFlow<Boolean> = flow {
         while (currentCoroutineContext().isActive) {
@@ -119,13 +124,15 @@ class PrivateRoomViewModelImpl(
             }
         }
         backgroundScope.launch {
-            val self = sessionManager.self
             client.first().players.filter { it.username == self.first().username}[0].state.collect {
                 accept.value = it != PlayerSessionState.READY
             }
         }
     }
-
+    override val selfIsHost: MutableState<Boolean> = mutableStateOf(false)
+    override suspend fun isHost() {
+        this.selfIsHost.value =  client.first().players.filter { it.username == self.first().username}[0].isHost
+    }
     private suspend fun setSeed(roomId: UInt, seed: UInt) {
         client.first().changeSeed(roomId, seed)
     }
@@ -141,6 +148,7 @@ class PrivateRoomViewModelImpl(
             acceptButtonText.value = "Waiting for the opponent..."
         }
     }
+
 //    val boardSeed = MutableStateFlow(0u)
 //    override val boardProperties: StateFlow<BoardProperties> = boardSeed.map { BoardProperties(it) }
 
