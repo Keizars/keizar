@@ -31,5 +31,5 @@ interface RoomService {
      * Return OK on success.
      */
     @POST("room/{roomNumber}/join")
-    suspend fun joinRoom(roomNumber: UInt, @Body userInfo: UserInfo): Boolean
+    suspend fun joinRoom(roomNumber: UInt): Boolean
 }
