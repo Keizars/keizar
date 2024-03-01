@@ -59,7 +59,7 @@ import org.keizar.android.ui.game.configuration.GameConfigurationScene
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
 import org.keizar.android.ui.game.mp.MatchViewModel
-import org.keizar.android.ui.game.mp.MultiplayerGamePage
+import org.keizar.android.ui.game.mp.MultiplayerGameScene
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
 import org.keizar.android.ui.game.mp.room.PrivateRoomScene
 import org.keizar.android.ui.game.sp.SinglePlayerGameScene
@@ -208,7 +208,7 @@ fun MainScreen() {
         }
         composable("game/multiplayer") { backStackEntry ->
             LoginChecker(navController)
-            MultiplayerGamePage(
+            MultiplayerGameScene(
                 roomId = backStackEntry.arguments!!.getString("roomId")!!.toUInt(),
                 goBack = {
                     navController.popBackStack()

@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -49,6 +48,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
@@ -100,32 +100,45 @@ fun GameBoardTopBar(
 fun GameBoard(
     vm: GameBoardViewModel,
     modifier: Modifier = Modifier,
+    opponentCapturedPieces: @Composable RowScope.(tileSize: DpSize, sourceCoordinates: LayoutCoordinates) -> Unit = { tileSize, sourceCoordinates ->
+        CapturedPiecesHost(
+            capturedPieceHostState = vm.theirCapturedPieceHostState,
+            slotSize = tileSize,
+            sourceCoordinates = sourceCoordinates,
+        )
+    },
+    myCapturedPieces: @Composable RowScope.(tileSize: DpSize, sourceCoordinates: LayoutCoordinates) -> Unit = { tileSize, sourceCoordinates ->
+        CapturedPiecesHost(
+            capturedPieceHostState = vm.myCapturedPieceHostState,
+            slotSize = tileSize,
+            sourceCoordinates = sourceCoordinates,
+        )
+    },
     boardOverlay: @Composable BoxScope.() -> Unit = { },
 ) {
     var boardGlobalCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
-
     val tileSize by vm.pieceArranger.tileSize.collectAsStateWithLifecycle(DpSize.Zero)
 
-    CapturedPiecesHost(
-        capturedPieceHostState = vm.theirCapturedPieceHostState,
-        slotSize = tileSize,
-        sourceCoordinates = boardGlobalCoordinates,
-        Modifier.fillMaxWidth()
-    )
+    Column {
+        Row(Modifier.align(Alignment.Start), verticalAlignment = CenterVertically) {
+            boardGlobalCoordinates?.let {
+                opponentCapturedPieces(tileSize, it)
+            }
+        }
 
-    Box(modifier = modifier.onGloballyPositioned { boardGlobalCoordinates = it }) {
-        BoardBackground(vm, Modifier.matchParentSize())
-        BoardPieces(vm)
-        PossibleMovesOverlay(vm)
-        boardOverlay()
+        Box(modifier = modifier.onGloballyPositioned { boardGlobalCoordinates = it }) {
+            BoardBackground(vm, Modifier.matchParentSize())
+            BoardPieces(vm)
+            PossibleMovesOverlay(vm)
+            boardOverlay()
+        }
+
+        Row(Modifier.align(Alignment.End), verticalAlignment = CenterVertically) {
+            boardGlobalCoordinates?.let {
+                myCapturedPieces(tileSize, it)
+            }
+        }
     }
-
-    CapturedPiecesHost(
-        capturedPieceHostState = vm.myCapturedPieceHostState,
-        slotSize = tileSize,
-        sourceCoordinates = boardGlobalCoordinates,
-        Modifier.fillMaxWidth()
-    )
 }
 
 @Composable
@@ -142,21 +155,6 @@ fun GameBoardScaffold(
             topBar()
         }
 
-        Row(
-            modifier.fillMaxWidth().padding(16.dp).wrapContentHeight(),
-            horizontalArrangement = Arrangement.Start
-        ) {
-            Box(
-                modifier = modifier.weight(1f).wrapContentHeight()
-            ) {
-                // TODO: Avatar
-            }
-            Text(
-                text = "Opponent Username", // TODO: Change username
-                modifier.weight(3f).wrapContentHeight(),
-                fontSize = 18.sp
-            )
-        }
         board()
 
         Row(
@@ -165,23 +163,6 @@ fun GameBoardScaffold(
                 .padding(horizontal = 16.dp), horizontalArrangement = Arrangement.End
         ) {
             actions()
-        }
-
-        Row(
-            modifier.fillMaxWidth().padding(16.dp).wrapContentHeight(),
-            horizontalArrangement = Arrangement.End
-        ) {
-            Text(
-                text = "Opponent Username", // TODO: Change username
-                modifier.weight(3f).wrapContentHeight(),
-                fontSize = 18.sp,
-                textAlign = TextAlign.End
-            )
-            Box(
-                modifier = modifier.weight(1f).wrapContentHeight()
-            ) {
-                // TODO: Avatar
-            }
         }
 
         Row {
@@ -410,13 +391,15 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                 if (vm is MultiplayerGameBoardViewModel) {
                     val myName by vm.myName.collectAsState(initial = "")
                     val opponentName by vm.opponentName.collectAsState(initial = "")
-                    val opponentStatistics = vm.getPlayerStatistics(if (vm.selfPlayer == Player.FirstBlackPlayer) Player.FirstWhitePlayer else Player.FirstBlackPlayer)
-                    text = "$myName captured: ${playerStatistics.round1Captured} + ${playerStatistics.round2Captured} = ${playerStatistics.round1Captured + playerStatistics.round2Captured}\n" +
-                            "$opponentName captured:  ${playerStatistics.round1OpponentCaptured} + ${playerStatistics.round2OpponentCaptured} = ${playerStatistics.round1OpponentCaptured + playerStatistics.round2OpponentCaptured}\n" +
-                            "Number of moves: ${playerStatistics.round1Moves} + ${playerStatistics.round2Moves} = ${playerStatistics.round1Moves + playerStatistics.round2Moves}\n" +
-                            "Time: ${playerStatistics.round1Time / 60} m ${playerStatistics.round1Time % 60} s + ${playerStatistics.round2Time / 60} m ${playerStatistics.round2Time % 60} s = ${(playerStatistics.round1Time + playerStatistics.round2Time) / 60} m ${(playerStatistics.round1Time + playerStatistics.round2Time) % 60} s\n" +
-                            "$myName moves' average time: ${playerStatistics.round1AverageTime / 60} m ${playerStatistics.round1AverageTime % 60} s + ${playerStatistics.round2AverageTime / 60} m ${playerStatistics.round2AverageTime % 60} s = ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) / 60} m ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) % 60} s\n" +
-                            "$opponentName moves' average time: ${opponentStatistics.round1AverageTime / 60} m ${opponentStatistics.round1AverageTime % 60} s + ${opponentStatistics.round2AverageTime / 60} m ${opponentStatistics.round2AverageTime % 60} s = ${(opponentStatistics.round1AverageTime + opponentStatistics.round2AverageTime) / 60} m ${(opponentStatistics.round1AverageTime + opponentStatistics.round2AverageTime) % 60} s\n"
+                    val opponentStatistics =
+                        vm.getPlayerStatistics(if (vm.selfPlayer == Player.FirstBlackPlayer) Player.FirstWhitePlayer else Player.FirstBlackPlayer)
+                    text =
+                        "$myName captured: ${playerStatistics.round1Captured} + ${playerStatistics.round2Captured} = ${playerStatistics.round1Captured + playerStatistics.round2Captured}\n" +
+                                "$opponentName captured:  ${playerStatistics.round1OpponentCaptured} + ${playerStatistics.round2OpponentCaptured} = ${playerStatistics.round1OpponentCaptured + playerStatistics.round2OpponentCaptured}\n" +
+                                "Number of moves: ${playerStatistics.round1Moves} + ${playerStatistics.round2Moves} = ${playerStatistics.round1Moves + playerStatistics.round2Moves}\n" +
+                                "Time: ${playerStatistics.round1Time / 60} m ${playerStatistics.round1Time % 60} s + ${playerStatistics.round2Time / 60} m ${playerStatistics.round2Time % 60} s = ${(playerStatistics.round1Time + playerStatistics.round2Time) / 60} m ${(playerStatistics.round1Time + playerStatistics.round2Time) % 60} s\n" +
+                                "$myName moves' average time: ${playerStatistics.round1AverageTime / 60} m ${playerStatistics.round1AverageTime % 60} s + ${playerStatistics.round2AverageTime / 60} m ${playerStatistics.round2AverageTime % 60} s = ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) / 60} m ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) % 60} s\n" +
+                                "$opponentName moves' average time: ${opponentStatistics.round1AverageTime / 60} m ${opponentStatistics.round1AverageTime % 60} s + ${opponentStatistics.round2AverageTime / 60} m ${opponentStatistics.round2AverageTime % 60} s = ${(opponentStatistics.round1AverageTime + opponentStatistics.round2AverageTime) / 60} m ${(opponentStatistics.round1AverageTime + opponentStatistics.round2AverageTime) % 60} s\n"
                 } else {
                     text =
                         "You captured: ${playerStatistics.round1Captured} + ${playerStatistics.round2Captured} = ${playerStatistics.round1Captured + playerStatistics.round2Captured}\n" +
@@ -458,13 +441,15 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                 if (vm is MultiplayerGameBoardViewModel) {
                     val myName by vm.myName.collectAsState(initial = "")
                     val opponentName by vm.opponentName.collectAsState(initial = "")
-                    val opponentStatistics = vm.getPlayerStatistics(if (vm.selfPlayer == Player.FirstBlackPlayer) Player.FirstWhitePlayer else Player.FirstBlackPlayer)
-                    text = "$myName captured: ${playerStatistics.round1Captured} + ${playerStatistics.round2Captured} = ${playerStatistics.round1Captured + playerStatistics.round2Captured}\n" +
-                            "$opponentName captured:  ${playerStatistics.round1OpponentCaptured} + ${playerStatistics.round2OpponentCaptured} = ${playerStatistics.round1OpponentCaptured + playerStatistics.round2OpponentCaptured}\n" +
-                            "Number of moves: ${playerStatistics.round1Moves} + ${playerStatistics.round2Moves} = ${playerStatistics.round1Moves + playerStatistics.round2Moves}\n" +
-                            "Time: ${playerStatistics.round1Time / 60} m ${playerStatistics.round1Time % 60} s + ${playerStatistics.round2Time / 60} m ${playerStatistics.round2Time % 60} s = ${(playerStatistics.round1Time + playerStatistics.round2Time) / 60} m ${(playerStatistics.round1Time + playerStatistics.round2Time) % 60} s\n" +
-                            "$myName moves' average time: ${playerStatistics.round1AverageTime / 60} m ${playerStatistics.round1AverageTime % 60} s + ${playerStatistics.round2AverageTime / 60} m ${playerStatistics.round2AverageTime % 60} s = ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) / 60} m ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) % 60} s\n" +
-                            "$opponentName moves' average time: ${opponentStatistics.round1AverageTime / 60} m ${opponentStatistics.round1AverageTime % 60} s + ${opponentStatistics.round2AverageTime / 60} m ${opponentStatistics.round2AverageTime % 60} s = ${(opponentStatistics.round1AverageTime + opponentStatistics.round2AverageTime) / 60} m ${(opponentStatistics.round1AverageTime + opponentStatistics.round2AverageTime) % 60} s\n"
+                    val opponentStatistics =
+                        vm.getPlayerStatistics(if (vm.selfPlayer == Player.FirstBlackPlayer) Player.FirstWhitePlayer else Player.FirstBlackPlayer)
+                    text =
+                        "$myName captured: ${playerStatistics.round1Captured} + ${playerStatistics.round2Captured} = ${playerStatistics.round1Captured + playerStatistics.round2Captured}\n" +
+                                "$opponentName captured:  ${playerStatistics.round1OpponentCaptured} + ${playerStatistics.round2OpponentCaptured} = ${playerStatistics.round1OpponentCaptured + playerStatistics.round2OpponentCaptured}\n" +
+                                "Number of moves: ${playerStatistics.round1Moves} + ${playerStatistics.round2Moves} = ${playerStatistics.round1Moves + playerStatistics.round2Moves}\n" +
+                                "Time: ${playerStatistics.round1Time / 60} m ${playerStatistics.round1Time % 60} s + ${playerStatistics.round2Time / 60} m ${playerStatistics.round2Time % 60} s = ${(playerStatistics.round1Time + playerStatistics.round2Time) / 60} m ${(playerStatistics.round1Time + playerStatistics.round2Time) % 60} s\n" +
+                                "$myName moves' average time: ${playerStatistics.round1AverageTime / 60} m ${playerStatistics.round1AverageTime % 60} s + ${playerStatistics.round2AverageTime / 60} m ${playerStatistics.round2AverageTime % 60} s = ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) / 60} m ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) % 60} s\n" +
+                                "$opponentName moves' average time: ${opponentStatistics.round1AverageTime / 60} m ${opponentStatistics.round1AverageTime % 60} s + ${opponentStatistics.round2AverageTime / 60} m ${opponentStatistics.round2AverageTime % 60} s = ${(opponentStatistics.round1AverageTime + opponentStatistics.round2AverageTime) / 60} m ${(opponentStatistics.round1AverageTime + opponentStatistics.round2AverageTime) % 60} s\n"
                 } else {
                     text =
                         "You captured: ${playerStatistics.round1Captured} + ${playerStatistics.round2Captured} = ${playerStatistics.round1Captured + playerStatistics.round2Captured}\n" +

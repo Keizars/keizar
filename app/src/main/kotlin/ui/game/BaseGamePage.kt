@@ -29,6 +29,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import org.keizar.android.encode
@@ -47,6 +48,14 @@ fun BaseGamePage(
     onClickHome: () -> Unit,
     onClickGameConfig: () -> Unit,
     modifier: Modifier = Modifier,
+    board: @Composable (Dp) -> Unit = @Composable { size ->
+        GameBoard(
+            vm = vm,
+            Modifier
+                .padding(vertical = 16.dp)
+                .size(size),
+        )
+    },
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     var showGameConfigurationDialog by remember { mutableStateOf(false) }
@@ -98,13 +107,7 @@ fun BaseGamePage(
                     val size = maxHeight - 200.dp
                     GameBoardScaffold(
                         vm,
-                        board = {
-                            GameBoard(
-                                vm = vm, Modifier
-                                    .padding(vertical = 16.dp)
-                                    .size(size)
-                            )
-                        },
+                        board = { board(size) },
                         modifier = Modifier.width(IntrinsicSize.Min),
                         bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickGameConfig) },
                         actions = actions,
@@ -115,13 +118,7 @@ fun BaseGamePage(
                     val size = min(maxWidth, maxHeight)
                     GameBoardScaffold(
                         vm,
-                        board = {
-                            GameBoard(
-                                vm = vm, Modifier
-                                    .padding(vertical = 16.dp)
-                                    .size(size)
-                            )
-                        },
+                        board = { board(size) },
                         modifier = Modifier.fillMaxSize(),
                         bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickGameConfig) },
                         actions = actions,
