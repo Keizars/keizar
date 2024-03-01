@@ -26,9 +26,7 @@ class KeizarClientFacade(
      * Create a room with random room number and join the room with given user info.
      * Return the room info.
      */
-    suspend fun createRoomAndJoin(
-        parentCoroutineContext: CoroutineContext,
-    ): Boolean {
+    suspend fun createRoomAndJoin(): Boolean {
         val roomInfo = room.createRoom()
         return room.joinRoom(roomInfo.roomNumber)
     }
@@ -37,10 +35,7 @@ class KeizarClientFacade(
      * Join a room with given number and user info.
      * Return true on success.
      */
-    suspend fun joinRoom(
-        roomNumber: UInt,
-        parentCoroutineContext: CoroutineContext,
-    ): Boolean {
+    suspend fun joinRoom(roomNumber: UInt): Boolean {
         val roomInfo = room.getRoom(roomNumber)
         return room.joinRoom(roomInfo.roomNumber)
     }
