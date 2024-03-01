@@ -2,8 +2,8 @@ package org.keizar.server.database.local
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.keizar.server.database.models.UserModel
 import org.keizar.server.database.UserDbControl
+import org.keizar.server.database.models.UserModel
 
 class InMemoryUserDbControl : UserDbControl {
     private val _data: MutableList<UserModel> = mutableListOf()
@@ -16,21 +16,22 @@ class InMemoryUserDbControl : UserDbControl {
         return data { add(userModel) }
     }
 
-    override suspend fun updateUsername(userId: String, newUsername: String): Boolean {
+    override suspend fun update(
+        userId: String,
+        newUsername: String?,
+        newNickname: String?,
+        avatarUrl: String?
+    ): Boolean {
         return data {
             find { it.id == userId }?.let {
                 remove(it)
-                add(it.copy(username = newUsername))
-                true
-            } ?: false
-        }
-    }
-
-    override suspend fun updateNickname(userId: String, newNickname: String): Boolean {
-        return data {
-            find { it.id == userId }?.let {
-                remove(it)
-                add(it.copy(nickname = newNickname))
+                add(
+                    it.copy(
+                        username = newUsername ?: it.username,
+                        nickname = newNickname ?: it.nickname,
+                        avatarUrl = avatarUrl ?: it.avatarUrl
+                    )
+                )
                 true
             } ?: false
         }

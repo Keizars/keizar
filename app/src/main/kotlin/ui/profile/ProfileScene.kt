@@ -50,6 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -152,9 +153,21 @@ fun ProfilePage(
                 .fillMaxWidth()
                 .height(64.dp),
         ) {
+            val context = LocalContext.current
+            val imagePicker = rememberImagePicker(onImageSelected = { files ->
+                vm.launchInBackground {
+                    context.contentResolver.openInputStream(files.first())?.use {
+                        vm.uploadAvatar(it)
+                    } ?: throw IllegalArgumentException("Failed to open input stream for $files")
+                }
+            })
+
             Box(
                 Modifier
                     .clip(CircleShape)
+                    .clickable {
+                        imagePicker.launchPhotoPicker()
+                    }
             ) {
                 AsyncImage(
                     model = self?.avatarUrlOrDefault(),
@@ -324,7 +337,7 @@ fun SavedBoardCard(modifier: Modifier = Modifier, layoutSeedText: String, vm: Pr
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
 
-                Text(
+                    Text(
                         text = "Game board seed: $layoutSeedText",
                         Modifier.padding(bottom = 8.dp),
                         textAlign = TextAlign.Center

@@ -2,6 +2,7 @@
 kotlin = "2.0.0-Beta4"
 coroutines = "1.7.3"
 mongodb-driver-kotlin-coroutine = "4.10.1"
+aws = "1.0.41"
 serialization = "1.6.2"
 voyager = "1.0.0"
 atomicfu = "0.21.0"
@@ -71,6 +72,7 @@ ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negoti
 ktor-server-call-logging = { module = "io.ktor:ktor-server-call-logging", version.ref = "ktor" }
 ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor" }
 ktor-server-websocket-jvm = { module = "io.ktor:ktor-server-websockets-jvm", version.ref = "ktor" }
+ktor-server-status = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
 
 # Retrofit
 mongodb-driver-kotlin-coroutine = { module = "org.mongodb:mongodb-driver-kotlin-coroutine", version.ref = "mongodb-driver-kotlin-coroutine" }
@@ -165,3 +167,9 @@ coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coil" 
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgres_version" }
 h2database = { module = "com.h2database:h2", version.ref = "h2_version" }
 dynamodb = { module = "software.amazon.awssdk:dynamodb", version.ref = "dynamodb_version" }
+
+# S3
+aws-s3 = { module = "aws.sdk.kotlin:s3", version.ref = "aws" }
+aws-sts = { module = "aws.sdk.kotlin:sts", version.ref = "aws" }
+aws-s3control = { module = "aws.sdk.kotlin:s3control", version.ref = "aws" }
+aws-secretsmanager = { module = "aws.sdk.kotlin:secretsmanager", version.ref = "aws" }

@@ -111,6 +111,7 @@ class Client(
         single<UserService> { retrofit.create(UserService::class.java) }
         single<RoomService> { retrofit.create(RoomService::class.java) }
         single<SeedBankService> { retrofit.create(SeedBankService::class.java) }
+        single<StreamingService> { StreamingServiceImpl() }
     }
 }
 

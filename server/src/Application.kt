@@ -2,6 +2,7 @@
 
 package org.keizar.server
 
+import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
 import io.ktor.server.application.log
@@ -9,6 +10,8 @@ import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.netty.NettyApplicationEngine
 import io.ktor.server.plugins.callloging.CallLogging
+import io.ktor.server.plugins.statuspages.StatusPages
+import io.ktor.server.response.respond
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import org.keizar.server.plugins.configureDatabases
@@ -45,6 +48,12 @@ fun Application.module() {
             it.request.queryParameters["requestId"]
         }
         level = org.slf4j.event.Level.INFO
+    }
+    install(StatusPages) {
+        exception<Throwable> { call, throwable ->
+            throwable.printStackTrace()
+            call.respond(HttpStatusCode.InternalServerError, "Internal server error")
+        }
     }
 
     configureSecurity(context)

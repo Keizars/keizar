@@ -3,15 +3,16 @@ package org.keizar.server
 import kotlinx.coroutines.test.runTest
 import org.keizar.server.database.InMemoryDatabaseManagerImpl
 import org.keizar.server.modules.AccountModuleImpl
+import org.keizar.server.modules.InMemoryAvatarStorage
 import org.keizar.server.utils.AuthTokenManager
 import org.keizar.utils.communication.account.AuthStatus
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlin.test.assertNotNull
 
 class AccountModuleTest {
     private val plainAuthTokenManager = object : AuthTokenManager {
@@ -24,6 +25,7 @@ class AccountModuleTest {
         val accountModule = AccountModuleImpl(
             database = InMemoryDatabaseManagerImpl(),
             authTokenManager = plainAuthTokenManager,
+            avatarStorage = InMemoryAvatarStorage(),
         )
 
         var respond = accountModule.register("test", byteArrayOf(1))
@@ -44,6 +46,7 @@ class AccountModuleTest {
         val accountModule = AccountModuleImpl(
             database = InMemoryDatabaseManagerImpl(),
             authTokenManager = plainAuthTokenManager,
+            avatarStorage = InMemoryAvatarStorage(),
         )
         var respond = accountModule.login("test", byteArrayOf(1))
         assertEquals(AuthStatus.USER_NOT_FOUND, respond.status)
@@ -66,6 +69,7 @@ class AccountModuleTest {
         val accountModule = AccountModuleImpl(
             database = InMemoryDatabaseManagerImpl(),
             authTokenManager = plainAuthTokenManager,
+            avatarStorage = InMemoryAvatarStorage(),
         )
         assertFalse(accountModule.isUsernameTaken("test"))
 
@@ -80,8 +84,9 @@ class AccountModuleTest {
         val accountModule = AccountModuleImpl(
             database = InMemoryDatabaseManagerImpl(),
             authTokenManager = plainAuthTokenManager,
+            avatarStorage = InMemoryAvatarStorage(),
         )
-        
+
         assertNull(accountModule.getUser(UUID.randomUUID()))
         assertNull(accountModule.getUserByName("blah"))
 
@@ -90,7 +95,7 @@ class AccountModuleTest {
         assertNotNull(respond.token)
         val userId = plainAuthTokenManager.matchToken(respond.token!!)
         assertNotNull(userId)
-        
+
         val user1 = accountModule.getUser(UUID.fromString(userId))
         val user2 = accountModule.getUser(UUID.fromString(userId))
         assertEquals(user1!!, user2!!)

@@ -4,8 +4,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.keizar.server.database.InMemoryDatabaseManagerImpl
 import org.keizar.server.database.MongoDatabaseManagerImpl
-import org.keizar.server.modules.GameRoomsModuleImpl
 import org.keizar.server.modules.AccountModuleImpl
+import org.keizar.server.modules.AvatarStorage
+import org.keizar.server.modules.AwsAvatarStorage
+import org.keizar.server.modules.GameRoomsModuleImpl
+import org.keizar.server.modules.InMemoryAvatarStorage
 import org.keizar.server.modules.SeedBankModuleImpl
 import org.keizar.server.utils.AesEncoder
 import org.keizar.server.utils.AuthTokenConfig
@@ -44,9 +47,15 @@ class ServerContext(
         parentCoroutineScope.launch { databaseManager.initialize() }
     }
 
+    private val avatarStorage: AvatarStorage = if (env.testing) {
+        InMemoryAvatarStorage()
+    } else {
+        AwsAvatarStorage()
+    }
+    
     val gameRooms = GameRoomsModuleImpl(parentCoroutineScope.coroutineContext, logger)
-    val accounts = AccountModuleImpl(databaseManager, authTokenManager)
     val seedBank = SeedBankModuleImpl(databaseManager)
+    val accounts = AccountModuleImpl(databaseManager, authTokenManager, avatarStorage)
 }
 
 fun setupServerContext(

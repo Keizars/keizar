@@ -8,4 +8,5 @@ data class UserModel(
     val username: String, // Unique Column
     val hash: String,
     val nickname: String? = null,
+    val avatarUrl: String? = null,
 )

@@ -39,6 +39,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.protobuf)
 
     implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.logging)
+    implementation(libs.ktor.client.auth)
     implementation(libs.koin.android)
     implementation(libs.retrofit)
     implementation(libs.retrofit.kotlinx.serialization)

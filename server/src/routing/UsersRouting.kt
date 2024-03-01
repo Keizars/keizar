@@ -1,6 +1,5 @@
 package org.keizar.server.routing
 
-import io.ktor.client.content.LocalFileContent
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
@@ -11,15 +10,14 @@ import io.ktor.server.request.receiveStream
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.post
+import io.ktor.server.routing.put
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.server.util.getOrFail
 import org.keizar.server.ServerContext
 import org.keizar.server.utils.getUserId
-import org.keizar.utils.communication.account.ImageUrlExchange
 import org.keizar.utils.communication.account.User
 import org.keizar.utils.communication.account.UsernameValidityResponse
-import java.util.UUID
 
 fun Application.usersRouting(context: ServerContext) {
     val accounts = context.accounts
@@ -36,13 +34,24 @@ fun Application.usersRouting(context: ServerContext) {
                     }
                     call.respond(user)
                 }
-                post("/avatar") {
-                    val uid = getUserId() ?: return@post
+                put("/avatar") {
+                    val uid = getUserId() ?: return@put
                     val contentType = call.request.contentType()
-                    val path = call.receiveStream().use { input ->
+//                    call.receiveMultipart().readAllParts().first().let { part ->
+//                        accounts.uploadNewAvatar(
+//                            uid, when (part) {
+//                                is PartData.BinaryChannelItem -> part.provider().toInputStream()
+//                                is PartData.BinaryItem -> part.provider().readBytes().inputStream()
+//                                is PartData.FileItem -> part.provider().readBytes().inputStream()
+//                                is PartData.FormItem -> part.value.toByteArray().inputStream()
+//                            }, contentType
+//                        )
+//                    }
+                    call.receiveStream().use { input ->
                         accounts.uploadNewAvatar(uid, input, contentType)
                     }
-                    call.respond(ImageUrlExchange(path))
+
+                    call.respond(HttpStatusCode.OK)
                 }
             }
             get("/{username}") {
@@ -61,19 +70,19 @@ fun Application.usersRouting(context: ServerContext) {
                 val available = !accounts.isUsernameTaken(username)
                 call.respond(UsernameValidityResponse(available))
             }
-            get("/{uid}/avatar") {
-                val uid = try {
-                    UUID.fromString(call.parameters.getOrFail("uid"))
-                } catch (e: IllegalArgumentException) {
-                    throw NotFoundException("Invalid UserId")
-                }
-
-                val (avatar, contentType) = accounts.getUserAvatar(uid) ?: kotlin.run {
-                    call.respond(HttpStatusCode.NotFound)
-                    return@get
-                }
-                call.respond(LocalFileContent(avatar, contentType))
-            }
+//            get("/{uid}/avatar") {
+//                val uid = try {
+//                    UUID.fromString(call.parameters.getOrFail("uid"))
+//                } catch (e: IllegalArgumentException) {
+//                    throw NotFoundException("Invalid UserId")
+//                }
+//
+//                val (avatar, contentType) = accounts.getUserAvatar(uid) ?: kotlin.run {
+//                    call.respond(HttpStatusCode.NotFound)
+//                    return@get
+//                }
+//                call.respond(LocalFileContent(avatar, contentType))
+//            }
         }
     }
 }

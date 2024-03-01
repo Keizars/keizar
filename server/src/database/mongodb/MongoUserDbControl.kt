@@ -15,17 +15,25 @@ class MongoUserDbControl(
         return userTable.insertOne(userModel).wasAcknowledged()
     }
 
-    override suspend fun updateUsername(userId: String, newUsername: String): Boolean {
+    override suspend fun update(
+        userId: String,
+        newUsername: String?,
+        newNickname: String?,
+        avatarUrl: String?
+    ): Boolean {
         return userTable.updateOne(
             filter = Filters.eq("_id", userId),
-            update = Updates.set("username", newUsername)
-        ).matchedCount > 0
-    }
-
-    override suspend fun updateNickname(userId: String, newNickname: String): Boolean {
-        return userTable.updateOne(
-            filter = Filters.eq("_id", userId),
-            update = Updates.set("nickname", newNickname)
+            update = Updates.combine(listOfNotNull(
+                newUsername?.let {
+                    Updates.set("username", it)
+                },
+                newNickname?.let {
+                    Updates.set("nickname", it)
+                },
+                avatarUrl?.let {
+                    Updates.set("avatarUrl", it)
+                }
+            )),
         ).matchedCount > 0
     }
 

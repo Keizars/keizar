@@ -1,6 +1,8 @@
 package org.keizar.server.modules
 
 import io.ktor.http.ContentType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.keizar.server.database.DatabaseManager
 import org.keizar.server.database.models.UserModel
 import org.keizar.server.utils.AuthTokenManager
@@ -18,13 +20,13 @@ interface AccountModule {
     suspend fun login(username: String, hash: ByteArray): AuthResponse
     suspend fun getUser(userId: UUID): User?
     suspend fun getUserByName(name: String): User?
-    suspend fun getUserAvatar(uid: UUID): Pair<File, ContentType>?
-    suspend fun uploadNewAvatar(uid: UUID, input: InputStream, contentType: ContentType): String
+    suspend fun uploadNewAvatar(uid: UUID, input: InputStream, contentType: ContentType)
 }
 
 class AccountModuleImpl(
     private val database: DatabaseManager,
     private val authTokenManager: AuthTokenManager,
+    private val avatarStorage: AvatarStorage,
 ) : AccountModule {
     override suspend fun register(username: String, hash: ByteArray): AuthResponse {
         if (isUsernameTaken(username)) {
@@ -34,13 +36,13 @@ class AccountModuleImpl(
         val status = LiteralChecker.checkUsername(username)
         return if (status == AuthStatus.SUCCESS) {
             val userId = UUID.randomUUID()
-           database.user.addUser(
-               UserModel(
-               id = userId.toString(),
-               username = username,
-               hash = hash.toString(Charsets.UTF_8),
-           )
-           )
+            database.user.addUser(
+                UserModel(
+                    id = userId.toString(),
+                    username = username,
+                    hash = hash.toString(Charsets.UTF_8),
+                )
+            )
 
             val token = authTokenManager.createToken(userId.toString())
             AuthResponse(status, token)
@@ -70,7 +72,7 @@ class AccountModuleImpl(
         return User(
             nickname = user.nickname ?: user.username,
             username = user.username,
-            avatarUrl = "",
+            avatarUrl = user.avatarUrl ?: ""
         )
     }
 
@@ -79,15 +81,30 @@ class AccountModuleImpl(
         return User(
             nickname = user.nickname ?: user.username,
             username = user.username,
-            avatarUrl = "",
+            avatarUrl = user.avatarUrl ?: "",
         )
     }
 
-    override suspend fun getUserAvatar(uid: UUID): Pair<File, ContentType>? {
-        TODO("Not yet implemented")
-    }
+//    override suspend fun getUserAvatar(uid: UUID): Pair<File, ContentType>? {
+//        val user = database.user.getUserById(uid.toString()) ?: return null
+//        return avatarStorage.uploadAvatar()
+//    }
 
-    override suspend fun uploadNewAvatar(uid: UUID, input: InputStream, contentType: ContentType): String {
-        TODO("Not yet implemented")
+    override suspend fun uploadNewAvatar(uid: UUID, input: InputStream, contentType: ContentType) {
+        val user = database.user.getUserById(uid.toString()) ?: throw IllegalArgumentException("User not found")
+        val file = withContext(Dispatchers.IO) {
+            File.createTempFile("avatar", "tmp").apply {
+                this.outputStream().use { input.copyTo(it) }
+            }
+        }
+        val newUrl = avatarStorage.uploadAvatar(uid.toString(), file, contentType.toString())
+        withContext(Dispatchers.IO) {
+            file.delete()
+        }
+
+        database.user.update(
+            user.id,
+            avatarUrl = newUrl
+        )
     }
 }
