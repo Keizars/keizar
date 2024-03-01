@@ -21,7 +21,7 @@ import org.keizar.utils.communication.account.User
 import org.keizar.utils.communication.account.UsernameValidityResponse
 import java.util.UUID
 
-fun Application.accountRouting(context: ServerContext) {
+fun Application.usersRouting(context: ServerContext) {
     val accounts = context.accounts
 
     routing {

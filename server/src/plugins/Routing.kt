@@ -6,7 +6,7 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import org.keizar.server.ServerContext
-import org.keizar.server.routing.accountRouting
+import org.keizar.server.routing.usersRouting
 import org.keizar.server.routing.gameRoomRouting
 import org.keizar.server.routing.seedBankRouting
 import org.solvo.server.modules.authenticationRouting
@@ -19,6 +19,6 @@ fun Application.configureMultiplayerRouting(context: ServerContext) {
     }
     gameRoomRouting(context)
     authenticationRouting(context)
-    accountRouting(context)
+    usersRouting(context)
     seedBankRouting(context)
 }
