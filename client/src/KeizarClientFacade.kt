@@ -28,7 +28,7 @@ class KeizarClientFacade(
      */
     suspend fun createRoomAndJoin(
         parentCoroutineContext: CoroutineContext,
-    ): ClientGameRoom {
+    ): GameRoomClient {
         val roomInfo = room.createRoom()
         return joinRoom(roomInfo, parentCoroutineContext)!!
     }
@@ -40,7 +40,7 @@ class KeizarClientFacade(
     suspend fun joinRoom(
         roomNumber: UInt,
         parentCoroutineContext: CoroutineContext,
-    ): ClientGameRoom? {
+    ): GameRoomClient? {
         val roomInfo = room.getRoom(roomNumber)
         return joinRoom(roomInfo, parentCoroutineContext)
     }
@@ -48,7 +48,7 @@ class KeizarClientFacade(
     private suspend fun joinRoom(
         roomInfo: RoomInfo,
         parentCoroutineContext: CoroutineContext,
-    ): ClientGameRoom? {
+    ): GameRoomClient? {
         return if (room.joinRoom(roomInfo.roomNumber)) {
             room.createClientRoom(roomInfo, parentCoroutineContext)
         } else {

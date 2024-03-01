@@ -5,7 +5,7 @@ import kotlinx.coroutines.flow.first
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
-import org.keizar.client.ClientGameRoom
+import org.keizar.client.GameRoomClient
 import org.keizar.game.BoardProperties
 import org.keizar.game.RoomInfo
 import kotlin.coroutines.CoroutineContext
@@ -20,7 +20,7 @@ interface GameRoomModule {
     suspend fun createClientRoom(
         roomInfo: RoomInfo,
         parentCoroutineContext: CoroutineContext
-    ): ClientGameRoom
+    ): GameRoomClient
 }
 
 class GameRoomModuleImpl(
@@ -68,9 +68,9 @@ class GameRoomModuleImpl(
     override suspend fun createClientRoom(
         roomInfo: RoomInfo,
         parentCoroutineContext: CoroutineContext
-    ): ClientGameRoom {
+    ): GameRoomClient {
         val websocketSession = client.getRoomWebsocketSession(roomInfo.roomNumber, getToken())
-        return ClientGameRoom.create(roomInfo, websocketSession, parentCoroutineContext).apply {
+        return GameRoomClient.create(roomInfo, websocketSession, parentCoroutineContext).apply {
             start()
         }
     }

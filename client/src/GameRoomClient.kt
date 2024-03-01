@@ -27,7 +27,7 @@ import org.keizar.utils.communication.message.SetReady
 import kotlin.coroutines.CoroutineContext
 
 
-interface ClientGameRoom : AutoCloseable {
+interface GameRoomClient : AutoCloseable {
     val roomNumber: UInt
     val players: List<ClientPlayer>
     val state: StateFlow<GameRoomState>
@@ -59,8 +59,8 @@ interface ClientGameRoom : AutoCloseable {
             roomInfo: RoomInfo,
             websocketSession: DefaultClientWebSocketSession,
             parentCoroutineContext: CoroutineContext
-        ): ClientGameRoom {
-            return ClientGameRoomImpl(
+        ): GameRoomClient {
+            return GameRoomClientImpl(
                 roomNumber = roomInfo.roomNumber,
                 players = roomInfo.playerInfo.map {
                     ClientPlayer(
@@ -76,12 +76,12 @@ interface ClientGameRoom : AutoCloseable {
     }
 }
 
-class ClientGameRoomImpl internal constructor(
+class GameRoomClientImpl internal constructor(
     override val roomNumber: UInt,
     override val players: List<ClientPlayer>,
     private val session: DefaultClientWebSocketSession,
     parentCoroutineContext: CoroutineContext
-) : ClientGameRoom {
+) : GameRoomClient {
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
