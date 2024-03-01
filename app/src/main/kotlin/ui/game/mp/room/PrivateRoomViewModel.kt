@@ -56,7 +56,7 @@ interface PrivateRoomViewModel : HasBackgroundScope {
     @Stable
     val configuration: GameConfigurationViewModel
 
-    //    
+    //
 //    /**
 //     * The current configuration of the board, to preview
 //     */
