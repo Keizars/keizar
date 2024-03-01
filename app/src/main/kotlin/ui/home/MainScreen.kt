@@ -2,6 +2,8 @@ package org.keizar.android.ui.home
 
 import android.app.Activity
 import android.os.Bundle
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,10 +12,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -146,30 +150,27 @@ fun MainScreen() {
                 )
             }
         }
-        composable("game/lobby") {
-            val isLoggedIn by GlobalContext.get().get<SessionManager>().isLoggedIn.collectAsStateWithLifecycle(null)
+        composable("game/lobby",
+            enterTransition = {
+                fadeIn()
+            },
+            exitTransition = { fadeOut() }
+        ) {
+            val isLoggedIn by remember {
+                GlobalContext.get().get<SessionManager>().isLoggedIn
+            }.collectAsStateWithLifecycle(null)
             when (isLoggedIn) {
                 null -> {}
                 false -> {
                     SideEffect {
-                        navController.navigate("auth/login")
+                        navController.navigate("auth/login") {
+                            launchSingleTop = true
+//                            argument("popTo") {
+//                                type = NavType.StringType
+//                                defaultValue = "game/lobby"
+//                            }
+                        }
                     }
-//                    AlertDialog(
-//                        onDismissRequest = { navController.popBackStack() },
-//                        confirmButton = {
-//                            Button(onClick = { navController.navigate("auth/login") }) {
-//                                Text("OK")
-//                            }
-//                        },
-//                        dismissButton = {
-//                            TextButton(onClick = { navController.popBackStack() }) {
-//                                Text(text = "Cancel")
-//                            }
-//                        },
-//                        text = {
-//                            Text(text = "Please log in to play online")
-//                        }
-//                    )
                 }
 
                 true -> {
@@ -278,12 +279,22 @@ fun MainScreen() {
         }
         composable(
             "auth/{mode}",
-            arguments = listOf(navArgument("mode") { type = NavType.StringType })
-        ) {
+            arguments = listOf(
+                navArgument("mode") { type = NavType.StringType },
+            ),
+            enterTransition = {
+                fadeIn()
+            },
+            exitTransition = { fadeOut() }
+        ) { entry ->
             AuthScene(
-                initialIsRegister = it.arguments?.getString("mode") == "register",
+                initialIsRegister = entry.arguments?.getString("mode") == "register",
                 onClickBack = {
-                    navController.popBackStack("profile", true)
+                    if (navController.previousBackStackEntry?.destination?.route == "profile") {
+                        navController.popBackStack("profile", true)
+                    } else {
+                        navController.popBackStack()
+                    }
                 },
                 onSuccess = {
                     navController.popBackStack()
@@ -347,13 +358,54 @@ fun HomePage(navController: NavController) {
                 .weight(2f),
             verticalArrangement = Arrangement.SpaceEvenly,
         ) {
+            val isLoggedIn by remember {
+                GlobalContext.get().get<SessionManager>().isLoggedIn
+            }.collectAsStateWithLifecycle(null)
             // Single Player Button
             Button(onClick = { navController.navigate("game/configuration") }, modifier = Modifier.width(170.dp)) {
                 Text("Play vs Computer", textAlign = TextAlign.Center)
             }
 
+            var showLogInDialog by remember {
+                mutableStateOf(false)
+            }
+            // Online log in
+            if (showLogInDialog) {
+                AlertDialog(
+                    onDismissRequest = {
+                        showLogInDialog = false
+                        navController.popBackStack()
+                    },
+                    confirmButton = {
+                        Button(onClick = {
+                            showLogInDialog = false
+                            navController.navigate("auth/login")
+                        }) {
+                            Text("OK")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = {
+                            showLogInDialog = false
+                            navController.popBackStack()
+                        }) {
+                            Text(text = "Cancel")
+                        }
+                    },
+                    text = {
+                        Text(text = "Please log in to play online")
+                    }
+                )
+            }
+
             // Multiplayer Button
-            Button(onClick = { navController.navigate("game/lobby") }, modifier = Modifier.width(170.dp)) {
+            Button(onClick = {
+                if (isLoggedIn == false) {
+                    showLogInDialog = true
+                } else {
+                    navController.navigate("game/lobby")
+                }
+            }, modifier = Modifier.width(170.dp)) {
                 Text("2 Players", textAlign = TextAlign.Center)
             }
 
