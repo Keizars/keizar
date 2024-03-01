@@ -11,8 +11,13 @@ import org.keizar.server.utils.AesEncoder
 import org.keizar.server.utils.AuthTokenConfig
 import org.keizar.server.utils.AuthTokenManagerImpl
 import org.slf4j.Logger
+import java.security.SecureRandom
 import kotlin.time.Duration.Companion.days
 
+/**
+ * The [ServerContext] class represents the context for the server application, providing access
+ * to various modules and managers needed for its operation.
+ */
 class ServerContext(
     parentCoroutineScope: CoroutineScope,
     logger: Logger,
@@ -20,12 +25,15 @@ class ServerContext(
     private val databaseManager = if (System.getenv("TESTING") == "true") {
         InMemoryDatabaseManagerImpl()
     } else {
-        MongoDatabaseManagerImpl(connection = System.getenv("MONGODB_CONNECTION_STRING"))
+        MongoDatabaseManagerImpl(
+            connection = System.getenv("MONGODB_CONNECTION_STRING")
+                ?: throw RuntimeException("Missing MONGODB_CONNECTION_STRING environment variable")
+        )
     }
 
     val authTokenManager = AuthTokenManagerImpl(
         config = AuthTokenConfig(
-            secret = "d6yHBc5hXQrUjBKTK8Z3WFx7i6Zm6Ufm", // TODO: Change this to a secure secret
+            secret = System.getenv("TOKEN_SECRET") ?: generateSecureRandomString(),
             expirationTime = 7.days.inWholeMilliseconds,
         ),
         encoder = AesEncoder()
@@ -42,4 +50,10 @@ class ServerContext(
 
 fun setupServerContext(coroutineScope: CoroutineScope, logger: Logger): ServerContext {
     return ServerContext(coroutineScope, logger)
+}
+
+private fun generateSecureRandomString(): String {
+    val bytes = ByteArray(32)
+    SecureRandom().nextBytes(bytes)
+    return bytes.toString(Charsets.UTF_8)
 }
