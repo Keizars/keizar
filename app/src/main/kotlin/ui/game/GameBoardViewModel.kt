@@ -11,7 +11,6 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -143,13 +142,6 @@ interface GameBoardViewModel : HasBackgroundScope {
 
     @Stable
     val singlePlayerMode: Boolean
-
-    @Stable
-    val myName: SharedFlow<String>
-
-    @Stable
-    val opponentName: SharedFlow<String>
-
 
 
     // clicking
@@ -307,7 +299,8 @@ class SinglePlayerGameBoardViewModel(
 class MultiplayerGameBoardViewModel(
     game: GameSession,
     selfPlayer: Player,
-) : BaseGameBoardViewModel(game, selfPlayer) {
+
+    ) : BaseGameBoardViewModel(game, selfPlayer) {
     override val startConfiguration: GameStartConfiguration
         get() = GameStartConfiguration(
             playAs = selfRole.value,
@@ -316,6 +309,13 @@ class MultiplayerGameBoardViewModel(
         )
 
     override val singlePlayerMode = false
+
+    @Stable
+    val myName: SharedFlow<String> = MutableStateFlow("")
+
+    @Stable
+    val opponentName: SharedFlow<String> = MutableStateFlow("")
+
 }
 
 @Suppress("LeakingThis")
@@ -450,11 +450,6 @@ abstract class BaseGameBoardViewModel(
     override val canUndo: StateFlow<Boolean> =
         game.currentRound.flatMapLatest { it.canUndo }.stateInBackground(false)
 
-    // TODO: Implement
-    override val myName: SharedFlow<String> = MutableSharedFlow<String>()
-
-    override val opponentName: SharedFlow<String> = MutableSharedFlow<String>()
-
     init {
         backgroundScope.launch {
             winner.collect { winner ->
@@ -486,7 +481,7 @@ abstract class BaseGameBoardViewModel(
 
     override fun onClickTile(logicalPos: BoardPos) {
         if (!arePiecesClickable) return
-        
+
         val pick = currentPick.value ?: return
         completePick(isDrag = false)
         launchInBackground(start = CoroutineStart.UNDISPATCHED) {
