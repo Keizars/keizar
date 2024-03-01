@@ -6,21 +6,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -35,11 +30,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -58,14 +50,13 @@ fun AuthEditScene(
     onSuccess: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val vm = remember(initialIsRegister) { AuthViewModel(initialIsRegister) }
+    val vm = remember(initialIsRegister) { AuthEditViewModel() }
     Scaffold(
         modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
                 title = {
-                    val isRegister by vm.isRegister.collectAsStateWithLifecycle()
-                    Text(text = if (isRegister) "Register" else "Login")
+                    Text(text = "Edit Account")
                 },
                 navigationIcon = {
                     IconButton(onClick = onClickBack) {
@@ -94,7 +85,7 @@ fun AuthEditScene(
 
 @Composable
 fun AuthEditPage(
-    viewModel: AuthViewModel,
+    viewModel: AuthEditViewModel,
     onSuccess: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -114,8 +105,6 @@ fun AuthEditPage(
         horizontalAlignment = Alignment.CenterHorizontally,
 
         ) {
-        val isRegister by viewModel.isRegister.collectAsStateWithLifecycle()
-        val usernameError by viewModel.usernameError.collectAsStateWithLifecycle()
         val passwordError by viewModel.passwordError.collectAsStateWithLifecycle()
         val verifyPasswordError by viewModel.verifyPasswordError.collectAsStateWithLifecycle()
 
@@ -131,27 +120,6 @@ fun AuthEditPage(
             )
         }
 
-        Row(
-            modifier = Modifier.padding(10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedTextField(
-                value = viewModel.username.value,
-                onValueChange = { viewModel.setUsername(it) },
-                isError = (usernameError != null),
-                label = { Text("Username") },
-                shape = RoundedCornerShape(8.dp)
-            )
-        }
-        AnimatedVisibility(usernameError != null) {
-            usernameError?.let {
-                Text(
-                    text = it,
-                    fontSize = errorFontSize,
-                    color = Color.Red,
-                )
-            }
-        }
 
         Row(
             modifier = Modifier.padding(10.dp),
@@ -161,7 +129,7 @@ fun AuthEditPage(
                 value = viewModel.password.value,
                 onValueChange = { viewModel.setPassword(it) },
                 isError = (passwordError != null),
-                label = { Text("Password") },
+                label = { Text("New Password") },
                 shape = RoundedCornerShape(8.dp),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
@@ -179,7 +147,7 @@ fun AuthEditPage(
             }
         }
 
-        AnimatedVisibility(isRegister) {
+        AnimatedVisibility(true) {
             Row(
                 modifier = Modifier.padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -188,7 +156,7 @@ fun AuthEditPage(
                     value = viewModel.verifyPassword.value,
                     onValueChange = { viewModel.setVerifyPassword(it) },
                     isError = (verifyPasswordError != null),
-                    label = { Text("Verify Password") },
+                    label = { Text("Verify New Password") },
                     shape = RoundedCornerShape(8.dp),
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Password,
@@ -239,61 +207,12 @@ fun AuthEditPage(
             )
         }
 
-        AnimatedVisibility(isRegister) {
-            val agreementChecked by viewModel.agreementChecked.collectAsStateWithLifecycle()
-            Column(Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center,
-                ) {
-                    Checkbox(
-                        checked = agreementChecked,
-                        onCheckedChange = { viewModel.agreementChecked.value = it }
-                    )
-
-                    val text = buildAnnotatedString {
-//                        append(
-//                            """
-//                        I understand that by using this app some data regarding games played within this app will be shared anonymously with the publisher
-//                    """.trimIndent()
-//                        )
-                        append("I agree to the ")
-                        pushStyle(
-                            SpanStyle(
-                                color = MaterialTheme.colorScheme.primary,
-                                textDecoration = TextDecoration.Underline
-                            )
-                        )
-                        pushStringAnnotation("terms", "terms")
-                        append("terms and conditions")
-                        pop()
-                    }
-                    ClickableText(text = text, onClick = {
-                        if (text.getStringAnnotations("terms", 0, text.length).isEmpty()) {
-                            // Clicking "I agree to the"
-                            viewModel.agreementChecked.value = !agreementChecked
-                        } else {
-                            // Clicking "terms and conditions"
-                            showTermsDialog = true
-                        }
-                    })
-                }
-            }
-        }
-
         Button(
             onClick = {
-                if (viewModel.isRegister.value && !viewModel.agreementChecked.value) {
-                    showTermsDialog = true
-                    return@Button
-                }
                 if (viewModel.isProcessing.compareAndSet(expect = false, update = true)) {
                     viewModel.launchInBackground {
                         val result = try {
-                            viewModel.proceedLogin()
+                            viewModel.processedUpdate()
                         } finally {
                             viewModel.isProcessing.compareAndSet(expect = true, update = false)
                         }
@@ -308,35 +227,8 @@ fun AuthEditPage(
             enabled = !viewModel.isProcessing.collectAsStateWithLifecycle().value,
             modifier = Modifier.padding(8.dp),
         ) {
-            Text(if (isRegister) "Sign up" else "Login")
+            Text("Update Account")
         }
-
-        val highlightStyle =
-            SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)
-        val signUpMessage = remember(highlightStyle) {
-            buildAnnotatedString {
-                append("Does not have an account? Please ")
-                pushStyle(highlightStyle)
-                append("sign up")
-                pop()
-            }
-        }
-
-        val loginMessage = remember(highlightStyle) {
-            buildAnnotatedString {
-                append("Already have an account? Please ")
-                pushStyle(highlightStyle)
-                append("log in")
-                pop()
-            }
-        }
-
-        ClickableText(
-            text = if (!isRegister) signUpMessage else loginMessage,
-            onClick = { viewModel.onClickSwitch() },
-            style = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onBackground),
-            modifier = Modifier.padding(top = 8.dp)
-        )
     }
 }
 
@@ -344,7 +236,7 @@ fun AuthEditPage(
 @Preview(device = Devices.TABLET)
 @Composable
 private fun PreviewLogin() {
-    AuthScene(
+    AuthEditScene(
         initialIsRegister = false,
         onClickBack = {},
         onSuccess = {},
@@ -352,14 +244,3 @@ private fun PreviewLogin() {
     )
 }
 
-@Preview
-@Preview(device = Devices.TABLET)
-@Composable
-private fun PreviewRegister() {
-    AuthScene(
-        initialIsRegister = true,
-        onClickBack = {},
-        onSuccess = {},
-        Modifier
-    )
-}
