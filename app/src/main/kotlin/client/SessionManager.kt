@@ -86,7 +86,6 @@ private class SessionManagerImpl : SessionManager, KoinComponent, HasBackgroundS
     private val logger = logger(SessionManager::class)
 
     override val token: SharedFlow<String?> = tokenRepository.token.shareInBackground(started = SharingStarted.Eagerly)
-    override val isLoggedIn: Flow<Boolean> = token.map { it != null }
 
     /**
      * Current user's information.
@@ -108,6 +107,8 @@ private class SessionManagerImpl : SessionManager, KoinComponent, HasBackgroundS
             }
         }
     }.stateInBackground(started = SharingStarted.Eagerly)
+
+    override val isLoggedIn: Flow<Boolean> = self.map { it != null }
 
     override suspend fun invalidateToken() {
         logger.info { "Invalidating token" }
