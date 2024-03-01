@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.keizar.android.R
+import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
 
@@ -236,11 +237,13 @@ fun AuthEditPage(
 @Preview(device = Devices.TABLET)
 @Composable
 private fun PreviewLogin() {
-    AuthEditScene(
-        initialIsRegister = false,
-        onClickBack = {},
-        onSuccess = {},
-        Modifier
-    )
+    ProvideCompositionalLocalsForPreview {
+        AuthEditScene(
+            initialIsRegister = false,
+            onClickBack = {},
+            onSuccess = {},
+            Modifier
+        )
+    }
 }
 
