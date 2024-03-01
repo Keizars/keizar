@@ -29,7 +29,8 @@ fun Application.usersRouting(context: ServerContext) {
             authenticate("auth-bearer") {
                 get("/me") {
                     val uid = getUserId() ?: return@get
-                    val user: User = accounts.getUser(uid) ?: run {
+                    val user: User? = accounts.getUser(uid)
+                    if (user == null) {
                         call.respond(HttpStatusCode.Unauthorized)
                         return@get
                     }
