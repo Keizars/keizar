@@ -14,7 +14,7 @@ import org.keizar.server.plugins.configureSockets
 import org.keizar.server.routing.usersRouting
 import org.solvo.server.modules.authenticationRouting
 
-class End2EndTest {
+class ServerTest {
     private fun Application.basicSetup(): ServerContext {
         val serverCoroutineScope = CoroutineScope(SupervisorJob())
         val context = setupServerContext(
@@ -32,7 +32,7 @@ class End2EndTest {
     }
 
     @Test
-    fun testUsersModule() = testApplication {
+    fun `test users module`() = testApplication {
         application {
             val context = basicSetup()
             authenticationRouting(context)
