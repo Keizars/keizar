@@ -21,19 +21,20 @@ import kotlin.time.Duration.Companion.days
 class ServerContext(
     parentCoroutineScope: CoroutineScope,
     logger: Logger,
+    env: EnvironmentVariables,
 ) {
-    private val databaseManager = if (System.getenv("TESTING") == "true") {
+    private val databaseManager = if (env.testing == "true") {
         InMemoryDatabaseManagerImpl()
     } else {
         MongoDatabaseManagerImpl(
-            connection = System.getenv("MONGODB_CONNECTION_STRING")
+            connection = env.mongoDbConnectionString
                 ?: throw RuntimeException("Missing MONGODB_CONNECTION_STRING environment variable")
         )
     }
 
     val authTokenManager = AuthTokenManagerImpl(
         config = AuthTokenConfig(
-            secret = System.getenv("TOKEN_SECRET")?.toByteArray() ?: generateSecureRandomBytes(),
+            secret = env.tokenSecret?.toByteArray() ?: generateSecureRandomBytes(),
             expirationTime = 7.days.inWholeMilliseconds,
         ),
         encoder = AesEncoder()
@@ -48,8 +49,12 @@ class ServerContext(
     val seedBank = SeedBankModuleImpl(databaseManager)
 }
 
-fun setupServerContext(coroutineScope: CoroutineScope, logger: Logger): ServerContext {
-    return ServerContext(coroutineScope, logger)
+fun setupServerContext(
+    coroutineScope: CoroutineScope,
+    logger: Logger,
+    env: EnvironmentVariables = EnvironmentVariables(),
+): ServerContext {
+    return ServerContext(coroutineScope, logger, env)
 }
 
 private fun generateSecureRandomBytes(): ByteArray {

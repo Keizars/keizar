@@ -21,13 +21,6 @@ fun main() {
     getServer().start(wait = true)
 }
 
-suspend fun runServer(block: suspend () -> Unit) {
-    val server = getServer()
-    server.start(wait = false)
-    block()
-    server.stop()
-}
-
 private fun getServer(): NettyApplicationEngine {
     return embeddedServer(
         Netty,
