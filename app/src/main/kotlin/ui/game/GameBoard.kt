@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -104,21 +105,6 @@ fun GameBoard(
     var boardGlobalCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
 
     val tileSize by vm.pieceArranger.tileSize.collectAsStateWithLifecycle(DpSize.Zero)
-//    Row(
-//        modifier.fillMaxWidth().padding(16.dp).height(48.dp),
-//        verticalAlignment = Alignment.CenterVertically
-//    ) {
-//        Box(
-//            modifier = modifier.weight(1f).height(48.dp)
-//        ) {
-//            // TODO: Avatar
-//        }
-//        Text(
-//            text = "Opponent Username",
-//            modifier.weight(3f),
-//            fontSize = 18.sp
-//        )
-//    }
 
     CapturedPiecesHost(
         capturedPieceHostState = vm.theirCapturedPieceHostState,
@@ -140,21 +126,6 @@ fun GameBoard(
         sourceCoordinates = boardGlobalCoordinates,
         Modifier.fillMaxWidth()
     )
-//    Row(
-//        modifier.fillMaxWidth().padding(16.dp).height(48.dp),
-//        verticalAlignment = Alignment.CenterVertically
-//    ) {
-//        Text(
-//            text = "Opponent Username",
-//            modifier.weight(3f),
-//            fontSize = 18.sp
-//        )
-//        Box(
-//            modifier = modifier.weight(1f).height(48.dp)
-//        ) {
-//            // TODO: Avatar
-//        }
-//    }
 }
 
 @Composable
@@ -171,6 +142,21 @@ fun GameBoardScaffold(
             topBar()
         }
 
+        Row(
+            modifier.fillMaxWidth().padding(16.dp).wrapContentHeight(),
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Box(
+                modifier = modifier.weight(1f).wrapContentHeight()
+            ) {
+                // TODO: Avatar
+            }
+            Text(
+                text = "Opponent Username", // TODO: Change username
+                modifier.weight(3f).wrapContentHeight(),
+                fontSize = 18.sp
+            )
+        }
         board()
 
         Row(
@@ -179,6 +165,23 @@ fun GameBoardScaffold(
                 .padding(horizontal = 16.dp), horizontalArrangement = Arrangement.End
         ) {
             actions()
+        }
+
+        Row(
+            modifier.fillMaxWidth().padding(16.dp).wrapContentHeight(),
+            horizontalArrangement = Arrangement.End
+        ) {
+            Text(
+                text = "Opponent Username", // TODO: Change username
+                modifier.weight(3f).wrapContentHeight(),
+                fontSize = 18.sp,
+                textAlign = TextAlign.End
+            )
+            Box(
+                modifier = modifier.weight(1f).wrapContentHeight()
+            ) {
+                // TODO: Avatar
+            }
         }
 
         Row {

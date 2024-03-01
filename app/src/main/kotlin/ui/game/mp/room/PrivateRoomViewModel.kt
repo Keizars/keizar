@@ -1,8 +1,6 @@
 package org.keizar.android.ui.game.mp.room
 
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
@@ -55,12 +53,6 @@ interface PrivateRoomViewModel : HasBackgroundScope {
     @Stable
     val configuration: GameConfigurationViewModel
 
-    //    
-//    /**
-//     * The current configuration of the board, to preview
-//     */
-//    @Stable
-//    val boardProperties: StateFlow<BoardProperties>
     @Stable
     val accept: Flow<Boolean>
 
@@ -141,9 +133,6 @@ class PrivateRoomViewModelImpl(
             client.first().setReady()
         }
     }
-
-//    val boardSeed = MutableStateFlow(0u)
-//    override val boardProperties: StateFlow<BoardProperties> = boardSeed.map { BoardProperties(it) }
 
 
     override fun dispose() {
