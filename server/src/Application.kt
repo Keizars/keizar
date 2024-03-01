@@ -24,12 +24,14 @@ fun main() {
     getServer().start(wait = true)
 }
 
-private fun getServer(): NettyApplicationEngine {
+internal fun getServer(
+    env: EnvironmentVariables = EnvironmentVariables(),
+): NettyApplicationEngine {
     return embeddedServer(
         Netty,
-        port = System.getenv("PORT")?.toInt() ?: 4392,
+        port = env.port ?: 4392,
         host = "0.0.0.0",
-        module = Application::module,
+        module = { module(env) },
         configure = {
             this.tcpKeepAlive = true
             this.connectionGroupSize = 40
@@ -39,9 +41,9 @@ private fun getServer(): NettyApplicationEngine {
     )
 }
 
-fun Application.module() {
+fun Application.module(env: EnvironmentVariables) {
     val serverCoroutineScope = CoroutineScope(SupervisorJob())
-    val context = setupServerContext(serverCoroutineScope, log)
+    val context = setupServerContext(serverCoroutineScope, log, env)
 
     install(CallLogging) {
         mdc("requestId") {
