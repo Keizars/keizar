@@ -21,16 +21,4 @@ interface RoomService {
 
     @POST("room/{roomNumber}/join")
     suspend fun joinRoom(roomNumber: UInt, @Body userInfo: UserInfo): Boolean
-
-    /**
-     * Changes the seed of the room
-     */
-    @PATCH("room/{roomNumber}/seed/{seed}")
-    suspend fun setSeed(roomNumber: UInt, seed: UInt)
-
-    /**
-     * Accepts the seed change made by other user
-     */
-    @POST("room/{roomNumber}/agree")
-    suspend fun acceptChange(roomNumber: UInt, seed: UInt)
 }
