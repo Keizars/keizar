@@ -163,13 +163,7 @@ fun MainScreen() {
                 null -> {}
                 false -> {
                     SideEffect {
-                        navController.navigate("auth/login") {
-                            launchSingleTop = true
-//                            argument("popTo") {
-//                                type = NavType.StringType
-//                                defaultValue = "game/lobby"
-//                            }
-                        }
+                        navController.navigate("auth/login")
                     }
                 }
 
@@ -214,9 +208,7 @@ fun MainScreen() {
                     navController.popBackStack()
                 },
                 onClickHome = {
-                    navController.navigate("home") {
-                        launchSingleTop = true
-                    }
+                    navController.popBackStack("home", false)
                 },
                 onClickGameConfig = {
                     navController.navigate("game/lobby")
@@ -282,14 +274,15 @@ fun MainScreen() {
             arguments = listOf(
                 navArgument("mode") { type = NavType.StringType },
             ),
-            enterTransition = {
-                fadeIn()
-            },
+            enterTransition = { fadeIn() },
             exitTransition = { fadeOut() }
         ) { entry ->
             AuthScene(
                 initialIsRegister = entry.arguments?.getString("mode") == "register",
                 onClickBack = {
+                    if (navController.currentBackStackEntry != entry) {
+                        return@AuthScene
+                    }
                     if (navController.previousBackStackEntry?.destination?.route == "profile") {
                         navController.popBackStack("profile", true)
                     } else {
