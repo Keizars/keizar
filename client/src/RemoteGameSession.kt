@@ -7,11 +7,13 @@ import org.keizar.game.snapshot.GameSnapshot
 import org.keizar.utils.communication.game.Player
 
 interface RemoteGameSession : GameSession {
-    // Self player
+    /**
+     * The player allocation of the user using this session:
+     * either a [Player.FirstWhitePlayer] or a [Player.FirstBlackPlayer]
+     */
     val player: Player
 
     companion object {
-        // use functions in KeizarClientFacade instead
         internal suspend fun createAndConnect(
             gameSnapshot: GameSnapshot,
             websocketHandler: GameSessionWsHandler,
@@ -39,6 +41,9 @@ class RemoteGameSessionImpl internal constructor(
     override val rounds: List<RemoteRoundSession> = game.rounds.map { it as RemoteRoundSession }
     override val player: Player = gameSessionWsHandler.getSelfPlayer()
 
+    /**
+     * Returns false if the user tries to call [confirmNextRound] for their opponent
+     */
     override suspend fun confirmNextRound(player: Player): Boolean {
         if (player != this.player) return false
         return game.confirmNextRound(player).also {

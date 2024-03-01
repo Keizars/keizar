@@ -33,9 +33,7 @@ class KeizarWebsocketClientFacade(
             roomInfo = roomInfo,
             websocketSession = websocketSession,
             parentCoroutineContext = parentCoroutineContext
-        ).apply {
-            start()
-        }
+        )
     }
 }
 

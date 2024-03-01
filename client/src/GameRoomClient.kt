@@ -7,6 +7,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
@@ -101,12 +102,6 @@ interface GameRoomClient : AutoCloseable {
      */
     suspend fun getGameSession(): RemoteGameSession
 
-    /**
-     * Connect to the websocket session and start receiving updates
-     * Automatically called when the client is created.
-     */
-    suspend fun start()
-
     companion object {
         internal fun create(
             self: User,
@@ -198,7 +193,15 @@ class GameRoomClientImpl internal constructor(
             }
         }
 
-    override suspend fun start() {
+    init {
+        myCoroutineScope.launch { start() }
+    }
+
+    /**
+     * Connect to the websocket session and start receiving updates
+     * Automatically called when the client is created.
+     */
+    private suspend fun start() {
         websocketSessionHandler.start()
     }
 
