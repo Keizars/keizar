@@ -3,6 +3,7 @@ package org.keizar.android.ui.tutorial
 import androidx.compose.runtime.Stable
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapLatest
@@ -16,6 +17,7 @@ import org.keizar.android.ui.game.BaseGameBoardViewModel
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.game.GameSession
 import org.keizar.utils.communication.game.Player
+import org.keizar.utils.communication.game.RoundStats
 
 fun TutorialGameBoardViewModel(
     tutorial: Tutorial,
@@ -32,10 +34,9 @@ fun TutorialGameBoardViewModel(
 class TutorialGameBoardViewModel(
     @Stable
     val tutorialSession: TutorialSession,
-    game: GameSession = tutorialSession.game, selfPlayer: Player = tutorialSession.tutorial.player
+    game: GameSession = tutorialSession.game, selfPlayer: Player = tutorialSession.tutorial.player,
 ) : BaseGameBoardViewModel(game, selfPlayer) {
     override val startConfiguration: GameStartConfiguration = GameStartConfiguration.random()
-    override var arePiecesClickable: Boolean = false
 
     init {
         tutorialSession.requests.requestingShowPossibleMoves
@@ -62,4 +63,7 @@ class TutorialGameBoardViewModel(
                 keizar.respond()
             }.launchIn(backgroundScope)
     }
+
+    override val roundStats: Flow<RoundStats>
+        get() = TODO("Not yet implemented")
 }

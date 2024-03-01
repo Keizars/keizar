@@ -23,8 +23,6 @@ interface RoundSession {
     val moveDurations: StateFlow<List<Instant>>
     val whitePlayerMoves: StateFlow<Int>
     val blackPlayerMoves: StateFlow<Int>
-    val whitePlayerCaptures: StateFlow<Int>
-    val blackPlayerCaptures: StateFlow<Int>
 
     // undo/redo: only available when playing against computer.
     // Players can only undo in their own turn before they make a move.
@@ -83,11 +81,6 @@ class RoundSessionImpl(
     private val _blackPlayerMoves = MutableStateFlow<Int>(0)
     override val blackPlayerMoves: StateFlow<Int> = _blackPlayerMoves.asStateFlow()
 
-    private val _whitePlayerCaptures = MutableStateFlow<Int>(0)
-    override val whitePlayerCaptures: StateFlow<Int> = _whitePlayerCaptures.asStateFlow()
-
-    private val _blackPlayerCaptures = MutableStateFlow<Int>(0)
-    override val blackPlayerCaptures: StateFlow<Int> = _blackPlayerCaptures.asStateFlow()
 
     init {
         _moveDurations.value = _moveDurations.value + Instant.now()
@@ -137,14 +130,6 @@ class RoundSessionImpl(
                 } else {
                     _blackPlayerMoves.value++
                 }
-                if (ruleEngine.pieceAt(to) != null) {
-                    if (curRole.value == Role.WHITE) {
-                        _whitePlayerCaptures.value++
-                    } else {
-                        _blackPlayerCaptures.value++
-                    }
-                }
-                else{}
             }
             return moveSuccess
         }
@@ -156,15 +141,20 @@ class RoundSessionImpl(
 
     override fun getNeutralStatistics(): NeutralStats {
         return NeutralStats(
+            whiteCaptured = ruleEngine.getLostPiecesCount(Role.BLACK).value,
+            blackCaptured = ruleEngine.getLostPiecesCount(Role.WHITE).value,
+            whiteAverageTime = moveDurations.value.drop(1).zipWithNext { a, b -> b.epochSecond - a.epochSecond }.filterIndexed { index, _ -> index % 2 == 0 }.average(),
+            blackAverageTime = moveDurations.value.drop(1).zipWithNext { a, b -> b.epochSecond - a.epochSecond }.filterIndexed { index, _ -> index % 2 == 1 }.average(),
             whiteMoves = whitePlayerMoves.value,
             blackMoves = blackPlayerMoves.value,
-            whiteCaptured = whitePlayerCaptures.value,
-            blackCaptured = blackPlayerCaptures.value,
-            moveDuration = moveDurations.value,
+            blackTime = moveDurations.value.drop(1).zipWithNext { a, b -> b.epochSecond - a.epochSecond }.filterIndexed { index, _ -> index % 2 == 1 }.sum().toInt(),
+            whiteTime = moveDurations.value.drop(1).zipWithNext { a, b -> b.epochSecond - a.epochSecond }.filterIndexed { index, _ -> index % 2 == 0 }.sum().toInt(),
         )
     }
 
     override fun reset() {
         ruleEngine.reset()
+        _blackPlayerMoves.value = 0
+        _whitePlayerMoves.value = 0
     }
 }

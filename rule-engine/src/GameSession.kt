@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -12,12 +13,9 @@ import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
 import org.keizar.game.snapshot.GameSnapshot
 import org.keizar.utils.communication.game.GameResult
-import org.keizar.utils.communication.game.NeutralStats
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.game.RoundStats
 import java.util.concurrent.atomic.AtomicInteger
-import java.time.Duration
-import java.time.Instant
 
 /***
  * API for the backend. Representation of a complete game that may contain multiple rounds
@@ -78,7 +76,7 @@ interface GameSession {
     fun getRole(player: Player, roundNo: Int): Role
     fun getRoundWinner(roundNo: Int): Flow<Player?>
 
-    fun getRoundStats(roundNo: Int): Flow<RoundStats>
+    suspend fun getRoundStats(roundNo: Int): Flow<RoundStats>
 
     companion object {
         // Create a standard GameSession using the seed provided.
@@ -268,11 +266,15 @@ class GameSessionImpl(
         return rounds[roundNo].winner.map { it?.let { role -> getPlayer(role, roundNo) } }
     }
 
-    override fun getRoundStats(roundNo: Int): Flow<RoundStats> {
-        return flowOf(RoundStats(
-            NeutralStats = rounds[roundNo].getNeutralStatistics(),
-            player = getPlayer(Role.WHITE, roundNo),
-            ))
+    override suspend fun getRoundStats(roundNo: Int): Flow<RoundStats> {
+
+        return getRoundWinner(roundNo).map { winner ->
+            RoundStats(
+                neutralStats = rounds[roundNo].getNeutralStatistics(),
+                player = getPlayer(Role.WHITE, roundNo),
+                winner = winner,
+                )
+        }
     }
 
     override fun getRole(player: Player, roundNo: Int): Role {

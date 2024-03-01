@@ -27,7 +27,7 @@ import me.him188.ani.utils.logging.info
 import org.keizar.aiengine.AlgorithmAI
 import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.BuildConfig
-import org.keizar.android.client.GameDataService
+//import org.keizar.android.client.GameDataService
 import org.keizar.android.data.SavedState
 import org.keizar.android.data.SavedStateRepository
 import org.keizar.android.ui.foundation.AbstractViewModel
@@ -43,11 +43,10 @@ import org.keizar.game.GameSession
 import org.keizar.game.Piece
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
-import org.keizar.game.statistics.getStatistics
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
-import org.keizar.utils.communication.game.PlayerStatistics
+import org.keizar.utils.communication.game.RoundStats
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.seconds
@@ -143,6 +142,9 @@ interface GameBoardViewModel : HasBackgroundScope {
     @Stable
     val singlePlayerMode: Boolean
 
+    @Stable
+    val roundStats: Flow<RoundStats>
+
 
     // clicking
 
@@ -205,7 +207,6 @@ interface GameBoardViewModel : HasBackgroundScope {
 
     fun undo()
 
-    fun getPlayerStatistics(player: Player): PlayerStatistics
 
     fun saveResults()
 
@@ -233,7 +234,7 @@ class SinglePlayerGameBoardViewModel(
     selfPlayer,
 ), KoinComponent {
     private val savedStateRepository: SavedStateRepository by inject()
-    private val GameDataService: GameDataService by inject()
+//    private val GameDataService: GameDataService by inject()
 
     private val gameAi =
         when (difficulty) {
@@ -291,6 +292,8 @@ class SinglePlayerGameBoardViewModel(
             layoutSeed = boardProperties.seed ?: 0,
         )
 
+    override val roundStats: Flow<RoundStats> = game.currentRoundNo.flatMapLatest { game.getRoundStats(it) }
+
     override suspend fun removeSavedState() {
         savedStateRepository.save(SavedState.Empty)
     }
@@ -307,6 +310,8 @@ class MultiplayerGameBoardViewModel(
             difficulty = Difficulty.EASY,
             layoutSeed = boardProperties.seed ?: 0,
         )
+    override val roundStats: Flow<RoundStats>
+        get() = TODO("Not yet implemented")
 
     override val singlePlayerMode = false
 
@@ -594,10 +599,6 @@ abstract class BaseGameBoardViewModel(
                 roundSession.undo(selfRole.value)
             }
         }
-    }
-
-    override fun getPlayerStatistics(player: Player): PlayerStatistics {
-        return game.getStatistics(player)
     }
 
     override fun saveResults() {
