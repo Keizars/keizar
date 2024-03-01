@@ -19,7 +19,7 @@ class End2EndTest {
         val serverCoroutineScope = CoroutineScope(SupervisorJob())
         val context = setupServerContext(
             serverCoroutineScope, log, EnvironmentVariables(
-                testing = "true",
+                testing = true,
                 mongoDbConnectionString = "",
             )
         )
