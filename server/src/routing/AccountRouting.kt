@@ -18,6 +18,7 @@ import org.keizar.server.ServerContext
 import org.keizar.server.utils.getUserId
 import org.keizar.utils.communication.account.ImageUrlExchange
 import org.keizar.utils.communication.account.User
+import org.keizar.utils.communication.account.UsernameValidityResponse
 import java.util.UUID
 
 fun Application.accountRouting(context: ServerContext) {
@@ -26,7 +27,7 @@ fun Application.accountRouting(context: ServerContext) {
     routing {
         route("/users") {
             authenticate("auth-bearer") {
-                get("me") {
+                get("/me") {
                     val uid = getUserId() ?: return@get
                     val user: User = accounts.getUser(uid) ?: throw NotFoundException("Invalid user")
                     call.respond(user)
@@ -40,10 +41,20 @@ fun Application.accountRouting(context: ServerContext) {
                     call.respond(ImageUrlExchange(path))
                 }
             }
+            get("/{username}") {
+                val username = call.parameters.getOrFail("username")
+                val user = accounts.getUserByName(username) ?: throw NotFoundException("No such user")
+                call.respond(user)
+            }
             get("/search") {
                 val name: String = call.request.queryParameters.getOrFail("name")
                 val user = accounts.getUserByName(name) ?: throw NotFoundException("Invalid user")
                 call.respond(user)
+            }
+            post("/available") {
+                val username = call.request.queryParameters.getOrFail("username")
+                val available = !accounts.isUsernameTaken(username)
+                call.respond(UsernameValidityResponse(available))
             }
             get("/{uid}/avatar") {
                 val uid = try {

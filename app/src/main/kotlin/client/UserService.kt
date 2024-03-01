@@ -7,6 +7,7 @@ import org.keizar.utils.communication.account.UsernameValidityResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface UserService {
@@ -24,4 +25,7 @@ interface UserService {
 
     @GET("users/me")
     suspend fun self(): User
+
+    @GET("users/{username}")
+    suspend fun getUser(@Path("username") username: String): User
 }
