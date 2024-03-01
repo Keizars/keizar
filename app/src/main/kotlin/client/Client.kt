@@ -107,9 +107,8 @@ class Client(
      */
     val module: Module = module {
         single<UserService> { retrofit.create(UserService::class.java) }
-
-        // Use org.keizar.client.KeizarClientFacade instead of RoomService
         single<RoomService> { retrofit.create(RoomService::class.java) }
+        single<SeedBankService> { retrofit.create(SeedBankService::class.java) }
     }
 }
 

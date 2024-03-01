@@ -25,13 +25,21 @@ fun Application.seedBankRouting(context: ServerContext) {
             post("/{seed}") {
                 val userId = getUserId() ?: return@post
                 val seed = call.parameters["seed"] ?: return@post
-                call.respond(seedBank.addSeed(userId, seed))
+                if (seedBank.addSeed(userId, seed)) {
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    call.respond(HttpStatusCode.Conflict)
+                }
             }
 
             delete("/{seed}") {
                 val userId = getUserId() ?: return@delete
                 val seed = call.parameters["seed"] ?: return@delete
-                call.respond(seedBank.removeSeed(userId, seed))
+                if (seedBank.removeSeed(userId, seed)) {
+                    call.respond(HttpStatusCode.OK)
+                } else {
+                    call.respond(HttpStatusCode.NotFound)
+                }
             }
         }
     }
