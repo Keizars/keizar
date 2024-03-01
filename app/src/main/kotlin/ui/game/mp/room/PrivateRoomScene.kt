@@ -84,7 +84,7 @@ private fun AcceptArea(
         horizontalArrangement = Arrangement.End,
     ) {
         Button(
-            modifier = if (!isSystemInLandscape()) modifier.padding(end = 12.dp) else modifier,
+            modifier = if (!isSystemInLandscape()) Modifier.padding(end = 12.dp) else Modifier,
             onClick = { vm.backgroundScope.launch { vm.accept() }
             }
         ) {
