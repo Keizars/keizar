@@ -3,6 +3,7 @@ package org.keizar.client
 import org.keizar.client.internal.GameSessionWsHandler
 import org.keizar.game.GameSession
 import org.keizar.game.RoundSessionImpl
+import org.keizar.game.snapshot.GameSnapshot
 import org.keizar.utils.communication.game.Player
 
 interface RemoteGameSession : GameSession {
@@ -12,9 +13,10 @@ interface RemoteGameSession : GameSession {
     companion object {
         // use functions in KeizarClientFacade instead
         internal suspend fun createAndConnect(
+            gameSnapshot: GameSnapshot,
             websocketHandler: GameSessionWsHandler,
         ): RemoteGameSession {
-            val game = GameSession.restore(websocketHandler.getGameSnapshot()) { ruleEngine ->
+            val game = GameSession.restore(gameSnapshot) { ruleEngine ->
                 RemoteRoundSessionImpl(
                     RoundSessionImpl(ruleEngine),
                     websocketHandler

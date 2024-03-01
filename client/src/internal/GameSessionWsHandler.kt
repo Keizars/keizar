@@ -23,7 +23,6 @@ import kotlin.coroutines.CoroutineContext
 internal interface GameSessionWsHandler : AutoCloseable {
     fun getCurrentSelfRole(): StateFlow<Role>
     fun getSelfPlayer(): Player
-    fun getGameSnapshot(): GameSnapshot
     fun bind(session: GameSession)
     fun bind(remote: RemoteRoundSession, round: RoundSession)
     fun sendConfirmNextRound()
@@ -31,11 +30,15 @@ internal interface GameSessionWsHandler : AutoCloseable {
     suspend fun start()
 }
 
+/**
+ * The websocket handler for a ongoing game.
+ * Used by a [RemoteGameSession] to communication with server.
+ * Created by a [GameRoomClient] whose state changes to [GameRoomState.PLAYING].
+ */
 internal class GameSessionWsHandlerImpl(
     parentCoroutineContext: CoroutineContext,
     private val session: DefaultClientWebSocketSession,
     private val selfPlayer: Player,
-    private val gameSnapshot: GameSnapshot,
 ) : GameSessionWsHandler {
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
@@ -45,7 +48,11 @@ internal class GameSessionWsHandlerImpl(
     private val currentSelfRole: MutableStateFlow<Role> = MutableStateFlow(Role.WHITE)
 
     private val websocketSessionHandler =
-        object : AbstractWebsocketSessionHandler(session, parentCoroutineContext) {
+        object : AbstractWebsocketSessionHandler(
+            session = session,
+            parentCoroutineContext = parentCoroutineContext,
+            cancelWebsocketOnExit = true
+        ) {
             override suspend fun processResponse(respond: Respond) {
                 when (respond) {
                     ConfirmNextRound -> gameSession.confirmNextRound(selfPlayer.opponent())
@@ -85,10 +92,6 @@ internal class GameSessionWsHandlerImpl(
 
     override fun getSelfPlayer(): Player {
         return selfPlayer
-    }
-
-    override fun getGameSnapshot(): GameSnapshot {
-        return gameSnapshot
     }
 
     override fun bind(session: GameSession) {

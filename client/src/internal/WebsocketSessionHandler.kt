@@ -13,17 +13,28 @@ import kotlinx.coroutines.launch
 import org.keizar.client.exception.NetworkFailureException
 import org.keizar.utils.communication.message.Request
 import org.keizar.utils.communication.message.Respond
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.coroutines.CoroutineContext
 
 
 internal interface WebsocketSessionHandler : AutoCloseable {
+    val isClosed: Boolean
     suspend fun start()
     fun sendRequest(request: Request)
 }
 
+/**
+ * The template method class for a websocket session handler with an (abstract)
+ * configurable [processResponse] method.
+ * Provides a [sendRequest] method to send requests through the websocket.
+ */
 internal abstract class AbstractWebsocketSessionHandler(
     private val session: DefaultClientWebSocketSession,
     parentCoroutineContext: CoroutineContext,
+    /**
+     * If true, the handler with cancel the websocket session when it is closed.
+     */
+    private val cancelWebsocketOnExit: Boolean,
 ) : WebsocketSessionHandler {
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
@@ -43,8 +54,18 @@ internal abstract class AbstractWebsocketSessionHandler(
         }
     }
 
+    private val _isClosed = AtomicBoolean(false)
+    override val isClosed: Boolean get() = _isClosed.get()
+
+    /**
+     * A concurrent-safe idempotent close method.
+     * Will cancel the websocket session if [cancelWebsocketOnExit] is set.
+     */
     override fun close() {
-        myCoroutineScope.cancel()
+        if (_isClosed.compareAndSet(false, true)) {
+            myCoroutineScope.cancel()
+            if (cancelWebsocketOnExit) session.cancel()
+        }
     }
 
     private val outflowChannel: Channel<Request> = Channel()

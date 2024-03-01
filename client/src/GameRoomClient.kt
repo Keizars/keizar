@@ -97,6 +97,7 @@ interface GameRoomClient : AutoCloseable {
      * Create and return a RemoteGameSession for the room specified by its room number.
      * Should be called only when state of the room is [GameRoomState.PLAYING].
      * If called on other states, it will wait until the state changes to [GameRoomState.PLAYING].
+     * Multiple calls to this method will return the same RemoteGameSession instance.
      */
     suspend fun getGameSession(): RemoteGameSession
 
@@ -135,7 +136,7 @@ class GameRoomClientImpl internal constructor(
     override val roomNumber: UInt,
     override val players: List<ClientPlayer>,
     /**
-     * Websocket session for the game room
+     * Websocket session used to communicate with the room on server and synchronize the states.
      */
     private val session: DefaultClientWebSocketSession,
     parentCoroutineContext: CoroutineContext
@@ -151,19 +152,36 @@ class GameRoomClientImpl internal constructor(
 
     /**
      *  These two variables are set by RemoteSessionSetup message from the server.
-     *  The values are guaranteed to be non-null when the room state changes to [GameRoomState.ALL_CONNECTED].
+     *  The values are guaranteed to be non-null when the room state changes to
+     *  [GameRoomState.ALL_CONNECTED].
      */
     private val playerAllocation: MutableStateFlow<Player?> = MutableStateFlow(null)
     private val gameSnapshot: MutableStateFlow<GameSnapshot?> = MutableStateFlow(null)
 
+    /**
+     * This websocket session handler is active until the room state changes to
+     * [GameRoomState.PLAYING]. It is used for receiving pre-game updates from the server,
+     * including changes of room state, player state, and game setup (player allocation and
+     * [BoardProperties]).
+     *
+     * When room state changes to [GameRoomState.PLAYING], this handler is closed and the control
+     * of the websocket session is transferred to a [GameSessionWsHandlerImpl] handled by
+     * a [RemoteGameSession], both created by [getGameSession].
+     */
     private val websocketSessionHandler =
-        object : AbstractWebsocketSessionHandler(session, myCoroutineScope.coroutineContext) {
+        object : AbstractWebsocketSessionHandler(
+            session = session,
+            parentCoroutineContext = myCoroutineScope.coroutineContext,
+            cancelWebsocketOnExit = false
+        ) {
             override suspend fun processResponse(respond: Respond) {
                 when (respond) {
                     is PlayerStateChange -> {
                         players.firstOrNull { it.username == respond.username }
                             ?.setState(respond.newState)
                     }
+
+                    is RoomStateChange -> _state.value = respond.newState
 
                     is RemoteSessionSetup -> {
                         playerAllocation.value = respond.playerAllocation
@@ -172,8 +190,6 @@ class GameRoomClientImpl internal constructor(
                             respond.gameSnapshot
                         )
                     }
-
-                    is RoomStateChange -> _state.value = respond.newState
                     else -> {
                         // ignore
                     }
@@ -191,27 +207,39 @@ class GameRoomClientImpl internal constructor(
     }
 
     override suspend fun changeSeed(roomNumber: UInt, seed: UInt) {
+        if (websocketSessionHandler.isClosed) return
         val properties = BoardProperties.toJson(BoardProperties.getStandardProperties(seed.toInt()))
         return websocketSessionHandler.sendRequest(ChangeBoard(properties))
     }
 
     override suspend fun setReady() {
+        if (websocketSessionHandler.isClosed) return
         return websocketSessionHandler.sendRequest(SetReady)
     }
 
     private var game: RemoteGameSession? = null
     private val createGameMutex = Mutex()
+
+    /**
+     * Create and retrieve a RemoteGameSession for the room using the singleton pattern.
+     * If the room is not in state [GameRoomState.PLAYING], this method will wait until then to
+     * make sure that the [playerAllocation] and [gameSnapshot] are set to the correct values.
+     *
+     * Also closes [websocketSessionHandler] and transfers the control of the websocket session to
+     * a [GameSessionWsHandlerImpl] handled by the returned [RemoteGameSession].
+     */
     override suspend fun getGameSession(): RemoteGameSession {
         createGameMutex.withLock {
             if (game == null) {
                 state.first { it == GameRoomState.PLAYING }
+                websocketSessionHandler.close()
                 val wsHandler = GameSessionWsHandlerImpl(
                     parentCoroutineContext = myCoroutineScope.coroutineContext,
                     session = session,
                     selfPlayer = playerAllocation.first { it != null }!!,
-                    gameSnapshot = gameSnapshot.first { it != null }!!,
                 )
-                game = RemoteGameSession.createAndConnect(wsHandler)
+                val gameSnapshot = gameSnapshot.first { it != null }!!
+                game = RemoteGameSession.createAndConnect(gameSnapshot, wsHandler)
             }
         }
         return game!!
