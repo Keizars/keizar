@@ -3,7 +3,7 @@ import kotlinx.serialization.Serializable
 import java.time.Instant
 
 @Serializable
-data class PlayerStatistics(
+data class GameStats(
     val player: Player,
 
     val round1Captured: Int,
@@ -22,11 +22,15 @@ data class PlayerStatistics(
     val round2AverageTime: Long,
 )
 
-data class spRoundStatistics(
+data class NeutralStats(
     val whiteCaptured: Int,
     val blackCaptured: Int,
     val moveDuration: List<Instant>,
     val whiteMoves: Int,
     val blackMoves: Int,
-    val userPlayer: Player?,
+)
+
+data class RoundStats(
+    val NeutralStats: NeutralStats,
+    val player: Player,
 )

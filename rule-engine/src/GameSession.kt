@@ -5,14 +5,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import org.keizar.game.internal.RuleEngine
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
 import org.keizar.game.snapshot.GameSnapshot
-import org.keizar.utils.communication.game.PlayerStatistics
 import org.keizar.utils.communication.game.GameResult
+import org.keizar.utils.communication.game.NeutralStats
 import org.keizar.utils.communication.game.Player
+import org.keizar.utils.communication.game.RoundStats
 import java.util.concurrent.atomic.AtomicInteger
 import java.time.Duration
 import java.time.Instant
@@ -75,7 +77,8 @@ interface GameSession {
     fun getPlayer(role: Role, roundNo: Int): Player
     fun getRole(player: Player, roundNo: Int): Role
     fun getRoundWinner(roundNo: Int): Flow<Player?>
-    fun getMoveDurations(roundNo: Int): StateFlow<List<Instant>>
+
+    fun getRoundStats(roundNo: Int): Flow<RoundStats>
 
     companion object {
         // Create a standard GameSession using the seed provided.
@@ -265,8 +268,11 @@ class GameSessionImpl(
         return rounds[roundNo].winner.map { it?.let { role -> getPlayer(role, roundNo) } }
     }
 
-    override fun getMoveDurations(roundNo: Int): StateFlow<List<Instant>> {
-        return rounds[roundNo].moveDurations
+    override fun getRoundStats(roundNo: Int): Flow<RoundStats> {
+        return flowOf(RoundStats(
+            NeutralStats = rounds[roundNo].getNeutralStatistics(),
+            player = getPlayer(Role.WHITE, roundNo),
+            ))
     }
 
     override fun getRole(player: Player, roundNo: Int): Role {
