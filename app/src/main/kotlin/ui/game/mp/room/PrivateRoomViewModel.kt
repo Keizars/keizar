@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.keizar.android.client.RoomService
+import org.keizar.android.client.SessionManager
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.game.configuration.GameConfigurationViewModel
@@ -26,6 +27,7 @@ import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
 import org.keizar.client.GameRoomClient
 import org.keizar.client.KeizarWebsocketClientFacade
 import org.keizar.client.exception.RoomFullException
+import org.keizar.utils.communication.PlayerSessionState
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.seconds
@@ -64,6 +66,7 @@ interface PrivateRoomViewModel : HasBackgroundScope {
 
     @Stable
     val acceptButtonText: MutableState<String>
+
 }
 
 class PrivateRoomViewModelImpl(
@@ -71,6 +74,7 @@ class PrivateRoomViewModelImpl(
 ) : PrivateRoomViewModel, AbstractViewModel(), KoinComponent {
     private val facade: KeizarWebsocketClientFacade by inject()
     private val roomService: RoomService by inject()
+    private val sessionManager: SessionManager by inject()
 
     override val playersReady: SharedFlow<Boolean> = flow {
         while (currentCoroutineContext().isActive) {
@@ -111,8 +115,13 @@ class PrivateRoomViewModelImpl(
         backgroundScope.launch {
             configuration.boardProperties.collect {
                 it.seed?.let { it1 -> setSeed(roomId, it1.toUInt()) }
-                accept.value = true
                 showToast.value = true
+            }
+        }
+        backgroundScope.launch {
+            val self = sessionManager.self
+            client.first().players.filter { it.username == self.first().username}[0].state.collect {
+                accept.value = it != PlayerSessionState.READY
             }
         }
     }
