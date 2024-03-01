@@ -32,11 +32,13 @@ private val ClientJson = Json {
 }
 
 internal interface KeizarHttpClient : AutoCloseable {
+    suspend fun getRoom(roomNumber: UInt, token: String): RoomInfo
     suspend fun postRoomJoin(roomNumber: UInt, token: String): Boolean
     suspend fun getRoomWebsocketSession(
         roomNumber: UInt,
         token: String,
     ): DefaultClientWebSocketSession
+
 }
 
 internal class KeizarHttpClientImpl(
@@ -53,6 +55,19 @@ internal class KeizarHttpClientImpl(
         Logging {
             level = LogLevel.INFO
         }
+    }
+
+    override suspend fun getRoom(
+        roomNumber: UInt,
+        token: String,
+    ): RoomInfo {
+        val respond: HttpResponse = client.get(urlString = "$endpoint/room/$roomNumber") {
+            header("Authorization", "Bearer $token")
+        }
+        if (respond.status != HttpStatusCode.OK) {
+            throw NetworkFailureException("Failed getRoom")
+        }
+        return respond.body<RoomInfo>()
     }
 
     override suspend fun postRoomJoin(
