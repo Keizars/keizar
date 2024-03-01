@@ -10,6 +10,9 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.Module
 import org.koin.dsl.module
 
+/**
+ * Gets a Koin module for the Android app.
+ */
 fun getKoinModule(client: Client = Client(BuildConfig.SERVER_ENDPOINT)): Module {
     return module {
         single<KeizarWebsocketClientFacade> {
@@ -20,7 +23,6 @@ fun getKoinModule(client: Client = Client(BuildConfig.SERVER_ENDPOINT)): Module 
         }
         single<SavedStateRepository> { SavedStateRepository(androidContext().savedStateStore) }
         single<SessionManager> { SessionManager() }
-        single<Client> { client }
         includes(client.module)
         includes(RepositoryModules)
     }

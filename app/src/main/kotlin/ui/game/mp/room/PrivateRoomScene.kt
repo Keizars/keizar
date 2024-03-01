@@ -187,7 +187,7 @@ private fun Configurations(
             supportingText = {
                 Text(text = "Explore new board layouts by changing the seed. Other player can also see this board.")
             },
-            readOnly = vm.selfIsHost.value,
+            readOnly = vm.selfIsHost.collectAsStateWithLifecycle(false).value,
             modifier = Modifier.fillMaxWidth(),
         )
 

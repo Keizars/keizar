@@ -14,8 +14,11 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.keizar.android.client.RoomService
@@ -65,8 +68,7 @@ interface PrivateRoomViewModel : HasBackgroundScope {
     suspend fun accept()
 
     @Stable
-    val selfIsHost: State<Boolean>
-    suspend fun isHost()
+    val selfIsHost: Flow<Boolean>
 
     @Stable
     val acceptButtonText: MutableState<String>
@@ -108,6 +110,8 @@ class PrivateRoomViewModelImpl(
         }
     }.shareInBackground(started = SharingStarted.Eagerly)
 
+    private val selfPlayer = client.map { it.selfPlayer }
+
     override val connectRoomError: MutableStateFlow<ConnectRoomError?> = MutableStateFlow(null)
 
     override val configuration: GameConfigurationViewModel = GameConfigurationViewModel(false)
@@ -124,15 +128,14 @@ class PrivateRoomViewModelImpl(
             }
         }
         backgroundScope.launch {
-            client.first().players.filter { it.username == self.first().username}[0].state.collect {
+            selfPlayer.flatMapLatest { it.state }.collect {
                 accept.value = it != PlayerSessionState.READY
             }
         }
     }
-    override val selfIsHost: MutableState<Boolean> = mutableStateOf(false)
-    override suspend fun isHost() {
-        this.selfIsHost.value =  client.first().players.filter { it.username == self.first().username}[0].isHost
-    }
+
+    override val selfIsHost: Flow<Boolean> = selfPlayer.mapLatest { it.isHost }
+
     private suspend fun setSeed(roomId: UInt, seed: UInt) {
         client.first().changeSeed(roomId, seed)
     }

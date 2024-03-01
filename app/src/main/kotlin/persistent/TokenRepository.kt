@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.map
 
 private val KEY_TOKEN: Preferences.Key<String> = stringPreferencesKey("token")
 
+/**
+ * Persistent storage for tokens.
+ */
 class TokenRepository(
     private val store: DataStore<Preferences>
 ) {

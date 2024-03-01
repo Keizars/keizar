@@ -14,9 +14,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import me.him188.ani.utils.logging.error
 import org.keizar.android.BuildConfig
+import org.keizar.android.client.SessionManager
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.game.BaseGamePage
 import org.keizar.android.ui.game.MultiplayerGameBoardViewModel
@@ -24,6 +26,8 @@ import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
 import org.keizar.client.GameRoomClient
 import org.keizar.client.KeizarWebsocketClientFacade
 import org.keizar.client.exception.RoomFullException
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import org.koin.mp.KoinPlatform
 import kotlin.time.Duration.Companion.seconds
 
@@ -46,7 +50,9 @@ private sealed class ConnectionError(
  */
 private class MultiplayerGameConnector(
     roomId: UInt
-) : AbstractViewModel() {
+) : AbstractViewModel(), KoinComponent {
+    private val sessionManager: SessionManager by inject()
+
     val error: MutableStateFlow<ConnectionError?> = MutableStateFlow(null)
 
     val client: SharedFlow<GameRoomClient> = flow {
@@ -70,6 +76,12 @@ private class MultiplayerGameConnector(
     val session = client.mapLatest {
         it.getGameSession()
     }.shareInBackground()
+
+    val selfPlayer = client.map { it.selfPlayer }
+
+//    val selfPlayer = combine(client, sessionManager.self) { client, self ->
+//        client.players.firstOrNull { it.username == self?.username }
+//    }.shareInBackground()
 }
 
 @Composable
@@ -93,47 +105,14 @@ fun MultiplayerGamePage(
                     Text(text = "OK")
                 }
             },
-            text = {
-                if (error is ConnectionError.NetworkError) {
-                    Text(text = "Failed to join the room. Please check your network connection.")
-                } else {
-                    Text(text = "Failed to join the room. Please check the room id.")
-                }
-            },
-        )
-    }
-
-    val client by connector.client.collectAsStateWithLifecycle(null)
-    val session by connector.session.collectAsStateWithLifecycle(null)
-
-    client?.let {
-        val player by it.player.collectAsStateWithLifecycle(initialValue = null)
-        player?.let { p ->
-            BaseGamePage(
-                remember {
-                    MultiplayerGameBoardViewModel(it, p)
-                },
-                onClickHome = onClickHome,
-                onClickGameConfig = onClickGameConfig,
-                modifier = modifier
-            )
-        } ?: run {
-            ConnectingRoomDialog(extra = {
-                if (BuildConfig.DEBUG) {
-                    Text(text = "Debug info: RemoteGameSession.player is still null")
-                }
-            })
-        }
-    }
-
-    if (session == null) {
-        AlertDialog(
-            onDismissRequest = goBack,
-            confirmButton = { Text(text = "OK") },
             title = { Text(text = "Error") },
             text = {
                 Column {
-                    Text(text = "Failed to join the room. Please check your internet connection and try again.")
+                    if (error is ConnectionError.NetworkError) {
+                        Text(text = "Failed to join the room. Please check your internet connection.")
+                    } else {
+                        Text(text = "Failed to join the room. Please check the room id.")
+                    }
 
                     if (BuildConfig.DEBUG) {
                         Text(
@@ -143,8 +122,27 @@ fun MultiplayerGamePage(
                         )
                     }
                 }
-            }
+            },
         )
+    }
+
+    val session by connector.session.collectAsStateWithLifecycle(null)
+
+    session?.let { s ->
+        BaseGamePage(
+            remember {
+                MultiplayerGameBoardViewModel(s, s.player)
+            },
+            onClickHome = onClickHome,
+            onClickGameConfig = onClickGameConfig,
+            modifier = modifier
+        )
+    } ?: run {
+        ConnectingRoomDialog(extra = {
+            if (BuildConfig.DEBUG) {
+                Text(text = "Debug info: RemoteGameSession.player is still null")
+            }
+        })
     }
 }
 
