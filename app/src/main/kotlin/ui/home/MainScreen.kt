@@ -108,7 +108,10 @@ fun MainScreen() {
         composable(
             "game/configuration",
         ) {
-            GameConfigurationScene(navController)
+            GameConfigurationScene(
+                onClickGoBack = { navController.popBackStack(it.destination.id, true) },
+                navController
+            )
         }
         composable(
             "game/single-player",
@@ -190,7 +193,11 @@ fun MainScreen() {
             val roomId = backStackEntry.arguments!!.getString("roomId")!!.toUInt()
             PrivateRoomScene(
                 roomId = roomId,
-                onClickHome = { navController.navigate("home") },
+                onClickHome = {
+                    if (navController.currentBackStackEntry?.destination?.route == "game/room") {
+                        navController.popBackStack("home", false)
+                    }
+                },
                 onPlayersReady = {
                     navController.navigate(navController.graph["game/multiplayer"].id, Bundle().apply {
                         putString("roomId", roomId.toString())

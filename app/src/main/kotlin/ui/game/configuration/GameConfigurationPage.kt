@@ -73,10 +73,11 @@ import org.keizar.game.Role.WHITE
 
 @Composable
 fun GameConfigurationScene(
+    onClickGoBack: () -> Unit,
     navController: NavController,
 ) {
     GameConfigurationPage(
-        onClickGoBack = { navController.popBackStack() },
+        onClickGoBack = onClickGoBack,
         onClickStart = {
             val configuration = ProtoBuf.Default.encodeToHexString(GameStartConfiguration.serializer(), it)
             navController.navigate(navController.graph["game/single-player"].id, Bundle().apply {
