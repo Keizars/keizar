@@ -25,12 +25,12 @@ inline fun Application.routeAuthenticated(crossinline block: Routing.() -> Unit)
 }
 
 suspend fun PipelineContext<Unit, ApplicationCall>.getUserId(): UUID? {
-    val uidStr = call.principal<UserIdPrincipal>()?.name
-    if (uidStr == null) {
+    val uid = call.principal<UserIdPrincipal>()?.name?.formatToUuidOrNull()
+    if (uid == null) {
         call.respond(HttpStatusCode.Unauthorized)
         return null
     }
-    return uidStr.formatToUuidOrNull()
+    return uid
 }
 
 suspend fun PipelineContext<Unit, ApplicationCall>.checkAuthentication(): Boolean {

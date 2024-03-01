@@ -29,7 +29,10 @@ fun Application.accountRouting(context: ServerContext) {
             authenticate("auth-bearer") {
                 get("/me") {
                     val uid = getUserId() ?: return@get
-                    val user: User = accounts.getUser(uid) ?: throw NotFoundException("Invalid user")
+                    val user: User = accounts.getUser(uid) ?: run {
+                        call.respond(HttpStatusCode.Unauthorized)
+                        return@get
+                    }
                     call.respond(user)
                 }
                 post("/avatar") {
@@ -43,7 +46,8 @@ fun Application.accountRouting(context: ServerContext) {
             }
             get("/{username}") {
                 val username = call.parameters.getOrFail("username")
-                val user = accounts.getUserByName(username) ?: throw NotFoundException("No such user")
+                val user =
+                    accounts.getUserByName(username) ?: throw NotFoundException("No such user")
                 call.respond(user)
             }
             get("/search") {
