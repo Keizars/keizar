@@ -23,7 +23,7 @@ import org.keizar.android.ui.game.configuration.GameConfigurationViewModel
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
 import org.keizar.client.GameRoomClient
 import org.keizar.client.KeizarWebsocketClientFacade
-import org.keizar.client.RoomFullException
+import org.keizar.client.exception.RoomFullException
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.seconds

@@ -2,6 +2,7 @@ package org.keizar.client
 
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.first
+import org.keizar.client.exception.RoomFullException
 import org.keizar.client.internal.KeizarHttpClient
 import org.keizar.client.internal.KeizarHttpClientImpl
 import kotlin.coroutines.CoroutineContext
@@ -32,4 +33,3 @@ class KeizarWebsocketClientFacade(
 }
 
 
-class RoomFullException : Exception("The room is full")
