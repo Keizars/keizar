@@ -6,6 +6,9 @@ import org.keizar.game.RoundSessionImpl
 import org.keizar.utils.communication.game.Player
 
 interface RemoteGameSession : GameSession {
+    // Self player
+    val player: Player
+
     companion object {
         // use functions in KeizarClientFacade instead
         internal suspend fun createAndConnect(
@@ -32,9 +35,10 @@ class RemoteGameSessionImpl internal constructor(
     private val gameSessionWsHandler: GameSessionWsHandler,
 ) : GameSession by game, RemoteGameSession {
     override val rounds: List<RemoteRoundSession> = game.rounds.map { it as RemoteRoundSession }
+    override val player: Player = gameSessionWsHandler.getSelfPlayer()
 
     override suspend fun confirmNextRound(player: Player): Boolean {
-        if (player != gameSessionWsHandler.getSelfPlayer()) return false
+        if (player != this.player) return false
         return game.confirmNextRound(player).also {
             if (it) gameSessionWsHandler.sendConfirmNextRound()
         }
