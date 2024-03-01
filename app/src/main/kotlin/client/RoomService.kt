@@ -14,7 +14,7 @@ interface RoomService {
      */
     @POST("room/{roomNumber}/create")
     suspend fun createRoom(
-        @Path("roomNumber") roomNumber: UInt,
+        @Path("roomNumber") roomNumber: String,
         @Body properties: BoardProperties = BoardProperties.getStandardProperties()
     )
 
@@ -22,12 +22,12 @@ interface RoomService {
      * Get the room information of a specified room number.
      */
     @GET("room/{roomNumber}")
-    suspend fun getRoom(@Path("roomNumber") roomNumber: UInt): RoomInfo
+    suspend fun getRoom(@Path("roomNumber") roomNumber: String): RoomInfo
 
     /**
      * Join a room with given number.
      * Return OK on success.
      */
     @POST("room/{roomNumber}/join")
-    suspend fun joinRoom(roomNumber: UInt): Boolean
+    suspend fun joinRoom(roomNumber: String): Boolean
 }

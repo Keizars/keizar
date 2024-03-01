@@ -85,7 +85,7 @@ class PrivateRoomViewModelImpl(
 
     override val playersReady: SharedFlow<Boolean> = flow {
         while (currentCoroutineContext().isActive) {
-            emit(roomService.getRoom(roomId).playerInfo.all { it.isReady })
+            emit(roomService.getRoom(roomId.toString()).playerInfo.all { it.isReady })
             delay(2.seconds)
         }
     }.flowOn(Dispatchers.IO)

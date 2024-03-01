@@ -46,7 +46,7 @@ internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinCom
     }
 
     override suspend fun joinRoom() {
-        roomService.joinRoom(joinRoomIdEditing.value.toUInt())
+        roomService.joinRoom(joinRoomIdEditing.value)
     }
 
     override val selfRoomId: MutableStateFlow<String?> = MutableStateFlow(null)
@@ -60,7 +60,7 @@ internal class MatchViewModelImpl : MatchViewModel, AbstractViewModel(), KoinCom
             creatingRoom.value = true
             try {
                 val roomId = Random.nextUInt()
-                roomService.createRoom(roomId, BoardProperties.getStandardProperties())
+                roomService.createRoom(roomId.toString(), BoardProperties.getStandardProperties())
                 selfRoomId.value = roomId.toString()
                 return roomId.toString()
             } finally {
