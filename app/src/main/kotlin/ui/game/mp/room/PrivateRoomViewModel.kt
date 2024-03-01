@@ -84,7 +84,7 @@ class PrivateRoomViewModelImpl(
             } catch (e: RoomFullException) {
                 e.printStackTrace()
                 connectRoomError.value = ConnectRoomError.ROOM_FULL
-                continue
+                return@flow
             } catch (e: Throwable) {
                 e.printStackTrace()
                 connectRoomError.value = ConnectRoomError.NETWORK_ERROR
