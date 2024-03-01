@@ -40,7 +40,7 @@ interface GameRoomClient : AutoCloseable {
     /**
      * Set the player's state to ready
      */
-    suspend fun setReady(roomNumber: UInt, seed: UInt)
+    suspend fun setReady()
 
     /**
      * Create and return a RemoteGameSession for the room specified by its room number.
@@ -130,7 +130,7 @@ class GameRoomClientImpl internal constructor(
         return websocketSessionHandler.sendRequest(ChangeBoard(properties))
     }
 
-    override suspend fun setReady(roomNumber: UInt, seed: UInt) {
+    override suspend fun setReady() {
         return websocketSessionHandler.sendRequest(SetReady)
     }
 
