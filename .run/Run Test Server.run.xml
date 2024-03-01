@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+    <configuration default="false" name="Run Test Server" type="JetRunConfigurationType">
+        <envs>
+            <env name="PORT" value="4392" />
+            <env name="TESTING" value="true" />
+        </envs>
+        <option name="MAIN_CLASS_NAME" value="org.keizar.server.ApplicationKt" />
+        <module name="keizar.server.main" />
+        <shortenClasspath name="NONE" />
+        <method v="2">
+            <option name="Make" enabled="true" />
+        </method>
+    </configuration>
+</component>
