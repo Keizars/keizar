@@ -92,6 +92,10 @@ private class SessionManagerImpl : SessionManager, KoinComponent, HasBackgroundS
      * Current user's information.
      */
     override val self: StateFlow<User?> = token.transformLatest {
+        if (it == null) {
+            emit(null)
+            return@transformLatest
+        }
         while (true) {
             try {
                 emit(userService.self())
