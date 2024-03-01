@@ -5,9 +5,10 @@ import kotlinx.coroutines.flow.first
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
+import org.keizar.client.ClientGameRoom
 import org.keizar.game.BoardProperties
 import org.keizar.game.RoomInfo
-import org.keizar.utils.communication.message.UserInfo
+import kotlin.coroutines.CoroutineContext
 import kotlin.random.Random
 import kotlin.random.nextUInt
 
@@ -15,16 +16,19 @@ interface GameRoomModule {
     suspend fun createRoom(roomNumber: UInt? = null, seed: Int? = null): RoomInfo
     suspend fun createRoom(roomNumber: UInt? = null, boardProperties: BoardProperties): RoomInfo
     suspend fun getRoom(roomNumber: UInt): RoomInfo
-    suspend fun joinRoom(roomNumber: UInt, userInfo: UserInfo): Boolean
-    suspend fun setSeed(roomNumber: UInt, seed: UInt): Boolean
-    suspend fun acceptChange(roomNumber: UInt, seed: UInt): Boolean
+    suspend fun joinRoom(roomNumber: UInt): Boolean
+    suspend fun createClientRoom(
+        roomInfo: RoomInfo,
+        parentCoroutineContext: CoroutineContext
+    ): ClientGameRoom
 }
 
 class GameRoomModuleImpl(
     private val client: KeizarHttpClient,
     private val _token: SharedFlow<String?>,
 ) : GameRoomModule {
-    private suspend fun getToken() = _token.first() ?: throw IllegalStateException("User token not available")
+    private suspend fun getToken() =
+        _token.first() ?: throw IllegalStateException("User token not available")
 
     private companion object {
         private val logger = logger<GameRoomModuleImpl>()
@@ -45,15 +49,15 @@ class GameRoomModuleImpl(
         }.onFailure {
             logger.error(it) { "GameRoomModule.createRoom: failed to create $actualRoomNumber" }
         }.getOrThrow()
-        return RoomInfo(actualRoomNumber, boardProperties, 0, false)
+        return RoomInfo(actualRoomNumber, boardProperties, listOf())
     }
 
     override suspend fun getRoom(roomNumber: UInt): RoomInfo {
         return client.getRoom(roomNumber, getToken())
     }
 
-    override suspend fun joinRoom(roomNumber: UInt, userInfo: UserInfo): Boolean {
-        return kotlin.runCatching { client.postRoomJoin(roomNumber, userInfo, getToken()) }
+    override suspend fun joinRoom(roomNumber: UInt): Boolean {
+        return kotlin.runCatching { client.postRoomJoin(roomNumber, getToken()) }
             .onSuccess {
                 logger.info { "GameRoomModule.joinRoom: successfully joined $roomNumber" }
             }.onFailure {
@@ -61,21 +65,13 @@ class GameRoomModuleImpl(
             }.getOrThrow()
     }
 
-    override suspend fun setSeed(roomNumber: UInt, seed: UInt): Boolean {
-        return kotlin.runCatching { client.setSeed(roomNumber, seed, getToken()) }
-            .onSuccess {
-                logger.info { "GameRoomModule.setSeed: successfully set seed $seed for $roomNumber" }
-            }.onFailure {
-                logger.error(it) { "GameRoomModule.setSeed: failed to set seed $seed for $roomNumber" }
-            }.getOrThrow()
-    }
-
-    override suspend fun acceptChange(roomNumber: UInt, seed: UInt): Boolean {
-        return kotlin.runCatching { client.acceptChange(roomNumber, seed, getToken()) }
-            .onSuccess {
-                logger.info { "GameRoomModule.acceptChange: successfully accepted seed $seed for $roomNumber" }
-            }.onFailure {
-                logger.error(it) { "GameRoomModule.acceptChange: failed to accept seed $seed for $roomNumber" }
-            }.getOrThrow()
+    override suspend fun createClientRoom(
+        roomInfo: RoomInfo,
+        parentCoroutineContext: CoroutineContext
+    ): ClientGameRoom {
+        val websocketSession = client.getRoomWebsocketSession(roomInfo.roomNumber, getToken())
+        return ClientGameRoom.create(roomInfo, websocketSession, parentCoroutineContext).apply {
+            start()
+        }
     }
 }

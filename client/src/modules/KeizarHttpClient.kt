@@ -2,8 +2,6 @@ package org.keizar.client.modules
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
-import io.ktor.client.plugins.auth.Auth
-import io.ktor.client.plugins.auth.providers.bearer
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.plugins.logging.LogLevel
 import io.ktor.client.plugins.logging.Logging
@@ -36,14 +34,11 @@ private val ClientJson = Json {
 interface KeizarHttpClient : AutoCloseable {
     suspend fun postRoomCreate(roomNumber: UInt, boardProperties: BoardProperties, token: String)
     suspend fun getRoom(roomNumber: UInt, token: String): RoomInfo
-    suspend fun postRoomJoin(roomNumber: UInt, userInfo: UserInfo, token: String): Boolean
+    suspend fun postRoomJoin(roomNumber: UInt, token: String): Boolean
     suspend fun getRoomWebsocketSession(
         roomNumber: UInt,
         token: String,
     ): DefaultClientWebSocketSession
-
-    suspend fun setSeed(roomNumber: UInt, seed: UInt, token: String): Boolean
-    suspend fun acceptChange(roomNumber: UInt, seed: UInt, token: String): Boolean
 }
 
 class KeizarHttpClientImpl(
@@ -93,7 +88,6 @@ class KeizarHttpClientImpl(
 
     override suspend fun postRoomJoin(
         roomNumber: UInt,
-        userInfo: UserInfo,
         token: String,
     ): Boolean {
         val respond = client.post(
@@ -113,24 +107,6 @@ class KeizarHttpClientImpl(
         ) {
             header("Authorization", "Bearer $token")
         }
-    }
-
-    override suspend fun setSeed(roomNumber: UInt, seed: UInt, token: String): Boolean {
-        val respond = client.patch(
-            urlString = "$endpoint/room/$roomNumber/seed/$seed"
-        ) {
-            header("Authorization", "Bearer $token")
-        }
-        return respond.status == HttpStatusCode.OK
-    }
-
-    override suspend fun acceptChange(roomNumber: UInt, seed: UInt, token: String): Boolean {
-        val respond = client.post(
-            urlString = "$endpoint/room/$roomNumber/agree"
-        ) {
-            header("Authorization", "Bearer $token")
-        }
-        return respond.status == HttpStatusCode.OK
     }
 
     override fun close() {

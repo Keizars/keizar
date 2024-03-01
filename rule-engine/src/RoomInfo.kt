@@ -1,17 +1,21 @@
 package org.keizar.game
 
 import kotlinx.serialization.Serializable
+import org.keizar.utils.communication.message.UserInfo
 
 @Serializable
 data class RoomInfo(
     val roomNumber: UInt,
     val properties: BoardProperties,
     /**
-     * Number of players currently in the room
+     * Information of players currently in the room
      */
-    val playerCount: Int,
-    /**
-     * Whether all players are ready to start the game.
-     */
-    val playersReady: Boolean
+    val playerInfo: List<PlayerInfo>,
+)
+
+@Serializable
+data class PlayerInfo(
+    val user: UserInfo,
+    val isHost: Boolean,
+    val isReady: Boolean,
 )

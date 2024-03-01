@@ -64,7 +64,7 @@ class MultiplayerRoomViewModel(
     private val facade: KeizarClientFacade by inject()
     val playersReady = flow {
         while (currentCoroutineContext().isActive) {
-            emit(facade.getRoom(roomId).playersReady)
+            emit(facade.getRoom(roomId).playerInfo.all { it.isReady })
             delay(2.seconds)
         }
     }.flowOn(Dispatchers.IO)

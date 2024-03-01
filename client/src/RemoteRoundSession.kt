@@ -3,7 +3,7 @@ package org.keizar.client
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
-import org.keizar.client.modules.GameSessionModule
+import org.keizar.client.modules.GameSessionWsHandler
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import org.keizar.utils.communication.game.BoardPos
@@ -12,13 +12,13 @@ interface RemoteRoundSession: RoundSession
 
 class RemoteRoundSessionImpl internal constructor(
     private val round: RoundSession,
-    private val gameSessionModule: GameSessionModule,
+    private val websocketHandler: GameSessionWsHandler,
 ): RoundSession by round, RemoteRoundSession {
     init {
-        gameSessionModule.bind(this, round)
+        websocketHandler.bind(this, round)
     }
 
-    private val selfRole: StateFlow<Role> = gameSessionModule.getCurrentSelfRole()
+    private val selfRole: StateFlow<Role> = websocketHandler.getCurrentSelfRole()
 
     override fun getAvailableTargets(from: BoardPos): Flow<List<BoardPos>> {
         if (round.pieceAt(from) != selfRole.value) return flowOf(listOf())
@@ -28,7 +28,7 @@ class RemoteRoundSessionImpl internal constructor(
     override suspend fun move(from: BoardPos, to: BoardPos): Boolean {
         if (round.pieceAt(from) != selfRole.value) return false
         return round.move(from, to).also {
-            if (it) gameSessionModule.sendMove(from, to)
+            if (it) websocketHandler.sendMove(from, to)
         }
     }
 }

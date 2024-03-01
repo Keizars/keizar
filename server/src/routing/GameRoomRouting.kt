@@ -1,7 +1,6 @@
 package org.keizar.server.routing
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.serialization.WebsocketDeserializeException
 import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
@@ -10,8 +9,8 @@ import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
+import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
-import io.ktor.server.websocket.receiveDeserialized
 import io.ktor.server.websocket.webSocket
 import io.ktor.util.pipeline.PipelineContext
 import org.keizar.game.BoardProperties
@@ -74,8 +73,7 @@ fun Application.gameRoomRouting(context: ServerContext) {
             val info = RoomInfo(
                 roomNumber = room.roomNumber,
                 properties = room.properties,
-                playerCount = room.playerCount,
-                playersReady = room.playersReady,
+                playerInfo = room.listPlayers(),
             )
             call.respond(info)
         }

@@ -9,15 +9,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.ClosedReceiveChannelException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.launch
 import org.keizar.game.BoardProperties
 import org.keizar.utils.communication.PlayerSessionState
@@ -26,56 +22,72 @@ import org.keizar.utils.communication.message.Exit
 import org.keizar.utils.communication.message.RemoteSessionSetup
 import org.keizar.utils.communication.message.Request
 import org.keizar.utils.communication.message.Respond
-import org.keizar.utils.communication.message.StateChange
+import org.keizar.utils.communication.message.PlayerStateChange
 import org.slf4j.Logger
 import kotlin.coroutines.CoroutineContext
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
-import kotlinx.serialization.BinaryFormat
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import org.keizar.game.GameSession
+import org.keizar.game.PlayerInfo
 import org.keizar.game.snapshot.GameSnapshot
+import org.keizar.utils.communication.message.ChangeBoard
 import org.keizar.utils.communication.message.ConfirmNextRound
 import org.keizar.utils.communication.message.Move
+import org.keizar.utils.communication.message.RoomStateChange
+import org.keizar.utils.communication.message.SetReady
 import org.keizar.utils.communication.message.UserInfo
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.ConcurrentMap
-import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.seconds
 
 interface GameRoom : AutoCloseable {
-    /**
-     * Connect to the user through a web socket session. When two players both connect,
-     * the game should start automatically. (On the server side, it should start to send
-     * and forward messages through the websockets.)
-     * Calling connect() twice on the same [UserInfo] will override its registered [PlayerSession].
-     * The messages will be sent to the newest [PlayerSession].
-     */
-    suspend fun connect(user: UserInfo, player: PlayerSession): Boolean
-
     /**
      * Add a user into the room. Register them as one of the players, but not start the game.
      * If the player is already in the room, return true.
      */
-    fun addPlayer(user: UserInfo): Boolean
+    suspend fun join(user: UserInfo): Boolean
+
+    /**
+     * Connect to the user through a web socket session.
+     * Calling connect() twice on the same [UserInfo] will override its registered [DefaultWebSocketServerSession].
+     * The messages will be sent to the newest [DefaultWebSocketServerSession].
+     */
+    fun connect(user: UserInfo, session: DefaultWebSocketServerSession): PlayerSession?
+
+    /**
+     * Make a user ready to start the game. If the user is already ready, return true.
+     * When two players are both ready, the game should start.
+     * On the server side, it should start to send and forward messages through the
+     * registered websockets.
+     */
+    fun ready(user: UserInfo): Boolean
+
+    /**
+     * Returns true if the user is already in the room.
+     */
+    fun containsPlayer(user: UserInfo): Boolean
+
+    /**
+     * Whether the user is the host (creator) of the room.
+     */
+    fun isHost(user: UserInfo): Boolean
+
+    /**
+     * List all players in the room.
+     */
+    fun listPlayers(): List<PlayerInfo>
+
+    /**
+     * Return whether each player is ready to start the game.
+     */
+    fun getIfPlayersReady(): Map<UserInfo, Boolean>
 
     val roomNumber: UInt
     val properties: BoardProperties
 
     /**
-     * Whether the game has finished.
+     * Indicate the state of the room.
+     * Can be one of [ServerGameRoomState.Started], [ServerGameRoomState.AllConnected], [ServerGameRoomState.Playing], [ServerGameRoomState.Finished].
      */
-    val finished: Flow<Boolean>
-
-    /**
-     * Number of players that are [addPlayer()]-ed to the room.
-     */
-    val playerCount: Int
-
-    /**
-     * Whether all players added are ready to start the game.
-     */
-    val playersReady: Boolean
+    val state: Flow<ServerGameRoomState>
 
     companion object {
         fun create(
@@ -87,8 +99,6 @@ interface GameRoom : AutoCloseable {
             return GameRoomImpl(roomNumber, properties, parentCoroutineContext, logger)
         }
     }
-
-    fun containsPlayer(user: UserInfo): Boolean
 }
 
 class GameRoomImpl(
@@ -96,8 +106,10 @@ class GameRoomImpl(
     override val properties: BoardProperties,
     parentCoroutineContext: CoroutineContext,
     private val logger: Logger,
+    private val heartbeatInterval: Long = 5.seconds.inWholeMilliseconds,
+    private val dyingHeartbeatThreshold: Int = 60,
 ) : GameRoom {
-    private val exceptionHandler = CoroutineExceptionHandler{ _, e ->
+    private val exceptionHandler = CoroutineExceptionHandler { _, e ->
         logger.error(e.message)
     }
 
@@ -107,87 +119,210 @@ class GameRoomImpl(
                 exceptionHandler
     )
 
+    override val state: MutableStateFlow<ServerGameRoomState> =
+        MutableStateFlow(ServerGameRoomState.Started(properties))
+
 
     /**
      * Add players into the room and register player information.
      */
 
-    private val playerInfo: MutableList<UserInfo> = mutableListOf()
-    private val _playerCount: AtomicInteger = AtomicInteger(0)
-    override val playerCount: Int get() = _playerCount.get()
-    override var playersReady = false
-    private val playersMutex = Mutex()
+    override suspend fun join(user: UserInfo): Boolean {
+        val curState = state.value as? ServerGameRoomState.Started ?: return false
+        return curState.players {
+            if (this.containsKey(user)) return@players true
+            if (this.size >= Player.entries.size) return@players false
 
-    private val playerAllocation: ConcurrentMap<UserInfo, Player> = ConcurrentHashMap()
+            val player = PlayerSession.create(
+                user = user,
+                playerAllocation = curState.allocatePlayer() ?: return@players false,
+                isHost = this.isEmpty(),
+            )
+            this[user] = player
+            startHeartbeat(player)
+            startNotifyStateChange(player)
+            startReceivingPreGameRequests(player)
 
-    override fun addPlayer(user: UserInfo): Boolean {
-        if (user in playerInfo) return true
-        val playerIndex = _playerCount.getAndIncrement()
-        if (playerIndex < Player.entries.size) {
-            myCoroutineScope.launch {
-                playersMutex.withLock {
-                    playerInfo.add(playerIndex, user)
+            if (this.size == Player.entries.size) {
+                state.value = curState.toAllConnected()
+            }
+            return@players true
+        }
+    }
+
+    private fun startHeartbeat(player: PlayerSession) {
+        myCoroutineScope.launch {
+            while (true) {
+                player.checkConnection()
+                delay(heartbeatInterval)
+            }
+        }
+    }
+
+    private fun startNotifyStateChange(player: PlayerSession) {
+        myCoroutineScope.launch {
+            for (receiver in players.values) {
+                player.state.collect { newState ->
+                    logger.info("Notify player $receiver of player $player state change: $newState")
+                    receiver.session.value?.sendRespond(
+                        PlayerStateChange(player.user.username, newState)
+                    )
                 }
             }
-            if (playerIndex == Player.entries.size - 1) {
-                playersReady = true
-            }
-            allocatePlayer(user)
-            return true
         }
-        return false
+        myCoroutineScope.launch {
+            this@GameRoomImpl.state.collect { newState ->
+                logger.info("Notify player $player of room state change: $newState")
+                player.session.value?.sendRespond(RoomStateChange(newState.toGameRoomState()))
+            }
+        }
     }
+
+    private fun startReceivingPreGameRequests(player: PlayerSession) {
+        val job = myCoroutineScope.launch {
+            player.session.collectLatest {
+                try {
+                    val message = it?.receiveDeserialized<Request>() ?: return@collectLatest
+                    logger.info("Received request $message from $player")
+                    when (message) {
+                        is ChangeBoard -> {
+                            if (player.isHost) {
+                                changeBoard(BoardProperties.fromJson(message.boardProperties))
+                            }
+                        }
+
+                        is SetReady -> {
+                            ready(player.user)
+                        }
+
+                        else -> {
+                            // ignore
+                        }
+                    }
+                } catch (e: WebsocketDeserializeException) {
+                    // ignore
+                }
+            }
+        }
+        myCoroutineScope.launch {
+            state.first { it is ServerGameRoomState.Playing || it is ServerGameRoomState.Finished }
+            job.cancel()
+        }
+    }
+
+    /**
+     * Change the board properties of the game.
+     * Doing so will remove all players from their ready state.
+     */
+    private suspend fun changeBoard(newProperties: BoardProperties): Boolean {
+        val curState = state.value as? ServerGameRoomState.StateWithModifiableBoardPropertiesServer
+            ?: return false
+        curState.boardProperties = newProperties
+        when (curState) {
+            is ServerGameRoomState.Started -> {
+                curState.players {
+                    for (player in this.values) {
+                        player.setState(PlayerSessionState.STARTED)
+                        notifyRemoteSessionSetup(player)
+                    }
+                }
+            }
+
+            is ServerGameRoomState.AllConnected -> {
+                for (player in curState.players.values) {
+                    player.setState(PlayerSessionState.STARTED)
+                    notifyRemoteSessionSetup(player)
+                }
+            }
+        }
+        return true
+    }
+
+
+    /**
+     * Functions for querying player information.
+     */
+
+    private val players get() = state.value.players
 
     override fun containsPlayer(user: UserInfo): Boolean {
-        return user in playerInfo
+        return players.containsKey(user)
     }
 
-
-    /**
-     * Determine which player is the FirstBlackPlayer and which is the FirstWhitePlayer.
-     */
-
-    private val allPlayers = Player.entries.shuffled()
-    private val allPlayersIndex = AtomicInteger(0)
-    private fun allocatePlayer(user: UserInfo) {
-        if (playerAllocation.containsKey(user)) return
-        val index = allPlayersIndex.getAndIncrement()
-        if (index >= allPlayers.size) return
-        playerAllocation[user] = allPlayers[index]
+    override fun isHost(user: UserInfo): Boolean {
+        return players[user]?.isHost ?: false
     }
 
-
-    /**
-     * Connect players ([UserInfo]s) to websocket sessions ([PlayerSession]s).
-     */
-
-    private val playerSessions: MutableMap<UserInfo, MutableStateFlow<PlayerSession>> =
-        mutableMapOf()
-    private val playersConnected: MutableStateFlow<Boolean> = MutableStateFlow(false)
-
-    override suspend fun connect(user: UserInfo, player: PlayerSession): Boolean {
-        if (user in playerInfo) {
-            notifyRemoteSessionSetup(
-                player = player,
-                allocation = playerAllocation[player.user]!!,
-                gameSnapshot = serverGame.getSnapshot()
+    override fun listPlayers(): List<PlayerInfo> {
+        return players.map { (user, playerSession) ->
+            PlayerInfo(
+                user = user,
+                isHost = playerSession.isHost,
+                isReady = playerSession.state.value == PlayerSessionState.READY,
             )
-
-            if (!playerSessions.containsKey(user)) {
-                playerSessions[user] = MutableStateFlow(player)
-            } else {
-                val oldSession = playerSessions[user]!!.value
-                oldSession.cancel("Websocket session $oldSession expired")
-                playerSessions[user]!!.value = player
-            }
-            logger.info("Session of user $user changed to $player")
-
-            if (playerSessions.keys.containsAll(playerInfo)) {
-                playersConnected.value = true
-            }
-            return true
         }
-        return false
+    }
+
+    override fun getIfPlayersReady(): Map<UserInfo, Boolean> {
+        return players.mapValues { (_, player) -> player.state.value == PlayerSessionState.READY }
+    }
+
+
+    /**
+     * Connect players ([UserInfo]s) to websocket sessions ([DefaultWebSocketServerSession]s).
+     */
+
+    override fun connect(user: UserInfo, session: DefaultWebSocketServerSession): PlayerSession? {
+        val playerSession = players[user] ?: return null
+        playerSession.connect(session)
+        myCoroutineScope.launch {
+            notifyRemoteSessionSetup(playerSession)
+            session.sendRespond(RoomStateChange(state.value.toGameRoomState()))
+            for (player in players.values) {
+                session.sendRespond(PlayerStateChange(player.user.username, player.state.value))
+            }
+        }
+        logger.info("Session of user $user changed to $session")
+        return playerSession
+    }
+
+    private suspend fun notifyRemoteSessionSetup(
+        player: PlayerSession,
+    ) {
+        val allocation = player.playerAllocation
+        val gameSnapshot = when (val curState = state.value) {
+            is ServerGameRoomState.StateWithModifiableBoardPropertiesServer ->
+                GameSession.create(curState.boardProperties).getSnapshot()
+
+            is ServerGameRoomState.Playing -> curState.serverGame.getSnapshot()
+            is ServerGameRoomState.Finished -> return
+        }
+        logger.info("Notify user $player of allocation $allocation and gameSnapshot")
+        player.session.value?.sendRespond(
+            RemoteSessionSetup(
+                allocation,
+                Json.encodeToJsonElement(gameSnapshot)
+            )
+        )
+    }
+
+
+    /**
+     * Make players ready to start the game.
+     */
+
+    override fun ready(user: UserInfo): Boolean {
+        val curState = state.value as? ServerGameRoomState.AllConnected ?: return false
+        val playerSession = players[user] ?: return false
+        playerSession.setState(PlayerSessionState.READY)
+        checkAllPlayersReady(curState)
+        return true
+    }
+
+    private fun checkAllPlayersReady(curState: ServerGameRoomState.AllConnected) {
+        if (players.values.all { it.state.value == PlayerSessionState.READY }) {
+            state.value = curState.toPlaying()
+        }
     }
 
 
@@ -201,125 +336,114 @@ class GameRoomImpl(
 
     private fun startWaitingForPlayers() {
         myCoroutineScope.launch {
-            playersConnected.first { it }
+            state.first { it is ServerGameRoomState.Playing }
             startGame()
-            updateFinished()
+            checkAllFinished()
         }
     }
 
-    private var _finished: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    override var finished: StateFlow<Boolean> = _finished.asStateFlow()
-
-    private suspend fun updateFinished() {
-        combine(playerSessions.values.map { session ->
-            session.flatMapLatest { it.state }
-        }) { states ->
-            states.all { it == PlayerSessionState.TERMINATING }
-        }.first { it }
-        _finished.value = true
+    private fun checkAllFinished() {
+        myCoroutineScope.launch {
+            val curState = state.value as ServerGameRoomState.Playing
+            var dyingHeartbeats = 0
+            while (true) {
+                delay(heartbeatInterval)
+                if (dyingHeartbeats >= dyingHeartbeatThreshold) {
+                    state.value = curState.toFinished()
+                } else if (
+                    players.values.all { it.state.value == PlayerSessionState.TERMINATING }
+                ) {
+                    state.value = curState.toFinished()
+                } else if (
+                    players.values.all {
+                        it.state.value == PlayerSessionState.DISCONNECTED ||
+                                it.state.value == PlayerSessionState.TERMINATING
+                    }
+                ) {
+                    ++dyingHeartbeats
+                } else {
+                    dyingHeartbeats = 0
+                }
+            }
+        }
     }
 
     override fun close() {
         myCoroutineScope.cancel()
     }
 
-    private val serverGame: GameSession = GameSession.create(properties)
+    private suspend fun startGame() {
+        val curState = state.value as ServerGameRoomState.Playing
 
-    private fun startGame() {
-        playerSessions.values.map {
-            myCoroutineScope.launch {
-                it.collectLatest { player ->
-                    player.setState(PlayerSessionState.PLAYING)
-                }
-            }
-
-            myCoroutineScope.launch {
-                notifyStateChange(it)
-            }
+        players.values.map { player ->
+            player.setState(PlayerSessionState.PLAYING)
         }
 
-        val player1 = playerSessions[playerInfo[0]]!!
-        val player2 = playerSessions[playerInfo[1]]!!
+        val (player1, player2) = players.values.toList()
 
         myCoroutineScope.launch {
-            player2.collectLatest {
+            player2.session.collectLatest {
                 forwardMessages(player2, player1)
             }
         }
 
         myCoroutineScope.launch {
-            player1.collectLatest {
+            player1.session.collectLatest {
                 forwardMessages(player1, player2)
             }
         }
     }
 
-    private suspend fun notifyRemoteSessionSetup(
-        player: PlayerSession,
-        allocation: Player,
-        gameSnapshot: GameSnapshot
-    ) {
-        logger.info("Notify user $player of player allocation: $allocation and gameSnapshot")
-        player.sendRespond(
-            RemoteSessionSetup(
-                allocation,
-                Json.encodeToJsonElement(gameSnapshot)
-            )
-        )
-    }
-
     private suspend fun forwardMessages(
-        from: StateFlow<PlayerSession>,
-        to: StateFlow<PlayerSession>
+        from: PlayerSession,
+        to: PlayerSession,
     ) {
-        val player = playerAllocation[from.value.user]!!
+        val player = from.playerAllocation
+        val curState = state.value as ServerGameRoomState.Playing
         while (true) {
             try {
-                val message = from.value.session.receiveDeserialized<Request>()
-                logger.info("Received request $message from ${from.value}")
+                val message = from.session.value?.receiveDeserialized<Request>() ?: return
+                logger.info("Received request $message from $from")
                 myCoroutineScope.launch {
                     when (message) {
                         ConfirmNextRound -> {
-                            if (!serverGame.confirmNextRound(player)) {
-                                logger.info("Player ${from.value} sends invalid confirmNextRound")
+                            if (!curState.serverGame.confirmNextRound(player)) {
+                                logger.info("Player $from sends invalid confirmNextRound")
                             }
-                            to.value.sendRequest(message)
+                            to.session.value?.sendRequest(message)
                         }
 
                         Exit -> {
-                            from.value.setState(PlayerSessionState.TERMINATING)
+                            from.setState(PlayerSessionState.TERMINATING)
                             logger.info("$from exiting")
                         }
 
                         is Move -> {
-                            if (!serverGame.currentRound.first().move(message.from, message.to)) {
-                                logger.info("Player ${from.value} sends invalid move $message")
+                            if (!curState.serverGame.currentRound.first()
+                                    .move(message.from, message.to)
+                            ) {
+                                logger.info("Player $from sends invalid move $message")
                             }
-                            to.value.sendRequest(message)
+                            to.session.value?.sendRequest(message)
                         }
 
-                        is UserInfo -> {}
+                        else -> {
+                            // ignore
+                        }
                     }
                 }
-                logger.info("Forwarded request $message to ${to.value}")
+                logger.info("Forwarded request $message to $to")
             } catch (e: WebsocketDeserializeException) {
                 // ignore
             }
         }
     }
-
-    private suspend fun notifyStateChange(player: StateFlow<PlayerSession>) {
-        player.value.state.collect { newState ->
-            logger.info("Notify player ${player.value} of state change: $newState")
-            player.value.sendRespond(StateChange(newState))
-        }
-    }
 }
 
-suspend inline fun PlayerSession.sendRespond(message: Respond) {
-    session.sendSerialized(message)
+suspend inline fun DefaultWebSocketServerSession.sendRespond(message: Respond) {
+    sendSerialized(message)
 }
 
-suspend inline fun PlayerSession.sendRequest(message: Request) {
-    session.sendSerialized(message)
+suspend inline fun DefaultWebSocketServerSession.sendRequest(message: Request) {
+    sendSerialized(message)
 }

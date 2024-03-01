@@ -1,6 +1,8 @@
 package org.keizar.game
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import org.keizar.game.tilearrangement.PlainTileArrangementFactory
 import org.keizar.game.tilearrangement.StandardTileArrangementFactory
 import org.keizar.utils.communication.game.BoardPos
@@ -55,6 +57,14 @@ data class BoardProperties(
         fun getStandardProperties(randomSeed: Int? = null): BoardProperties {
             val seed = randomSeed ?: generateRandomSeed()
             return BoardPropertiesBuilder(prototype = BoardPropertiesPrototypes.Standard(seed)).build()
+        }
+
+        fun toJson(properties: BoardProperties): JsonElement {
+            return Json.encodeToJsonElement(serializer(), properties)
+        }
+
+        fun fromJson(properties: JsonElement): BoardProperties {
+            return Json.decodeFromJsonElement(serializer(), properties)
         }
     }
 }
