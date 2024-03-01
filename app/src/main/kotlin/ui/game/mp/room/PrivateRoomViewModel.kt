@@ -9,6 +9,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -39,7 +41,7 @@ interface PrivateRoomViewModel {
     val roomId: UInt
 
     @Stable
-    val connectRoomError: MutableStateFlow<ConnectRoomError?>
+    val connectRoomError: StateFlow<ConnectRoomError?>
 
     @Stable
     val playersReady: SharedFlow<Boolean>
@@ -93,7 +95,7 @@ class PrivateRoomViewModelImpl(
             }
             emit(client)
         }
-    }
+    }.shareInBackground(started = SharingStarted.Eagerly)
 
     override val connectRoomError: MutableStateFlow<ConnectRoomError?> = MutableStateFlow(null)
 
