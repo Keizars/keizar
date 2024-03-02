@@ -339,8 +339,8 @@ class SinglePlayerGameBoardViewModel(
         }
 
         launchInBackground {
-            game.finalWinner.distinctUntilChanged().collect { winner ->
-                if (winner != null && singlePlayerMode && sessionManager.isLoggedIn.first()) {
+            game.finalWinner.distinctUntilChanged().collect {
+                if (it != null && singlePlayerMode && sessionManager.isLoggedIn.first()) {
                     saveAnonymousResults()
                 }
             }
