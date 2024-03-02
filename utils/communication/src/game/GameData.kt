@@ -9,4 +9,6 @@ data class GameData(
     val gameConfiguration: String,
     val user1: String? = null,
     val user2: String? = null,
-    val currentTimestamp: String)
+    val currentTimestamp: String,
+    val userSaved: Boolean = false
+)

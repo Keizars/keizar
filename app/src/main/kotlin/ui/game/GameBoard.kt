@@ -355,7 +355,7 @@ fun RoundTwoBottomBar(
                         val isLoggedIn = vm.sessionManager.isLoggedIn.first()
                         if (isLoggedIn) {
                             if (vm is PlayableGameBoardViewModel) {
-                                vm.saveResults()
+                                vm.saveResults(userSaved = true)
                             }
                         } else {
                             onClickLogin()

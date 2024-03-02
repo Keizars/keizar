@@ -249,7 +249,7 @@ sealed class PlayableGameBoardViewModel(
     selfPlayer: Player,
 ) : BaseGameBoardViewModel(game, selfPlayer) {
 
-    suspend fun saveResults() {
+    suspend fun saveResults(userSaved: Boolean = false) {
         var opponentName : String? = null
         val userName = sessionManager.self.value?.username
         val gameDataService: GameDataService by inject()
