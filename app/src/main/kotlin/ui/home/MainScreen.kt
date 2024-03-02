@@ -2,6 +2,7 @@ package org.keizar.android.ui.home
 
 import android.app.Activity
 import android.os.Bundle
+import android.widget.Toast
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
@@ -82,6 +83,7 @@ private val json = Json { ignoreUnknownKeys = true }
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
+    val context = LocalContext.current
 
 
     LaunchedEffect(true) {
@@ -333,9 +335,11 @@ fun MainScreen() {
                     }
                 },
                 onSuccessPasswordEdit = {
-                    navController.navigate("auth/login")
+                    Toast.makeText(context, "Password updated!", Toast.LENGTH_SHORT).show()
+                    navController.popBackStack()
                 },
                 onSuccessNicknameEdit = {
+                    Toast.makeText(context, "Nickname updated!", Toast.LENGTH_SHORT).show()
                     navController.popBackStack()
                 },
             )

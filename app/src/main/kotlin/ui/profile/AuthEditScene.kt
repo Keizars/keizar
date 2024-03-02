@@ -11,7 +11,6 @@ import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -20,13 +19,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -54,7 +50,7 @@ fun AuthEditScene(
     onSuccessNicknameEdit: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val vm = remember(initIsPasswordEdit) { AuthEditViewModel(true) }
+    val vm = remember(initIsPasswordEdit) { AuthEditViewModel(initIsPasswordEdit) }
     Scaffold(
         modifier.fillMaxSize(),
         topBar = {
@@ -179,16 +175,35 @@ fun AuthEditPage(
                 modifier = Modifier.padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                val curNickname = viewModel.getCurrentNickname()
+                if (curNickname == "") {
+                    Text(
+                        text = "Current name: $curNickname",
+                        fontSize = 16.sp,
+                    )
+                } else {
+                    Text(
+                        text = "Come you set your nickname!",
+                        fontSize = 16.sp,
+                    )
+                }
+            }
+        }
+
+        AnimatedVisibility(!isPasswordEdit) {
+            Row(
+                modifier = Modifier.padding(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 OutlinedTextField(
-                    value = viewModel.password.value,
+                    value = viewModel.nickname.value,
                     onValueChange = { viewModel.setNickname(it) },
-                    isError = (passwordError != null),
+                    isError = (nicknameError != null),
                     label = { Text("New nickName") },
                     shape = RoundedCornerShape(8.dp),
                     keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Password,
-                    ),
-                    visualTransformation = PasswordVisualTransformation('*')
+                        keyboardType = KeyboardType.Text,
+                    )
                 )
             }
         }
@@ -200,9 +215,6 @@ fun AuthEditPage(
                     color = Color.Red,
                 )
             }
-        }
-        AnimatedVisibility(!isPasswordEdit) {
-
         }
 
 
@@ -234,11 +246,14 @@ fun AuthEditPage(
         }
 
         val highlightStyle =
-            SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)
+            SpanStyle(
+                color = MaterialTheme.colorScheme.primary,
+                textDecoration = TextDecoration.Underline
+            )
         val passwordEditMessage = remember(highlightStyle) {
             buildAnnotatedString {
                 pushStyle(highlightStyle)
-                append("Change nickname and avatar")
+                append("Change nickname")
                 pop()
             }
         }
