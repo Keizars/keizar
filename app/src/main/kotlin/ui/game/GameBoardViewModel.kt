@@ -29,6 +29,7 @@ import me.him188.ani.utils.logging.info
 import org.keizar.aiengine.AlgorithmAI
 import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.BuildConfig
+import org.keizar.android.client.AnonymousDataService
 import org.keizar.android.client.SessionManager
 import org.keizar.android.client.UserService
 //import org.keizar.android.client.GameDataService
@@ -60,6 +61,7 @@ import org.koin.core.component.inject
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 import org.keizar.android.client.GameDataService
+import org.keizar.utils.communication.game.AnonymousGameData
 
 interface GameBoardViewModel : HasBackgroundScope {
     @Stable
@@ -267,6 +269,14 @@ sealed class PlayableGameBoardViewModel(
         }
     }
 
+    suspend fun saveAnonymousResults() {
+        val gameDataService: AnonymousDataService by inject()
+        val gameData = AnonymousGameData (round1Statistics.first(), round2Statistics.first(), startConfiguration.encode(), Instant.now().toString())
+        this.launchInBackground {
+            gameDataService.sendAnonymousData(gameData)
+        }
+    }
+
 }
 
 class SinglePlayerGameBoardViewModel(
@@ -324,6 +334,14 @@ class SinglePlayerGameBoardViewModel(
             game.finalWinner.distinctUntilChanged().collect {
                 if (it != null) {
                     savedStateRepository.save(SavedState.Empty)
+                }
+            }
+        }
+
+        launchInBackground {
+            game.finalWinner.distinctUntilChanged().collect { winner ->
+                if (winner != null && singlePlayerMode && sessionManager.isLoggedIn.first()) {
+                    saveAnonymousResults()
                 }
             }
         }

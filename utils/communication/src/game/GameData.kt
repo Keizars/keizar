@@ -10,3 +10,10 @@ data class GameData(
     val opponentName: String,
     val userName: String,
     val currentTimestamp: String)
+
+@Serializable
+data class AnonymousGameData(
+    val round1Statistics: RoundStats,
+    val round2Statistics: RoundStats,
+    val gameConfiguration: String,
+    val currentTimestamp: String)
