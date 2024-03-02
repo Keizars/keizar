@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
@@ -16,8 +17,6 @@ import org.keizar.utils.communication.game.NeutralStats
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.game.RoundStats
 import java.util.concurrent.atomic.AtomicInteger
-import java.time.Duration
-import java.time.Instant
 
 /***
  * API for the backend. Representation of a complete game that may contain multiple rounds
@@ -79,6 +78,8 @@ interface GameSession {
     fun getRoundWinner(roundNo: Int): Flow<Player?>
 
     fun getRoundStats(roundNo: Int): Flow<RoundStats>
+
+    fun getSavedRoundStats(roundNo: Int): Flow<RoundStats>?
 
     companion object {
         // Create a standard GameSession using the seed provided.
@@ -165,6 +166,10 @@ class GameSessionImpl(
 
     private val nextRoundAgreement: MutableList<Boolean>
     private val agreementCounter: AtomicInteger = AtomicInteger(0)
+
+
+    private var round1Stats: Flow<RoundStats>? = null
+    private var round2Stats: Flow<RoundStats>? = null
 
     init {
         rounds = (0..<properties.rounds).map {
@@ -269,10 +274,29 @@ class GameSessionImpl(
     }
 
     override fun getRoundStats(roundNo: Int): Flow<RoundStats> {
-        return flowOf(RoundStats(
-            NeutralStats = rounds[roundNo].getNeutralStatistics(),
-            player = getPlayer(Role.WHITE, roundNo),
-            ))
+
+        val stats = getRoundWinner(roundNo).map { winner ->
+            RoundStats(
+                neutralStats = rounds[roundNo].getNeutralStatistics(),
+                player = getPlayer(Role.WHITE, roundNo),
+                winner = winner,
+                )
+        }
+        if (roundNo == 1) {
+            round1Stats = stats
+        } else {
+            round2Stats = stats
+        }
+
+        return stats
+    }
+
+    override fun getSavedRoundStats(roundNo: Int): Flow<RoundStats>? {
+        return if (roundNo == 0) {
+            round1Stats
+        } else {
+            round2Stats
+        }
     }
 
     override fun getRole(player: Player, roundNo: Int): Role {

@@ -120,6 +120,21 @@ fun GameBoard(
 ) {
     var boardGlobalCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
     val tileSize by vm.pieceArranger.tileSize.collectAsStateWithLifecycle(DpSize.Zero)
+//    Row(
+//        modifier.fillMaxWidth().padding(16.dp).height(48.dp),
+//        verticalAlignment = Alignment.CenterVertically
+//    ) {
+//        Box(
+//            modifier = modifier.weight(1f).height(48.dp)
+//        ) {
+//            // TODO: Avatar
+//        }
+//        Text(
+//            text = "Opponent Username",
+//            modifier.weight(3f),
+//            fontSize = 18.sp
+//        )
+//    }
 
     Column {
         Row(Modifier.align(Alignment.Start), verticalAlignment = CenterVertically) {
@@ -335,7 +350,7 @@ fun RoundTwoBottomBar(
             }
 
             ActionButton(
-                onClick = { 
+                onClick = {
                     vm.launchInBackground {
                         val isLoggedIn = vm.sessionManager.isLoggedIn.first()
                         if (isLoggedIn) {
@@ -400,27 +415,55 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
             }
 
             is GameResult.Draw -> {
-                val playerStatistics = vm.getPlayerStatistics(vm.selfPlayer)
-                val text: String
+                val round1stats = vm.round1Statistics.collectAsState(initial = null).value
+                val round2stats = vm.round2Statistics.collectAsState(initial = null).value
+                var statText: String = ""
                 if (vm is MultiplayerGameBoardViewModel) {
                     val myName by vm.myUser.collectAsState(initial = "")
                     val opponentName by vm.opponentUser.collectAsState(initial = "")
-                    val opponentStatistics =
-                        vm.getPlayerStatistics(if (vm.selfPlayer == Player.FirstBlackPlayer) Player.FirstWhitePlayer else Player.FirstBlackPlayer)
-                    text =
-                        "$myName captured: ${playerStatistics.round1Captured} + ${playerStatistics.round2Captured} = ${playerStatistics.round1Captured + playerStatistics.round2Captured}\n" +
-                                "$opponentName captured:  ${playerStatistics.round1OpponentCaptured} + ${playerStatistics.round2OpponentCaptured} = ${playerStatistics.round1OpponentCaptured + playerStatistics.round2OpponentCaptured}\n" +
-                                "Number of moves: ${playerStatistics.round1Moves} + ${playerStatistics.round2Moves} = ${playerStatistics.round1Moves + playerStatistics.round2Moves}\n" +
-                                "Time: ${playerStatistics.round1Time / 60} m ${playerStatistics.round1Time % 60} s + ${playerStatistics.round2Time / 60} m ${playerStatistics.round2Time % 60} s = ${(playerStatistics.round1Time + playerStatistics.round2Time) / 60} m ${(playerStatistics.round1Time + playerStatistics.round2Time) % 60} s\n" +
-                                "$myName moves' average time: ${playerStatistics.round1AverageTime / 60} m ${playerStatistics.round1AverageTime % 60} s + ${playerStatistics.round2AverageTime / 60} m ${playerStatistics.round2AverageTime % 60} s = ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) / 60} m ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) % 60} s\n" +
-                                "$opponentName moves' average time: ${opponentStatistics.round1AverageTime / 60} m ${opponentStatistics.round1AverageTime % 60} s + ${opponentStatistics.round2AverageTime / 60} m ${opponentStatistics.round2AverageTime % 60} s = ${(opponentStatistics.round1AverageTime + opponentStatistics.round2AverageTime) / 60} m ${(opponentStatistics.round1AverageTime + opponentStatistics.round2AverageTime) % 60} s\n"
+                    if (round1stats != null && round2stats != null) {
+                        if (vm.selfPlayer == Player.FirstBlackPlayer) {
+                            statText =
+                                "$myName captured: ${round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured}\n" +
+                                        "$opponentName captured: ${round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured}\n" +
+                                        "Number of moves in round 1: ${round1stats.neutralStats.blackMoves}\n" +
+                                        "Number of moves in round 2: ${round2stats.neutralStats.blackMoves}\n" +
+                                        "Time: ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) / 60} m ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) % 60} s \n" +
+                                        "Your moves' average time in first round: ${String.format("%.4f", round1stats.neutralStats.blackAverageTime)} s\n" +
+                                        "Your moves' average time in second round: ${String.format("%.4f", round2stats.neutralStats.whiteAverageTime)} s\n"
+                        } else {
+                            statText =
+                                "$myName captured: ${round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured}\n" +
+                                        "$opponentName captured: ${round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured}\n" +
+                                        "Number of moves in round 1: ${round1stats.neutralStats.blackMoves}\n" +
+                                        "Number of moves in round 2: ${round2stats.neutralStats.blackMoves}\n" +
+                                        "Time: ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) / 60} m ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) % 60} s \n" +
+                                        "Your moves' average time in first round: ${String.format("%.4f", round1stats.neutralStats.whiteAverageTime)} s\n" +
+                                        "Your moves' average time in second round: ${String.format("%.4f", round2stats.neutralStats.blackAverageTime)} s\n"
+                        }
+                    }
                 } else {
-                    text =
-                        "You captured: ${playerStatistics.round1Captured} + ${playerStatistics.round2Captured} = ${playerStatistics.round1Captured + playerStatistics.round2Captured}\n" +
-                                "Opponent captured:  ${playerStatistics.round1OpponentCaptured} + ${playerStatistics.round2OpponentCaptured} = ${playerStatistics.round1OpponentCaptured + playerStatistics.round2OpponentCaptured}\n" +
-                                "Number of moves: ${playerStatistics.round1Moves} + ${playerStatistics.round2Moves} = ${playerStatistics.round1Moves + playerStatistics.round2Moves}\n" +
-                                "Time: ${playerStatistics.round1Time / 60} m ${playerStatistics.round1Time % 60} s + ${playerStatistics.round2Time / 60} m ${playerStatistics.round2Time % 60} s = ${(playerStatistics.round1Time + playerStatistics.round2Time) / 60} m ${(playerStatistics.round1Time + playerStatistics.round2Time) % 60} s\n" +
-                                "Your moves' average time: ${playerStatistics.round1AverageTime / 60} m ${playerStatistics.round1AverageTime % 60} s + ${playerStatistics.round2AverageTime / 60} m ${playerStatistics.round2AverageTime % 60} s = ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) / 60} m ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) % 60} s\n"
+                    if (round1stats != null && round2stats != null) {
+                        if (vm.selfPlayer == Player.FirstBlackPlayer) {
+                            statText =
+                                "You captured: ${round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured}\n" +
+                                        "Opponent captured: ${round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured}\n" +
+                                        "Number of moves in round 1: ${round1stats.neutralStats.blackMoves}\n" +
+                                        "Number of moves in round 2: ${round2stats.neutralStats.blackMoves}\n" +
+                                        "Time: ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime / 60)} m ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) % 60} s \n" +
+                                        "Your moves' average time in first round: ${String.format("%.4f", round1stats.neutralStats.blackAverageTime)} s\n" +
+                                        "Your moves' average time in second round: ${String.format("%.4f", round2stats.neutralStats.whiteAverageTime)} \ns"
+                        } else {
+                            statText =
+                                "You captured: ${round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured}\n" +
+                                        "Opponent captured: ${round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured}\n" +
+                                        "Number of moves in round 1: ${round1stats.neutralStats.blackMoves}\n" +
+                                        "Number of moves in round 2: ${round2stats.neutralStats.blackMoves}\n" +
+                                        "Time: ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) / 60} m ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) % 60} s \n" +
+                                        "Your moves' average time in first round: ${String.format("%.4f", round1stats.neutralStats.whiteAverageTime)} s\n" +
+                                        "Your moves' average time in second round: ${String.format("%.4f", round2stats.neutralStats.blackAverageTime)} s\n"
+                        }
+                    }
                 }
                 AlertDialog(onDismissRequest = {},
                     title = {
@@ -432,7 +475,7 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                     },
                     text = {
                         Text(
-                            text = text,
+                            text = statText,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -444,34 +487,64 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                         }) {
                             Text(text = "OK")
                         }
-                    })
+                    }
+                )
             }
 
 
             is GameResult.Winner -> {
-                val playerStatistics = vm.getPlayerStatistics(vm.selfPlayer)
+                val round1stats = vm.round1Statistics.collectAsState(initial = null).value
+                val round2stats = vm.round2Statistics.collectAsState(initial = null).value
+                var statText: String = ""
                 val winnerText = if (finalWinner.player == vm.selfPlayer) "You Win" else "You Lose"
-                val text: String
                 if (vm is MultiplayerGameBoardViewModel) {
                     val myName by vm.myUser.collectAsState(initial = "")
                     val opponentName by vm.opponentUser.collectAsState(initial = "")
-                    val opponentStatistics =
-                        vm.getPlayerStatistics(if (vm.selfPlayer == Player.FirstBlackPlayer) Player.FirstWhitePlayer else Player.FirstBlackPlayer)
-                    text =
-                        "$myName captured: ${playerStatistics.round1Captured} + ${playerStatistics.round2Captured} = ${playerStatistics.round1Captured + playerStatistics.round2Captured}\n" +
-                                "$opponentName captured:  ${playerStatistics.round1OpponentCaptured} + ${playerStatistics.round2OpponentCaptured} = ${playerStatistics.round1OpponentCaptured + playerStatistics.round2OpponentCaptured}\n" +
-                                "Number of moves: ${playerStatistics.round1Moves} + ${playerStatistics.round2Moves} = ${playerStatistics.round1Moves + playerStatistics.round2Moves}\n" +
-                                "Time: ${playerStatistics.round1Time / 60} m ${playerStatistics.round1Time % 60} s + ${playerStatistics.round2Time / 60} m ${playerStatistics.round2Time % 60} s = ${(playerStatistics.round1Time + playerStatistics.round2Time) / 60} m ${(playerStatistics.round1Time + playerStatistics.round2Time) % 60} s\n" +
-                                "$myName moves' average time: ${playerStatistics.round1AverageTime / 60} m ${playerStatistics.round1AverageTime % 60} s + ${playerStatistics.round2AverageTime / 60} m ${playerStatistics.round2AverageTime % 60} s = ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) / 60} m ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) % 60} s\n" +
-                                "$opponentName moves' average time: ${opponentStatistics.round1AverageTime / 60} m ${opponentStatistics.round1AverageTime % 60} s + ${opponentStatistics.round2AverageTime / 60} m ${opponentStatistics.round2AverageTime % 60} s = ${(opponentStatistics.round1AverageTime + opponentStatistics.round2AverageTime) / 60} m ${(opponentStatistics.round1AverageTime + opponentStatistics.round2AverageTime) % 60} s\n"
+                    if (round1stats != null && round2stats != null) {
+                        if (vm.selfPlayer == Player.FirstBlackPlayer) {
+                            statText =
+                                "$myName captured: ${round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured}\n" +
+                                    "$opponentName captured: ${round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured}\n" +
+                                    "Number of moves in round 1: ${round1stats.neutralStats.blackMoves}\n" +
+                                    "Number of moves in round 1: ${round2stats.neutralStats.blackMoves}\n" +
+                                    "Time: ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) / 60} m ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) % 60} s \n" +
+                                    "Your moves' average time in first round: ${String.format("%.4f", round1stats.neutralStats.blackAverageTime)} s\n" +
+                                    "Your moves' average time in second round: ${String.format("%.4f", round2stats.neutralStats.whiteAverageTime)} s\n"
+                        } else {
+                            statText =
+                                "$myName captured: ${round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured}\n" +
+                                    "$opponentName captured: ${round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured}\n" +
+                                    "Number of moves in round 1: ${round1stats.neutralStats.blackMoves}\n" +
+                                    "Number of moves in round 1: ${round2stats.neutralStats.blackMoves}\n" +
+                                    "Time: ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) / 60} m ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) % 60} s \n" +
+                                    "Your moves' average time in first round: ${String.format("%.4f", round1stats.neutralStats.whiteAverageTime)} s\n" +
+                                    "Your moves' average time in second round: ${String.format("%.4f", round2stats.neutralStats.blackAverageTime)} s\n"
+                        }
+                    }
                 } else {
-                    text =
-                        "You captured: ${playerStatistics.round1Captured} + ${playerStatistics.round2Captured} = ${playerStatistics.round1Captured + playerStatistics.round2Captured}\n" +
-                                "Opponent captured:  ${playerStatistics.round1OpponentCaptured} + ${playerStatistics.round2OpponentCaptured} = ${playerStatistics.round1OpponentCaptured + playerStatistics.round2OpponentCaptured}\n" +
-                                "Number of moves: ${playerStatistics.round1Moves} + ${playerStatistics.round2Moves} = ${playerStatistics.round1Moves + playerStatistics.round2Moves}\n" +
-                                "Time: ${playerStatistics.round1Time / 60} m ${playerStatistics.round1Time % 60} s + ${playerStatistics.round2Time / 60} m ${playerStatistics.round2Time % 60} s = ${(playerStatistics.round1Time + playerStatistics.round2Time) / 60} m ${(playerStatistics.round1Time + playerStatistics.round2Time) % 60} s\n" +
-                                "Your moves' average time: ${playerStatistics.round1AverageTime / 60} m ${playerStatistics.round1AverageTime % 60} s + ${playerStatistics.round2AverageTime / 60} m ${playerStatistics.round2AverageTime % 60} s = ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) / 60} m ${(playerStatistics.round1AverageTime + playerStatistics.round2AverageTime) % 60} s\n"
+                    if (round1stats != null && round2stats != null) {
+                        if (vm.selfPlayer == Player.FirstBlackPlayer) {
+                            statText =
+                                "You captured: ${round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured}\n" +
+                                        "Opponent captured: ${round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured}\n" +
+                                        "Number of moves in round 1: ${round1stats.neutralStats.blackMoves}\n" +
+                                        "Number of moves in round 1: ${round2stats.neutralStats.blackMoves}\n" +
+                                        "Time: ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) / 60} m ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) % 60} s \n" +
+                                        "Your moves' average time in first round: ${String.format("%.4f", round1stats.neutralStats.blackAverageTime)} s\n" +
+                                        "Your moves' average time in second round: ${String.format("%.4f", round2stats.neutralStats.whiteAverageTime)} s\n"
+                        } else {
+                            statText =
+                                "You captured: ${round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured}\n" +
+                                        "Opponent captured: ${round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured}\n" +
+                                        "Number of moves in round 1: ${round1stats.neutralStats.blackMoves}\n" +
+                                        "Number of moves in round 1: ${round2stats.neutralStats.blackMoves}\n" +
+                                        "Time: ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) / 60} m ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) % 60} s \n" +
+                                        "Your moves' average time in first round: ${String.format("%.4f", round1stats.neutralStats.whiteAverageTime)} s\n" +
+                                        "Your moves' average time in second round: ${String.format("%.4f", round2stats.neutralStats.blackAverageTime)} s\n"
+                        }
+                    }
                 }
+
                 AlertDialog(onDismissRequest = {},
                     title = {
                         Text(
@@ -482,7 +555,9 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                     },
                     text = {
                         Text(
-                            text = text
+                            text = statText,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
                         )
                     },
                     confirmButton = {
@@ -492,12 +567,14 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                         }) {
                             Text(text = "Ok")
                         }
-                    })
+                    }
+                )
 
             }
         }
     }
 }
+
 
 @Composable
 fun WinningRoundDialog(
@@ -512,26 +589,7 @@ fun WinningRoundDialog(
         null -> {}
 
         else -> {
-            val playerStatistics = vm.getPlayerStatistics(vm.selfPlayer)
-            val timeTaken: Int
-            val numOfMoves: Int
-            val selfCapturedPieces: Int
-            val opponentCapturedPieces: Int
-            val averageTimeTaken: Long
-
-            if (currentRoundCount == 0) {
-                timeTaken = playerStatistics.round1Time
-                numOfMoves = playerStatistics.round1Moves
-                selfCapturedPieces = playerStatistics.round1Captured
-                opponentCapturedPieces = playerStatistics.round1OpponentCaptured
-                averageTimeTaken = playerStatistics.round1AverageTime
-            } else {
-                timeTaken = playerStatistics.round2Time
-                numOfMoves = playerStatistics.round2Moves
-                selfCapturedPieces = playerStatistics.round2Captured
-                opponentCapturedPieces = playerStatistics.round2OpponentCaptured
-                averageTimeTaken = playerStatistics.round2AverageTime
-            }
+            val stats = vm.latestRoundStats.collectAsState(initial = null).value
 
             val roundCountText = if (currentRoundCount == 0) "First Round" else "Second Round"
             val winningStatusText =
@@ -547,15 +605,57 @@ fun WinningRoundDialog(
                         )
                     },
                     text = {
-                        Text(
-                            text = "You captured: $selfCapturedPieces\n" +
-                                    "Opponent captured: $opponentCapturedPieces\n" +
-                                    "Number of moves: $numOfMoves\n" +
-                                    "Time: ${timeTaken / 60} m ${timeTaken % 60} \n" +
-                                    "Your moves' average time: ${averageTimeTaken / 60} m ${averageTimeTaken % 60} s",
-                            modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Center
-                        )
+                        if (stats != null) {
+                            if (currentRoundCount == 0) {
+                                if (vm.selfPlayer == Player.FirstBlackPlayer) {
+                                    Text(
+                                        text = "You captured: ${stats.neutralStats.blackCaptured}\n" +
+                                                "Opponent captured: ${stats.neutralStats.whiteCaptured}\n" +
+                                                "Number of moves: ${stats.neutralStats.blackMoves}\n" +
+                                                "Time: ${stats.neutralStats.blackTime / 60} m ${stats.neutralStats.blackTime % 60} s \n" +
+                                                "Your moves' average time: ${String.format("%.4f", stats.neutralStats.blackAverageTime)} s",
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                                else {
+                                    Text(
+                                        text = "You captured: ${stats.neutralStats.whiteCaptured}\n" +
+                                                "Opponent captured: ${stats.neutralStats.blackCaptured}\n" +
+                                                "Number of moves: ${stats.neutralStats.whiteMoves}\n" +
+                                                "Time: ${stats.neutralStats.whiteTime / 60} m ${stats.neutralStats.whiteTime % 60} s \n" +
+                                                "Your moves' average time: ${String.format("%.4f", stats.neutralStats.whiteAverageTime)} s",
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textAlign = TextAlign.Center
+                                    )
+
+                                }
+                            }
+                            else {
+                                if (vm.selfPlayer == Player.FirstBlackPlayer) {
+                                    Text(
+                                        text = "You captured: ${stats.neutralStats.whiteCaptured}\n" +
+                                                "Opponent captured: ${stats.neutralStats.blackCaptured}\n" +
+                                                "Number of moves: ${stats.neutralStats.whiteMoves}\n" +
+                                                "Time: ${stats.neutralStats.whiteTime / 60} m ${stats.neutralStats.whiteTime % 60} s \n" +
+                                                "Your moves' average time: ${String.format("%.4f", stats.neutralStats.whiteAverageTime)} s",
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                                else {
+                                    Text(
+                                        text = "You captured: ${stats.neutralStats.blackCaptured}\n" +
+                                                "Opponent captured: ${stats.neutralStats.whiteCaptured}\n" +
+                                                "Number of moves: ${stats.neutralStats.blackMoves}\n" +
+                                                "Time: ${stats.neutralStats.blackTime / 60} m ${stats.neutralStats.blackTime % 60} s \n" +
+                                                "Your moves' average time: ${String.format("%.4f", stats.neutralStats.blackAverageTime)} s",
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                            }
+                        }
                     },
                     confirmButton = {
                         Button(onClick = {

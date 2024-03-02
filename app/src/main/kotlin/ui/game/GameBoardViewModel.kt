@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -28,9 +29,9 @@ import me.him188.ani.utils.logging.info
 import org.keizar.aiengine.AlgorithmAI
 import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.BuildConfig
-import org.keizar.android.client.GameDataService
 import org.keizar.android.client.SessionManager
 import org.keizar.android.client.UserService
+//import org.keizar.android.client.GameDataService
 import org.keizar.android.data.SavedState
 import org.keizar.android.data.SavedStateRepository
 import org.keizar.android.encode
@@ -48,18 +49,17 @@ import org.keizar.game.GameSession
 import org.keizar.game.Piece
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
-import org.keizar.game.statistics.getStatistics
 import org.keizar.utils.communication.account.User
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.GameData
 import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
-import org.keizar.utils.communication.game.PlayerStatistics
-import org.keizar.utils.communication.game.RoundStatistics
+import org.keizar.utils.communication.game.RoundStats
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
+import org.keizar.android.client.GameDataService
 
 interface GameBoardViewModel : HasBackgroundScope {
     @Stable
@@ -151,16 +151,18 @@ interface GameBoardViewModel : HasBackgroundScope {
 
     @Stable
     val singlePlayerMode: Boolean
-    
+
     @Stable
     val sessionManager: SessionManager
-    
+
     @Stable
-    val round1Statistics: RoundStatistics
-    
+    var round1Statistics: Flow<RoundStats>
+
     @Stable
-    val round2Statistics: RoundStatistics
-    
+    var round2Statistics: Flow<RoundStats>
+
+    @Stable
+    val latestRoundStats: Flow<RoundStats>
 
 
     // clicking
@@ -224,7 +226,6 @@ interface GameBoardViewModel : HasBackgroundScope {
 
     fun undo()
 
-    fun getPlayerStatistics(player: Player): PlayerStatistics
 
 
     suspend fun removeSavedState() {}
@@ -248,8 +249,8 @@ sealed class PlayableGameBoardViewModel(
     game: GameSession,
     selfPlayer: Player,
 ) : BaseGameBoardViewModel(game, selfPlayer) {
-    
-    fun saveResults() {
+
+    suspend fun saveResults() {
         var opponentName : String = ""
         val userName = sessionManager.self.value?.username ?: ""
         val gameDataService: GameDataService by inject()
@@ -260,12 +261,12 @@ sealed class PlayableGameBoardViewModel(
         } else {
             opponentName = "Computer"
         }
-        val gameData = GameData(round1Statistics, round2Statistics, startConfiguration.encode(), opponentName, userName, Instant.now().toString())
+        val gameData = GameData(round1Statistics.first(), round2Statistics.first(), startConfiguration.encode(), opponentName, userName, Instant.now().toString())
         this.launchInBackground {
             gameDataService.sendGameData(gameData)
         }
     }
-    
+
 }
 
 class SinglePlayerGameBoardViewModel(
@@ -277,7 +278,7 @@ class SinglePlayerGameBoardViewModel(
     selfPlayer,
 ), KoinComponent {
     private val savedStateRepository: SavedStateRepository by inject()
-    private val GameDataService: GameDataService by inject()
+//    private val GameDataService: GameDataService by inject()
 
     private val gameAi =
         when (difficulty) {
@@ -354,7 +355,6 @@ class MultiplayerGameBoardViewModel(
             difficulty = Difficulty.EASY,
             layoutSeed = boardProperties.seed ?: 0,
         )
-    
 
     override val singlePlayerMode = false
 
@@ -481,13 +481,19 @@ abstract class BaseGameBoardViewModel(
 
     @Stable
     override val singlePlayerMode = true
-    
+
     @Stable
     override val sessionManager: SessionManager by inject()
-    
-    // TODO: Implement this
-    override val round1Statistics: RoundStatistics = RoundStatistics(0)
-    override val round2Statistics: RoundStatistics = RoundStatistics(0)
+
+    override var round1Statistics: Flow<RoundStats> = game.getRoundStats(0)
+
+    override var round2Statistics: Flow<RoundStats> = game.getRoundStats(1)
+
+    override val latestRoundStats: Flow<RoundStats>
+        get() {
+            val stats =  game.currentRoundNo.flatMapLatest { game.getRoundStats(it) }
+            return stats
+        }
 
     @Stable
     override val availablePositions: SharedFlow<List<BoardPos>?> =
@@ -654,10 +660,6 @@ abstract class BaseGameBoardViewModel(
         }
     }
 
-    override fun getPlayerStatistics(player: Player): PlayerStatistics {
-        return game.getStatistics(player)
-    }
-    
 
 }
 
