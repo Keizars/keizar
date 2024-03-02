@@ -19,8 +19,10 @@ class MongoUserDbControl(
         userId: String,
         newUsername: String?,
         newNickname: String?,
+        passwordHash: String?,
         avatarUrl: String?
     ): Boolean {
+        // TODO: ensure that username does not clash
         return userTable.updateOne(
             filter = Filters.eq("_id", userId),
             update = Updates.combine(listOfNotNull(
@@ -29,6 +31,9 @@ class MongoUserDbControl(
                 },
                 newNickname?.let {
                     Updates.set("nickname", it)
+                },
+                passwordHash?.let {
+                    Updates.set("hash", it)
                 },
                 avatarUrl?.let {
                     Updates.set("avatarUrl", it)

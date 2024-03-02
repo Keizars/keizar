@@ -20,6 +20,7 @@ class InMemoryUserDbControl : AbstractUserDbControl() {
         userId: String,
         newUsername: String?,
         newNickname: String?,
+        passwordHash: String?,
         avatarUrl: String?
     ): Boolean {
         return data {
@@ -29,6 +30,7 @@ class InMemoryUserDbControl : AbstractUserDbControl() {
                     it.copy(
                         username = newUsername ?: it.username,
                         nickname = newNickname ?: it.nickname,
+                        hash = passwordHash ?: it.hash,
                         avatarUrl = avatarUrl ?: it.avatarUrl
                     )
                 )

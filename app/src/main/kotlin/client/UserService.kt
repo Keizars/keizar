@@ -2,10 +2,15 @@ package org.keizar.android.client
 
 import org.keizar.utils.communication.account.AuthRequest
 import org.keizar.utils.communication.account.AuthResponse
+import org.keizar.utils.communication.account.ChangePasswordRequest
+import org.keizar.utils.communication.account.ChangePasswordResponse
+import org.keizar.utils.communication.account.EditUserRequest
+import org.keizar.utils.communication.account.EditUserResponse
 import org.keizar.utils.communication.account.User
 import org.keizar.utils.communication.account.UsernameValidityResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -48,4 +53,10 @@ interface UserService {
 
     @GET("users/{username}")
     suspend fun getUser(@Path("username") username: String): User
+
+    @PATCH("users/me")
+    suspend fun editUser(@Body request: EditUserRequest): EditUserResponse
+
+    @POST("users/me/password")
+    suspend fun changePassword(@Body request: ChangePasswordRequest): ChangePasswordResponse
 }

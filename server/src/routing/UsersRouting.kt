@@ -6,9 +6,11 @@ import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.NotFoundException
 import io.ktor.server.request.contentType
+import io.ktor.server.request.receive
 import io.ktor.server.request.receiveStream
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
+import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
 import io.ktor.server.routing.route
@@ -16,8 +18,13 @@ import io.ktor.server.routing.routing
 import io.ktor.server.util.getOrFail
 import org.keizar.server.ServerContext
 import org.keizar.server.utils.getUserId
+import org.keizar.utils.communication.account.ChangePasswordRequest
+import org.keizar.utils.communication.account.ChangePasswordResponse
+import org.keizar.utils.communication.account.EditUserRequest
+import org.keizar.utils.communication.account.EditUserResponse
 import org.keizar.utils.communication.account.User
 import org.keizar.utils.communication.account.UsernameValidityResponse
+import org.solvo.server.modules.AuthDigest
 
 fun Application.usersRouting(context: ServerContext) {
     val accounts = context.accounts
@@ -52,6 +59,23 @@ fun Application.usersRouting(context: ServerContext) {
                     }
 
                     call.respond(HttpStatusCode.OK)
+                }
+                patch("/me") {
+                    val uid = getUserId() ?: return@patch
+                    val request = call.receive<EditUserRequest>()
+                    accounts.updateInfo(
+                        uid,
+                        newUsername = request.username,
+                        newNickname = request.nickname,
+                    )
+                    call.respond(EditUserResponse(success = true))
+                }
+                post("/me/password") {
+                    val uid = getUserId() ?: return@post
+                    val request = call.receive<ChangePasswordRequest>()
+                    val hash = AuthDigest(request.password)
+                    accounts.updateInfo(uid, passwordHash = hash.toString(Charsets.UTF_8))
+                    call.respond(ChangePasswordResponse(success = true))
                 }
             }
             get("/{username}") {

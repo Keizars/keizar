@@ -22,6 +22,12 @@ interface AccountModule {
     suspend fun getUser(userId: UUID): User?
     suspend fun getUserByUsername(name: String): User?
     suspend fun uploadNewAvatar(uid: UUID, input: InputStream, contentType: ContentType)
+    suspend fun updateInfo(
+        uid: UUID,
+        newUsername: String? = null,
+        newNickname: String? = null,
+        passwordHash: String? = null,
+    )
 }
 
 class AccountModuleImpl(
@@ -109,6 +115,15 @@ class AccountModuleImpl(
         database.user.update(
             user.id,
             avatarUrl = newUrl
+        )
+    }
+
+    override suspend fun updateInfo(uid: UUID, newUsername: String?, newNickname: String?, passwordHash: String?) {
+        database.user.update(
+            uid.toString(),
+            newUsername = newUsername,
+            newNickname = newNickname,
+            passwordHash = passwordHash
         )
     }
 }

@@ -8,6 +8,7 @@ interface UserDbControl {
         userId: String,
         newUsername: String? = null,
         newNickname: String? = null,
+        passwordHash: String? = null,
         avatarUrl: String? = null,
     ): Boolean
 
