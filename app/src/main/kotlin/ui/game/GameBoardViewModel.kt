@@ -250,8 +250,8 @@ sealed class PlayableGameBoardViewModel(
 ) : BaseGameBoardViewModel(game, selfPlayer) {
 
     suspend fun saveResults() {
-        var opponentName : String = ""
-        val userName = sessionManager.self.value?.username ?: ""
+        var opponentName : String? = null
+        val userName = sessionManager.self.value?.username
         val gameDataService: GameDataService by inject()
         if (this is MultiplayerGameBoardViewModel) {
             this.launchInBackground {
