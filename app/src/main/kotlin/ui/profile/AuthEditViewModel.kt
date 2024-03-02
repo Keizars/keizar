@@ -3,24 +3,16 @@ package org.keizar.android.ui.profile
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.keizar.android.client.SessionManager
-import org.keizar.android.client.StreamingService
 import org.keizar.android.client.UserService
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.utils.communication.LiteralChecker
 import org.keizar.utils.communication.account.AuthStatus
 import org.keizar.utils.communication.account.ModelConstraints
-import org.keizar.utils.communication.account.User
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.io.File
-import java.io.InputStream
 
 class AuthEditViewModel(
     isPasswordEdit: Boolean,
@@ -28,7 +20,6 @@ class AuthEditViewModel(
     private val userService: UserService by inject()
     private val sessionManager: SessionManager by inject()
     private val username = sessionManager.self.value?.username
-    private val streamingService: StreamingService by inject()
     private val curNickname: String = sessionManager.self.value?.nickname ?: ""
 
     val isPasswordEdit = MutableStateFlow(isPasswordEdit)
@@ -80,25 +71,6 @@ class AuthEditViewModel(
 
         return withTimeout(5000) {
             doAuth(username, password)
-        }
-    }
-
-    val self: SharedFlow<User> = sessionManager.token.mapLatest {
-        userService.self()
-    }.shareInBackground()
-    suspend fun uploadAvatar(avatar: InputStream) {
-        val temp = withContext(Dispatchers.IO) {
-            File.createTempFile("avatar", "tmp")
-        }
-        try {
-            avatar.use { input ->
-                temp.outputStream().use { output ->
-                    input.copyTo(output)
-                }
-            }
-            streamingService.uploadAvatar(temp)
-        } finally {
-            temp.delete()
         }
     }
 
