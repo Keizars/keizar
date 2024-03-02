@@ -1,19 +1,28 @@
 package org.keizar.android.client
+
 import org.keizar.utils.communication.game.GameData
-import org.keizar.utils.communication.game.GameDataRequestData
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
 
 interface GameDataService {
-    @POST("game/data")
-    suspend fun sendGameData(@Body gameData: GameData): Boolean
-    
-    @GET("game/data")
-    suspend fun getGameData(@Body userName: String): List<GameData>
-    
-    @DELETE("game/data")
-    suspend fun deleteGameData(@Body gameDataRequestData: GameDataRequestData): Boolean
-    
+    /**
+     * Uploads a game data to the server.
+     */
+    @POST("games")
+    suspend fun sendGameData(@Body gameData: GameData)
+
+    /**
+     * Retrieves all the games of the user currently logged in.
+     */
+    @GET("games")
+    suspend fun getGames(): List<GameData>
+
+    /**
+     * Deletes a game from the server.
+     */
+    @DELETE("games/{id}")
+    suspend fun deleteGame(@Path("id") id: String)
 }
