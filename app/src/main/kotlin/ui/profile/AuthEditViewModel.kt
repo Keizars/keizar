@@ -70,11 +70,19 @@ class AuthEditViewModel(
         val password = password.value
 
         return withTimeout(5000) {
-            doAuth(username, password)
+            doPasswordUpdate(username, password)
         }
     }
 
-    private suspend fun doAuth(username: String?, newPassword: String): Boolean {
+    private suspend fun doPasswordUpdate(username: String?, newPassword: String): Boolean {
+
+        val user =
+            username?.let { userService.getUser(it) }   // TODO: 2024/3/1 Change password and login in
+
+        return false
+    }
+
+    private suspend fun doNicknameUpdate(username: String?, nickname: String): Boolean {
 
         val user =
             username?.let { userService.getUser(it) }   // TODO: 2024/3/1 Change password and login in
