@@ -14,10 +14,14 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class AuthEditViewModel(
+    isPasswordEdit: Boolean,
 ) : AbstractViewModel(), KoinComponent {
     private val userService: UserService by inject()
     private val sessionManager: SessionManager by inject()
     private val username = sessionManager.self.value?.username
+    private val nickname = sessionManager.self.value?.nickname
+
+    val isPasswordEdit = MutableStateFlow(isPasswordEdit)
 
     private val _password: MutableState<String> = mutableStateOf("")
     val password: State<String> get() = _password
@@ -31,7 +35,6 @@ class AuthEditViewModel(
 
 
     val isProcessing: MutableStateFlow<Boolean> = MutableStateFlow(false)
-    val agreementChecked: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
     fun setPassword(password: String) {
         flushErrors()
@@ -64,6 +67,12 @@ class AuthEditViewModel(
         return false
     }
 
+    fun onClickSwitch() {
+        flushErrors()
+        if (isProcessing.value) return
+
+        isPasswordEdit.value = !isPasswordEdit.value
+    }
     private fun checkInputs(): Boolean {
         val password = password.value
         if (password.isEmpty()) {

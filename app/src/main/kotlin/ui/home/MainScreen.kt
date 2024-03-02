@@ -63,7 +63,6 @@ import org.keizar.android.ui.game.mp.MultiplayerGameScene
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
 import org.keizar.android.ui.game.mp.room.PrivateRoomScene
 import org.keizar.android.ui.game.sp.SinglePlayerGameScene
-import org.keizar.android.ui.profile.AuthEditPage
 import org.keizar.android.ui.profile.AuthEditScene
 import org.keizar.android.ui.profile.AuthScene
 import org.keizar.android.ui.profile.ProfileScene
@@ -322,7 +321,7 @@ fun MainScreen() {
             "profile/edit",
         ) {entry ->
             AuthEditScene(
-                initialIsRegister = entry.arguments?.getString("mode") == "register",
+                initIsPasswordEdit = false,
                 onClickBack = {
                     if (navController.currentBackStackEntry != entry) {
                         return@AuthEditScene
