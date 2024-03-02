@@ -506,7 +506,7 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                                 "$myName captured: ${round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured}\n" +
                                     "$opponentName captured: ${round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured}\n" +
                                     "Number of moves in round 1: ${round1stats.neutralStats.blackMoves}\n" +
-                                    "Number of moves in round 1: ${round2stats.neutralStats.blackMoves}\n" +
+                                    "Number of moves in round 2: ${round2stats.neutralStats.blackMoves}\n" +
                                     "Time: ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) / 60} m ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) % 60} s \n" +
                                     "Your moves' average time in first round: ${String.format("%.4f", round1stats.neutralStats.blackAverageTime)} s\n" +
                                     "Your moves' average time in second round: ${String.format("%.4f", round2stats.neutralStats.whiteAverageTime)} s\n"
@@ -515,7 +515,7 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                                 "$myName captured: ${round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured}\n" +
                                     "$opponentName captured: ${round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured}\n" +
                                     "Number of moves in round 1: ${round1stats.neutralStats.blackMoves}\n" +
-                                    "Number of moves in round 1: ${round2stats.neutralStats.blackMoves}\n" +
+                                    "Number of moves in round 2: ${round2stats.neutralStats.blackMoves}\n" +
                                     "Time: ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) / 60} m ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) % 60} s \n" +
                                     "Your moves' average time in first round: ${String.format("%.4f", round1stats.neutralStats.whiteAverageTime)} s\n" +
                                     "Your moves' average time in second round: ${String.format("%.4f", round2stats.neutralStats.blackAverageTime)} s\n"
@@ -528,7 +528,7 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                                 "You captured: ${round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured}\n" +
                                         "Opponent captured: ${round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured}\n" +
                                         "Number of moves in round 1: ${round1stats.neutralStats.blackMoves}\n" +
-                                        "Number of moves in round 1: ${round2stats.neutralStats.blackMoves}\n" +
+                                        "Number of moves in round 2: ${round2stats.neutralStats.blackMoves}\n" +
                                         "Time: ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) / 60} m ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) % 60} s \n" +
                                         "Your moves' average time in first round: ${String.format("%.4f", round1stats.neutralStats.blackAverageTime)} s\n" +
                                         "Your moves' average time in second round: ${String.format("%.4f", round2stats.neutralStats.whiteAverageTime)} s\n"
@@ -537,7 +537,7 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                                 "You captured: ${round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured}\n" +
                                         "Opponent captured: ${round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured}\n" +
                                         "Number of moves in round 1: ${round1stats.neutralStats.blackMoves}\n" +
-                                        "Number of moves in round 1: ${round2stats.neutralStats.blackMoves}\n" +
+                                        "Number of moves in round 2: ${round2stats.neutralStats.blackMoves}\n" +
                                         "Time: ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) / 60} m ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) % 60} s \n" +
                                         "Your moves' average time in first round: ${String.format("%.4f", round1stats.neutralStats.whiteAverageTime)} s\n" +
                                         "Your moves' average time in second round: ${String.format("%.4f", round2stats.neutralStats.blackAverageTime)} s\n"
