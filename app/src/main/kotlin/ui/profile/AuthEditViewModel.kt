@@ -17,7 +17,7 @@ class AuthEditViewModel(
 ) : AbstractViewModel(), KoinComponent {
     private val userService: UserService by inject()
     private val sessionManager: SessionManager by inject()
-    val username = sessionManager.self.value?.username
+    private val username = sessionManager.self.value?.username
 
     private val _password: MutableState<String> = mutableStateOf("")
     val password: State<String> get() = _password
