@@ -109,18 +109,6 @@ fun AuthEditPage(
         val passwordError by viewModel.passwordError.collectAsStateWithLifecycle()
         val verifyPasswordError by viewModel.verifyPasswordError.collectAsStateWithLifecycle()
 
-        Box(
-            modifier = Modifier
-                .padding(bottom = 64.dp)
-                .widthIn(max = 256.dp), contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.keizar_icon),
-                contentDescription = "Keizar Icon",
-                tint = Color.Unspecified
-            )
-        }
-
 
         Row(
             modifier = Modifier.padding(10.dp),

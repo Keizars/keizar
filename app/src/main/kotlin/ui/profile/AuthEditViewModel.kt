@@ -17,7 +17,7 @@ class AuthEditViewModel(
 ) : AbstractViewModel(), KoinComponent {
     private val userService: UserService by inject()
     private val sessionManager: SessionManager by inject()
-    val username = sessionManager.self.value!!.username
+    val username = sessionManager.self.value?.username
 
     private val _password: MutableState<String> = mutableStateOf("")
     val password: State<String> get() = _password
@@ -56,9 +56,10 @@ class AuthEditViewModel(
         }
     }
 
-    private suspend fun doAuth(username: String, newPassword: String): Boolean {
+    private suspend fun doAuth(username: String?, newPassword: String): Boolean {
 
-        val user = userService.getUser(username)   // TODO: 2024/3/1 Change password and login in
+        val user =
+            username?.let { userService.getUser(it) }   // TODO: 2024/3/1 Change password and login in
 
         return false
     }
