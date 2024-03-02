@@ -99,7 +99,6 @@ class AccountModuleImpl(
 
     @OptIn(ExperimentalStdlibApi::class)
     override suspend fun uploadNewAvatar(uid: UUID, input: InputStream, contentType: ContentType) {
-        val user = database.user.getUserById(uid.toString()) ?: throw IllegalArgumentException("User not found")
         val file = withContext(Dispatchers.IO) {
             File.createTempFile("avatar", "tmp").apply {
                 this.outputStream().use { input.copyTo(it) }
@@ -113,7 +112,7 @@ class AccountModuleImpl(
         }
 
         database.user.update(
-            user.id,
+            uid.toString(),
             avatarUrl = newUrl
         )
     }
