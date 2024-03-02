@@ -8,6 +8,7 @@ import kotlinx.coroutines.withTimeout
 import org.keizar.android.client.SessionManager
 import org.keizar.android.client.UserService
 import org.keizar.android.ui.foundation.AbstractViewModel
+import org.keizar.utils.communication.LiteralChecker
 import org.keizar.utils.communication.account.AuthStatus
 import org.keizar.utils.communication.account.ModelConstraints
 import org.koin.core.component.KoinComponent
@@ -19,9 +20,12 @@ class AuthEditViewModel(
     private val userService: UserService by inject()
     private val sessionManager: SessionManager by inject()
     private val username = sessionManager.self.value?.username
-    private val nickname = sessionManager.self.value?.nickname
+    val currAvatar = sessionManager.self.value?.avatarUrl
 
     val isPasswordEdit = MutableStateFlow(isPasswordEdit)
+
+    private val _nickname: MutableState<String> = mutableStateOf("")
+    val nickname: State<String> get() = _password
 
     private val _password: MutableState<String> = mutableStateOf("")
     val password: State<String> get() = _password
@@ -32,10 +36,17 @@ class AuthEditViewModel(
     private val nicknameValid: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val passwordError: MutableStateFlow<String?> = MutableStateFlow(null)
     val verifyPasswordError: MutableStateFlow<String?> = MutableStateFlow(null)
+    val nicknameError: MutableStateFlow<String?> = MutableStateFlow(null)
 
 
     val isProcessing: MutableStateFlow<Boolean> = MutableStateFlow(false)
 
+    fun setNickname(username: String) {
+        flushErrors()
+        _nickname.value = username.trim()
+        val validity = LiteralChecker.checkUsername(username)
+        nicknameError.value = validity.render()
+    }
     fun setPassword(password: String) {
         flushErrors()
         _password.value = password
@@ -94,6 +105,7 @@ class AuthEditViewModel(
     private fun flushErrors() {
         passwordError.value = null
         nicknameValid.value = false
+        nicknameError.value = null
     }
 }
 

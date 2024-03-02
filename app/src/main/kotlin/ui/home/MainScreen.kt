@@ -332,7 +332,10 @@ fun MainScreen() {
                         navController.popBackStack()
                     }
                 },
-                onSuccess = {
+                onSuccessPasswordEdit = {
+                    navController.navigate("auth/login")
+                },
+                onSuccessNicknameEdit = {
                     navController.popBackStack()
                 },
             )

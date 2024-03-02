@@ -50,7 +50,8 @@ import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
 fun AuthEditScene(
     initIsPasswordEdit: Boolean,
     onClickBack: () -> Unit,
-    onSuccess: () -> Unit,
+    onSuccessPasswordEdit: () -> Unit,
+    onSuccessNicknameEdit: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val vm = remember(initIsPasswordEdit) { AuthEditViewModel(true) }
@@ -78,7 +79,8 @@ fun AuthEditScene(
         ) {
             AuthEditPage(
                 viewModel = vm,
-                onSuccess = onSuccess,
+                onSuccessPasswordEdit = onSuccessPasswordEdit,
+                onSuccessNicknameEdit = onSuccessNicknameEdit,
                 Modifier.fillMaxSize()
             )
         }
@@ -89,7 +91,8 @@ fun AuthEditScene(
 @Composable
 fun AuthEditPage(
     viewModel: AuthEditViewModel,
-    onSuccess: () -> Unit,
+    onSuccessPasswordEdit: () -> Unit,
+    onSuccessNicknameEdit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val isProcessing by viewModel.isProcessing.collectAsStateWithLifecycle()
@@ -111,6 +114,7 @@ fun AuthEditPage(
         ) {
         val passwordError by viewModel.passwordError.collectAsStateWithLifecycle()
         val verifyPasswordError by viewModel.verifyPasswordError.collectAsStateWithLifecycle()
+        val nicknameError by viewModel.nicknameError.collectAsStateWithLifecycle()
 
         // is password edit
         AnimatedVisibility(isPasswordEdit) {
@@ -170,6 +174,36 @@ fun AuthEditPage(
         }
 
         // is nickname and avatar edit
+        AnimatedVisibility(!isPasswordEdit) {
+            Row(
+                modifier = Modifier.padding(10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedTextField(
+                    value = viewModel.password.value,
+                    onValueChange = { viewModel.setNickname(it) },
+                    isError = (passwordError != null),
+                    label = { Text("New nickName") },
+                    shape = RoundedCornerShape(8.dp),
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Password,
+                    ),
+                    visualTransformation = PasswordVisualTransformation('*')
+                )
+            }
+        }
+        AnimatedVisibility(nicknameError != null) {
+            nicknameError?.let {
+                Text(
+                    text = it,
+                    fontSize = errorFontSize,
+                    color = Color.Red,
+                )
+            }
+        }
+        AnimatedVisibility(!isPasswordEdit) {
+
+        }
 
 
         Button(
@@ -183,7 +217,11 @@ fun AuthEditPage(
                         }
                         if (result) {
                             withContext(Dispatchers.Main) {
-                                onSuccess()
+                                if (isPasswordEdit) {
+                                    onSuccessPasswordEdit()
+                                } else {
+                                    onSuccessNicknameEdit()
+                                }
                             }
                         }
                     }
@@ -230,7 +268,8 @@ private fun PreviewNickname() {
         AuthEditScene(
             initIsPasswordEdit = false,
             onClickBack = {},
-            onSuccess = {},
+            onSuccessPasswordEdit = {},
+            onSuccessNicknameEdit = {},
             Modifier
         )
     }
@@ -244,7 +283,8 @@ private fun PreviewPassword() {
         AuthEditScene(
             initIsPasswordEdit = true,
             onClickBack = {},
-            onSuccess = {},
+            onSuccessPasswordEdit = {},
+            onSuccessNicknameEdit = {},
             Modifier
         )
     }
