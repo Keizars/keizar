@@ -528,7 +528,43 @@ fun WinningRoundDialog(
                                                 "Opponent captured: ${stats.neutralStats.whiteCaptured}\n" +
                                                 "Number of moves: ${stats.neutralStats.blackMoves}\n" +
                                                 "Time: ${stats.neutralStats.blackTime / 60} m ${stats.neutralStats.blackTime % 60} s \n" +
-                                                "Your moves' average time: ${stats.neutralStats.blackAverageTime / 60} m ${stats.neutralStats.blackAverageTime % 60} s",
+                                                "Your moves' average time: ${String.format("%.4f", stats.neutralStats.blackAverageTime)} s s",
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                                else {
+                                    Text(
+                                        text = "You captured: ${stats.neutralStats.whiteCaptured}\n" +
+                                                "Opponent captured: ${stats.neutralStats.blackCaptured}\n" +
+                                                "Number of moves: ${stats.neutralStats.whiteMoves}\n" +
+                                                "Time: ${stats.neutralStats.whiteTime / 60} m ${stats.neutralStats.whiteTime % 60} s \n" +
+                                                "Your moves' average time: ${String.format("%.4f", stats.neutralStats.whiteAverageTime)} s s",
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textAlign = TextAlign.Center
+                                    )
+
+                                }
+                            }
+                            else {
+                                if (vm.selfPlayer == Player.FirstBlackPlayer) {
+                                    Text(
+                                        text = "You captured: ${stats.neutralStats.whiteCaptured}\n" +
+                                                "Opponent captured: ${stats.neutralStats.blackCaptured}\n" +
+                                                "Number of moves: ${stats.neutralStats.whiteMoves}\n" +
+                                                "Time: ${stats.neutralStats.whiteTime / 60} m ${stats.neutralStats.whiteTime % 60} s \n" +
+                                                "Your moves' average time: ${String.format("%.4f", stats.neutralStats.whiteAverageTime)} s s",
+                                        modifier = Modifier.fillMaxWidth(),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
+                                else {
+                                    Text(
+                                        text = "You captured: ${stats.neutralStats.blackCaptured}\n" +
+                                                "Opponent captured: ${stats.neutralStats.whiteCaptured}\n" +
+                                                "Number of moves: ${stats.neutralStats.blackMoves}\n" +
+                                                "Time: ${stats.neutralStats.blackTime / 60} m ${stats.neutralStats.blackTime % 60} s \n" +
+                                                "Your moves' average time: ${String.format("%.4f", stats.neutralStats.blackAverageTime)} s",
                                         modifier = Modifier.fillMaxWidth(),
                                         textAlign = TextAlign.Center
                                     )
