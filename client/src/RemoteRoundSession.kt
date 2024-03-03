@@ -7,6 +7,7 @@ import org.keizar.client.internal.GameSessionWsHandler
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import org.keizar.utils.communication.game.BoardPos
+import org.keizar.utils.communication.game.NeutralStats
 
 interface RemoteRoundSession: RoundSession
 
@@ -34,6 +35,10 @@ class RemoteRoundSessionImpl internal constructor(
         return round.move(from, to).also {
             if (it) websocketHandler.sendMove(from, to)
         }
+    }
+
+    override fun getNeutralStatistics(): NeutralStats {
+        return round.getNeutralStatistics()
     }
 }
 

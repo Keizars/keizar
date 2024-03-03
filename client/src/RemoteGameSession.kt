@@ -1,10 +1,12 @@
 package org.keizar.client
 
+import kotlinx.coroutines.flow.Flow
 import org.keizar.client.internal.GameSessionWsHandler
 import org.keizar.game.GameSession
 import org.keizar.game.RoundSessionImpl
 import org.keizar.game.snapshot.GameSnapshot
 import org.keizar.utils.communication.game.Player
+import org.keizar.utils.communication.game.RoundStats
 
 interface RemoteGameSession : GameSession {
     /**
@@ -53,4 +55,8 @@ class RemoteGameSessionImpl internal constructor(
 
     override fun replayCurrentRound(): Boolean = false
     override fun replayGame(): Boolean = false
+
+    override fun getRoundStats(roundNo: Int): Flow<RoundStats> {
+        return game.getRoundStats(roundNo)
+    }
 }
