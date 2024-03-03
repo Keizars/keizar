@@ -1,8 +1,11 @@
 package org.keizar.android.ui.foundation
 
+import androidx.annotation.UiThread
+import androidx.annotation.WorkerThread
 import androidx.compose.runtime.MutableState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.BufferOverflow
@@ -105,12 +108,48 @@ interface HasBackgroundScope {
 }
 
 
+/**
+ * Launches a new coroutine job in the background scope.
+ *
+ * Note that UI jobs are not allowed in this scope. To launch a UI job, use [launchInMain].
+ */
+fun <V : HasBackgroundScope> V.launchInBackground(
+    start: CoroutineStart = CoroutineStart.DEFAULT,
+    @WorkerThread block: suspend V.() -> Unit,
+): Job {
+    return backgroundScope.launch(start = start) {
+        block()
+    }
+}
+
+
+/**
+ * Launches a new coroutine job in the background scope.
+ *
+ * Note that UI jobs are not allowed in this scope. To launch a UI job, use [launchInMain].
+ */
 fun <V : HasBackgroundScope> V.launchInBackground(
     context: CoroutineContext = EmptyCoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
-    block: suspend V.() -> Unit,
+    @WorkerThread block: suspend V.() -> Unit,
 ): Job {
     return backgroundScope.launch(context, start) {
+        block()
+    }
+}
+
+/**
+ * Launches a new coroutine job in the UI scope.
+ *
+ * Note that you must not perform any costly operations in this scope, as this will block the UI.
+ * To perform costly computation, use [launchInBackground].
+ */
+fun <V : HasBackgroundScope> V.launchInMain(
+    context: CoroutineContext = EmptyCoroutineContext,
+    start: CoroutineStart = CoroutineStart.DEFAULT,
+    @UiThread block: suspend V.() -> Unit,
+): Job {
+    return backgroundScope.launch(context + Dispatchers.Main, start) {
         block()
     }
 }
