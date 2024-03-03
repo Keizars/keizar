@@ -16,11 +16,24 @@ class InMemoryGameDataControl: GameDataDBControl {
         mutex.withLock { return _data.block() }
     }
     override suspend fun addGameData(gameData: GameDataModel): Boolean {
-        return data { add(gameData) }
+        //add data if id is not already in the list or both userid is the same and time is the same
+        val success = data { !any { it.id == gameData.id || (it.userId1 == gameData.userId1
+                && it.userId2 == gameData.userId2 && it.timeStamp == gameData.timeStamp) } }
+        if (success) data { add(gameData) }
+        return success
     }
 
     override suspend fun removeGameData(gameDataId: UUID): Boolean{
-       return data { find { it.id == gameDataId }?.let { it.userSaved = false; true } ?: false }
+        return data {
+            find { it.id == gameDataId }?.let {
+                if (it.userSaved) {
+                    it.userSaved = false
+                    true
+                } else {
+                    false
+                }
+            } ?: false
+        }
     }
 
     override suspend fun getGameDataById(gameDataId: UUID): GameData {

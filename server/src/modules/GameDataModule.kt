@@ -7,7 +7,7 @@ import java.util.UUID
 
 
 interface GameDataModule {
-    suspend fun getGameData(userId: UUID): List<GameData>
+    suspend fun getGameDataByUsedID(userId: UUID): List<GameData>
     suspend fun addGameData(gameData: GameData): Boolean
     suspend fun removeGameData(id: UUID): Boolean
 }
@@ -15,7 +15,7 @@ interface GameDataModule {
 class GameDataModuleImpl (
     private val database: DatabaseManager,
 ) : GameDataModule {
-    override suspend fun getGameData(userId: UUID): List<GameData> {
+    override suspend fun getGameDataByUsedID(userId: UUID): List<GameData> {
         return database.gameData.getGameDataByUser(userId.toString())
     }
 

@@ -17,7 +17,23 @@ class MongoGameDataDbControl(
     private val gameDataTable: MongoCollection<GameDataModel>
 ): GameDataDBControl {
     override suspend fun addGameData(gameData: GameDataModel): Boolean {
-        return gameDataTable.insertOne(gameData).wasAcknowledged()
+        // add data if id not in list and username and time is not the same
+        return try {
+            val success = gameDataTable.find(
+                Filters.or(
+                    Filters.eq("id", gameData.id),
+                    Filters.and(
+                        Filters.eq("userId1", gameData.userId1),
+                        Filters.eq("userId2", gameData.userId2),
+                        Filters.eq("timeStamp", gameData.timeStamp)
+                    )
+                )
+            ).first()
+            false
+        } catch (e: NoSuchElementException) {
+            gameDataTable.insertOne(gameData)
+            true
+        }
     }
 
     override suspend fun removeGameData(gameDataId: UUID): Boolean {

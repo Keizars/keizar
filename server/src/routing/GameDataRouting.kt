@@ -1,6 +1,5 @@
 package org.keizar.server.routing
 
-import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
 import io.ktor.server.auth.authenticate
@@ -29,7 +28,7 @@ fun Application.GameDataRouting(context: ServerContext) {
 
                 get {
                     val userId = getUserId() ?: return@get
-                    call.respond(gameDataTable.getGameData(userId))
+                    call.respond(gameDataTable.getGameDataByUsedID(userId))
                 }
 
 
