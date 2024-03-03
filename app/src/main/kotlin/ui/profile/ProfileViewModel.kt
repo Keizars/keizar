@@ -30,6 +30,7 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     private val userService: UserService by inject()
     private val streamingService: StreamingService by inject()
     private val seedBankService: SeedBankService by inject()
+    val refresh: MutableState<Boolean> = mutableStateOf(false)
 
     /**
      * Current user's information.
@@ -78,11 +79,15 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     val nicknameError: MutableStateFlow<String?> = MutableStateFlow(null)
     fun showDialog() {
         showNicknameEditDialog.value = true
+        refresh.value = false
     }
 
     suspend fun confirmDialog() {
-        processedUpdate()
-        showNicknameEditDialog.value = false
+        val success = processedUpdate()
+        if (success) {
+            refresh.value = true
+            showNicknameEditDialog.value = false
+        }
     }
 
     fun cancelDialog() {
