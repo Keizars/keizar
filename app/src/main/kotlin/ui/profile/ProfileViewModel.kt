@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import org.keizar.android.client.GameDataService
 import org.keizar.android.client.SeedBankService
 import org.keizar.android.client.SessionManager
 import org.keizar.android.client.StreamingService
@@ -20,6 +21,7 @@ import org.keizar.utils.communication.account.AuthStatus
 import org.keizar.utils.communication.account.EditUserRequest
 import org.keizar.utils.communication.account.ModelConstraints
 import org.keizar.utils.communication.account.User
+import org.keizar.utils.communication.game.GameData
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
@@ -30,6 +32,7 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     private val userService: UserService by inject()
     private val streamingService: StreamingService by inject()
     private val seedBankService: SeedBankService by inject()
+    private val gameDataService: GameDataService by inject()
     val refresh: MutableState<Boolean> = mutableStateOf(false)
 
     /**
@@ -46,6 +49,9 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
         sessionManager.invalidateToken()
     }
 
+    suspend fun deleteGame(id: String) {
+        gameDataService.deleteGame(id)
+    }
     suspend fun removeSeed(seed: String) {
         allSeeds.value = allSeeds.value.filter { it != seed }
         seedBankService.removeSeed(seed)
@@ -72,6 +78,10 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
 
     val allSeeds: MutableStateFlow<List<String>> = time.map {
         seedBankService.getSeeds()
+    }.localCachedStateFlow(emptyList())
+    
+    val allGames: MutableStateFlow<List<GameData>> = time.map {
+        gameDataService.getGames()
     }.localCachedStateFlow(emptyList())
 
     val showNicknameEditDialog = mutableStateOf(false)
