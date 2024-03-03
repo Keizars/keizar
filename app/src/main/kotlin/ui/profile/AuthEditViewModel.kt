@@ -5,27 +5,17 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withTimeout
-import org.keizar.android.client.SessionManager
 import org.keizar.android.client.UserService
 import org.keizar.android.ui.foundation.AbstractViewModel
-import org.keizar.utils.communication.LiteralChecker
 import org.keizar.utils.communication.account.AuthStatus
+import org.keizar.utils.communication.account.ChangePasswordRequest
 import org.keizar.utils.communication.account.ModelConstraints
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class AuthEditViewModel(
-    isPasswordEdit: Boolean,
 ) : AbstractViewModel(), KoinComponent {
     private val userService: UserService by inject()
-    private val sessionManager: SessionManager by inject()
-    private val username = sessionManager.self.value?.username
-    private val curNickname: String = sessionManager.self.value?.nickname ?: ""
-
-    val isPasswordEdit = MutableStateFlow(isPasswordEdit)
-
-    private val _nickname: MutableState<String> = mutableStateOf("")
-    val nickname: State<String> get() = _password
 
     private val _password: MutableState<String> = mutableStateOf("")
     val password: State<String> get() = _password
@@ -36,26 +26,15 @@ class AuthEditViewModel(
     private val nicknameValid: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val passwordError: MutableStateFlow<String?> = MutableStateFlow(null)
     val verifyPasswordError: MutableStateFlow<String?> = MutableStateFlow(null)
-    val nicknameError: MutableStateFlow<String?> = MutableStateFlow(null)
 
 
     val isProcessing: MutableStateFlow<Boolean> = MutableStateFlow(false)
-
-    fun setNickname(username: String) {
-        flushErrors()
-        _nickname.value = username.trim()
-        val validity = LiteralChecker.checkUsername(username)
-        nicknameError.value = validity.render()
-    }
     fun setPassword(password: String) {
         flushErrors()
         _password.value = password
         passwordError.value = null
     }
 
-    fun getCurrentNickname(): String {
-        return curNickname
-    }
 
     fun setVerifyPassword(password: String) {
         flushErrors()
@@ -66,36 +45,17 @@ class AuthEditViewModel(
     suspend fun processedUpdate(): Boolean {
         if (!checkInputs()) return false
 
-        val username = username
         val password = password.value
 
         return withTimeout(5000) {
-            doPasswordUpdate(username, password)
+            doPasswordUpdate(password)
         }
     }
 
-    private suspend fun doPasswordUpdate(username: String?, newPassword: String): Boolean {
-
-        val user =
-            username?.let { userService.getUser(it) }   // TODO: 2024/3/1 Change password and login in
-
-        return false
+    private suspend fun doPasswordUpdate(newPassword: String): Boolean {
+        return userService.changePassword(ChangePasswordRequest(newPassword)).success
     }
 
-    private suspend fun doNicknameUpdate(username: String?, nickname: String): Boolean {
-
-        val user =
-            username?.let { userService.getUser(it) }   // TODO: 2024/3/1 Change password and login in
-
-        return false
-    }
-
-    fun onClickSwitch() {
-        flushErrors()
-        if (isProcessing.value) return
-
-        isPasswordEdit.value = !isPasswordEdit.value
-    }
     private fun checkInputs(): Boolean {
         val password = password.value
         if (password.isEmpty()) {
@@ -117,7 +77,6 @@ class AuthEditViewModel(
     private fun flushErrors() {
         passwordError.value = null
         nicknameValid.value = false
-        nicknameError.value = null
     }
 }
 

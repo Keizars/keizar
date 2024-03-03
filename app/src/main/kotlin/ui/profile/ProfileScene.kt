@@ -21,18 +21,23 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DropdownMenuItem
+import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -74,7 +79,7 @@ import org.keizar.game.Role
 fun ProfileScene(
     vm: ProfileViewModel,
     onClickBack: () -> Unit,
-    onClickEdit: () -> Unit,
+    onClickPasswordEdit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -112,6 +117,19 @@ fun ProfileScene(
                                 )
                             }
                         )
+                        DropdownMenuItem(
+                            onClick = {
+                                showDropdown = false
+                                onClickPasswordEdit()
+                            },
+                            text = { Text(text = "Change Password") },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.AutoMirrored.Filled.Login,
+                                    contentDescription = "Password",
+                                )
+                            }
+                        )
                     }
                     IconButton(onClick = { showDropdown = !showDropdown }) {
                         Icon(
@@ -129,7 +147,6 @@ fun ProfileScene(
         ) {
             ProfilePage(
                 vm = vm,
-                onClickEdit = onClickEdit,
                 Modifier.fillMaxSize()
             )
         }
@@ -139,7 +156,6 @@ fun ProfileScene(
 @Composable
 fun ProfilePage(
     vm: ProfileViewModel,
-    onClickEdit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val self by vm.self.collectAsStateWithLifecycle(null)
@@ -188,7 +204,7 @@ fun ProfilePage(
                         modifier = Modifier
                             .padding(start = 12.dp)
                             .size(20.dp)
-                            .clickable(onClick = onClickEdit)
+                            .clickable(onClick = { vm.showDialog() })
                     ) {
                         Icon(
                             Icons.Default.Edit,
@@ -244,6 +260,9 @@ fun ProfilePage(
             )
         }
 
+        if (vm.showNicknameEditDialog.value) {
+            NicknameEditDialog(vm = vm)
+        }
         HorizontalPager(state = pagerState) {
             Column(Modifier.fillMaxSize()) {
                 when (it) {
@@ -254,6 +273,42 @@ fun ProfilePage(
             }
         }
     }
+}
+
+@Composable
+fun NicknameEditDialog(modifier: Modifier = Modifier, vm: ProfileViewModel) {
+    val nicknameError by vm.nicknameError.collectAsStateWithLifecycle()
+    AlertDialog(onDismissRequest = {},
+        title = {
+            Text(
+                text = "Edit Nickname",
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        },
+        text = {
+            OutlinedTextField(
+                value = vm.nickname.value,
+                onValueChange = { vm.setNickname(it) },
+                isError = (nicknameError != null),
+                label = { Text("New nickname") },
+                shape = RoundedCornerShape(8.dp),
+            )
+        },
+        confirmButton = {
+            Button(onClick = {
+                vm.launchInBackground { vm.confirmDialog() }
+            }) {
+                Text(text = "OK")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = {
+                vm.cancelDialog()
+            }) {
+                Text(text = "Cancel")
+            }
+        })
 }
 
 @Composable
@@ -367,7 +422,7 @@ private fun Statistics(modifier: Modifier = Modifier) {
 @Composable
 private fun PreviewProfilePage() {
     ProvideCompositionalLocalsForPreview {
-        ProfileScene(ProfileViewModel(), onClickBack = {}, onClickEdit = {})
+        ProfileScene(ProfileViewModel(), onClickBack = {}, onClickPasswordEdit = {})
     }
 }
 
@@ -384,4 +439,11 @@ private fun PreviewSavedBoardCard() {
             )
         ), vm = vm
     )
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PreviewDialog() {
+    val vm = ProfileViewModel()
+    NicknameEditDialog(vm = vm)
 }

@@ -1,16 +1,24 @@
 package org.keizar.android.ui.profile
 
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.keizar.android.client.SeedBankService
 import org.keizar.android.client.SessionManager
 import org.keizar.android.client.StreamingService
 import org.keizar.android.client.UserService
 import org.keizar.android.ui.foundation.AbstractViewModel
+import org.keizar.utils.communication.LiteralChecker
+import org.keizar.utils.communication.account.AuthStatus
+import org.keizar.utils.communication.account.EditUserRequest
+import org.keizar.utils.communication.account.ModelConstraints
 import org.keizar.utils.communication.account.User
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -61,4 +69,56 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     val allSeeds: MutableStateFlow<List<String>> = time.map {
         seedBankService.getSeeds()
     }.localCachedStateFlow(emptyList())
+
+    val showNicknameEditDialog = mutableStateOf(false)
+
+    private val _nickname: MutableState<String> = mutableStateOf("")
+    val nickname: State<String> get() = _nickname
+
+    val nicknameError: MutableStateFlow<String?> = MutableStateFlow(null)
+    fun showDialog() {
+        showNicknameEditDialog.value = true
+    }
+
+    suspend fun confirmDialog() {
+        processedUpdate()
+        showNicknameEditDialog.value = false
+    }
+
+    fun cancelDialog() {
+        showNicknameEditDialog.value = false
+        _nickname.value = ""
+    }
+
+    private suspend fun updateNickname(): Boolean {
+        return userService.editUser(EditUserRequest(nickname = nickname.value)).success
+    }
+
+    private suspend fun processedUpdate(): Boolean {
+        return withTimeout(5000) {
+            updateNickname()
+        }
+    }
+
+
+    fun setNickname(username: String) {
+        flushErrors()
+        _nickname.value = username.trim()
+        val validity = LiteralChecker.checkUsername(username)
+        nicknameError.value = validity.render()
+    }
+    private fun flushErrors() {
+        nicknameError.value = null
+    }
+
+    private fun AuthStatus.render(): String? {
+        return when (this) {
+            AuthStatus.INVALID_USERNAME -> "Must consist of English characters, digits, '-' or '_'"
+            AuthStatus.USERNAME_TOO_LONG -> "Nickname is too long. Maximum length is ${ModelConstraints.USERNAME_MAX_LENGTH} characters"
+            AuthStatus.DUPLICATED_USERNAME -> "Nickname is already taken. Please pick another one"
+            AuthStatus.SUCCESS -> null
+            AuthStatus.USER_NOT_FOUND -> "User not found"
+            AuthStatus.WRONG_PASSWORD -> "Wrong password"
+        }
+    }
 }

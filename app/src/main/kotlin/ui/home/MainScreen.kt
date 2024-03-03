@@ -314,7 +314,7 @@ fun MainScreen() {
                 onClickBack = {
                     navController.popBackStack()
                 },
-                onClickEdit = {
+                onClickPasswordEdit = {
                     navController.navigate("profile/edit")
                 }
             )
@@ -323,7 +323,6 @@ fun MainScreen() {
             "profile/edit",
         ) {entry ->
             AuthEditScene(
-                initIsPasswordEdit = false,
                 onClickBack = {
                     if (navController.currentBackStackEntry != entry) {
                         return@AuthEditScene
@@ -336,10 +335,6 @@ fun MainScreen() {
                 },
                 onSuccessPasswordEdit = {
                     Toast.makeText(context, "Password updated!", Toast.LENGTH_SHORT).show()
-                    navController.popBackStack()
-                },
-                onSuccessNicknameEdit = {
-                    Toast.makeText(context, "Nickname updated!", Toast.LENGTH_SHORT).show()
                     navController.popBackStack()
                 },
             )
