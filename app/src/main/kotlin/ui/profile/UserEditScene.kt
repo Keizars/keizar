@@ -42,7 +42,7 @@ fun AuthEditScene(
     onSuccessPasswordEdit: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val vm = remember { AuthEditViewModel() }
+    val vm = remember { UserEditViewModel() }
     Scaffold(
         modifier.fillMaxSize(),
         topBar = {
@@ -77,7 +77,7 @@ fun AuthEditScene(
 
 @Composable
 fun AuthEditPage(
-    viewModel: AuthEditViewModel,
+    viewModel: UserEditViewModel,
     onSuccessPasswordEdit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
