@@ -212,7 +212,7 @@ fun ProfilePage(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = self?.nickname ?: "Loading...",
+                        text = vm.nickname.collectAsStateWithLifecycle().value,
                         style = MaterialTheme.typography.titleMedium
                     )
 
@@ -308,8 +308,8 @@ fun NicknameEditDialog(
         },
         text = {
             OutlinedTextField(
-                value = vm.nickname.value,
-                onValueChange = { vm.setNickname(it) },
+                value = vm.editNickname.value,
+                onValueChange = { vm.setEditNickname(it) },
                 isError = (nicknameError != null),
                 label = { Text("New nickname") },
                 shape = RoundedCornerShape(8.dp),
