@@ -212,7 +212,9 @@ fun GameConfigurationPagePortrait(
                         val isLoggedIn = vm.sessionManagerService.isLoggedIn.first()
                         if (isLoggedIn) {
                             vm.seedBankService.addSeed(vm.configurationSeed.first())
-                            Toast.makeText(context, "Seed saved", Toast.LENGTH_SHORT).show()
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(context, "Seed saved", Toast.LENGTH_SHORT).show()
+                            }
                         } else {
                             withContext(Dispatchers.Main) {
                                 onClickLogin()

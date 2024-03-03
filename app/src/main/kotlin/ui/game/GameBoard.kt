@@ -1,6 +1,7 @@
 package org.keizar.android.ui.game
 
 import android.app.Activity
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -64,8 +65,10 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.withContext
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.transition.CapturedPiecesHost
 import org.keizar.game.Role
@@ -349,6 +352,7 @@ fun RoundTwoBottomBar(
                     text = { Text(text = "Replay Game", fontSize = 10.sp) })
             }
 
+            val context = LocalContext.current
             ActionButton(
                 onClick = {
                     vm.launchInBackground {
@@ -356,9 +360,14 @@ fun RoundTwoBottomBar(
                         if (isLoggedIn) {
                             if (vm is PlayableGameBoardViewModel) {
                                 vm.saveResults(userSaved = true)
+                                withContext(Dispatchers.Main) {
+                                    Toast.makeText(context, "Game saved", Toast.LENGTH_SHORT).show()
+                                }
                             }
                         } else {
-                            onClickLogin()
+                            withContext(Dispatchers.Main) {
+                                onClickLogin()
+                            }
                         }
                         } },
                 icon = { Icon(Icons.Default.Save, null) },
@@ -417,7 +426,7 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
             is GameResult.Draw -> {
                 val round1stats = vm.round1Statistics.collectAsState(initial = null).value
                 val round2stats = vm.round2Statistics.collectAsState(initial = null).value
-                var statText: String = ""
+                var statText = ""
                 if (vm is MultiplayerGameBoardViewModel) {
                     val myName by vm.myUser.collectAsState(initial = "")
                     val opponentName by vm.opponentUser.collectAsState(initial = "")
@@ -495,7 +504,7 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
             is GameResult.Winner -> {
                 val round1stats = vm.round1Statistics.collectAsState(initial = null).value
                 val round2stats = vm.round2Statistics.collectAsState(initial = null).value
-                var statText: String = ""
+                var statText = ""
                 val winnerText = if (finalWinner.player == vm.selfPlayer) "You Win" else "You Lose"
                 if (vm is MultiplayerGameBoardViewModel) {
                     val myName by vm.myUser.collectAsState(initial = "")
