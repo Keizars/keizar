@@ -1,4 +1,6 @@
 package org.keizar.utils.communication.game
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 
 import kotlinx.serialization.Serializable
 
@@ -21,3 +23,8 @@ data class RoundStats(
     val player: Player,
     val winner: Player?,
 )
+
+fun jsonElementToRoundStats(jsonElement: JsonElement): RoundStats {
+    val jsonString = jsonElement.toString()
+    return Json.decodeFromString<RoundStats>(jsonString)
+}

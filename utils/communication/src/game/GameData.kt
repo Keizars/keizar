@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class GameData(
+    val id: String? = null,
     val round1Statistics: RoundStats,
     val round2Statistics: RoundStats,
     val gameConfiguration: String,

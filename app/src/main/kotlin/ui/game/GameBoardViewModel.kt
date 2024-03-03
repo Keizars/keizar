@@ -330,7 +330,7 @@ class SinglePlayerGameBoardViewModel(
 
         launchInBackground {
             game.finalWinner.distinctUntilChanged().collect {
-                if (it != null && singlePlayerMode) {
+                if (it != null) {
                     saveResults()
                 }
             }

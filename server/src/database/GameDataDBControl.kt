@@ -1,6 +1,7 @@
 package org.keizar.server.database
 
 import org.keizar.server.database.models.GameDataModel
+import org.keizar.utils.communication.game.GameData
 import java.util.UUID
 
 interface GameDataDBControl {
@@ -9,13 +10,9 @@ interface GameDataDBControl {
 
     suspend fun removeGameData(gameDataId: UUID): Boolean
 
-    suspend fun getGameDataById(gameDataId: String): GameDataModel
+    suspend fun getGameDataById(gameDataId: UUID): GameData
 
-    suspend fun getGameDataByUser(userId: String): List<GameDataModel>
+    suspend fun getGameDataByUser(userId: String): List<GameData>
 
-    suspend fun getGameDataByUserAndOpponent(
-        userId1: String,
-        userId2: String,
-    ): GameDataModel
 
 }

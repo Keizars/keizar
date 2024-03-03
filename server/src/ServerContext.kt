@@ -7,6 +7,7 @@ import org.keizar.server.database.MongoDatabaseManagerImpl
 import org.keizar.server.modules.AccountModuleImpl
 import org.keizar.server.modules.AvatarStorage
 import org.keizar.server.modules.AwsAvatarStorage
+import org.keizar.server.modules.GameDataModuleImpl
 import org.keizar.server.modules.GameRoomsModuleImpl
 import org.keizar.server.modules.InMemoryAvatarStorage
 import org.keizar.server.modules.SeedBankModuleImpl
@@ -56,6 +57,7 @@ class ServerContext(
     val gameRooms = GameRoomsModuleImpl(parentCoroutineScope.coroutineContext, logger)
     val seedBank = SeedBankModuleImpl(databaseManager)
     val accounts = AccountModuleImpl(databaseManager, authTokenManager, avatarStorage)
+    val gameData = GameDataModuleImpl(databaseManager)
 }
 
 fun setupServerContext(
