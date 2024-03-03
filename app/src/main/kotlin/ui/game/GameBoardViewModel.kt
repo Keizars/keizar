@@ -1,5 +1,6 @@
 package org.keizar.android.ui.game
 
+//import org.keizar.android.client.GameDataService
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
@@ -28,9 +29,9 @@ import me.him188.ani.utils.logging.info
 import org.keizar.aiengine.AlgorithmAI
 import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.BuildConfig
+import org.keizar.android.client.GameDataService
 import org.keizar.android.client.SessionManager
 import org.keizar.android.client.UserService
-//import org.keizar.android.client.GameDataService
 import org.keizar.android.data.SavedState
 import org.keizar.android.data.SavedStateRepository
 import org.keizar.android.encode
@@ -58,7 +59,6 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
-import org.keizar.android.client.GameDataService
 
 interface GameBoardViewModel : HasBackgroundScope {
     @Stable
@@ -260,7 +260,16 @@ sealed class PlayableGameBoardViewModel(
         } else {
             opponentName = "Computer"
         }
-        val gameData = GameData(round1Statistics.first(), round2Statistics.first(), startConfiguration.encode(), opponentName, userName, Instant.now().toString())
+        // TODO:  GameData
+        val gameData = GameData(
+            "",
+            round1Statistics.first(),
+            round2Statistics.first(),
+            startConfiguration.encode(),
+            opponentName,
+            userName,
+            Instant.now().toString()
+        )
         this.launchInBackground {
             gameDataService.sendGameData(gameData)
         }

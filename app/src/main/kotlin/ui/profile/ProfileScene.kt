@@ -80,6 +80,7 @@ fun ProfileScene(
     vm: ProfileViewModel,
     onClickBack: () -> Unit,
     onClickPasswordEdit: () -> Unit,
+    onSuccessfulEdit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Scaffold(
@@ -98,7 +99,9 @@ fun ProfileScene(
                     var showDropdown by remember {
                         mutableStateOf(false)
                     }
-                    DropdownMenu(expanded = showDropdown, onDismissRequest = { showDropdown = false }) {
+                    DropdownMenu(
+                        expanded = showDropdown,
+                        onDismissRequest = { showDropdown = false }) {
                         DropdownMenuItem(
                             onClick = {
                                 showDropdown = false
@@ -145,10 +148,19 @@ fun ProfileScene(
             Modifier
                 .padding(contentPadding)
         ) {
-            ProfilePage(
-                vm = vm,
-                Modifier.fillMaxSize()
-            )
+            if (vm.refresh.value) {
+                ProfilePage(
+                    vm = vm,
+                    onSuccessfulEdit = onSuccessfulEdit,
+                    Modifier.fillMaxSize()
+                )
+            } else {
+                ProfilePage(
+                    vm = vm,
+                    onSuccessfulEdit = onSuccessfulEdit,
+                    Modifier.fillMaxSize()
+                )
+            }
         }
     }
 }
@@ -156,6 +168,7 @@ fun ProfileScene(
 @Composable
 fun ProfilePage(
     vm: ProfileViewModel,
+    onSuccessfulEdit: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val self by vm.self.collectAsStateWithLifecycle(null)
@@ -198,7 +211,10 @@ fun ProfilePage(
                     .fillMaxHeight()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = self?.nickname ?: "Loading...", style = MaterialTheme.typography.titleMedium)
+                    Text(
+                        text = vm.nickname.collectAsStateWithLifecycle().value,
+                        style = MaterialTheme.typography.titleMedium
+                    )
 
                     Box(
                         modifier = Modifier
@@ -261,7 +277,7 @@ fun ProfilePage(
         }
 
         if (vm.showNicknameEditDialog.value) {
-            NicknameEditDialog(vm = vm)
+            NicknameEditDialog(vm = vm, onSuccessfulEdit = onSuccessfulEdit)
         }
         HorizontalPager(state = pagerState) {
             Column(Modifier.fillMaxSize()) {
@@ -276,7 +292,11 @@ fun ProfilePage(
 }
 
 @Composable
-fun NicknameEditDialog(modifier: Modifier = Modifier, vm: ProfileViewModel) {
+fun NicknameEditDialog(
+    modifier: Modifier = Modifier,
+    vm: ProfileViewModel,
+    onSuccessfulEdit: () -> Unit
+) {
     val nicknameError by vm.nicknameError.collectAsStateWithLifecycle()
     AlertDialog(onDismissRequest = {},
         title = {
@@ -288,8 +308,8 @@ fun NicknameEditDialog(modifier: Modifier = Modifier, vm: ProfileViewModel) {
         },
         text = {
             OutlinedTextField(
-                value = vm.nickname.value,
-                onValueChange = { vm.setNickname(it) },
+                value = vm.editNickname.value,
+                onValueChange = { vm.setEditNickname(it) },
                 isError = (nicknameError != null),
                 label = { Text("New nickname") },
                 shape = RoundedCornerShape(8.dp),
@@ -297,7 +317,12 @@ fun NicknameEditDialog(modifier: Modifier = Modifier, vm: ProfileViewModel) {
         },
         confirmButton = {
             Button(onClick = {
-                vm.launchInBackground { vm.confirmDialog() }
+                vm.launchInBackground {
+                    vm.confirmDialog()
+                    withContext(Dispatchers.Main) {
+                        onSuccessfulEdit()
+                    }
+                }
             }) {
                 Text(text = "OK")
             }
@@ -422,7 +447,11 @@ private fun Statistics(modifier: Modifier = Modifier) {
 @Composable
 private fun PreviewProfilePage() {
     ProvideCompositionalLocalsForPreview {
-        ProfileScene(ProfileViewModel(), onClickBack = {}, onClickPasswordEdit = {})
+        ProfileScene(
+            ProfileViewModel(),
+            onClickBack = {},
+            onClickPasswordEdit = {},
+            onSuccessfulEdit = {})
     }
 }
 
@@ -445,5 +474,5 @@ private fun PreviewSavedBoardCard() {
 @Composable
 private fun PreviewDialog() {
     val vm = ProfileViewModel()
-    NicknameEditDialog(vm = vm)
+    NicknameEditDialog(vm = vm, onSuccessfulEdit = {})
 }

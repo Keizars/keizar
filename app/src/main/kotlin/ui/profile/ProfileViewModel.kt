@@ -30,6 +30,7 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     private val userService: UserService by inject()
     private val streamingService: StreamingService by inject()
     private val seedBankService: SeedBankService by inject()
+    val refresh: MutableState<Boolean> = mutableStateOf(false)
 
     /**
      * Current user's information.
@@ -37,6 +38,9 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     val self: SharedFlow<User> = sessionManager.token.mapLatest {
         userService.self()
     }.shareInBackground()
+
+    val nickname = self.mapLatest { it.nickname }
+        .localCachedStateFlow("Loading...")
 
     suspend fun logout() {
         sessionManager.invalidateToken()
@@ -72,26 +76,35 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
 
     val showNicknameEditDialog = mutableStateOf(false)
 
-    private val _nickname: MutableState<String> = mutableStateOf("")
-    val nickname: State<String> get() = _nickname
+    private val _editNickname: MutableState<String> = mutableStateOf("")
+    val editNickname: State<String> get() = _editNickname
 
     val nicknameError: MutableStateFlow<String?> = MutableStateFlow(null)
     fun showDialog() {
         showNicknameEditDialog.value = true
+        refresh.value = false
     }
 
     suspend fun confirmDialog() {
-        processedUpdate()
-        showNicknameEditDialog.value = false
+        val success = processedUpdate()
+        if (success) {
+            refresh.value = true
+            showNicknameEditDialog.value = false
+        }
     }
 
     fun cancelDialog() {
         showNicknameEditDialog.value = false
-        _nickname.value = ""
+        _editNickname.value = ""
     }
 
     private suspend fun updateNickname(): Boolean {
-        return userService.editUser(EditUserRequest(nickname = nickname.value)).success
+        val newNickname = editNickname.value
+        return userService.editUser(EditUserRequest(nickname = newNickname)).success.also { success ->
+            if (success) {
+                nickname.value = newNickname
+            }
+        }
     }
 
     private suspend fun processedUpdate(): Boolean {
@@ -101,12 +114,13 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     }
 
 
-    fun setNickname(username: String) {
+    fun setEditNickname(username: String) {
         flushErrors()
-        _nickname.value = username.trim()
+        _editNickname.value = username.trim()
         val validity = LiteralChecker.checkUsername(username)
         nicknameError.value = validity.render()
     }
+
     private fun flushErrors() {
         nicknameError.value = null
     }

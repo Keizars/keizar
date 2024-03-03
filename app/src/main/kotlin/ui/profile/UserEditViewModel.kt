@@ -13,7 +13,7 @@ import org.keizar.utils.communication.account.ModelConstraints
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class AuthEditViewModel(
+class UserEditViewModel(
 ) : AbstractViewModel(), KoinComponent {
     private val userService: UserService by inject()
 

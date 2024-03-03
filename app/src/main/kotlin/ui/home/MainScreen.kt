@@ -316,6 +316,9 @@ fun MainScreen() {
                 },
                 onClickPasswordEdit = {
                     navController.navigate("profile/edit")
+                },
+                onSuccessfulEdit = {
+                    Toast.makeText(context, "Nickname updated!", Toast.LENGTH_SHORT).show()
                 }
             )
         }
