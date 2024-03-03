@@ -38,6 +38,7 @@ import org.keizar.android.encode
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground
+import org.keizar.android.ui.foundation.launchInMain
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.transition.BoardTransitionController
 import org.keizar.android.ui.game.transition.CapturedPieceHostState
@@ -226,7 +227,6 @@ interface GameBoardViewModel : HasBackgroundScope {
     fun undo()
 
 
-
     suspend fun removeSavedState() {}
 }
 
@@ -250,7 +250,7 @@ sealed class PlayableGameBoardViewModel(
 ) : BaseGameBoardViewModel(game, selfPlayer) {
 
     suspend fun saveResults(userSaved: Boolean = false) {
-        var opponentName : String? = null
+        var opponentName: String? = null
         val userName = sessionManager.self.value?.username
         val gameDataService: GameDataService by inject()
         if (this is MultiplayerGameBoardViewModel) {
@@ -390,7 +390,7 @@ class MultiplayerGameBoardViewModel(
 abstract class BaseGameBoardViewModel(
     private val game: GameSession,
     @Stable override val selfPlayer: Player,
-) : AbstractViewModel(), GameBoardViewModel, KoinComponent{
+) : AbstractViewModel(), GameBoardViewModel, KoinComponent {
 
     open var arePiecesClickable: Boolean = true
 
@@ -508,7 +508,7 @@ abstract class BaseGameBoardViewModel(
 
     override val latestRoundStats: Flow<RoundStats>
         get() {
-            val stats =  game.currentRoundNo.flatMapLatest { game.getRoundStats(it) }
+            val stats = game.currentRoundNo.flatMapLatest { game.getRoundStats(it) }
             return stats
         }
 
@@ -630,7 +630,7 @@ abstract class BaseGameBoardViewModel(
 
     override fun startNextRound(selfPlayer: Player) {
         logger.info { "startNextRound, selfPlayer = $selfPlayer" }
-        launchInBackground(Dispatchers.Main.immediate, start = CoroutineStart.UNDISPATCHED) {
+        launchInMain(start = CoroutineStart.UNDISPATCHED) {
             if (currentRoundCount.value != 1) {
                 boardTransitionController.turnBoard()
             }
@@ -651,7 +651,7 @@ abstract class BaseGameBoardViewModel(
 
     override fun replayGame() {
         setEndRoundAnnouncement(false)
-        launchInBackground(Dispatchers.Main.immediate, start = CoroutineStart.UNDISPATCHED) {
+        launchInMain(start = CoroutineStart.UNDISPATCHED) {
             boardTransitionController.turnBoard()
         }
         game.replayGame()
