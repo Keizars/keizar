@@ -470,7 +470,13 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
 
 @Composable
 fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData: GameData) {
+    val round1stats = gameData.round1Statistics
+    val round2stats = gameData.round2Statistics
+    val selfUser by vm.self.collectAsStateWithLifecycle(null)
+    val myName = selfUser?.username
+    val opponentName = if (gameData.user1 == myName) gameData.user2 else gameData.user1
     Card(modifier = modifier.fillMaxWidth()) {
+        // TODO: Replace with actual avatar url
         val avatarUrl = "https://ui-avatars.com/api/?name=harrison"
         Row(
             modifier = modifier
@@ -487,10 +493,7 @@ fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData:
                 modifier = Modifier
                     .padding(8.dp)
             ) {
-                val round1stats = gameData.round1Statistics
-                val round2stats = gameData.round2Statistics
-                val selfUser by vm.self.collectAsStateWithLifecycle(null)
-                val myName = selfUser?.username
+
                 val winningStatus = if (round1stats.winner!! == round2stats.winner!!) {
                     if (round1stats.winner == round1stats.player) {
                         "Win"
@@ -500,7 +503,6 @@ fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData:
                 } else {
                     "Draw"
                 }
-                val opponentName = if (gameData.user1 == myName) gameData.user2 else gameData.user1
 
                 Text(text = "$winningStatus - ${gameData.currentTimestamp}", modifier = Modifier.padding(4.dp))
                 Text(text = "Opponent: $opponentName", modifier = Modifier.padding(4.dp))
@@ -536,7 +538,6 @@ fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData:
                     Text(text = "Details")
                 }
                 if (showDetails) {
-                    val selfUser by vm.self.collectAsStateWithLifecycle(null)
                     GameDetails(
                         gameData = gameData, onDismissRequest = { showDetails = false },
                         selfUser = selfUser!!
