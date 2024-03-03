@@ -108,6 +108,11 @@ interface HasBackgroundScope {
 }
 
 
+/**
+ * Launches a new coroutine job in the background scope.
+ *
+ * Note that UI jobs are not allowed in this scope. To launch a UI job, use [launchInMain].
+ */
 fun <V : HasBackgroundScope> V.launchInBackground(
     start: CoroutineStart = CoroutineStart.DEFAULT,
     @WorkerThread block: suspend V.() -> Unit,
@@ -117,6 +122,12 @@ fun <V : HasBackgroundScope> V.launchInBackground(
     }
 }
 
+
+/**
+ * Launches a new coroutine job in the background scope.
+ *
+ * Note that UI jobs are not allowed in this scope. To launch a UI job, use [launchInMain].
+ */
 fun <V : HasBackgroundScope> V.launchInBackground(
     context: CoroutineContext = EmptyCoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
@@ -127,6 +138,12 @@ fun <V : HasBackgroundScope> V.launchInBackground(
     }
 }
 
+/**
+ * Launches a new coroutine job in the UI scope.
+ *
+ * Note that you must not perform any costly operations in this scope, as this will block the UI.
+ * To perform costly computation, use [launchInBackground].
+ */
 fun <V : HasBackgroundScope> V.launchInMain(
     context: CoroutineContext = EmptyCoroutineContext,
     start: CoroutineStart = CoroutineStart.DEFAULT,
