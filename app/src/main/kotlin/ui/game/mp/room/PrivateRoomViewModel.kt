@@ -97,6 +97,7 @@ class PrivateRoomViewModelImpl(
                 continue
             }
             emit(client)
+            return@flow
         }
     }.shareInBackground(started = SharingStarted.Eagerly)
 
