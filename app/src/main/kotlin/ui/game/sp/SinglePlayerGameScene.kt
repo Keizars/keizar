@@ -44,8 +44,12 @@ fun SinglePlayerGameScene(
                 }
             }
         },
-        onClickGameConfig = { navController.popBackStack("game/configuration", false) },
-        onClickLogin = {navController.navigate("auth/login")},
+        onClickGameConfig = {
+            navController.navigate("game/configuration") {
+                launchSingleTop = true
+            }
+        },
+        onClickLogin = { navController.navigate("auth/login") },
         actions = {
             UndoButton(vm = vm)
         }
