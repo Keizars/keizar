@@ -112,6 +112,7 @@ class Client(
         single<RoomService> { retrofit.create(RoomService::class.java) }
         single<SeedBankService> { retrofit.create(SeedBankService::class.java) }
         single<StreamingService> { StreamingServiceImpl() }
+        single<GameDataService> { retrofit.create(GameDataService::class.java) }
     }
 }
 
