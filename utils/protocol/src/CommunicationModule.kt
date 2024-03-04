@@ -8,12 +8,12 @@ import org.keizar.utils.communication.message.ConfirmNextRound
 import org.keizar.utils.communication.message.Exit
 import org.keizar.utils.communication.message.Message
 import org.keizar.utils.communication.message.Move
+import org.keizar.utils.communication.message.PlayerStateChange
 import org.keizar.utils.communication.message.RemoteSessionSetup
 import org.keizar.utils.communication.message.Request
 import org.keizar.utils.communication.message.Respond
-import org.keizar.utils.communication.message.SetReady
-import org.keizar.utils.communication.message.PlayerStateChange
 import org.keizar.utils.communication.message.RoomStateChange
+import org.keizar.utils.communication.message.SetReady
 import org.keizar.utils.communication.message.UserInfo
 
 val CommunicationModule = SerializersModule {
