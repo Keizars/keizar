@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.ContentPaste
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -307,20 +306,20 @@ fun BoardSeedTextField(
         isError = isError,
         readOnly = readOnly,
         trailingIcon = {
-            if (clipboardManager.getText()?.text?.startsWith("P-") == true) {
-                IconButton(onClick = {
-                    onValueChange(clipboardManager.getText()?.text ?: "")
-                    Toast.makeText(context, "Seed pasted", Toast.LENGTH_SHORT).show()
-                }, enabled = refreshEnable) {
-                    Icon(Icons.Default.ContentPaste, contentDescription = "Paste seed")
-                }
-            } else {
+//            if (clipboardManager.getText()?.text?.startsWith("P-") == true) {
+//                IconButton(onClick = {
+//                    onValueChange(clipboardManager.getText()?.text ?: "")
+//                    Toast.makeText(context, "Seed pasted", Toast.LENGTH_SHORT).show()
+//                }, enabled = refreshEnable) {
+//                    Icon(Icons.Default.ContentPaste, contentDescription = "Paste seed")
+//                }
+//            } else {
                 IconButton(onClick = {
                     onClickRandom()
                 }, enabled = refreshEnable) {
                     Icon(Icons.Default.Refresh, contentDescription = "Generate random seed")
                 }
-            }
+//            }
         },
         shape = RoundedCornerShape(ROUND_CORNER_RADIUS),
         singleLine = true,
