@@ -7,19 +7,24 @@ import android.content.ClipboardManager
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -48,6 +53,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -57,13 +63,14 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -293,10 +300,10 @@ fun ProfilePage(
         if (vm.showNicknameEditDialog.value) {
             NicknameEditDialog(vm = vm, onSuccessfulEdit = onSuccessfulEdit)
         }
-        HorizontalPager(state = pagerState) {
+        HorizontalPager(state = pagerState, Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
                 when (it) {
-                    0 -> SavedBoards(vm = vm)
+                    0 -> SavedBoards(vm = vm, Modifier.fillMaxSize())
                     1 -> SavedGames(vm = vm)
                     2 -> Statistics()
                 }
@@ -366,33 +373,74 @@ fun AvatarImage(url: String?, modifier: Modifier = Modifier, filePath: String? =
 }
 
 @Composable
-fun SavedBoards(vm: ProfileViewModel) {
+fun SavedBoards(vm: ProfileViewModel, modifier: Modifier = Modifier) {
     val allSeeds by vm.allSeeds.collectAsState()
-    LazyVerticalGrid(
-        columns = GridCells.Fixed(1),
-        modifier = Modifier.padding(4.dp)
+    if (!isSystemInLandscape()) {
+        SavedBoardCardsSummary(modifier = Modifier.fillMaxWidth(), vm = vm, allSeeds = allSeeds)
+    } else {
+        Row(modifier = modifier, horizontalArrangement = Arrangement.Center) {
+            val selectedSeed by vm.selectedSeed.collectAsStateWithLifecycle()
+            SavedBoardCardsSummary(modifier = Modifier.wrapContentSize(), vm = vm, allSeeds = allSeeds)
+
+            VerticalDivider(Modifier.padding(horizontal = 8.dp))
+
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                val boardProperties = remember(selectedSeed) {
+                    selectedSeed?.boardProperties ?: BoardProperties.getStandardProperties()
+                }
+                Box(
+                    Modifier
+                        .size(500.dp)
+                        .clip(RoundedCornerShape(4.dp))
+                        .alpha(if (selectedSeed == null) 0.0f else 1f)
+                ) {
+                    BoardTiles(
+                        rotationDegrees = 0f,
+                        properties = boardProperties,
+                        currentPick = null,
+                        onClickTile = {},
+                        Modifier.matchParentSize(),
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SavedBoardCardsSummary(modifier: Modifier = Modifier, vm: ProfileViewModel, allSeeds: List<SavedSeed>) {
+    LazyColumn(
+        modifier = Modifier
+            .wrapContentSize()
+            .padding(4.dp)
     ) {
         items(allSeeds) { seed ->
             SavedBoardCard(
-                layoutSeedText = seed,
+                savedSeed = seed,
                 vm = vm,
-                modifier = Modifier.padding(4.dp)
+                modifier = modifier
+                    .padding(4.dp)
+                    .defaultMinSize(200.dp)
             )
         }
     }
 }
 
 @Composable
-fun SavedBoardCard(modifier: Modifier = Modifier, layoutSeedText: String, vm: ProfileViewModel) {
-    Card(modifier = modifier.fillMaxWidth()) {
-        val layoutSeed = GameStartConfigurationEncoder.decode(layoutSeedText)?.layoutSeed
+fun SavedBoardCard(
+    modifier: Modifier,
+    savedSeed: SavedSeed,
+    vm: ProfileViewModel
+) {
+    Card({ vm.selectedSeed.value = savedSeed }, modifier = modifier.wrapContentSize()) {
         Row(
-            modifier
-                .fillMaxWidth()
+            Modifier
                 .height(IntrinsicSize.Min)
                 .padding(4.dp)
         ) {
-            val boardProperties = BoardProperties.getStandardProperties(layoutSeed)
             Box(
                 Modifier
                     .size(150.dp)
@@ -400,15 +448,15 @@ fun SavedBoardCard(modifier: Modifier = Modifier, layoutSeedText: String, vm: Pr
             ) {
                 BoardTiles(
                     rotationDegrees = 0f,
-                    properties = boardProperties,
+                    properties = savedSeed.boardProperties,
                     currentPick = null,
                     onClickTile = {},
                     Modifier.matchParentSize(),
                 )
             }
-            Column {
+            Column(modifier = Modifier, horizontalAlignment = Alignment.End) {
                 Box(
-                    Modifier.fillMaxWidth(),
+                    Modifier,
                     contentAlignment = Alignment.TopEnd
                 ) {
                     var showMenu by remember { mutableStateOf(false) }
@@ -419,37 +467,38 @@ fun SavedBoardCard(modifier: Modifier = Modifier, layoutSeedText: String, vm: Pr
 
                     DropdownMenu(
                         expanded = showMenu,
-                        onDismissRequest = { showMenu = false },
-                        offset = DpOffset((62).dp, (-32).dp)
+                        onDismissRequest = { showMenu = false }
                     ) {
 
                         DropdownMenuItem(onClick = {
                             showMenu = false
                             val clipboard =
                                 context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            val clip = ClipData.newPlainText("Copied seed", layoutSeedText)
+                            val clip = ClipData.newPlainText("Copied seed", savedSeed.configurationSeed)
                             clipboard.setPrimaryClip(clip)
                         }) {
                             Text("Copy seed")
                         }
                         DropdownMenuItem(onClick = {
                             showMenu = false
-                            vm.launchInBackground { vm.removeSeed(layoutSeedText) }
+                            vm.launchInBackground {
+                                vm.removeSeed(savedSeed.configurationSeed)
+                                vm.selectedSeed.value = null
+                            }
                         }) {
                             Text("Delete")
                         }
                     }
                 }
                 Column(
-                    Modifier
+                    modifier
                         .padding(4.dp)
-                        .fillMaxHeight()
-                        .fillMaxWidth(),
+                        .fillMaxHeight(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
 
                     Text(
-                        text = "Game board seed: \n$layoutSeedText",
+                        text = "Game board seed: \n${savedSeed.configurationSeed}",
                         Modifier.padding(bottom = 8.dp),
                         textAlign = TextAlign.Center
                     )
@@ -741,11 +790,21 @@ private fun Statistics(modifier: Modifier = Modifier) {
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, fontScale = 2f)
+@Preview(showBackground = true, device = Devices.TABLET)
 @Composable
 private fun PreviewProfilePage() {
     ProvideCompositionalLocalsForPreview {
         ProfileScene(
-            ProfileViewModel(),
+            remember {
+                ProfileViewModel().apply {
+                    allSeeds.value = listOf(
+                        SavedSeed("123"),
+                        SavedSeed("456"),
+                        SavedSeed("789")
+                    )
+                }
+            },
             onClickBack = {},
             onClickPasswordEdit = {},
             onSuccessfulEdit = {})
@@ -754,16 +813,35 @@ private fun PreviewProfilePage() {
 
 @Preview(showBackground = true)
 @Composable
-private fun PreviewSavedBoardCard() {
+private fun PreviewSavedBoardCardPhone() {
     val vm = ProfileViewModel()
     SavedBoardCard(
-        layoutSeedText = GameStartConfigurationEncoder.encode(
-            GameStartConfiguration(
-                layoutSeed = 123,
-                playAs = Role.WHITE,
-                difficulty = Difficulty.MEDIUM
+        savedSeed = SavedSeed(
+            GameStartConfigurationEncoder.encode(
+                GameStartConfiguration(
+                    layoutSeed = 123,
+                    playAs = Role.WHITE,
+                    difficulty = Difficulty.MEDIUM
+                )
             )
-        ), vm = vm
+        ), vm = vm, modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Preview(showBackground = true, widthDp = 1000, device = Devices.TABLET)
+@Composable
+private fun PreviewSavedBoardCardTablet() {
+    val vm = ProfileViewModel()
+    SavedBoardCard(
+        savedSeed = SavedSeed(
+            GameStartConfigurationEncoder.encode(
+                GameStartConfiguration(
+                    layoutSeed = 123,
+                    playAs = Role.WHITE,
+                    difficulty = Difficulty.MEDIUM
+                )
+            )
+        ), vm = vm, modifier = Modifier
     )
 }
 
@@ -775,6 +853,7 @@ private fun PreviewDialog() {
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, device = Devices.TABLET)
 @Composable
 private fun PreviewSavedGameCard() {
     val vm = ProfileViewModel()
@@ -797,7 +876,7 @@ private fun PreviewSavedGameCard() {
     SavedGameCard(vm = vm, gameData = gameData)
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, device = Devices.TABLET)
 @Composable
 private fun PreviewGameDetails() {
     val round1Stats =
@@ -842,5 +921,6 @@ private fun PreviewSavedGames() {
         round1Stats, round1Stats, "1"
     )
     val vm = ProfileViewModel()
-    GameDetailColumn(gameData =gameData, modifier = Modifier)
+    GameDetailColumn(gameData = gameData, modifier = Modifier)
 }
+

@@ -1,5 +1,6 @@
 package org.keizar.android.ui.profile
 
+import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
@@ -10,12 +11,14 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import org.keizar.android.GameStartConfigurationEncoder
 import org.keizar.android.client.GameDataService
 import org.keizar.android.client.SeedBankService
 import org.keizar.android.client.SessionManager
 import org.keizar.android.client.StreamingService
 import org.keizar.android.client.UserService
 import org.keizar.android.ui.foundation.AbstractViewModel
+import org.keizar.game.BoardProperties
 import org.keizar.utils.communication.LiteralChecker
 import org.keizar.utils.communication.account.AuthStatus
 import org.keizar.utils.communication.account.EditUserRequest
@@ -26,6 +29,13 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
 import java.io.InputStream
+
+@Immutable
+data class SavedSeed(
+    val configurationSeed: String,
+    val layoutSeed: Int = GameStartConfigurationEncoder.decode(configurationSeed)?.layoutSeed ?: 0,
+    val boardProperties: BoardProperties = BoardProperties.getStandardProperties(layoutSeed)
+)
 
 class ProfileViewModel : KoinComponent, AbstractViewModel() {
     private val sessionManager: SessionManager by inject()
@@ -44,7 +54,7 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
 
     val nickname = self.mapLatest { it.nickname }
         .localCachedStateFlow("Loading...")
-    
+
     suspend fun getAvatarUrl(opponentUserName: String): String {
         return userService.getUser(opponentUserName).avatarUrlOrDefault()
     }
@@ -56,8 +66,9 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     suspend fun deleteGame(id: String) {
         gameDataService.deleteGame(id)
     }
+
     suspend fun removeSeed(seed: String) {
-        allSeeds.value = allSeeds.value.filter { it != seed }
+        allSeeds.value = allSeeds.value.filter { it.configurationSeed != seed }
         seedBankService.removeSeed(seed)
     }
 
@@ -80,10 +91,13 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     // Change time to refresh the seeds
     val time = MutableStateFlow(0)
 
-    val allSeeds: MutableStateFlow<List<String>> = time.map {
+    val allSeeds: MutableStateFlow<List<SavedSeed>> = time.map {
         seedBankService.getSeeds()
+    }.map {seeds -> seeds.map{SavedSeed(it)}
     }.localCachedStateFlow(emptyList())
-    
+
+    val selectedSeed: MutableStateFlow<SavedSeed?> = MutableStateFlow(null)
+
     val allGames: MutableStateFlow<List<GameDataGet>> = time.map {
         gameDataService.getGames()
     }.localCachedStateFlow(emptyList())
