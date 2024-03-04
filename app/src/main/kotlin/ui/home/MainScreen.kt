@@ -326,6 +326,11 @@ fun MainScreen() {
                 onClickBack = {
                     navController.popBackStack()
                 },
+                onClickPlayGame = {
+                    navController.navigate(navController.graph["game/configuration"].id, Bundle().apply {
+                        putString("configuration", it)
+                    })
+                },
                 onClickPasswordEdit = {
                     navController.navigate("profile/edit")
                 },

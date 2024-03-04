@@ -100,6 +100,7 @@ import java.io.File
 fun ProfileScene(
     vm: ProfileViewModel,
     onClickBack: () -> Unit,
+    onClickPlayGame: (String) -> Unit,
     onClickPasswordEdit: () -> Unit,
     onSuccessfulEdit: () -> Unit,
     modifier: Modifier = Modifier
@@ -173,13 +174,15 @@ fun ProfileScene(
                 ProfilePage(
                     vm = vm,
                     onSuccessfulEdit = onSuccessfulEdit,
-                    Modifier.fillMaxSize()
+                    Modifier.fillMaxSize(),
+                    onClickPlayGame = onClickPlayGame
                 )
             } else {
                 ProfilePage(
                     vm = vm,
                     onSuccessfulEdit = onSuccessfulEdit,
-                    Modifier.fillMaxSize()
+                    Modifier.fillMaxSize(),
+                    onClickPlayGame = onClickPlayGame
                 )
             }
         }
@@ -190,7 +193,8 @@ fun ProfileScene(
 fun ProfilePage(
     vm: ProfileViewModel,
     onSuccessfulEdit: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onClickPlayGame: (String) -> Unit
 ) {
     val self by vm.self.collectAsStateWithLifecycle(null)
     Column(
@@ -303,7 +307,7 @@ fun ProfilePage(
         HorizontalPager(state = pagerState, Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
                 when (it) {
-                    0 -> SavedBoards(vm = vm, Modifier.fillMaxSize())
+                    0 -> SavedBoards(vm = vm, Modifier.fillMaxSize(), onClickPlayGame = onClickPlayGame)
                     1 -> SavedGames(vm = vm)
                     2 -> Statistics()
                 }
@@ -373,14 +377,14 @@ fun AvatarImage(url: String?, modifier: Modifier = Modifier, filePath: String? =
 }
 
 @Composable
-fun SavedBoards(vm: ProfileViewModel, modifier: Modifier = Modifier) {
+fun SavedBoards(vm: ProfileViewModel, modifier: Modifier = Modifier, onClickPlayGame: (String) -> Unit) {
     val allSeeds by vm.allSeeds.collectAsState()
     if (!isSystemInLandscape()) {
-        SavedBoardCardsSummary(modifier = Modifier.fillMaxWidth(), vm = vm, allSeeds = allSeeds)
+        SavedBoardCardsSummary(modifier = Modifier.fillMaxWidth(), vm = vm, allSeeds = allSeeds, onClickPlayGame = onClickPlayGame)
     } else {
         Row(modifier = modifier, horizontalArrangement = Arrangement.Center) {
             val selectedSeed by vm.selectedSeed.collectAsStateWithLifecycle()
-            SavedBoardCardsSummary(modifier = Modifier.wrapContentSize(), vm = vm, allSeeds = allSeeds)
+            SavedBoardCardsSummary(modifier = Modifier.wrapContentSize(), vm = vm, allSeeds = allSeeds, onClickPlayGame = onClickPlayGame)
 
             VerticalDivider(Modifier.padding(horizontal = 8.dp))
 
@@ -411,7 +415,7 @@ fun SavedBoards(vm: ProfileViewModel, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SavedBoardCardsSummary(modifier: Modifier = Modifier, vm: ProfileViewModel, allSeeds: List<SavedSeed>) {
+private fun SavedBoardCardsSummary(modifier: Modifier = Modifier, vm: ProfileViewModel, allSeeds: List<SavedSeed>, onClickPlayGame: (String) -> Unit){
     LazyColumn(
         modifier = Modifier
             .wrapContentSize()
@@ -423,7 +427,8 @@ private fun SavedBoardCardsSummary(modifier: Modifier = Modifier, vm: ProfileVie
                 vm = vm,
                 modifier = modifier
                     .padding(4.dp)
-                    .defaultMinSize(200.dp)
+                    .defaultMinSize(200.dp),
+                onClickPlayGame = onClickPlayGame
             )
         }
     }
@@ -433,7 +438,8 @@ private fun SavedBoardCardsSummary(modifier: Modifier = Modifier, vm: ProfileVie
 fun SavedBoardCard(
     modifier: Modifier,
     savedSeed: SavedSeed,
-    vm: ProfileViewModel
+    vm: ProfileViewModel,
+    onClickPlayGame: (String) -> Unit
 ) {
     Card({ vm.selectedSeed.value = savedSeed }, modifier = modifier.wrapContentSize()) {
         Row(
@@ -494,15 +500,17 @@ fun SavedBoardCard(
                     modifier
                         .padding(4.dp)
                         .fillMaxHeight(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
 
                     Text(
                         text = "Game board seed: \n${savedSeed.configurationSeed}",
-                        Modifier.padding(bottom = 8.dp),
+                        Modifier.align(Alignment.CenterHorizontally).padding(bottom = 8.dp),
                         textAlign = TextAlign.Center
                     )
-
+                    
+                    Button(modifier = Modifier.align(Alignment.End), onClick = { onClickPlayGame(savedSeed.configurationSeed) }) {
+                        Text(text = "Play")
+                    }
                 }
             }
         }
@@ -807,7 +815,8 @@ private fun PreviewProfilePage() {
             },
             onClickBack = {},
             onClickPasswordEdit = {},
-            onSuccessfulEdit = {})
+            onSuccessfulEdit = {},
+            onClickPlayGame = {})
     }
 }
 
@@ -824,7 +833,7 @@ private fun PreviewSavedBoardCardPhone() {
                     difficulty = Difficulty.MEDIUM
                 )
             )
-        ), vm = vm, modifier = Modifier.fillMaxWidth()
+        ), vm = vm, modifier = Modifier.fillMaxWidth(), onClickPlayGame = {}
     )
 }
 
@@ -841,7 +850,7 @@ private fun PreviewSavedBoardCardTablet() {
                     difficulty = Difficulty.MEDIUM
                 )
             )
-        ), vm = vm, modifier = Modifier
+        ), vm = vm, modifier = Modifier, onClickPlayGame = {}
     )
 }
 
