@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
@@ -79,7 +78,7 @@ private fun AcceptArea(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier
+        Modifier
             .padding(bottom = 16.dp)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.End,
@@ -89,7 +88,7 @@ private fun AcceptArea(
             Text(text = "Waiting for the other player...", style = MaterialTheme.typography.titleMedium)
         } else {
             Button(
-                modifier = if (!isSystemInLandscape()) modifier.padding(end = 12.dp) else modifier,
+                modifier = if (!isSystemInLandscape()) Modifier.padding(end = 12.dp) else Modifier,
                 onClick = { vm.backgroundScope.launch { vm.accept() } }
             ) {
                 Text(text = "Ready!")
