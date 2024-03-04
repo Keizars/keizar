@@ -362,7 +362,7 @@ class MultiplayerGameBoardViewModel(
     game: GameSession,
     selfPlayer: Player,
     selfClientPlayer: ClientPlayer,
-    opponentClientPlayer: ClientPlayer,
+    opponentClientPlayer: ClientPlayer?,
 ) : PlayableGameBoardViewModel(game, selfPlayer), KoinComponent {
     private val userService: UserService by inject()
 
@@ -382,7 +382,9 @@ class MultiplayerGameBoardViewModel(
 
     @Stable
     val opponentUser: SharedFlow<User> = flow {
-        emit(userService.getUser(opponentClientPlayer.username))
+        if (opponentClientPlayer != null) {
+            emit(userService.getUser(opponentClientPlayer.username))
+        }
     }.shareInBackground()
 }
 

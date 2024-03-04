@@ -122,7 +122,7 @@ class PrivateRoomViewModelImpl(
 
     override val selfIsHost: Flow<Boolean> = selfPlayer.mapLatest { it.isHost }
 
-    override val opponentName: Flow<String> = opponentPlayer.mapLatest { it.username }
+    override val opponentName: Flow<String> = opponentPlayer.mapLatest { it?.username ?: "" }
 
     private suspend fun setSeed(roomId: UInt, seed: UInt) {
         client.first().changeSeed(roomId, seed)

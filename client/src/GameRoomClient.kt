@@ -26,7 +26,6 @@ import org.keizar.utils.communication.message.RemoteSessionSetup
 import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.RoomStateChange
 import org.keizar.utils.communication.message.SetReady
-import org.keizar.utils.communication.message.UserInfo
 import kotlin.coroutines.CoroutineContext
 
 
@@ -60,7 +59,7 @@ interface GameRoomClient : AutoCloseable {
     /**
      * Player information of the the self user.
      */
-    val opponentPlayer: ClientPlayer
+    val opponentPlayer: ClientPlayer?
 
     /**
      * State of the game room: one of [GameRoomState.STARTED], [GameRoomState.ALL_CONNECTED],
@@ -140,7 +139,7 @@ class GameRoomClientImpl internal constructor(
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
     override val selfPlayer: ClientPlayer = players.first { it.username == self.username }
-    override val opponentPlayer: ClientPlayer = players.first { it.username != self.username }
+    override val opponentPlayer: ClientPlayer? = players.first { it.username != self.username }
 
     private val _state: MutableStateFlow<GameRoomState> = MutableStateFlow(GameRoomState.STARTED)
     override val state: StateFlow<GameRoomState> = _state
