@@ -65,9 +65,8 @@ class GameRoomsModuleImpl(
     override suspend fun joinRoom(roomNumber: UInt, userInfo: UserInfo) {
         val room = getRoom(roomNumber)
         if (!room.join(userInfo)) {
-            // Room already full
-            logger.info("Failure: room $roomNumber already full")
-            throw NotFoundException("Room already full")
+            logger.info("Failure: join room $roomNumber failed, possibly due to room full or game started")
+            throw NotFoundException("Join room failed")
         }
     }
 

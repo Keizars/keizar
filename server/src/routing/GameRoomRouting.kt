@@ -5,12 +5,14 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.application.log
+import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
+import io.ktor.server.routing.routing
 import io.ktor.server.websocket.webSocket
 import io.ktor.util.pipeline.PipelineContext
 import org.keizar.game.BoardProperties
@@ -20,18 +22,20 @@ import org.keizar.server.modules.gameroom.GameRoom
 import org.keizar.server.modules.GameRoomModule
 import org.keizar.server.modules.gameroom.PlayerSession
 import org.keizar.server.utils.checkAuthentication
+import org.keizar.server.utils.getAuthenticated
 import org.keizar.server.utils.getUserId
-import org.keizar.server.utils.routeAuthenticated
+import org.keizar.server.utils.postAuthenticated
+import org.keizar.server.utils.websocketAuthenticated
 import org.keizar.utils.communication.message.UserInfo
 
 fun Application.gameRoomRouting(context: ServerContext) {
     val logger = log
-    routeAuthenticated {
+    routing {
         val rooms: GameRoomModule = context.gameRooms
-        webSocket("/room/{roomNumber}") {
+        websocketAuthenticated("/room/{roomNumber}") {
             val roomNumber: UInt = call.parameters["roomNumber"]?.toUIntOrNull()
                 ?: throw BadRequestException("Invalid room number")
-            val userId = getUserId() ?: return@webSocket
+            val userId = getUserId() ?: return@websocketAuthenticated
             val username = context.accounts.getUser(userId)?.username
                 ?: throw BadRequestException("Invalid user")
             val userInfo = UserInfo(username)
@@ -50,9 +54,9 @@ fun Application.gameRoomRouting(context: ServerContext) {
             logger.info("$username exiting room $roomNumber")
         }
 
-        post("/room/{roomNumber}/create") {
+        postAuthenticated("/room/{roomNumber}/create") {
             val roomNumber: UInt = getRoomNumberOrBadRequest()
-            if (!checkAuthentication()) return@post
+            if (!checkAuthentication()) return@postAuthenticated
             val properties = call.receive<BoardProperties>()
 
             logger.info("Creating room $roomNumber")
@@ -62,9 +66,9 @@ fun Application.gameRoomRouting(context: ServerContext) {
             call.respond(HttpStatusCode.OK)
         }
 
-        get("/room/{roomNumber}") {
+        getAuthenticated("/room/{roomNumber}") {
             val roomNumber: UInt = getRoomNumberOrBadRequest()
-            if (!checkAuthentication()) return@get
+            if (!checkAuthentication()) return@getAuthenticated
 
             logger.info("Fetching room $roomNumber")
             val room: GameRoom = rooms.getRoom(roomNumber)
@@ -78,9 +82,9 @@ fun Application.gameRoomRouting(context: ServerContext) {
             call.respond(info)
         }
 
-        post("/room/{roomNumber}/join") {
+        postAuthenticated("/room/{roomNumber}/join") {
             val roomNumber: UInt = getRoomNumberOrBadRequest()
-            val userId = getUserId() ?: return@post
+            val userId = getUserId() ?: return@postAuthenticated
             val username = context.accounts.getUser(userId)?.username
                 ?: throw BadRequestException("Invalid user")
             val userInfo = UserInfo(username)

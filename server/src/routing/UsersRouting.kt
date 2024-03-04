@@ -17,7 +17,11 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import io.ktor.server.util.getOrFail
 import org.keizar.server.ServerContext
+import org.keizar.server.utils.getAuthenticated
 import org.keizar.server.utils.getUserId
+import org.keizar.server.utils.patchAuthenticated
+import org.keizar.server.utils.postAuthenticated
+import org.keizar.server.utils.putAuthenticated
 import org.keizar.utils.communication.account.ChangePasswordRequest
 import org.keizar.utils.communication.account.ChangePasswordResponse
 import org.keizar.utils.communication.account.EditUserRequest
@@ -31,19 +35,18 @@ fun Application.usersRouting(context: ServerContext) {
 
     routing {
         route("/users") {
-            authenticate("auth-bearer") {
-                get("/me") {
-                    val uid = getUserId() ?: return@get
-                    val user: User? = accounts.getUser(uid)
-                    if (user == null) {
-                        call.respond(HttpStatusCode.Unauthorized)
-                        return@get
-                    }
-                    call.respond(user)
+            getAuthenticated("/me") {
+                val uid = getUserId() ?: return@getAuthenticated
+                val user: User? = accounts.getUser(uid)
+                if (user == null) {
+                    call.respond(HttpStatusCode.Unauthorized)
+                    return@getAuthenticated
                 }
-                put("/avatar") {
-                    val uid = getUserId() ?: return@put
-                    val contentType = call.request.contentType()
+                call.respond(user)
+            }
+            putAuthenticated("/avatar") {
+                val uid = getUserId() ?: return@putAuthenticated
+                val contentType = call.request.contentType()
 //                    call.receiveMultipart().readAllParts().first().let { part ->
 //                        accounts.uploadNewAvatar(
 //                            uid, when (part) {
@@ -54,29 +57,28 @@ fun Application.usersRouting(context: ServerContext) {
 //                            }, contentType
 //                        )
 //                    }
-                    call.receiveStream().use { input ->
-                        accounts.uploadNewAvatar(uid, input, contentType)
-                    }
+                call.receiveStream().use { input ->
+                    accounts.uploadNewAvatar(uid, input, contentType)
+                }
 
-                    call.respond(HttpStatusCode.OK)
-                }
-                patch("/me") {
-                    val uid = getUserId() ?: return@patch
-                    val request = call.receive<EditUserRequest>()
-                    accounts.updateInfo(
-                        uid,
-                        newUsername = request.username,
-                        newNickname = request.nickname,
-                    )
-                    call.respond(EditUserResponse(success = true))
-                }
-                post("/me/password") {
-                    val uid = getUserId() ?: return@post
-                    val request = call.receive<ChangePasswordRequest>()
-                    val hash = AuthDigest(request.password)
-                    accounts.updateInfo(uid, passwordHash = hash.toString(Charsets.UTF_8))
-                    call.respond(ChangePasswordResponse(success = true))
-                }
+                call.respond(HttpStatusCode.OK)
+            }
+            patchAuthenticated("/me") {
+                val uid = getUserId() ?: return@patchAuthenticated
+                val request = call.receive<EditUserRequest>()
+                accounts.updateInfo(
+                    uid,
+                    newUsername = request.username,
+                    newNickname = request.nickname,
+                )
+                call.respond(EditUserResponse(success = true))
+            }
+            postAuthenticated("/me/password") {
+                val uid = getUserId() ?: return@postAuthenticated
+                val request = call.receive<ChangePasswordRequest>()
+                val hash = AuthDigest(request.password)
+                accounts.updateInfo(uid, passwordHash = hash.toString(Charsets.UTF_8))
+                call.respond(ChangePasswordResponse(success = true))
             }
             get("/{username}") {
                 val username = call.parameters.getOrFail("username")
@@ -86,7 +88,8 @@ fun Application.usersRouting(context: ServerContext) {
             }
             get("/search") {
                 val name: String = call.request.queryParameters.getOrFail("name")
-                val user = accounts.getUserByUsername(name) ?: throw NotFoundException("Invalid user")
+                val user =
+                    accounts.getUserByUsername(name) ?: throw NotFoundException("Invalid user")
                 call.respond(user)
             }
             post("/available") {

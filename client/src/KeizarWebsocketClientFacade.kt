@@ -15,7 +15,7 @@ class KeizarWebsocketClientFacade(
 
     /**
      * Connect to server by websocket and create a game room session
-     * @throws RoomFullException if the room is full
+     * @throws RoomFullException if the join room failed
      */
     suspend fun connect(
         roomNumber: UInt,

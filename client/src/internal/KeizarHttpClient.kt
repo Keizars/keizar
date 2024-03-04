@@ -8,6 +8,7 @@ import io.ktor.client.plugins.logging.Logging
 import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
+import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.patch
@@ -67,7 +68,7 @@ internal class KeizarHttpClientImpl(
         token: String,
     ): RoomInfo {
         val respond: HttpResponse = client.get(urlString = "$endpoint/room/$roomNumber") {
-            header("Authorization", "Bearer $token")
+            bearerAuth(token)
         }
         if (respond.status != HttpStatusCode.OK) {
             throw NetworkFailureException("Failed getRoom")
@@ -82,14 +83,14 @@ internal class KeizarHttpClientImpl(
         val respond = client.post(
             urlString = "$endpoint/room/$roomNumber/join"
         ) {
-            header("Authorization", "Bearer $token")
+            bearerAuth(token)
         }
         return respond.status == HttpStatusCode.OK
     }
 
     override suspend fun getSelf(token: String): User {
         return client.get(urlString = "$endpoint/users/me") {
-            header("Authorization", "Bearer $token")
+            bearerAuth(token)
         }.body()
     }
 
@@ -100,7 +101,7 @@ internal class KeizarHttpClientImpl(
         return client.webSocketSession(
             urlString = "ws:${endpoint.substringAfter(':')}/room/$roomNumber",
         ) {
-            header("Authorization", "Bearer $token")
+            bearerAuth(token)
         }
     }
 
