@@ -113,7 +113,7 @@ fun MainScreen() {
             "game/configuration",
             listOf(
                 navArgument("configuration") {
-                    nullable = false
+                    nullable = true
                     type = NavType.StringType
                 },
             )
