@@ -2,15 +2,14 @@ package org.keizar.server.routing
 
 import io.ktor.server.application.Application
 import io.ktor.server.application.call
-import io.ktor.server.auth.authenticate
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
 import io.ktor.server.routing.delete
-import io.ktor.server.routing.get
 import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import org.keizar.server.ServerContext
+import org.keizar.server.utils.getAuthenticated
 import org.keizar.server.utils.getUserId
 import org.keizar.utils.communication.game.GameDataStore
 import java.util.UUID
@@ -25,8 +24,8 @@ fun Application.gameDataRouting(context: ServerContext) {
                 gameDataTable.addGameData(gameData)
             }
 
-            get {
-                val userId = getUserId() ?: return@get
+            getAuthenticated {
+                val userId = getUserId() ?: return@getAuthenticated
                 call.respond(gameDataTable.getGameDataByUsedID(userId))
             }
 
