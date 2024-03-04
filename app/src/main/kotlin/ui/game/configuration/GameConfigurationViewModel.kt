@@ -1,8 +1,6 @@
 package org.keizar.android.ui.game.configuration
 
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.remember
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,13 +42,13 @@ interface GameConfigurationViewModel : Disposable, HasBackgroundScope {
 
     @Stable
     val playAs: Flow<Role>
-    
+
     @Stable
     val seedBankService: SeedBankService
-    
+
     @Stable
     val sessionManagerService: SessionManager
-            
+
     fun setPlayAs(role: Role)
 
     @Stable
@@ -63,12 +61,10 @@ interface GameConfigurationViewModel : Disposable, HasBackgroundScope {
     fun setFreshButtonEnable(value: Boolean)
 }
 
-@Composable
-fun rememberGameConfigurationViewModel(): GameConfigurationViewModel = remember {
-    GameConfigurationViewModelImpl(isSingle = true)
-}
-
-fun GameConfigurationViewModel(isSingle: Boolean): GameConfigurationViewModel = GameConfigurationViewModelImpl(isSingle = isSingle)
+fun GameConfigurationViewModel(
+    initialConfiguration: GameStartConfiguration = GameStartConfiguration.random(),
+    isSingle: Boolean,
+): GameConfigurationViewModel = GameConfigurationViewModelImpl(initialConfiguration, isSingle = isSingle)
 
 @Serializable
 data class GameStartConfiguration(
@@ -126,9 +122,9 @@ private class GameConfigurationViewModelImpl(
     }
 
     override val freshButtonEnable: MutableStateFlow<Boolean> = MutableStateFlow(true)
-    
+
     override val seedBankService: SeedBankService by inject()
-    
+
     override val sessionManagerService: SessionManager by inject()
     override fun setFreshButtonEnable(value: Boolean) {
         freshButtonEnable.value = value
@@ -167,8 +163,7 @@ private class GameConfigurationViewModelImpl(
                 delay(3000)
                 setFreshButtonEnable(true)
             }
-        }
-        else {
+        } else {
             updateConfiguration {
                 GameStartConfiguration.random()
             }

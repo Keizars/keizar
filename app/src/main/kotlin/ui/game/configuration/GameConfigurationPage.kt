@@ -72,10 +72,12 @@ import org.keizar.game.Role.WHITE
 
 @Composable
 fun GameConfigurationScene(
+    initialConfiguration: GameStartConfiguration = GameStartConfiguration.random(),
     onClickGoBack: () -> Unit,
     navController: NavController,
 ) {
     GameConfigurationPage(
+        initialConfiguration = initialConfiguration,
         onClickGoBack = onClickGoBack,
         onClickStart = {
             val configuration = ProtoBuf.Default.encodeToHexString(GameStartConfiguration.serializer(), it)
@@ -91,11 +93,17 @@ private val ROUND_CORNER_RADIUS = 12.dp
 
 @Composable
 private fun GameConfigurationPage(
+    initialConfiguration: GameStartConfiguration = GameStartConfiguration.random(),
     onClickGoBack: () -> Unit,
     onClickStart: (GameStartConfiguration) -> Unit,
     onClickLogin: () -> Unit
 ) {
-    val vm = rememberGameConfigurationViewModel()
+    val vm = remember {
+        GameConfigurationViewModel(
+            initialConfiguration = initialConfiguration,
+            isSingle = true
+        )
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -165,7 +173,7 @@ fun GameConfigurationPageLandscape(
                 ) {
                     val context = LocalContext.current
                     SaveSeedButton(vm, onClickLogin, context)
-                    
+
                     StartButton(
                         { onClickStart(vm.configuration.value) },
                         Modifier
@@ -223,7 +231,7 @@ fun GameConfigurationPagePortrait(
 
 
 @Composable
-private fun SaveSeedButton(vm: GameConfigurationViewModel, onClickLogin: () -> Unit, context: android.content.Context){
+private fun SaveSeedButton(vm: GameConfigurationViewModel, onClickLogin: () -> Unit, context: android.content.Context) {
     TextButton(
         onClick = {
             vm.launchInBackground {
@@ -324,11 +332,11 @@ fun BoardSeedTextField(
 //                    Icon(Icons.Default.ContentPaste, contentDescription = "Paste seed")
 //                }
 //            } else {
-                IconButton(onClick = {
-                    onClickRandom()
-                }, enabled = refreshEnable) {
-                    Icon(Icons.Default.Refresh, contentDescription = "Generate random seed")
-                }
+            IconButton(onClick = {
+                onClickRandom()
+            }, enabled = refreshEnable) {
+                Icon(Icons.Default.Refresh, contentDescription = "Generate random seed")
+            }
 //            }
         },
         shape = RoundedCornerShape(ROUND_CORNER_RADIUS),

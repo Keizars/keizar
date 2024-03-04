@@ -49,6 +49,7 @@ import kotlinx.serialization.decodeFromHexString
 import kotlinx.serialization.encodeToHexString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
+import org.keizar.android.GameStartConfigurationEncoder
 import org.keizar.android.R
 import org.keizar.android.client.SessionManager
 import org.keizar.android.data.SavedState
@@ -110,10 +111,21 @@ fun MainScreen() {
         composable("home") { HomePage(navController) }
         composable(
             "game/configuration",
-        ) {
+            listOf(
+                navArgument("configuration") {
+                    nullable = false
+                    type = NavType.StringType
+                },
+            )
+        ) { entry ->
             GameConfigurationScene(
-                onClickGoBack = { navController.popBackStack(it.destination.id, true) },
-                navController
+                initialConfiguration = entry.arguments?.getString("configuration")?.let {
+                    GameStartConfigurationEncoder.decode(it)
+                } ?: remember {
+                    GameStartConfiguration.random()
+                },
+                onClickGoBack = { navController.popBackStack(entry.destination.id, true) },
+                navController = navController
             )
         }
         composable(
@@ -324,7 +336,7 @@ fun MainScreen() {
         }
         composable(
             "profile/edit",
-        ) {entry ->
+        ) { entry ->
             AuthEditScene(
                 onClickBack = {
                     if (navController.currentBackStackEntry != entry) {
