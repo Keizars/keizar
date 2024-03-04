@@ -20,22 +20,20 @@ fun Application.gameDataRouting(context: ServerContext) {
 
     routing {
         route("/games") {
-            authenticate("auth-bearer") {
-                post{
-                    val gameData = call.receive<GameDataStore>()
-                    gameDataTable.addGameData(gameData)
-                }
+            post{
+                val gameData = call.receive<GameDataStore>()
+                gameDataTable.addGameData(gameData)
+            }
 
-                get {
-                    val userId = getUserId() ?: return@get
-                    call.respond(gameDataTable.getGameDataByUsedID(userId))
-                }
+            get {
+                val userId = getUserId() ?: return@get
+                call.respond(gameDataTable.getGameDataByUsedID(userId))
+            }
 
 
-                delete("/{id}") {
-                    val id = call.parameters["id"] ?: return@delete
-                    gameDataTable.removeGameData(UUID.fromString(id))
-                }
+            delete("/{id}") {
+                val id = call.parameters["id"] ?: return@delete
+                gameDataTable.removeGameData(UUID.fromString(id))
             }
         }
     }

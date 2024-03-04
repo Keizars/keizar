@@ -257,7 +257,7 @@ sealed class PlayableGameBoardViewModel(
             this.launchInBackground {
                 opponentName = opponentUser.first().username
             }
-        } else {
+        } else if (userName != null){
             opponentName = "Computer"
         }
         val gameData = GameDataStore(

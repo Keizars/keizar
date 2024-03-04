@@ -4,6 +4,7 @@ import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
+import org.bson.codecs.configuration.CodecConfigurationException
 
 import org.keizar.server.database.GameDataDBControl
 import org.keizar.server.database.models.GameDataModel
@@ -16,14 +17,9 @@ class MongoGameDataDbControl(
         // add data if id not in list and username and time is not the same
         return try {
             gameDataTable.find(
-                Filters.or(
-                    Filters.eq("id", gameData.id),
-                    Filters.and(
-                        Filters.eq("userId1", gameData.userId),
-                        Filters.eq("userId2", gameData.opponentId),
-                        Filters.eq("timeStamp", gameData.timeStamp)
-                    )
-                )
+                filter = (Field("userId1") eq gameData.userId)
+                        and (Field("userId2") eq gameData.opponentId)
+                        and (Field("timeStamp") eq gameData.timeStamp)
             ).first()
             false
         } catch (e: NoSuchElementException) {
