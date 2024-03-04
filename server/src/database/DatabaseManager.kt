@@ -6,15 +6,18 @@ import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.Indexes
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import org.bson.UuidRepresentation
+import org.bson.codecs.configuration.CodecRegistries
 import org.keizar.server.database.local.InMemoryGameDataControl
 import org.keizar.server.database.local.InMemorySeedBankDbControl
 import org.keizar.server.database.local.InMemoryUserDbControl
 import org.keizar.server.database.models.GameDataModel
 import org.keizar.server.database.models.SeedBankModel
 import org.keizar.server.database.models.UserModel
+import org.keizar.server.database.mongodb.KeizarCodecRegistry
 import org.keizar.server.database.mongodb.MongoGameDataDbControl
 import org.keizar.server.database.mongodb.MongoSeedBankDbControl
 import org.keizar.server.database.mongodb.MongoUserDbControl
+import org.keizar.server.plugins.ServerJson
 
 interface DatabaseManager {
     val user: UserDbControl
@@ -34,6 +37,12 @@ class MongoDatabaseManagerImpl(
 ) : DatabaseManager {
     private val client = MongoClient.create(MongoClientSettings.builder().apply {
         applyConnectionString(ConnectionString(connection))
+        codecRegistry(
+            CodecRegistries.fromRegistries(
+                MongoClientSettings.getDefaultCodecRegistry(),
+                KeizarCodecRegistry(ServerJson),
+            )
+        )
         uuidRepresentation(UuidRepresentation.STANDARD)
     }.build())
 
