@@ -24,7 +24,11 @@ class KotlinxSerializationCodecProvider(
 
         return object : Codec<T> {
             override fun encode(writer: BsonWriter, value: T, encoderContext: EncoderContext?) {
-                val str = format.encodeToString(serializer, registry)
+                if (value == null) {
+                    writer.writeNull()
+                    return
+                }
+                val str = format.encodeToString(serializer, value)
                 writer.writeString(str)
             }
 
