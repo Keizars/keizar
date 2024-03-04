@@ -107,7 +107,7 @@ class PrivateRoomViewModelImpl(
 
     override val connectRoomError: MutableStateFlow<ConnectRoomError?> = MutableStateFlow(null)
 
-    override val configuration: GameConfigurationViewModel = GameConfigurationViewModel(isSingle = false)
+    override val configuration: GameConfigurationViewModel = GameConfigurationViewModel()
     override val accept: Flow<Boolean> = selfPlayer.map { it.state.value == PlayerSessionState.READY }
 
     private val showToast = mutableStateOf(false)
@@ -130,7 +130,7 @@ class PrivateRoomViewModelImpl(
     }
 
     override suspend fun accept() {
-        if (accept.first()) {
+        if (!accept.first()) {
             client.first().setReady()
         }
     }

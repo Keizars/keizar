@@ -84,6 +84,7 @@ private fun AcceptArea(
         horizontalArrangement = Arrangement.End,
     ) {
         val accept by vm.accept.collectAsStateWithLifecycle(false)
+        println(accept)
         if (accept) {
             Text(text = "Waiting for the other player...", style = MaterialTheme.typography.titleMedium)
         } else {

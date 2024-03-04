@@ -27,7 +27,6 @@ import org.koin.core.component.inject
 interface GameConfigurationViewModel : Disposable, HasBackgroundScope {
     val configuration: StateFlow<GameStartConfiguration>
     val configurationSeed: Flow<String>
-    val isSingle: Boolean
     fun updateRandomSeed()
 
     @Stable
@@ -63,8 +62,11 @@ interface GameConfigurationViewModel : Disposable, HasBackgroundScope {
 
 fun GameConfigurationViewModel(
     initialConfiguration: GameStartConfiguration = GameStartConfiguration.random(),
-    isSingle: Boolean,
-): GameConfigurationViewModel = GameConfigurationViewModelImpl(initialConfiguration, isSingle = isSingle)
+): GameConfigurationViewModel = GameConfigurationViewModelImpl(initialConfiguration)
+
+fun SinglePlayerGameConfigurationViewModel(
+    initialConfiguration: GameStartConfiguration = GameStartConfiguration.random(),
+): GameConfigurationViewModel = SinglePlayerGameConfigurationViewModelImpl(initialConfiguration)
 
 @Serializable
 data class GameStartConfiguration(
@@ -88,16 +90,18 @@ fun GameStartConfiguration.createBoard(): BoardProperties =
 
 private class GameConfigurationViewModelImpl(
     initialConfiguration: GameStartConfiguration = GameStartConfiguration.random(),
-    override val isSingle: Boolean
 ) : GameConfigurationViewModel, AbstractViewModel(), KoinComponent {
     override val configuration: MutableStateFlow<GameStartConfiguration> =
         MutableStateFlow(initialConfiguration)
-    override val configurationSeed: Flow<String> = configuration.map { GameStartConfigurationEncoder.encode(it) }
+    override val configurationSeed: Flow<String> =
+        configuration.map { GameStartConfigurationEncoder.encode(it) }
 
-    private val _configurationSeedText = MutableStateFlow(GameStartConfigurationEncoder.encode(initialConfiguration))
-    override val configurationSeedText = merge(_configurationSeedText, configurationSeed).stateInBackground(
-        GameStartConfigurationEncoder.encode(initialConfiguration)
-    )
+    private val _configurationSeedText =
+        MutableStateFlow(GameStartConfigurationEncoder.encode(initialConfiguration))
+    override val configurationSeedText =
+        merge(_configurationSeedText, configurationSeed).stateInBackground(
+            GameStartConfigurationEncoder.encode(initialConfiguration)
+        )
 
     private val layoutSeed: Flow<Int> = configuration.map { it.layoutSeed }
     override val playAs: Flow<Role> = configuration.map { it.playAs }
@@ -131,21 +135,14 @@ private class GameConfigurationViewModelImpl(
     }
 
     override fun setConfigurationSeedText(value: String) {
-        if (!isSingle) {
-            backgroundScope.launch {
-                setFreshButtonEnable(false)
-                _configurationSeedText.value = value
-                GameStartConfigurationEncoder.decode(value)?.let {
-                    updateConfiguration { it }
-                }
-                delay(3000)
-                setFreshButtonEnable(true)
-            }
-        } else {
+        backgroundScope.launch {
+            setFreshButtonEnable(false)
             _configurationSeedText.value = value
             GameStartConfigurationEncoder.decode(value)?.let {
                 updateConfiguration { it }
             }
+            delay(3000)
+            setFreshButtonEnable(true)
         }
     }
 
@@ -154,19 +151,13 @@ private class GameConfigurationViewModelImpl(
     }
 
     override fun updateRandomSeed() {
-        if (!isSingle) {
-            backgroundScope.launch {
-                setFreshButtonEnable(false)
-                updateConfiguration {
-                    GameStartConfiguration.random()
-                }
-                delay(3000)
-                setFreshButtonEnable(true)
-            }
-        } else {
+        backgroundScope.launch {
+            setFreshButtonEnable(false)
             updateConfiguration {
                 GameStartConfiguration.random()
             }
+            delay(3000)
+            setFreshButtonEnable(true)
         }
     }
 
@@ -174,4 +165,73 @@ private class GameConfigurationViewModelImpl(
         this.configuration.value = this.configuration.value.block()
     }
 
+}
+
+private class SinglePlayerGameConfigurationViewModelImpl(
+    initialConfiguration: GameStartConfiguration = GameStartConfiguration.random(),
+) :  GameConfigurationViewModel, AbstractViewModel(), KoinComponent{
+
+    override val configuration: MutableStateFlow<GameStartConfiguration> =
+        MutableStateFlow(initialConfiguration)
+    override val configurationSeed: Flow<String> =
+        configuration.map { GameStartConfigurationEncoder.encode(it) }
+
+    private val _configurationSeedText =
+        MutableStateFlow(GameStartConfigurationEncoder.encode(initialConfiguration))
+    override val configurationSeedText =
+        merge(_configurationSeedText, configurationSeed).stateInBackground(
+            GameStartConfigurationEncoder.encode(initialConfiguration)
+        )
+
+    private val layoutSeed: Flow<Int> = configuration.map { it.layoutSeed }
+    override val playAs: Flow<Role> = configuration.map { it.playAs }
+    override fun setPlayAs(role: Role) {
+        updateConfiguration {
+            copy(playAs = role)
+        }
+    }
+
+    override val boardProperties: SharedFlow<BoardProperties> =
+        layoutSeed.filterNotNull().map { layoutSeed ->
+            BoardProperties.getStandardProperties(layoutSeed)
+        }.shareInBackground()
+
+
+    override val difficulty: Flow<Difficulty> = configuration.map { it.difficulty }
+
+    override fun setDifficulty(difficulty: Difficulty) {
+        updateConfiguration {
+            copy(difficulty = difficulty)
+        }
+    }
+
+    override val freshButtonEnable: MutableStateFlow<Boolean> = MutableStateFlow(true)
+
+    override val seedBankService: SeedBankService by inject()
+
+    override val sessionManagerService: SessionManager by inject()
+    override fun setFreshButtonEnable(value: Boolean) {
+        freshButtonEnable.value = value
+    }
+
+    override fun setConfigurationSeedText(value: String) {
+        _configurationSeedText.value = value
+        GameStartConfigurationEncoder.decode(value)?.let {
+            updateConfiguration { it }
+        }
+    }
+
+    override fun updateRandomSeed() {
+        updateConfiguration {
+            GameStartConfiguration.random()
+        }
+    }
+    override val isConfigurationSeedTextError: Flow<Boolean> = configurationSeedText.map {
+        GameStartConfigurationEncoder.decode(it) == null
+    }
+
+
+    private inline fun updateConfiguration(block: GameStartConfiguration.() -> GameStartConfiguration) {
+        this.configuration.value = this.configuration.value.block()
+    }
 }

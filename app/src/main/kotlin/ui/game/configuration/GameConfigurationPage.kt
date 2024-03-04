@@ -99,9 +99,8 @@ private fun GameConfigurationPage(
     onClickLogin: () -> Unit
 ) {
     val vm = remember {
-        GameConfigurationViewModel(
+        SinglePlayerGameConfigurationViewModel(
             initialConfiguration = initialConfiguration,
-            isSingle = true
         )
     }
     Scaffold(
