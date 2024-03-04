@@ -6,7 +6,7 @@ plugins {
 configureFlattenSourceSets()
 
 dependencies {
-    implementation(projects.utils.protocol)
+    implementation(projects.protocol)
     api(libs.kotlinx.coroutines.core)
     api(libs.kotlinx.coroutines.test)
     api(libs.kotlinx.serialization.json)

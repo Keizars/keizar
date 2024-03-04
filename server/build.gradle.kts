@@ -7,7 +7,7 @@ plugins {
 dependencies {
     api(libs.kotlinx.serialization.json)
     implementation(project(":rule-engine"))
-    implementation(projects.utils.protocol)
+    implementation(projects.protocol)
     implementation(kotlin("reflect"))
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.server.auth)

@@ -5,7 +5,7 @@ plugins {
 
 dependencies {
     implementation(project(":rule-engine"))
-    implementation(projects.utils.protocol)
+    implementation(projects.protocol)
     runtimeOnly(libs.slf4j.simple)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.logging)
