@@ -115,7 +115,7 @@ private fun GameConfigurationPage(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             if (isSystemInLandscape()) {
-                GameConfigurationPageLandscape(vm, onClickStart, Modifier.fillMaxSize())
+                GameConfigurationPageLandscape(vm, onClickStart, onClickLogin, Modifier.fillMaxSize())
             } else {
                 GameConfigurationPagePortrait(vm, onClickStart, onClickLogin, Modifier.fillMaxSize())
             }
@@ -127,6 +127,7 @@ private fun GameConfigurationPage(
 fun GameConfigurationPageLandscape(
     vm: GameConfigurationViewModel,
     onClickStart: (GameStartConfiguration) -> Unit,
+    onClickLogin: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     BoxWithConstraints(modifier, contentAlignment = Alignment.Center) {
@@ -162,6 +163,9 @@ fun GameConfigurationPageLandscape(
                         .fillMaxWidth()
                         .height(50.dp), horizontalArrangement = Arrangement.End
                 ) {
+                    val context = LocalContext.current
+                    SaveSeedButton(vm, onClickLogin, context)
+                    
                     StartButton(
                         { onClickStart(vm.configuration.value) },
                         Modifier
@@ -205,28 +209,7 @@ fun GameConfigurationPagePortrait(
                 .fillMaxWidth()
                 .height(50.dp), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically
         ) {
-            TextButton(
-                onClick = {
-                    vm.launchInBackground {
-                        val isLoggedIn = vm.sessionManagerService.isLoggedIn.first()
-                        if (isLoggedIn) {
-                            val seed = vm.configurationSeed.first()
-                            vm.seedBankService.addSeed(seed)
-                            withContext(Dispatchers.Main) {
-                                Toast.makeText(context, "Seed saved", Toast.LENGTH_SHORT).show()
-                            }
-                        } else {
-                            withContext(Dispatchers.Main) {
-                                onClickLogin()
-                            }
-                        }
-                    }
-                }, modifier = Modifier
-                    .padding(top = 10.dp)
-                    .height(45.dp)
-            ) {
-                Text("Save Seed", modifier = Modifier, textAlign = TextAlign.Center)
-            }
+            SaveSeedButton(vm, onClickLogin, context)
 
             StartButton(
                 { onClickStart(vm.configuration.value) },
@@ -235,6 +218,33 @@ fun GameConfigurationPagePortrait(
                     .height(45.dp)
             )
         }
+    }
+}
+
+
+@Composable
+private fun SaveSeedButton(vm: GameConfigurationViewModel, onClickLogin: () -> Unit, context: android.content.Context){
+    TextButton(
+        onClick = {
+            vm.launchInBackground {
+                val isLoggedIn = vm.sessionManagerService.isLoggedIn.first()
+                if (isLoggedIn) {
+                    val seed = vm.configurationSeed.first()
+                    vm.seedBankService.addSeed(seed)
+                    withContext(Dispatchers.Main) {
+                        Toast.makeText(context, "Seed saved", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        onClickLogin()
+                    }
+                }
+            }
+        }, modifier = Modifier
+            .padding(top = 10.dp)
+            .height(45.dp)
+    ) {
+        Text("Save Seed", modifier = Modifier, textAlign = TextAlign.Center)
     }
 }
 
