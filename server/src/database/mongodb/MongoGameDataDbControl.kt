@@ -15,7 +15,7 @@ class MongoGameDataDbControl(
     override suspend fun addGameData(gameData: GameDataModel): Boolean {
         // add data if id not in list and username and time is not the same
         return try {
-            val success = gameDataTable.find(
+            gameDataTable.find(
                 Filters.or(
                     Filters.eq("id", gameData.id),
                     Filters.and(
