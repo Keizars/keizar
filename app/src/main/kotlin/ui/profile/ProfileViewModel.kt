@@ -44,6 +44,10 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
 
     val nickname = self.mapLatest { it.nickname }
         .localCachedStateFlow("Loading...")
+    
+    suspend fun getAvatarUrl(opponentUserName: String): String {
+        return userService.getUser(opponentUserName).avatarUrlOrDefault()
+    }
 
     suspend fun logout() {
         sessionManager.invalidateToken()

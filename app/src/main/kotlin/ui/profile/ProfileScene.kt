@@ -69,6 +69,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -86,6 +88,7 @@ import org.keizar.utils.communication.game.GameDataStore
 import org.keizar.utils.communication.game.NeutralStats
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.game.RoundStats
+import java.io.File
 
 @Composable
 fun ProfileScene(
@@ -349,9 +352,12 @@ fun NicknameEditDialog(
 }
 
 @Composable
-fun AvatarImage(url: String?, modifier: Modifier = Modifier) {
+fun AvatarImage(url: String?, modifier: Modifier = Modifier, filePath: String? = null) {
     AsyncImage(
-        model = url,
+        model = if (filePath != null) ImageRequest.Builder(LocalContext.current)
+            .data(File(filePath))
+            .crossfade(true)
+            .build() else url,
         contentDescription = "Avatar",
         modifier,
         placeholder = rememberVectorPainter(Icons.Default.Person),
@@ -474,19 +480,34 @@ fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData:
     val round2stats = gameData.round2Statistics
     val selfUser by vm.self.collectAsStateWithLifecycle(null)
     val myName = selfUser?.username
-    val opponentName = if (gameData.userId == myName) gameData.opponentId else gameData.userId
+
+    val opponentName = if (gameData.userId == null || gameData.opponentId == null) {
+        "Computer"
+    } else {
+        if (gameData.userId == myName) gameData.opponentId else gameData.userId
+    }
     Card(modifier = modifier.fillMaxWidth()) {
-        // TODO: Replace with actual avatar url
-        val avatarUrl = "https://ui-avatars.com/api/?name=harrison"
+        var avatarUrl = ""
+        var filePath: String? = null
+        if (opponentName == "Computer") {
+            filePath = "app/src/main/res/drawable/robot_icon.png"
+        } else {
+            vm.launchInBackground {
+                avatarUrl = vm.getAvatarUrl(opponentName!!)
+            }
+        }
+
         Row(
             modifier = modifier
                 .fillMaxWidth()
                 .height(IntrinsicSize.Min)
         ) {
             AvatarImage(
-                url = avatarUrl, modifier = Modifier
+                url = avatarUrl,
+                modifier = Modifier
                     .size(72.dp)
-                    .padding(8.dp)
+                    .padding(8.dp),
+                filePath = filePath
             )
 
             Column(
@@ -517,7 +538,7 @@ fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData:
                 ) {
                     Icon(Icons.Filled.MoreVert, contentDescription = "More options")
                 }
-                
+
                 DropdownMenu(
                     expanded = showMenu,
                     onDismissRequest = { showMenu = false }
@@ -560,9 +581,15 @@ private fun GameDetails(
         Column(
             modifier = modifier
                 .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.background).padding(8.dp)
+                .background(MaterialTheme.colorScheme.background)
+                .padding(8.dp)
         ) {
-            Column(modifier = Modifier.fillMaxWidth().padding(8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 val layoutSeed = GameStartConfigurationEncoder.decode(gameData.gameConfiguration)?.layoutSeed
                 val boardProperties = BoardProperties.getStandardProperties(layoutSeed)
                 Box(
@@ -586,7 +613,7 @@ private fun GameDetails(
             val myName = selfUser.username
             val opponentName = if (gameData.userId == myName) gameData.opponentId else gameData.userId
 
-            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally){
+            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
 
                 Column(
                     modifier = Modifier
@@ -642,7 +669,7 @@ private fun GameDetails(
                         modifier = Modifier.padding(8.dp),
                         textAlign = TextAlign.Center
                     )
-                    
+
                     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
                         Button(onClick = onDismissRequest) {
                             Text(text = "OK")
