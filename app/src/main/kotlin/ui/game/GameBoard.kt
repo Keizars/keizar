@@ -74,6 +74,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.withContext
+import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.transition.CapturedPiecesHost
@@ -235,7 +236,7 @@ private fun LandscapeBottomBar(
 
 @Preview(showBackground = true, device = Devices.TABLET)
 @Composable
-private fun PreviewBottomBaw() {
+private fun PreviewBottomBar1() = ProvideCompositionalLocalsForPreview {
     val vm = rememberSinglePlayerGameBoardForPreview()
     GameBoardScaffold(
         vm,
@@ -243,10 +244,24 @@ private fun PreviewBottomBaw() {
             GameBoard(vm, Modifier.size(400.dp))
         },
         bottomBar = {
-            RoundOneBottomBar(vm = rememberSinglePlayerGameBoardForPreview(), onClickHome = {})
+            RoundOneBottomBar(vm = vm, onClickHome = {})
         }
     )
+}
 
+@Preview(showBackground = true, device = Devices.TABLET)
+@Composable
+private fun PreviewBottomBar2() = ProvideCompositionalLocalsForPreview {
+    val vm = rememberSinglePlayerGameBoardForPreview()
+    GameBoardScaffold(
+        vm,
+        board = {
+            GameBoard(vm, Modifier.size(400.dp))
+        },
+        bottomBar = {
+            RoundTwoBottomBar(vm = vm, onClickHome = {}, onClickGameConfig = {}, onClickLogin = {})
+        }
+    )
 }
 
 @Composable
@@ -389,7 +404,8 @@ fun RoundTwoBottomBar(
     Column {
         Row(
             modifier
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 16.dp)
+                .width(IntrinsicSize.Max),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.Top
         ) {
@@ -439,7 +455,9 @@ fun RoundTwoBottomBar(
                     }
                 },
                 icon = { Icon(Icons.Default.Save, null) },
-                text = { Text(text = "Save Game", fontSize = 10.sp) })
+                text = { Text(text = "Save Game", fontSize = 10.sp, softWrap = false) },
+                Modifier.width(IntrinsicSize.Max)
+            )
 
             ActionButton(
                 onClick = { vm.setShowGameOverResults(true) },
@@ -1002,13 +1020,13 @@ private fun ActionButton(
     icon: @Composable () -> Unit,
     text: @Composable () -> Unit,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = MaterialTheme.colorScheme.background,
+//    backgroundColor: Color = MaterialTheme.colorScheme.background,
     isLoading: Boolean = false
 ) {
     Column(
         modifier
             .clip(RoundedCornerShape(8.dp))
-            .background(backgroundColor)
+//            .background(backgroundColor)
             .clickable(
                 remember { MutableInteractionSource() },
                 indication = rememberRipple(bounded = false),
