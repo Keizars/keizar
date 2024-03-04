@@ -138,8 +138,8 @@ class GameRoomClientImpl internal constructor(
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
-    override val selfPlayer: ClientPlayer = players.first { it.username == self.username }
-    override val opponentPlayer: ClientPlayer? = players.firstOrNull { it.username != self.username }
+    override val selfPlayer: ClientPlayer get() = players.first { it.username == self.username }
+    override val opponentPlayer: ClientPlayer? get() = players.firstOrNull { it.username != self.username }
 
     private val _state: MutableStateFlow<GameRoomState> = MutableStateFlow(GameRoomState.STARTED)
     override val state: StateFlow<GameRoomState> = _state
