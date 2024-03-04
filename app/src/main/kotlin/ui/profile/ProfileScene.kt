@@ -1,12 +1,12 @@
 package org.keizar.android.ui.profile
 
+//noinspection UsingMaterialAndMaterial3Libraries
+//noinspection UsingMaterialAndMaterial3Libraries
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -24,9 +24,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.DropdownMenuItem
-//noinspection UsingMaterialAndMaterial3Libraries
 import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -65,6 +63,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -83,8 +82,7 @@ import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.game.BoardProperties
 import org.keizar.game.Difficulty
 import org.keizar.game.Role
-import org.keizar.utils.communication.account.User
-import org.keizar.utils.communication.game.GameDataStore
+import org.keizar.utils.communication.game.GameDataGet
 import org.keizar.utils.communication.game.NeutralStats
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.game.RoundStats
@@ -370,7 +368,7 @@ fun AvatarImage(url: String?, modifier: Modifier = Modifier, filePath: String? =
 fun SavedBoards(vm: ProfileViewModel) {
     val allSeeds by vm.allSeeds.collectAsState()
     LazyVerticalGrid(
-        columns = GridCells.Fixed(2),
+        columns = GridCells.Fixed(1),
         modifier = Modifier.padding(4.dp)
     ) {
         items(allSeeds) { seed ->
@@ -408,7 +406,8 @@ fun SavedBoardCard(modifier: Modifier = Modifier, layoutSeedText: String, vm: Pr
                 )
             }
             Column {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                Box(Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.TopEnd) {
                     var showMenu by remember { mutableStateOf(false) }
                     val context = LocalContext.current
                     IconButton(onClick = { showMenu = !showMenu }) {
@@ -417,7 +416,8 @@ fun SavedBoardCard(modifier: Modifier = Modifier, layoutSeedText: String, vm: Pr
 
                     DropdownMenu(
                         expanded = showMenu,
-                        onDismissRequest = { showMenu = false }
+                        onDismissRequest = { showMenu = false },
+                        offset = DpOffset((62).dp, (-32).dp)
                     ) {
 
                         DropdownMenuItem(onClick = {
@@ -425,7 +425,6 @@ fun SavedBoardCard(modifier: Modifier = Modifier, layoutSeedText: String, vm: Pr
                             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             val clip = ClipData.newPlainText("Copied seed", layoutSeedText)
                             clipboard.setPrimaryClip(clip)
-                            Toast.makeText(context, "Seed copied to clipboard", Toast.LENGTH_SHORT).show()
                         }) {
                             Text("Copy seed")
                         }
@@ -446,7 +445,7 @@ fun SavedBoardCard(modifier: Modifier = Modifier, layoutSeedText: String, vm: Pr
                 ) {
 
                     Text(
-                        text = "Game board seed: $layoutSeedText",
+                        text = "Game board seed: \n$layoutSeedText",
                         Modifier.padding(bottom = 8.dp),
                         textAlign = TextAlign.Center
                     )
@@ -475,17 +474,11 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
 }
 
 @Composable
-fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData: GameDataStore) {
-    val round1stats = gameData.round1Statistics
-    val round2stats = gameData.round2Statistics
-    val selfUser by vm.self.collectAsStateWithLifecycle(null)
-    val myName = selfUser?.username
+fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData: GameDataGet) {
+    val round1stats = gameData.round1Stats
+    val round2stats = gameData.round2Stats
 
-    val opponentName = if (gameData.userId == null || gameData.opponentId == null) {
-        "Computer"
-    } else {
-        if (gameData.userId == myName) gameData.opponentId else gameData.userId
-    }
+    val opponentName = gameData.opponentUsername
     Card(modifier = modifier.fillMaxWidth()) {
         var avatarUrl = ""
         var filePath: String? = null
@@ -493,7 +486,7 @@ fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData:
             filePath = "app/src/main/res/drawable/robot_icon.png"
         } else {
             vm.launchInBackground {
-                avatarUrl = vm.getAvatarUrl(opponentName!!)
+                avatarUrl = vm.getAvatarUrl(opponentName)
             }
         }
 
@@ -525,7 +518,7 @@ fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData:
                     "Draw"
                 }
 
-                Text(text = "$winningStatus - ${gameData.currentTimestamp}", modifier = Modifier.padding(4.dp))
+                Text(text = "$winningStatus - ${gameData.timeStamp}", modifier = Modifier.padding(4.dp))
                 Text(text = "Opponent: $opponentName", modifier = Modifier.padding(4.dp))
             }
 
@@ -547,7 +540,7 @@ fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData:
                     DropdownMenuItem(onClick = {
                         showMenu = false
                         vm.launchInBackground {
-                            vm.deleteGame(gameData.id!!)
+                            vm.deleteGame(gameData.dataId)
                         }
                     }) {
                         Text("Delete")
@@ -561,7 +554,6 @@ fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData:
                 if (showDetails) {
                     GameDetails(
                         gameData = gameData, onDismissRequest = { showDetails = false },
-                        selfUser = selfUser!!
                     )
                 }
             }
@@ -573,9 +565,8 @@ fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData:
 @Composable
 private fun GameDetails(
     modifier: Modifier = Modifier,
-    gameData: GameDataStore,
-    onDismissRequest: () -> Unit,
-    selfUser: User
+    gameData: GameDataGet,
+    onDismissRequest: () -> Unit
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
         Column(
@@ -608,10 +599,10 @@ private fun GameDetails(
             }
 
 
-            val round1stats = gameData.round1Statistics
-            val round2stats = gameData.round2Statistics
-            val myName = selfUser.username
-            val opponentName = if (gameData.userId == myName) gameData.opponentId else gameData.userId
+            val round1stats = gameData.round1Stats
+            val round2stats = gameData.round2Stats
+            val myName = gameData.selfUsername
+            val opponentName = gameData.opponentUsername
 
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
 
@@ -726,7 +717,14 @@ private fun PreviewSavedGameCard() {
     val vm = ProfileViewModel()
     val round1Stats =
         RoundStats(NeutralStats(0, 0, 0.0, 0, 0, 0.0, 0, 0), Player.FirstBlackPlayer, Player.FirstWhitePlayer)
-    val gameData = GameDataStore("1", round1Stats, round1Stats, "123", "harrison", "harry", "2022-01-01", true)
+    val gameData = GameDataGet(
+        "harrison", "harry", "2023-02-19", GameStartConfigurationEncoder.encode(GameStartConfiguration(
+            layoutSeed = 123,
+            playAs = Role.WHITE,
+            difficulty = Difficulty.MEDIUM
+        )
+        ),
+        round1Stats, round1Stats, "1")
     SavedGameCard(vm = vm, gameData = gameData)
 }
 
@@ -735,18 +733,16 @@ private fun PreviewSavedGameCard() {
 private fun PreviewGameDetails() {
     val round1Stats =
         RoundStats(NeutralStats(0, 0, 0.0, 0, 0, 0.0, 0, 0), Player.FirstBlackPlayer, Player.FirstWhitePlayer)
-    val gameData = GameDataStore(
-        "1", round1Stats, round1Stats, GameStartConfigurationEncoder.encode(
-            GameStartConfiguration(
-                layoutSeed = 123,
-                playAs = Role.WHITE,
-                difficulty = Difficulty.MEDIUM
-            )
-        ), "harrison", "harry", "2022-01-01", true
-    )
+    val gameData = GameDataGet(
+        "harrison", "harry", "2023-02-19", GameStartConfigurationEncoder.encode(GameStartConfiguration(
+            layoutSeed = 123,
+            playAs = Role.WHITE,
+            difficulty = Difficulty.MEDIUM
+        )
+        ),
+        round1Stats, round1Stats, "1")
     GameDetails(
         gameData = gameData,
         onDismissRequest = {},
-        selfUser = User("harry", "harry", "https://ui-avatars.com/api/?name=harry")
     )
 }
