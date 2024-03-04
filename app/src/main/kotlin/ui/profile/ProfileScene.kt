@@ -534,10 +534,12 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
                     )
                 }
             }
-            GameDetailColumn(
-                modifier = modifier,
-                gameData = allGames.value.first(),
-            )
+            if (allGames.value.isNotEmpty()) {
+                GameDetailColumn(
+                    modifier = modifier,
+                    gameData = allGames.value.first(),
+                )
+            }
         }
     } else {
         LazyVerticalGrid(
