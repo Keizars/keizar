@@ -3,14 +3,10 @@ import com.mongodb.kotlin.client.coroutine.MongoCollection
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 
 import org.keizar.server.database.GameDataDBControl
 import org.keizar.server.database.models.GameDataModel
-import org.keizar.server.database.models.modelToData
-import org.keizar.utils.communication.game.GameData
-import org.keizar.utils.communication.game.jsonElementToRoundStats
 import java.util.UUID
 
 class MongoGameDataDbControl(
@@ -23,8 +19,8 @@ class MongoGameDataDbControl(
                 Filters.or(
                     Filters.eq("id", gameData.id),
                     Filters.and(
-                        Filters.eq("userId1", gameData.userId1),
-                        Filters.eq("userId2", gameData.userId2),
+                        Filters.eq("userId1", gameData.userId),
+                        Filters.eq("userId2", gameData.opponentId),
                         Filters.eq("timeStamp", gameData.timeStamp)
                     )
                 )
@@ -43,21 +39,21 @@ class MongoGameDataDbControl(
         ).wasAcknowledged()
     }
 
-    override suspend fun getGameDataById(gameDataId: UUID): GameData {
-        return modelToData(gameDataTable.find(
+    override suspend fun getGameDataById(gameDataId: UUID): GameDataModel{
+        return gameDataTable.find(
             Filters.eq("id", gameDataId)
-        ).first())
+        ).first()
     }
 
-    override suspend fun getGameDataByUser(userId: String): List<GameData> {
-        val list = mutableListOf<GameData>()
+    override suspend fun getGameDataByUser(userId: String): List<GameDataModel> {
+        val list = mutableListOf<GameDataModel>()
         gameDataTable.find(
             Filters.or(
                 Filters.eq("userId1", userId),
                 Filters.eq("userId2", userId),
                 Filters.eq("userSaved", true)
             )
-        ).map{ modelToData(it) }.toList(list)
+        ).toList(list)
         return list
     }
 }

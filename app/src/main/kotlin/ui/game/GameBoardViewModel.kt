@@ -52,7 +52,7 @@ import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import org.keizar.utils.communication.account.User
 import org.keizar.utils.communication.game.BoardPos
-import org.keizar.utils.communication.game.GameData
+import org.keizar.utils.communication.game.GameDataStore
 import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.game.RoundStats
@@ -260,15 +260,15 @@ sealed class PlayableGameBoardViewModel(
         } else {
             opponentName = "Computer"
         }
-        // TODO:  GameData
-        val gameData = GameData(
-            "",
+        val gameData = GameDataStore(
+            null,
             round1Statistics.first(),
             round2Statistics.first(),
             startConfiguration.encode(),
-            opponentName,
             userName,
-            Instant.now().toString()
+            opponentName,
+            Instant.now().toString(),
+            userSaved
         )
         this.launchInBackground {
             gameDataService.sendGameData(gameData)

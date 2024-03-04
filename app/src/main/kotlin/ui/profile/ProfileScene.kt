@@ -82,7 +82,7 @@ import org.keizar.game.BoardProperties
 import org.keizar.game.Difficulty
 import org.keizar.game.Role
 import org.keizar.utils.communication.account.User
-import org.keizar.utils.communication.game.GameData
+import org.keizar.utils.communication.game.GameDataStore
 import org.keizar.utils.communication.game.NeutralStats
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.game.RoundStats
@@ -469,12 +469,12 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
 }
 
 @Composable
-fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData: GameData) {
+fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData: GameDataStore) {
     val round1stats = gameData.round1Statistics
     val round2stats = gameData.round2Statistics
     val selfUser by vm.self.collectAsStateWithLifecycle(null)
     val myName = selfUser?.username
-    val opponentName = if (gameData.user1 == myName) gameData.user2 else gameData.user1
+    val opponentName = if (gameData.userId == myName) gameData.opponentId else gameData.userId
     Card(modifier = modifier.fillMaxWidth()) {
         // TODO: Replace with actual avatar url
         val avatarUrl = "https://ui-avatars.com/api/?name=harrison"
@@ -552,7 +552,7 @@ fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData:
 @Composable
 private fun GameDetails(
     modifier: Modifier = Modifier,
-    gameData: GameData,
+    gameData: GameDataStore,
     onDismissRequest: () -> Unit,
     selfUser: User
 ) {
@@ -584,7 +584,7 @@ private fun GameDetails(
             val round1stats = gameData.round1Statistics
             val round2stats = gameData.round2Statistics
             val myName = selfUser.username
-            val opponentName = if (gameData.user1 == myName) gameData.user2 else gameData.user1
+            val opponentName = if (gameData.userId == myName) gameData.opponentId else gameData.userId
 
             Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally){
 
@@ -699,7 +699,7 @@ private fun PreviewSavedGameCard() {
     val vm = ProfileViewModel()
     val round1Stats =
         RoundStats(NeutralStats(0, 0, 0.0, 0, 0, 0.0, 0, 0), Player.FirstBlackPlayer, Player.FirstWhitePlayer)
-    val gameData = GameData("1", round1Stats, round1Stats, "123", "harrison", "harry", "2022-01-01", true)
+    val gameData = GameDataStore("1", round1Stats, round1Stats, "123", "harrison", "harry", "2022-01-01", true)
     SavedGameCard(vm = vm, gameData = gameData)
 }
 
@@ -708,7 +708,7 @@ private fun PreviewSavedGameCard() {
 private fun PreviewGameDetails() {
     val round1Stats =
         RoundStats(NeutralStats(0, 0, 0.0, 0, 0, 0.0, 0, 0), Player.FirstBlackPlayer, Player.FirstWhitePlayer)
-    val gameData = GameData(
+    val gameData = GameDataStore(
         "1", round1Stats, round1Stats, GameStartConfigurationEncoder.encode(
             GameStartConfiguration(
                 layoutSeed = 123,

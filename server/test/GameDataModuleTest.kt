@@ -3,7 +3,7 @@ package org.keizar.server
 import kotlinx.coroutines.test.runTest
 import org.keizar.server.database.InMemoryDatabaseManagerImpl
 import org.keizar.server.modules.GameDataModuleImpl
-import org.keizar.server.modules.SeedBankModuleImpl
+import org.keizar.utils.communication.game.GameDataGet
 import org.keizar.utils.communication.game.NeutralStats
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.game.RoundStats
@@ -23,8 +23,8 @@ class GameDataModuleTest {
         val round2Stats = RoundStats(round2NeutralStats, Player.FirstBlackPlayer, Player.FirstBlackPlayer)
         val userId1 = UUID.randomUUID()
         val userId2 = UUID.randomUUID()
-        var userId3 = UUID.randomUUID()
-        val gameData1 = org.keizar.utils.communication.game.GameData(
+        val userId3 = UUID.randomUUID()
+        val gameData1 = org.keizar.utils.communication.game.GameDataStore(
             id = null,
             round1Stats,
             round2Stats,
@@ -34,7 +34,7 @@ class GameDataModuleTest {
             "timeStamp",
             false
         )
-        val gameData2 = org.keizar.utils.communication.game.GameData(
+        val gameData2 = org.keizar.utils.communication.game.GameDataStore(
             id = null,
             round1Stats,
             round2Stats,
@@ -44,13 +44,24 @@ class GameDataModuleTest {
             "timeStamp",
             true
         )
+        // add a non user saved game data
         assertTrue(gameDataModule.addGameData(gameData1))
         assertFalse(gameDataModule.addGameData(gameData1))
+        // shouldn't be able to get it
         assertFalse(gameDataModule.getGameDataByUsedID(userId1).isNotEmpty())
+        // add a user saved game data
         assertTrue(gameDataModule.addGameData(gameData2))
         val gameData = gameDataModule.getGameDataByUsedID(userId1)
-        val nulledIdGameData = gameData.map { it.copy(id = null) }
-        assertContentEquals(nulledIdGameData, listOf(gameData2))
+        val expectedData = GameDataGet (
+            "Unknown",
+            "Unknown",
+            "timeStamp",
+            "gameConfiguration",
+            round1Stats,
+            round2Stats,
+            gameData[0].dataId
+        )
+        assertContentEquals(gameData, listOf(expectedData))
     }
 
     @Test
@@ -63,7 +74,7 @@ class GameDataModuleTest {
         val userId1 = UUID.randomUUID()
         val userId2 = UUID.randomUUID()
         val uuidString = UUID.randomUUID().toString()
-        val gameData1 = org.keizar.utils.communication.game.GameData(
+        val gameData1 = org.keizar.utils.communication.game.GameDataStore(
             id = uuidString,
             round1Stats,
             round2Stats,

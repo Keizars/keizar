@@ -12,17 +12,17 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import org.keizar.server.ServerContext
 import org.keizar.server.utils.getUserId
-import org.keizar.utils.communication.game.GameData
+import org.keizar.utils.communication.game.GameDataStore
 import java.util.UUID
 
-fun Application.GameDataRouting(context: ServerContext) {
+fun Application.gameDataRouting(context: ServerContext) {
     val gameDataTable = context.gameData
 
     routing {
         route("/games") {
             authenticate("auth-bearer") {
                 post{
-                    val gameData = call.receive<GameData>()
+                    val gameData = call.receive<GameDataStore>()
                     gameDataTable.addGameData(gameData)
                 }
 

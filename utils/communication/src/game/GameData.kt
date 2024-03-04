@@ -5,15 +5,26 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
 @Serializable
-data class GameData(
+data class GameDataStore(
     val id: String? = null,
     val round1Statistics: RoundStats,
     val round2Statistics: RoundStats,
     val gameConfiguration: String,
-    val user1: String? = null,
-    val user2: String? = null,
+    val userId: String? = null,
+    val opponentId: String? = null,
     val currentTimestamp: String,
     val userSaved: Boolean = false
+)
+
+@Serializable
+data class GameDataGet(
+    val selfUsername: String,
+    val opponentUsername: String,
+    val timeStamp: String,
+    val gameConfiguration: String,
+    val round1Stats: RoundStats,
+    val round2Stats: RoundStats,
+    val dataId: String,
 )
 
 @Serializable

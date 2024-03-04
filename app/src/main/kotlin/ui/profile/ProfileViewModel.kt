@@ -21,7 +21,7 @@ import org.keizar.utils.communication.account.AuthStatus
 import org.keizar.utils.communication.account.EditUserRequest
 import org.keizar.utils.communication.account.ModelConstraints
 import org.keizar.utils.communication.account.User
-import org.keizar.utils.communication.game.GameData
+import org.keizar.utils.communication.game.GameDataStore
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
@@ -80,7 +80,7 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
         seedBankService.getSeeds()
     }.localCachedStateFlow(emptyList())
     
-    val allGames: MutableStateFlow<List<GameData>> = time.map {
+    val allGames: MutableStateFlow<List<GameDataStore>> = time.map {
         gameDataService.getGames()
     }.localCachedStateFlow(emptyList())
 

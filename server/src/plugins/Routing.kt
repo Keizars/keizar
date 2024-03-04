@@ -6,6 +6,7 @@ import io.ktor.server.response.respondText
 import io.ktor.server.routing.get
 import io.ktor.server.routing.routing
 import org.keizar.server.ServerContext
+import org.keizar.server.routing.gameDataRouting
 import org.keizar.server.routing.usersRouting
 import org.keizar.server.routing.gameRoomRouting
 import org.keizar.server.routing.seedBankRouting
@@ -21,4 +22,5 @@ fun Application.configureMultiplayerRouting(context: ServerContext) {
     authenticationRouting(context)
     usersRouting(context)
     seedBankRouting(context)
+    gameDataRouting(context)
 }

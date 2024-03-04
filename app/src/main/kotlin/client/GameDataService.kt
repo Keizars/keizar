@@ -1,6 +1,6 @@
 package org.keizar.android.client
 
-import org.keizar.utils.communication.game.GameData
+import org.keizar.utils.communication.game.GameDataStore
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -12,13 +12,13 @@ interface GameDataService {
      * Uploads a game data to the server.
      */
     @POST("games")
-    suspend fun sendGameData(@Body gameData: GameData)
+    suspend fun sendGameData(@Body gameData: GameDataStore)
 
     /**
      * Retrieves all the games of the user currently logged in.
      */
     @GET("games")
-    suspend fun getGames(): List<GameData>
+    suspend fun getGames(): List<GameDataStore>
 
     /**
      * Deletes a game from the server.
