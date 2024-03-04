@@ -20,7 +20,7 @@ class KotlinxSerializationCodecProvider(
     private val format: StringFormat,
 ) : CodecProvider {
     override fun <T> get(clazz: Class<T>, registry: CodecRegistry): Codec<T>? {
-        val serializer = serializerOrNull(clazz) ?: return null
+        val serializer = format.serializersModule.serializerOrNull(clazz) ?: return null
 
         return object : Codec<T> {
             override fun encode(writer: BsonWriter, value: T, encoderContext: EncoderContext?) {
