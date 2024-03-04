@@ -28,9 +28,9 @@ import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
@@ -141,7 +141,7 @@ fun ProfileScene(
                             text = { Text(text = "Change Password") },
                             leadingIcon = {
                                 Icon(
-                                    Icons.AutoMirrored.Filled.Login,
+                                    Icons.Default.Key,
                                     contentDescription = "Password",
                                 )
                             }
@@ -406,8 +406,10 @@ fun SavedBoardCard(modifier: Modifier = Modifier, layoutSeedText: String, vm: Pr
                 )
             }
             Column {
-                Box(Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.TopEnd) {
+                Box(
+                    Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.TopEnd
+                ) {
                     var showMenu by remember { mutableStateOf(false) }
                     val context = LocalContext.current
                     IconButton(onClick = { showMenu = !showMenu }) {
@@ -422,7 +424,8 @@ fun SavedBoardCard(modifier: Modifier = Modifier, layoutSeedText: String, vm: Pr
 
                         DropdownMenuItem(onClick = {
                             showMenu = false
-                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clipboard =
+                                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             val clip = ClipData.newPlainText("Copied seed", layoutSeedText)
                             clipboard.setPrimaryClip(clip)
                         }) {
@@ -474,12 +477,19 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
 }
 
 @Composable
-fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData: GameDataGet) {
+fun SavedGameCard(
+    modifier: Modifier = Modifier,
+    vm: ProfileViewModel, gameData: GameDataGet
+) {
+    var showDetails by remember { mutableStateOf(false) }
     val round1stats = gameData.round1Stats
     val round2stats = gameData.round2Stats
 
     val opponentName = gameData.opponentUsername
-    Card(modifier = modifier.fillMaxWidth()) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        onClick = {showDetails = true}
+    ) {
         var avatarUrl = ""
         var filePath: String? = null
         if (opponentName == "Computer") {
@@ -518,7 +528,10 @@ fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData:
                     "Draw"
                 }
 
-                Text(text = "$winningStatus - ${gameData.timeStamp}", modifier = Modifier.padding(4.dp))
+                Text(
+                    text = "$winningStatus - ${gameData.timeStamp}",
+                    modifier = Modifier.padding(4.dp)
+                )
                 Text(text = "Opponent: $opponentName", modifier = Modifier.padding(4.dp))
             }
 
@@ -545,11 +558,6 @@ fun SavedGameCard(modifier: Modifier = Modifier, vm: ProfileViewModel, gameData:
                     }) {
                         Text("Delete")
                     }
-                }
-
-                var showDetails by remember { mutableStateOf(false) }
-                Button(onClick = { showDetails = true }, modifier = Modifier.padding(8.dp)) {
-                    Text(text = "Details")
                 }
                 if (showDetails) {
                     GameDetails(
@@ -581,7 +589,8 @@ private fun GameDetails(
                     .padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                val layoutSeed = GameStartConfigurationEncoder.decode(gameData.gameConfiguration)?.layoutSeed
+                val layoutSeed =
+                    GameStartConfigurationEncoder.decode(gameData.gameConfiguration)?.layoutSeed
                 val boardProperties = BoardProperties.getStandardProperties(layoutSeed)
                 Box(
                     Modifier
@@ -604,7 +613,10 @@ private fun GameDetails(
             val myName = gameData.selfUsername
             val opponentName = gameData.opponentUsername
 
-            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
 
                 Column(
                     modifier = Modifier
@@ -613,7 +625,11 @@ private fun GameDetails(
                         .padding(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "Game Statistics", modifier = Modifier.padding(8.dp), textAlign = TextAlign.Center)
+                    Text(
+                        text = "Game Statistics",
+                        modifier = Modifier.padding(8.dp),
+                        textAlign = TextAlign.Center
+                    )
                     val statText: String
                     if (round1stats.player == Player.FirstBlackPlayer) {
                         statText =
@@ -661,7 +677,10 @@ private fun GameDetails(
                         textAlign = TextAlign.Center
                     )
 
-                    Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.End) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.End
+                    ) {
                         Button(onClick = onDismissRequest) {
                             Text(text = "OK")
                         }
@@ -716,15 +735,21 @@ private fun PreviewDialog() {
 private fun PreviewSavedGameCard() {
     val vm = ProfileViewModel()
     val round1Stats =
-        RoundStats(NeutralStats(0, 0, 0.0, 0, 0, 0.0, 0, 0), Player.FirstBlackPlayer, Player.FirstWhitePlayer)
-    val gameData = GameDataGet(
-        "harrison", "harry", "2023-02-19", GameStartConfigurationEncoder.encode(GameStartConfiguration(
-            layoutSeed = 123,
-            playAs = Role.WHITE,
-            difficulty = Difficulty.MEDIUM
+        RoundStats(
+            NeutralStats(0, 0, 0.0, 0, 0, 0.0, 0, 0),
+            Player.FirstBlackPlayer,
+            Player.FirstWhitePlayer
         )
+    val gameData = GameDataGet(
+        "harrison", "harry", "2023-02-19", GameStartConfigurationEncoder.encode(
+            GameStartConfiguration(
+                layoutSeed = 123,
+                playAs = Role.WHITE,
+                difficulty = Difficulty.MEDIUM
+            )
         ),
-        round1Stats, round1Stats, "1")
+        round1Stats, round1Stats, "1"
+    )
     SavedGameCard(vm = vm, gameData = gameData)
 }
 
@@ -732,15 +757,21 @@ private fun PreviewSavedGameCard() {
 @Composable
 private fun PreviewGameDetails() {
     val round1Stats =
-        RoundStats(NeutralStats(0, 0, 0.0, 0, 0, 0.0, 0, 0), Player.FirstBlackPlayer, Player.FirstWhitePlayer)
-    val gameData = GameDataGet(
-        "harrison", "harry", "2023-02-19", GameStartConfigurationEncoder.encode(GameStartConfiguration(
-            layoutSeed = 123,
-            playAs = Role.WHITE,
-            difficulty = Difficulty.MEDIUM
+        RoundStats(
+            NeutralStats(0, 0, 0.0, 0, 0, 0.0, 0, 0),
+            Player.FirstBlackPlayer,
+            Player.FirstWhitePlayer
         )
+    val gameData = GameDataGet(
+        "harrison", "harry", "2023-02-19", GameStartConfigurationEncoder.encode(
+            GameStartConfiguration(
+                layoutSeed = 123,
+                playAs = Role.WHITE,
+                difficulty = Difficulty.MEDIUM
+            )
         ),
-        round1Stats, round1Stats, "1")
+        round1Stats, round1Stats, "1"
+    )
     GameDetails(
         gameData = gameData,
         onDismissRequest = {},
