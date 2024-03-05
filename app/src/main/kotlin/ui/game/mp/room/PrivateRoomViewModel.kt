@@ -21,6 +21,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import org.keizar.android.client.RoomService
 import org.keizar.android.client.SessionManager
+import org.keizar.android.client.UserService
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.game.configuration.GameConfigurationViewModel
@@ -71,6 +72,11 @@ interface PrivateRoomViewModel : HasBackgroundScope {
     @Stable
     val opponentName: Flow<String>
 
+    @Stable
+    val opponentAvatar: Flow<String>
+
+    suspend fun getAvatar(username: String) : String
+
 }
 
 class PrivateRoomViewModelImpl(
@@ -78,6 +84,7 @@ class PrivateRoomViewModelImpl(
 ) : PrivateRoomViewModel, AbstractViewModel(), KoinComponent {
     private val facade: KeizarWebsocketClientFacade by inject()
     private val roomService: RoomService by inject()
+    private val userService: UserService by inject()
     private val sessionManager: SessionManager by inject()
 
     override val playersReady: SharedFlow<Boolean> = flow {
@@ -132,6 +139,7 @@ class PrivateRoomViewModelImpl(
     override val selfIsHost: Flow<Boolean> = selfPlayer.mapLatest { it.isHost }
 
     override val opponentName: Flow<String> = opponentPlayer.mapLatest { it?.username ?: "" }
+    override val opponentAvatar: Flow<String> = opponentPlayer.mapLatest { clientPlayer -> clientPlayer?.username?.let { getAvatar(it) } ?: "" }
 
     private suspend fun setSeed(seed: UInt) {
         client.first().changeSeed(seed)
@@ -141,6 +149,10 @@ class PrivateRoomViewModelImpl(
         if (!selfReady.first()) {
             client.first().setReady()
         }
+    }
+
+    override suspend fun getAvatar(username: String): String {
+        return userService.getUser(username).avatarUrl
     }
 
 

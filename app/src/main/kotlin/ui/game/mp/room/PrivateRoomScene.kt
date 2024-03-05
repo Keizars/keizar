@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
@@ -55,6 +56,7 @@ import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.game.configuration.BoardLayoutPreview
 import org.keizar.android.ui.game.configuration.BoardSeedTextField
+import org.keizar.android.ui.profile.AvatarImage
 import org.keizar.game.Role
 
 
@@ -235,20 +237,28 @@ private fun Configurations(
 
         HorizontalDivider(Modifier.padding(vertical = 16.dp))
 
-        ActionArea(vm.roomId, vm.opponentName.collectAsStateWithLifecycle("").value)
+        ActionArea(vm.roomId, vm.opponentName.collectAsStateWithLifecycle("").value, vm)
     }
 }
 
 @Composable
-private fun ActionArea(roomId: UInt, value: String) {
+private fun ActionArea(roomId: UInt, value: String, vm: PrivateRoomViewModel) {
     if (value == "") {
+        val opponentAvatar by vm.opponentAvatar.collectAsStateWithLifecycle(null)
         Row(
             Modifier
                 .padding(bottom = 16.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
-            Text(text = "Waiting for the other player...", style = MaterialTheme.typography.titleMedium)
+            if (opponentAvatar == "") {
+                Text(text = "Waiting for the other player...", style = MaterialTheme.typography.titleMedium)
+            } else {
+                Column {
+                    AvatarImage(url = opponentAvatar, modifier = Modifier.size(32.dp))
+                }
+            }
+
         }
 
         RoomIdTextField(
