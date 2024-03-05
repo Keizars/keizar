@@ -21,9 +21,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -523,9 +520,8 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
     val allGames = vm.allGames.collectAsStateWithLifecycle(emptyList())
     if (isSystemInLandscape()) {
         Row {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(1),
-                modifier = modifier.padding(4.dp)
+            LazyColumn(
+                modifier = modifier.padding(4.dp).wrapContentSize()
             ) {
                 items(allGames.value) { gameData ->
                     SavedGameCard(
@@ -543,15 +539,14 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
             }
         }
     } else {
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            modifier = modifier.padding(4.dp)
+        LazyColumn(
+            modifier = modifier.padding(4.dp).wrapContentSize()
         ) {
             items(allGames.value) { gameData ->
                 SavedGameCard(
                     vm = vm,
                     gameData = gameData,
-                    modifier = Modifier.padding(4.dp)
+                    modifier = Modifier.padding(4.dp).fillMaxWidth()
                 )
             }
         }
@@ -570,7 +565,7 @@ fun SavedGameCard(
 
     val opponentName = gameData.opponentUsername
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier,
         onClick = { showDetails = true }
     ) {
         var avatarUrl = ""
@@ -814,6 +809,28 @@ private fun PreviewProfilePage() {
                         SavedSeed("456"),
                         SavedSeed("789")
                     )
+                    
+                    allGames.value = listOf(GameDataGet(
+                        "harrison", "harry", "2023-02-19", GameStartConfigurationEncoder.encode(
+                            GameStartConfiguration(
+                                layoutSeed = 123,
+                                playAs = Role.WHITE,
+                                difficulty = Difficulty.MEDIUM
+                            )
+                        ),
+                        RoundStats(
+                            NeutralStats(0, 0, 0.0, 0, 0, 0.0, 0, 0),
+                            Player.FirstBlackPlayer,
+                            Player.FirstWhitePlayer
+                        ),
+                        RoundStats(
+                            NeutralStats(0, 0, 0.0, 0, 0, 0.0, 0, 0),
+                            Player.FirstBlackPlayer,
+                            Player.FirstWhitePlayer
+                        ),
+                        "1"
+                    
+                    ))
                 }
             },
             onClickBack = {},
