@@ -26,6 +26,8 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
@@ -63,8 +65,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -79,8 +83,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.keizar.android.GameStartConfigurationEncoder
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
+import org.keizar.android.ui.foundation.defaultFocus
 import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.foundation.launchInBackground
+import org.keizar.android.ui.foundation.onKey
 import org.keizar.android.ui.foundation.pagerTabIndicatorOffset
 import org.keizar.android.ui.game.BoardTiles
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
@@ -320,7 +326,10 @@ fun NicknameEditDialog(
     onSuccessfulEdit: () -> Unit
 ) {
     val nicknameError by vm.nicknameError.collectAsStateWithLifecycle()
-    AlertDialog(onDismissRequest = {},
+    AlertDialog(
+        onDismissRequest = {
+            vm.cancelDialog()
+        },
         title = {
             Text(
                 text = "Edit Nickname",
@@ -332,10 +341,25 @@ fun NicknameEditDialog(
             OutlinedTextField(
                 value = vm.editNickname.value,
                 onValueChange = { vm.setEditNickname(it) },
-                modifier = Modifier.fillMaxWidth(),
                 isError = (nicknameError != null),
                 label = { Text("New nickname") },
                 shape = RoundedCornerShape(8.dp),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Done,
+                ),
+                keyboardActions = KeyboardActions(onDone = {
+                    vm.launchInBackground {
+                        vm.confirmDialog()
+                    }
+                }),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .defaultFocus()
+                    .onKey(key = Key.Enter) {
+                        vm.launchInBackground {
+                            vm.confirmDialog()
+                        }
+                    },
             )
         },
         confirmButton = {
@@ -356,7 +380,9 @@ fun NicknameEditDialog(
             }) {
                 Text(text = "Cancel")
             }
-        })
+        },
+        modifier = modifier
+    )
 }
 
 @Composable
@@ -378,11 +404,21 @@ fun AvatarImage(url: String?, modifier: Modifier = Modifier, filePath: String? =
 fun SavedBoards(vm: ProfileViewModel, modifier: Modifier = Modifier, onClickPlayGame: (String) -> Unit) {
     val allSeeds by vm.allSeeds.collectAsState()
     if (!isSystemInLandscape()) {
-        SavedBoardCardsSummary(modifier = Modifier.fillMaxWidth(), vm = vm, allSeeds = allSeeds, onClickPlayGame = onClickPlayGame)
+        SavedBoardCardsSummary(
+            modifier = Modifier.fillMaxWidth(),
+            vm = vm,
+            allSeeds = allSeeds,
+            onClickPlayGame = onClickPlayGame
+        )
     } else {
         Row(modifier = modifier, horizontalArrangement = Arrangement.Center) {
             val selectedSeed by vm.selectedSeed.collectAsStateWithLifecycle()
-            SavedBoardCardsSummary(modifier = Modifier.wrapContentSize(), vm = vm, allSeeds = allSeeds, onClickPlayGame = onClickPlayGame)
+            SavedBoardCardsSummary(
+                modifier = Modifier.wrapContentSize(),
+                vm = vm,
+                allSeeds = allSeeds,
+                onClickPlayGame = onClickPlayGame
+            )
 
             VerticalDivider(Modifier.padding(horizontal = 8.dp))
 
@@ -413,7 +449,12 @@ fun SavedBoards(vm: ProfileViewModel, modifier: Modifier = Modifier, onClickPlay
 }
 
 @Composable
-private fun SavedBoardCardsSummary(modifier: Modifier = Modifier, vm: ProfileViewModel, allSeeds: List<SavedSeed>, onClickPlayGame: (String) -> Unit){
+private fun SavedBoardCardsSummary(
+    modifier: Modifier = Modifier,
+    vm: ProfileViewModel,
+    allSeeds: List<SavedSeed>,
+    onClickPlayGame: (String) -> Unit
+) {
     LazyColumn(
         modifier = Modifier
             .wrapContentSize()
@@ -502,11 +543,15 @@ fun SavedBoardCard(
 
                     Text(
                         text = "Game board seed: \n${savedSeed.configurationSeed}",
-                        Modifier.align(Alignment.CenterHorizontally).padding(bottom = 8.dp),
+                        Modifier
+                            .align(Alignment.CenterHorizontally)
+                            .padding(bottom = 8.dp),
                         textAlign = TextAlign.Center
                     )
-                    
-                    Button(modifier = Modifier.align(Alignment.End), onClick = { onClickPlayGame(savedSeed.configurationSeed) }) {
+
+                    Button(
+                        modifier = Modifier.align(Alignment.End),
+                        onClick = { onClickPlayGame(savedSeed.configurationSeed) }) {
                         Text(text = "Play")
                     }
                 }
@@ -521,7 +566,9 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
     if (isSystemInLandscape()) {
         Row {
             LazyColumn(
-                modifier = modifier.padding(4.dp).wrapContentSize()
+                modifier = modifier
+                    .padding(4.dp)
+                    .wrapContentSize()
             ) {
                 items(allGames.value) { gameData ->
                     SavedGameCard(
@@ -540,13 +587,17 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
         }
     } else {
         LazyColumn(
-            modifier = modifier.padding(4.dp).wrapContentSize()
+            modifier = modifier
+                .padding(4.dp)
+                .wrapContentSize()
         ) {
             items(allGames.value) { gameData ->
                 SavedGameCard(
                     vm = vm,
                     gameData = gameData,
-                    modifier = Modifier.padding(4.dp).fillMaxWidth()
+                    modifier = Modifier
+                        .padding(4.dp)
+                        .fillMaxWidth()
                 )
             }
         }
@@ -809,28 +860,30 @@ private fun PreviewProfilePage() {
                         SavedSeed("456"),
                         SavedSeed("789")
                     )
-                    
-                    allGames.value = listOf(GameDataGet(
-                        "harrison", "harry", "2023-02-19", GameStartConfigurationEncoder.encode(
-                            GameStartConfiguration(
-                                layoutSeed = 123,
-                                playAs = Role.WHITE,
-                                difficulty = Difficulty.MEDIUM
-                            )
-                        ),
-                        RoundStats(
-                            NeutralStats(0, 0, 0.0, 0, 0, 0.0, 0, 0),
-                            Player.FirstBlackPlayer,
-                            Player.FirstWhitePlayer
-                        ),
-                        RoundStats(
-                            NeutralStats(0, 0, 0.0, 0, 0, 0.0, 0, 0),
-                            Player.FirstBlackPlayer,
-                            Player.FirstWhitePlayer
-                        ),
-                        "1"
-                    
-                    ))
+
+                    allGames.value = listOf(
+                        GameDataGet(
+                            "harrison", "harry", "2023-02-19", GameStartConfigurationEncoder.encode(
+                                GameStartConfiguration(
+                                    layoutSeed = 123,
+                                    playAs = Role.WHITE,
+                                    difficulty = Difficulty.MEDIUM
+                                )
+                            ),
+                            RoundStats(
+                                NeutralStats(0, 0, 0.0, 0, 0, 0.0, 0, 0),
+                                Player.FirstBlackPlayer,
+                                Player.FirstWhitePlayer
+                            ),
+                            RoundStats(
+                                NeutralStats(0, 0, 0.0, 0, 0, 0.0, 0, 0),
+                                Player.FirstBlackPlayer,
+                                Player.FirstWhitePlayer
+                            ),
+                            "1"
+
+                        )
+                    )
                 }
             },
             onClickBack = {},
