@@ -1,3 +1,5 @@
+# This workflow will build and run tests for each commit. 
+# It will also build and push a Docker image for the server to Amazon ECR.
 name: Build
 
 
@@ -144,7 +146,7 @@ jobs:
           endpoint: builders
 
       - name: Log in to Docker
-        run: aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR_REGISTRY }}
+        run: aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR_REGISTRY }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

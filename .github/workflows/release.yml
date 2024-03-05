@@ -1,3 +1,5 @@
+# This workflow creates a release draft when a new tag is pushed.
+# It also builds and uploads the Android APK to the release draft.
 name: Release
 
 on:
