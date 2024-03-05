@@ -1,6 +1,7 @@
 package org.keizar.android.ui.profile
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,8 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.ClickableText
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -33,10 +34,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
@@ -49,6 +53,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.keizar.android.R
 import org.keizar.android.ui.foundation.launchInBackground
+import org.keizar.android.ui.foundation.moveFocusOnEnter
 import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
 
 @Composable
@@ -65,7 +70,7 @@ fun AuthScene(
             TopAppBar(
                 title = {
                     val isRegister by vm.isRegister.collectAsStateWithLifecycle()
-                    Text(text = if (isRegister) "Register" else "Login")
+                    Text(text = if (isRegister) "Sign up" else "Log in")
                 },
                 navigationIcon = {
                     IconButton(onClick = onClickBack) {
@@ -109,11 +114,12 @@ fun AuthPage(
 
     val errorFontSize = 14.sp
     Column(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .focusGroup(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-
-        ) {
+    ) {
         val isRegister by viewModel.isRegister.collectAsStateWithLifecycle()
         val usernameError by viewModel.usernameError.collectAsStateWithLifecycle()
         val passwordError by viewModel.passwordError.collectAsStateWithLifecycle()
@@ -131,6 +137,8 @@ fun AuthPage(
             )
         }
 
+        val focusManager = LocalFocusManager.current
+
         Row(
             modifier = Modifier.padding(10.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -140,17 +148,16 @@ fun AuthPage(
                 onValueChange = { viewModel.setUsername(it) },
                 isError = (usernameError != null),
                 label = { Text("Username") },
-                shape = RoundedCornerShape(8.dp)
+                shape = MaterialTheme.shapes.medium,
+                keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                modifier = Modifier.moveFocusOnEnter(),
+                supportingText = usernameError?.let {
+                    {
+                        Text(it)
+                    }
+                }
             )
-        }
-        AnimatedVisibility(usernameError != null) {
-            usernameError?.let {
-                Text(
-                    text = it,
-                    fontSize = errorFontSize,
-                    color = Color.Red,
-                )
-            }
         }
 
         Row(
@@ -162,21 +169,20 @@ fun AuthPage(
                 onValueChange = { viewModel.setPassword(it) },
                 isError = (passwordError != null),
                 label = { Text("Password") },
-                shape = RoundedCornerShape(8.dp),
-                keyboardOptions = KeyboardOptions(
+                shape = MaterialTheme.shapes.medium,
+                visualTransformation = PasswordVisualTransformation('*'),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    imeAction = ImeAction.Next,
                     keyboardType = KeyboardType.Password,
                 ),
-                visualTransformation = PasswordVisualTransformation('*')
+                keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                modifier = Modifier.moveFocusOnEnter(),
+                supportingText = passwordError?.let {
+                    {
+                        Text(it)
+                    }
+                }
             )
-        }
-        AnimatedVisibility(passwordError != null) {
-            passwordError?.let {
-                Text(
-                    text = it,
-                    fontSize = errorFontSize,
-                    color = Color.Red,
-                )
-            }
         }
 
         AnimatedVisibility(isRegister) {
@@ -189,20 +195,18 @@ fun AuthPage(
                     onValueChange = { viewModel.setVerifyPassword(it) },
                     isError = (verifyPasswordError != null),
                     label = { Text("Verify Password") },
-                    shape = RoundedCornerShape(8.dp),
-                    keyboardOptions = KeyboardOptions(
+                    shape = MaterialTheme.shapes.medium,
+                    keyboardOptions = KeyboardOptions.Default.copy(
+                        imeAction = ImeAction.Next,
                         keyboardType = KeyboardType.Password,
                     ),
-                    visualTransformation = PasswordVisualTransformation('*')
-                )
-            }
-        }
-        AnimatedVisibility(verifyPasswordError != null) {
-            verifyPasswordError?.let {
-                Text(
-                    text = it,
-                    fontSize = errorFontSize,
-                    color = Color.Red,
+                    keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) }),
+                    modifier = Modifier.moveFocusOnEnter(),
+                    supportingText = verifyPasswordError?.let {
+                        {
+                            Text(it)
+                        }
+                    }
                 )
             }
         }
@@ -308,7 +312,7 @@ fun AuthPage(
             enabled = !viewModel.isProcessing.collectAsStateWithLifecycle().value,
             modifier = Modifier.padding(8.dp),
         ) {
-            Text(if (isRegister) "Sign up" else "Login")
+            Text(if (isRegister) "Sign up" else "Log in")
         }
 
         val highlightStyle =
@@ -341,6 +345,7 @@ fun AuthPage(
 }
 
 @Preview
+@Preview(fontScale = 2f)
 @Preview(device = Devices.TABLET)
 @Composable
 private fun PreviewLogin() {
@@ -353,6 +358,7 @@ private fun PreviewLogin() {
 }
 
 @Preview
+@Preview(fontScale = 2f)
 @Preview(device = Devices.TABLET)
 @Composable
 private fun PreviewRegister() {
