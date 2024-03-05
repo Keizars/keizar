@@ -97,6 +97,8 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
 
     val selectedSeed: MutableStateFlow<SavedSeed?> = MutableStateFlow(null)
 
+    val selectedGame: MutableStateFlow<GameDataGet?> = MutableStateFlow(null)
+
     val allGames: MutableStateFlow<List<GameDataGet>> = time.map {
         gameDataService.getGames()
     }.localCachedStateFlow(emptyList())

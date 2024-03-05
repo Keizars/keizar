@@ -301,7 +301,12 @@ fun ProfilePage(
         HorizontalPager(state = pagerState, Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize()) {
                 when (it) {
-                    0 -> SavedBoards(vm = vm, Modifier.fillMaxSize(), onClickPlayGame = onClickPlayGame)
+                    0 -> SavedBoards(
+                        vm = vm,
+                        Modifier.fillMaxSize(),
+                        onClickPlayGame = onClickPlayGame
+                    )
+
                     1 -> SavedGames(vm = vm)
                     2 -> Statistics()
                 }
@@ -392,7 +397,11 @@ fun AvatarImage(url: String?, modifier: Modifier = Modifier, filePath: String? =
 }
 
 @Composable
-fun SavedBoards(vm: ProfileViewModel, modifier: Modifier = Modifier, onClickPlayGame: (String) -> Unit) {
+fun SavedBoards(
+    vm: ProfileViewModel,
+    modifier: Modifier = Modifier,
+    onClickPlayGame: (String) -> Unit
+) {
     val allSeeds by vm.allSeeds.collectAsState()
     if (!isSystemInLandscape()) {
         SavedBoardCardsSummary(
@@ -510,7 +519,8 @@ fun SavedBoardCard(
                             showMenu = false
                             val clipboard =
                                 context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            val clip = ClipData.newPlainText("Copied seed", savedSeed.configurationSeed)
+                            val clip =
+                                ClipData.newPlainText("Copied seed", savedSeed.configurationSeed)
                             clipboard.setPrimaryClip(clip)
                         }) {
                             Text("Copy seed")
@@ -554,6 +564,7 @@ fun SavedBoardCard(
 @Composable
 fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
     val allGames = vm.allGames.collectAsStateWithLifecycle(emptyList())
+    val selectedGame by vm.selectedGame.collectAsStateWithLifecycle()
     if (isSystemInLandscape()) {
         Row {
             LazyColumn(
@@ -565,7 +576,8 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
                     SavedGameCard(
                         vm = vm,
                         gameData = gameData,
-                        modifier = Modifier.padding(4.dp)
+                        modifier = Modifier.padding(4.dp),
+                        onclick = { vm.selectedGame.value = gameData }
                     )
                 }
             }
@@ -573,7 +585,7 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
             if (allGames.value.isNotEmpty()) {
                 GameDetailColumn(
                     modifier = modifier,
-                    gameData = allGames.value.first(),
+                    gameData = selectedGame
                 )
             }
         }
@@ -600,6 +612,7 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
 @Composable
 fun SavedGameCard(
     modifier: Modifier = Modifier,
+    onclick: () -> Unit = {},
     vm: ProfileViewModel, gameData: GameDataGet
 ) {
     var showDetails by remember { mutableStateOf(false) }
@@ -609,7 +622,10 @@ fun SavedGameCard(
     val opponentName = gameData.opponentUsername
     Card(
         modifier = modifier,
-        onClick = { showDetails = true }
+        onClick = {
+            showDetails = true
+            onclick()
+        }
     ) {
         var avatarUrl = ""
         var filePath: String? = null
@@ -693,7 +709,7 @@ fun SavedGameCard(
 @Composable
 private fun GameDetailColumn(
     modifier: Modifier = Modifier,
-    gameData: GameDataGet,
+    gameData: GameDataGet? = null
 ) {
     Column {
         Detail(modifier, gameData, showOK = false)
@@ -714,7 +730,7 @@ private fun GameDetailsDialog(
 @Composable
 private fun Detail(
     modifier: Modifier,
-    gameData: GameDataGet,
+    gameData: GameDataGet?,
     onDismissRequest: () -> Unit = {},
     showOK: Boolean
 ) {
@@ -723,6 +739,8 @@ private fun Detail(
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
             .padding(8.dp)
+            .alpha(if (gameData == null) 0.0f else 1f)
+            .alpha(if (gameData == null) 0.0f else 1f)
     ) {
         Column(
             modifier = Modifier
@@ -731,7 +749,7 @@ private fun Detail(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             val layoutSeed =
-                GameStartConfigurationEncoder.decode(gameData.gameConfiguration)?.layoutSeed
+                gameData?.let { GameStartConfigurationEncoder.decode(it.gameConfiguration)?.layoutSeed }
             val boardProperties = BoardProperties.getStandardProperties(layoutSeed)
             Box(
                 Modifier
@@ -747,83 +765,83 @@ private fun Detail(
                 )
             }
         }
-
-
-        val round1stats = gameData.round1Stats
-        val round2stats = gameData.round2Stats
-        val myName = gameData.selfUsername
-        val opponentName = gameData.opponentUsername
-
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
+        if (gameData != null) {
+            val round1stats = gameData.round1Stats
+            val round2stats = gameData.round2Stats
+            val myName = gameData.selfUsername
+            val opponentName = gameData.opponentUsername
 
             Column(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                    .padding(8.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = "Game Statistics",
-                    modifier = Modifier.padding(8.dp),
-                    textAlign = TextAlign.Center
-                )
-                val statText: String
-                if (round1stats.player == Player.FirstBlackPlayer) {
-                    statText =
-                        "$myName captured: ${round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured}\n" +
-                                "$opponentName captured: ${round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured}\n" +
-                                "Number of moves in round 1: ${round1stats.neutralStats.blackMoves}\n" +
-                                "Number of moves in round 2: ${round2stats.neutralStats.blackMoves}\n" +
-                                "Time Taken: ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) / 60} m ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) % 60} s \n" +
-                                "Your moves' average time in round 1: ${
-                                    String.format(
-                                        "%.4f",
-                                        round1stats.neutralStats.blackAverageTime
-                                    )
-                                } s\n" +
-                                "Your moves' average time in round 2: ${
-                                    String.format(
-                                        "%.4f",
-                                        round2stats.neutralStats.whiteAverageTime
-                                    )
-                                } s\n"
-                } else {
-                    statText =
-                        "$myName captured: ${round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured}\n" +
-                                "$opponentName captured: ${round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured}\n" +
-                                "Number of moves in round 1: ${round1stats.neutralStats.blackMoves}\n" +
-                                "Number of moves in round 2: ${round2stats.neutralStats.blackMoves}\n" +
-                                "Time Taken: ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) / 60} m ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) % 60} s \n" +
-                                "Your moves' average time in round 1: ${
-                                    String.format(
-                                        "%.4f",
-                                        round1stats.neutralStats.whiteAverageTime
-                                    )
-                                } s\n" +
-                                "Your moves' average time in round 2: ${
-                                    String.format(
-                                        "%.4f",
-                                        round2stats.neutralStats.blackAverageTime
-                                    )
-                                } s\n"
-                }
 
-                Text(
-                    text = statText,
-                    modifier = Modifier.padding(8.dp),
-                    textAlign = TextAlign.Center
-                )
-                if (showOK) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.End
-                    ) {
-                        Button(onClick = onDismissRequest) {
-                            Text(text = "OK")
+                Column(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                        .padding(8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Game Statistics",
+                        modifier = Modifier.padding(8.dp),
+                        textAlign = TextAlign.Center
+                    )
+                    val statText: String
+                    if (round1stats.player == Player.FirstBlackPlayer) {
+                        statText =
+                            "$myName captured: ${round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured}\n" +
+                                    "$opponentName captured: ${round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured}\n" +
+                                    "Number of moves in round 1: ${round1stats.neutralStats.blackMoves}\n" +
+                                    "Number of moves in round 2: ${round2stats.neutralStats.blackMoves}\n" +
+                                    "Time Taken: ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) / 60} m ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) % 60} s \n" +
+                                    "Your moves' average time in round 1: ${
+                                        String.format(
+                                            "%.4f",
+                                            round1stats.neutralStats.blackAverageTime
+                                        )
+                                    } s\n" +
+                                    "Your moves' average time in round 2: ${
+                                        String.format(
+                                            "%.4f",
+                                            round2stats.neutralStats.whiteAverageTime
+                                        )
+                                    } s\n"
+                    } else {
+                        statText =
+                            "$myName captured: ${round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured}\n" +
+                                    "$opponentName captured: ${round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured}\n" +
+                                    "Number of moves in round 1: ${round1stats.neutralStats.blackMoves}\n" +
+                                    "Number of moves in round 2: ${round2stats.neutralStats.blackMoves}\n" +
+                                    "Time Taken: ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) / 60} m ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) % 60} s \n" +
+                                    "Your moves' average time in round 1: ${
+                                        String.format(
+                                            "%.4f",
+                                            round1stats.neutralStats.whiteAverageTime
+                                        )
+                                    } s\n" +
+                                    "Your moves' average time in round 2: ${
+                                        String.format(
+                                            "%.4f",
+                                            round2stats.neutralStats.blackAverageTime
+                                        )
+                                    } s\n"
+                    }
+
+                    Text(
+                        text = statText,
+                        modifier = Modifier.padding(8.dp),
+                        textAlign = TextAlign.Center
+                    )
+                    if (showOK) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.End
+                        ) {
+                            Button(onClick = onDismissRequest) {
+                                Text(text = "OK")
+                            }
                         }
                     }
                 }
@@ -857,6 +875,27 @@ private fun PreviewProfilePage() {
                             "harrison", "harry", "2023-02-19", GameStartConfigurationEncoder.encode(
                                 GameStartConfiguration(
                                     layoutSeed = 123,
+                                    playAs = Role.WHITE,
+                                    difficulty = Difficulty.MEDIUM
+                                )
+                            ),
+                            RoundStats(
+                                NeutralStats(0, 0, 0.0, 0, 0, 0.0, 0, 0),
+                                Player.FirstBlackPlayer,
+                                Player.FirstWhitePlayer
+                            ),
+                            RoundStats(
+                                NeutralStats(0, 0, 0.0, 0, 0, 0.0, 0, 0),
+                                Player.FirstBlackPlayer,
+                                Player.FirstWhitePlayer
+                            ),
+                            "1"
+
+                        ),
+                        GameDataGet(
+                            "harrison", "harry", "2023-02-19", GameStartConfigurationEncoder.encode(
+                                GameStartConfiguration(
+                                    layoutSeed = 456,
                                     playAs = Role.WHITE,
                                     difficulty = Difficulty.MEDIUM
                                 )
