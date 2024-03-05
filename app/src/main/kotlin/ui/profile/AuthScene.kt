@@ -15,6 +15,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -31,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +46,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -164,13 +168,14 @@ fun AuthPage(
             modifier = Modifier.padding(10.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            var hide by rememberSaveable { mutableStateOf(true) }
             OutlinedTextField(
                 value = viewModel.password.value,
                 onValueChange = { viewModel.setPassword(it) },
                 isError = (passwordError != null),
                 label = { Text("Password") },
                 shape = MaterialTheme.shapes.medium,
-                visualTransformation = PasswordVisualTransformation('*'),
+                visualTransformation = if (hide) PasswordVisualTransformation('*') else VisualTransformation.None,
                 keyboardOptions = KeyboardOptions.Default.copy(
                     imeAction = ImeAction.Next,
                     keyboardType = KeyboardType.Password,
@@ -181,11 +186,23 @@ fun AuthPage(
                     {
                         Text(it)
                     }
+                },
+                trailingIcon = {
+                    if (hide) {
+                        IconButton(onClick = { hide = false }) {
+                            Icon(Icons.Default.VisibilityOff, contentDescription = "Hide")
+                        }
+                    } else {
+                        IconButton(onClick = { hide = true }) {
+                            Icon(Icons.Default.Visibility, contentDescription = "Show")
+                        }
+                    }
                 }
             )
         }
 
         AnimatedVisibility(isRegister) {
+            var hide by rememberSaveable { mutableStateOf(true) }
             Row(
                 modifier = Modifier.padding(10.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -196,6 +213,7 @@ fun AuthPage(
                     isError = (verifyPasswordError != null),
                     label = { Text("Verify Password") },
                     shape = MaterialTheme.shapes.medium,
+                    visualTransformation = if (hide) PasswordVisualTransformation('*') else VisualTransformation.None,
                     keyboardOptions = KeyboardOptions.Default.copy(
                         imeAction = ImeAction.Next,
                         keyboardType = KeyboardType.Password,
@@ -205,6 +223,17 @@ fun AuthPage(
                     supportingText = verifyPasswordError?.let {
                         {
                             Text(it)
+                        }
+                    },
+                    trailingIcon = {
+                        if (hide) {
+                            IconButton(onClick = { hide = false }) {
+                                Icon(Icons.Default.VisibilityOff, contentDescription = "Hide")
+                            }
+                        } else {
+                            IconButton(onClick = { hide = true }) {
+                                Icon(Icons.Default.Visibility, contentDescription = "Show")
+                            }
                         }
                     }
                 )
