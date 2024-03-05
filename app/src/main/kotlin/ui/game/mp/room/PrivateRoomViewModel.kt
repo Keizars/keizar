@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -53,10 +54,16 @@ interface PrivateRoomViewModel : HasBackgroundScope {
     @Stable
     val configuration: GameConfigurationViewModel
 
+    /**
+     * Whether the self player is ready to start the game.
+     */
     @Stable
-    val accept: Flow<Boolean>
+    val selfReady: Flow<Boolean>
 
-    suspend fun accept()
+    /**
+     * Notifies the server that the self player is ready to start the game.
+     */
+    suspend fun ready()
 
     @Stable
     val selfIsHost: Flow<Boolean>
@@ -109,7 +116,7 @@ class PrivateRoomViewModelImpl(
     override val connectRoomError: MutableStateFlow<ConnectRoomError?> = MutableStateFlow(null)
 
     override val configuration: GameConfigurationViewModel = GameConfigurationViewModel()
-    override val accept: Flow<Boolean> = selfPlayer.map { it.state.value == PlayerSessionState.READY }
+    override val selfReady: Flow<Boolean> = selfPlayer.flatMapLatest { it.state }.map { it == PlayerSessionState.READY }
 
     private val showToast = mutableStateOf(false)
 
@@ -130,8 +137,8 @@ class PrivateRoomViewModelImpl(
         client.first().changeSeed(seed)
     }
 
-    override suspend fun accept() {
-        if (!accept.first()) {
+    override suspend fun ready() {
+        if (!selfReady.first()) {
             client.first().setReady()
         }
     }

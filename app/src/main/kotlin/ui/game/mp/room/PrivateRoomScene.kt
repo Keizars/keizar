@@ -15,8 +15,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -88,17 +90,16 @@ private fun AcceptArea(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier,
+        modifier.wrapContentHeight(),
         horizontalArrangement = Arrangement.End,
     ) {
-        val accept by vm.accept.collectAsStateWithLifecycle(false)
-        println(accept)
+        val accept by vm.selfReady.collectAsStateWithLifecycle(false)
         if (accept) {
             Text(text = "Waiting for the other player...", style = MaterialTheme.typography.titleMedium)
         } else {
             Button(
                 modifier = if (!isSystemInLandscape()) Modifier.padding(end = 12.dp) else Modifier,
-                onClick = { vm.backgroundScope.launch { vm.accept() } }
+                onClick = { vm.backgroundScope.launch { vm.ready() } }
             ) {
                 Text(text = "Ready!")
             }
@@ -152,7 +153,7 @@ private fun PrivateRoomPage(
                 Column(Modifier.wrapContentWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     Column(Modifier.widthIn(max = 360.dp)) {
                         Configurations(vm)
-                        AcceptArea(vm, modifier)
+                        AcceptArea(vm, Modifier)
                     }
                 }
             }
@@ -160,10 +161,10 @@ private fun PrivateRoomPage(
             Box(Modifier) {
                 Column(
                     Modifier
-                        .systemBarsPadding()
+                        .statusBarsPadding()
                         .fillMaxSize()
                         .padding(contentPadding)
-                        .padding(all = 16.dp)
+                        .padding(horizontal = 16.dp)
                         .verticalScroll(rememberScrollState()),
                 ) {
                     val properties by vm.configuration.boardProperties.collectAsStateWithLifecycle(null)
@@ -174,7 +175,7 @@ private fun PrivateRoomPage(
 
                     Configurations(vm, Modifier.padding(top = 8.dp))
 
-                    Spacer(modifier = Modifier.height(64.dp))
+                    Spacer(modifier = Modifier.height(72.dp))
                 }
 
                 if (!isSystemInLandscape()) {
@@ -182,9 +183,9 @@ private fun PrivateRoomPage(
                         HorizontalDivider()
                         AcceptArea(
                             vm,
-                            modifier
+                            Modifier
                                 .fillMaxWidth()
-                                .alpha(0.90f)
+                                .alpha(0.96f)
                                 .background(MaterialTheme.colorScheme.surface)
                                 .padding(vertical = 8.dp)
                                 .navigationBarsPadding()
