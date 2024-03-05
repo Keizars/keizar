@@ -18,6 +18,9 @@ class SeedBankModuleImpl(
     }
 
     override suspend fun addSeed(userId: UUID, seed: String): Boolean {
+        if (database.seedBank.getSeeds(userId.toString()).contains(seed)) {
+            return true
+        }
         return database.seedBank.addSeed(userId.toString(), seed)
     }
 
