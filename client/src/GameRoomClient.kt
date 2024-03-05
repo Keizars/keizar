@@ -4,6 +4,7 @@ import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -62,7 +63,7 @@ interface GameRoomClient : AutoCloseable {
     /**
      * Player information of the the self user.
      */
-    val opponentPlayer: ClientPlayer?
+    val opponentPlayer: StateFlow<ClientPlayer?>
 
     /**
      * State of the game room: one of [GameRoomState.STARTED], [GameRoomState.ALL_CONNECTED],
@@ -120,7 +121,7 @@ interface GameRoomClient : AutoCloseable {
                         it.isHost,
                         it.isReady,
                     )
-                },
+                }.toMutableList(),
                 session = websocketSession,
                 parentCoroutineContext = parentCoroutineContext,
             )
@@ -131,7 +132,7 @@ interface GameRoomClient : AutoCloseable {
 class GameRoomClientImpl internal constructor(
     override val self: User,
     override val roomNumber: UInt,
-    override val players: List<ClientPlayer>,
+    override val players: MutableList<ClientPlayer>,
     /**
      * Websocket session used to communicate with the room on server and synchronize the states.
      */
@@ -142,7 +143,7 @@ class GameRoomClientImpl internal constructor(
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
     override val selfPlayer: ClientPlayer get() = players.first { it.username == self.username }
-    override val opponentPlayer: ClientPlayer? get() = players.firstOrNull { it.username != self.username }
+    override val opponentPlayer: MutableStateFlow<ClientPlayer?> get() = MutableStateFlow(null)
 
     private val _state = MutableSharedFlow<GameRoomState>(replay = 1)
     override val state: SharedFlow<GameRoomState> = _state
@@ -174,8 +175,18 @@ class GameRoomClientImpl internal constructor(
             override suspend fun processResponse(respond: Respond) {
                 when (respond) {
                     is PlayerStateChange -> {
-                        players.firstOrNull { it.username == respond.username }
-                            ?.setState(respond.newState)
+                        val player = players.firstOrNull { it.username == respond.username }
+                        if (player == null) {
+                            val newPlayer = ClientPlayer(
+                                username = respond.username,
+                                isHost = false,
+                                initialState = respond.newState,
+                            )
+                            players.add(newPlayer)
+                            opponentPlayer.value = newPlayer
+                        } else {
+                            player.setState(respond.newState)
+                        }
                     }
 
                     is RoomStateChange -> _state.emit(respond.newState)
@@ -278,10 +289,14 @@ class ClientPlayer(
      * Whether the player is the host of the room, i.e. the player who created the room
      */
     val isHost: Boolean,
-    initialIsReady: Boolean,
+    initialState: PlayerSessionState,
 ) {
-    private val _state: MutableStateFlow<PlayerSessionState> = MutableStateFlow(
-        if (initialIsReady) PlayerSessionState.READY else PlayerSessionState.STARTED
+    private val _state: MutableStateFlow<PlayerSessionState> = MutableStateFlow(initialState)
+
+    constructor(username: String, isHost: Boolean, initialIsReady: Boolean) : this(
+        username,
+        isHost,
+        if (initialIsReady) PlayerSessionState.READY else PlayerSessionState.STARTED,
     )
 
     /**
