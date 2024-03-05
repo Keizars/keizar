@@ -66,7 +66,9 @@ internal class GameSessionWsHandlerImpl(
         ) {
             override suspend fun processResponse(respond: Respond) {
                 when (respond) {
-                    ConfirmNextRound -> gameSession.confirmNextRound(selfPlayer.opponent())
+                    ConfirmNextRound -> {
+                        gameSession.confirmNextRound(selfPlayer.opponent())
+                    }
                     is Move -> {
                         val round = gameSession.currentRound.first()
                         getUnderlyingRound(round).move(respond.from, respond.to)

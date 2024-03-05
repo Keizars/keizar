@@ -14,7 +14,10 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
@@ -23,7 +26,9 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.keizar.client.KeizarWebsocketClientFacade
+import org.keizar.client.RemoteGameSession
 import org.keizar.game.BoardProperties
+import org.keizar.game.GameSession
 import org.keizar.utils.communication.GameRoomState
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.account.AuthRequest
@@ -93,10 +98,6 @@ class End2EndTest {
             bearerAuth(token)
         }
         assertEquals(HttpStatusCode.OK, responseCreate.status)
-        val responseJoin = client.post("$endpoint/room/$roomNo/join") {
-            bearerAuth(token)
-        }
-        assertEquals(HttpStatusCode.OK, responseJoin.status)
         client.close()
 
         val clientFacade = KeizarWebsocketClientFacade(endpoint, MutableStateFlow(token))
@@ -117,6 +118,8 @@ class End2EndTest {
         gameRoom.state.first { it == GameRoomState.PLAYING }
         val game = gameRoom.getGameSession()
         assertEquals(hostProposedSeed, game.properties.seed)
+
+        startGame(game, coroutineScope)
     }
 
     private suspend fun guestClientCoroutine(
@@ -157,6 +160,38 @@ class End2EndTest {
         gameRoom.state.first { it == GameRoomState.PLAYING }
         val game = gameRoom.getGameSession()
         assertNotEquals(guestProposedSeed, game.properties.seed)
+
+        startGame(game, coroutineScope)
+    }
+
+    private suspend fun startGame(game: RemoteGameSession, coroutineScope: CoroutineScope) {
+        val selfPlayer = game.player
+        val job1 = coroutineScope.launch {
+            game.currentRound.collectLatest { round ->
+                delay(1000)
+                val roundNo = game.currentRoundNo.first()
+                val selfRole = game.getRole(selfPlayer, roundNo)
+                while (true) {
+                    round.curRole.first { it == selfRole }
+                    val from = round.getAllPiecesPos(selfRole).first().randomOrNull()
+                    val to = from?.let { round.getAvailableTargets(it).first().randomOrNull() }
+                    to?.let { round.move(from, it) }
+                }
+            }
+        }
+        val job2 = coroutineScope.launch {
+            game.currentRound.collectLatest {  round ->
+                round.winner.first { it != null }
+                game.confirmNextRound(selfPlayer)
+            }
+        }
+        game.finalWinner.first { it != null }
+        try {
+            job1.cancel()
+            job2.cancel()
+        } catch (e: CancellationException) {
+            // ignore
+        }
     }
 
     @BeforeEach
