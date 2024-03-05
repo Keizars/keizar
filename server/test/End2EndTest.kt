@@ -10,6 +10,7 @@ import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
@@ -33,7 +34,6 @@ import kotlin.test.assertTrue
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class End2EndTest {
-    private val coroutineScope = CoroutineScope(Job())
     private val env = EnvironmentVariables(
         port = 4392,
         testing = true,
@@ -44,11 +44,17 @@ class End2EndTest {
 
     @Test
     fun test() = runTest {
-        val job = coroutineScope.launch { hostClientCoroutine() }
+        val coroutineScope = CoroutineScope(Job())
+        val job = coroutineScope.launch { hostClientCoroutine(coroutineScope) }
         job.join()
+        try {
+            coroutineScope.cancel()
+        } catch (e: CancellationException) {
+            // ignore
+        }
     }
 
-    private suspend fun hostClientCoroutine() {
+    private suspend fun hostClientCoroutine(coroutineScope: CoroutineScope) {
         val endpoint = "http://localhost:${env.port}"
         HttpClient {
             install(ContentNegotiation) {
