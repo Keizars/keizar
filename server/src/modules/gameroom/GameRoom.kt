@@ -128,6 +128,7 @@ class GameRoomImpl(
      */
 
     override suspend fun join(user: UserInfo): Boolean {
+        if (state.value is ServerGameRoomState.AllConnected) return players.containsKey(user)
         val curState = state.value as? ServerGameRoomState.Started ?: return false
         return curState.players {
             if (this.containsKey(user)) return@players true
@@ -135,7 +136,7 @@ class GameRoomImpl(
 
             val player = PlayerSession.create(
                 user = user,
-                playerAllocation = curState.allocatePlayer() ?: return@players false,
+                playerAllocation = curState.allocatePlayer(user) ?: return@players false,
                 isHost = this.isEmpty(),
             )
             this[user] = player

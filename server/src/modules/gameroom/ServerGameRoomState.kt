@@ -7,6 +7,7 @@ import org.keizar.game.GameSession
 import org.keizar.utils.communication.GameRoomState
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.message.UserInfo
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
 sealed interface ServerGameRoomState {
@@ -38,10 +39,15 @@ sealed interface ServerGameRoomState {
          */
         private val allPlayers = Player.entries.shuffled()
         private val allPlayersIndex = AtomicInteger(0)
-        fun allocatePlayer(): Player? {
+        private val registeredAllocation = ConcurrentHashMap<UserInfo, Player>()
+        fun allocatePlayer(user: UserInfo): Player? {
+            if (user in registeredAllocation.keys) return registeredAllocation[user]
+
             val index = allPlayersIndex.getAndIncrement()
             if (index >= allPlayers.size) return null
-            return allPlayers[index]
+            val allocation = allPlayers[index]
+            registeredAllocation[user] = allocation
+            return allocation
         }
     }
 

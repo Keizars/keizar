@@ -15,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.AfterEach
@@ -29,6 +30,7 @@ import org.keizar.utils.communication.account.AuthRequest
 import org.keizar.utils.communication.account.AuthResponse
 import kotlin.random.Random
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -39,14 +41,25 @@ class End2EndTest {
         testing = true,
         mongoDbConnectionString = ""
     )
+    private val random = Random
 
     private val server = getServer(env)
 
     @Test
     fun test() = runTest {
         val coroutineScope = CoroutineScope(Job())
-        val job = coroutineScope.launch { hostClientCoroutine(coroutineScope) }
-        job.join()
+        val startGuest = MutableStateFlow(false)
+        val roomNo = 5462
+        val hostJob = coroutineScope.launch {
+            hostClientCoroutine(coroutineScope, roomNo, startGuest)
+        }
+        startGuest.first { it }
+        val guestJob = coroutineScope.launch {
+            guestClientCoroutine(coroutineScope, roomNo)
+        }
+
+        hostJob.join()
+        guestJob.join()
         try {
             coroutineScope.cancel()
         } catch (e: CancellationException) {
@@ -54,41 +67,80 @@ class End2EndTest {
         }
     }
 
-    private suspend fun hostClientCoroutine(coroutineScope: CoroutineScope) {
+    private suspend fun hostClientCoroutine(
+        coroutineScope: CoroutineScope,
+        roomNo: Int,
+        startGuest: MutableStateFlow<Boolean>,
+    ) {
         val endpoint = "http://localhost:${env.port}"
-        HttpClient {
+        val client = HttpClient {
             install(ContentNegotiation) {
                 json()
             }
-        }.use { client ->
-            val username = "user-${Random.nextInt() % 1000}"
-            val token = client.post("$endpoint/users/register") {
-                contentType(ContentType.Application.Json)
-                setBody(AuthRequest(username = username, password = username))
-            }.body<AuthResponse>().token
-            assertNotNull(token)
-
-            val roomNo = 5462
-            val responseCreate = client.post("$endpoint/room/$roomNo/create") {
-                contentType(ContentType.Application.Json)
-                setBody(BoardProperties.getStandardProperties())
-                bearerAuth(token)
-            }
-            assertEquals(HttpStatusCode.OK, responseCreate.status)
-            val responseJoin = client.post("$endpoint/room/$roomNo/join") {
-                bearerAuth(token)
-            }
-            assertEquals(HttpStatusCode.OK, responseJoin.status)
-
-            val clientFacade = KeizarWebsocketClientFacade(endpoint, MutableStateFlow(token))
-            val gameRoom = clientFacade.connect(roomNo.toUInt(), coroutineScope.coroutineContext)
-
-            assertEquals(roomNo.toUInt(), gameRoom.roomNumber)
-            assertEquals(GameRoomState.STARTED, gameRoom.state.value)
-            assertEquals(username, gameRoom.self.username)
-            assertEquals(PlayerSessionState.STARTED, gameRoom.selfPlayer.state.value)
-            assertTrue(gameRoom.selfPlayer.isHost)
         }
+        val username = "user-${random.nextInt() % 1000}"
+        val token = client.post("$endpoint/users/register") {
+            contentType(ContentType.Application.Json)
+            setBody(AuthRequest(username = username, password = username))
+        }.body<AuthResponse>().token
+        assertNotNull(token)
+
+        val responseCreate = client.post("$endpoint/room/$roomNo/create") {
+            contentType(ContentType.Application.Json)
+            setBody(BoardProperties.getStandardProperties())
+            bearerAuth(token)
+        }
+        assertEquals(HttpStatusCode.OK, responseCreate.status)
+        val responseJoin = client.post("$endpoint/room/$roomNo/join") {
+            bearerAuth(token)
+        }
+        assertEquals(HttpStatusCode.OK, responseJoin.status)
+        client.close()
+
+        val clientFacade = KeizarWebsocketClientFacade(endpoint, MutableStateFlow(token))
+        val gameRoom = clientFacade.connect(roomNo.toUInt(), coroutineScope.coroutineContext)
+
+        assertEquals(roomNo.toUInt(), gameRoom.roomNumber)
+        assertEquals(GameRoomState.STARTED, gameRoom.state.value)
+        assertEquals(username, gameRoom.self.username)
+        assertEquals(PlayerSessionState.STARTED, gameRoom.selfPlayer.state.value)
+        assertTrue(gameRoom.selfPlayer.isHost)
+
+        startGuest.value = true
+    }
+
+    private suspend fun guestClientCoroutine(
+        coroutineScope: CoroutineScope,
+        roomNo: Int,
+    ) {
+        val endpoint = "http://localhost:${env.port}"
+        val client = HttpClient {
+            install(ContentNegotiation) {
+                json()
+            }
+        }
+        val username = "user-${random.nextInt() % 1000}"
+        val token = client.post("$endpoint/users/register") {
+            contentType(ContentType.Application.Json)
+            setBody(AuthRequest(username = username, password = username))
+        }.body<AuthResponse>().token
+        assertNotNull(token)
+
+        val responseJoin = client.post("$endpoint/room/$roomNo/join") {
+            bearerAuth(token)
+        }
+        assertEquals(HttpStatusCode.OK, responseJoin.status)
+        client.close()
+
+        val clientFacade = KeizarWebsocketClientFacade(endpoint, MutableStateFlow(token))
+        val gameRoom = clientFacade.connect(roomNo.toUInt(), coroutineScope.coroutineContext)
+
+        assertEquals(roomNo.toUInt(), gameRoom.roomNumber)
+        //assertEquals(GameRoomState.ALL_CONNECTED, gameRoom.state.value)
+        assertEquals(username, gameRoom.self.username)
+        assertEquals(PlayerSessionState.STARTED, gameRoom.selfPlayer.state.value)
+        assertFalse(gameRoom.selfPlayer.isHost)
+
     }
 
     @BeforeEach
