@@ -19,6 +19,7 @@ class ModelConstraints {
         const val CONTENT_TYPE_MAXIMUM_LENGTH = 256
 
         const val USERNAME_REGEX = "^[a-zA-Z0-9_-]+$"
+        const val NICKNAME_REGEX = "^[^\\s][\\s\\S]*\$"
         const val CODE_REGEX = "^[^\\/ \\t\\n\\r\\f\\v]+$"
     }
 }

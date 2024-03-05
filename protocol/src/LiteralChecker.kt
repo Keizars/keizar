@@ -19,5 +19,16 @@ class LiteralChecker {
             }
             return AuthStatus.SUCCESS
         }
+
+        fun checkNickname(nickname: String): AuthStatus {
+            if (nickname.length > ModelConstraints.USERNAME_MAX_LENGTH) {
+                return AuthStatus.NICKNAME_TOO_LONG
+            }
+            val valid = Regex(ModelConstraints.NICKNAME_REGEX).matches(nickname)
+            if (!valid) {
+                return AuthStatus.INVALID_NICKNAME
+            }
+            return AuthStatus.SUCCESS
+        }
     }
 }

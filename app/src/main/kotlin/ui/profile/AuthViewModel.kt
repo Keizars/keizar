@@ -112,6 +112,8 @@ class AuthViewModel(
             AuthStatus.WRONG_PASSWORD -> {
                 passwordError.value = response.status.render()
             }
+
+            else -> {}
         }
         return false
     }
@@ -168,5 +170,6 @@ private fun AuthStatus.render(): String? {
         AuthStatus.SUCCESS -> null
         AuthStatus.USER_NOT_FOUND -> "User not found"
         AuthStatus.WRONG_PASSWORD -> "Wrong password"
+        else -> {""}
     }
 }

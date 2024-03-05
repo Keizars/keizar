@@ -88,5 +88,6 @@ private fun AuthStatus.render(): String? {
         AuthStatus.SUCCESS -> null
         AuthStatus.USER_NOT_FOUND -> "User not found"
         AuthStatus.WRONG_PASSWORD -> "Wrong password"
+        else -> {""}
     }
 }

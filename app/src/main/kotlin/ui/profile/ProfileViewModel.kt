@@ -118,6 +118,7 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
         if (success) {
             refresh.value = true
             showNicknameEditDialog.value = false
+            _editNickname.value = _editNickname.value.trim()
         }
     }
 
@@ -142,10 +143,10 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     }
 
 
-    fun setEditNickname(username: String) {
+    fun setEditNickname(nickName: String) {
         flushErrors()
-        _editNickname.value = username.trim()
-        val validity = LiteralChecker.checkUsername(username)
+        _editNickname.value = nickName
+        val validity = LiteralChecker.checkNickname(nickName)
         nicknameError.value = validity.render()
     }
 
@@ -156,11 +157,13 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     private fun AuthStatus.render(): String? {
         return when (this) {
             AuthStatus.INVALID_USERNAME -> "Must consist of English characters, digits, '-' or '_'"
-            AuthStatus.USERNAME_TOO_LONG -> "Nickname is too long. Maximum length is ${ModelConstraints.USERNAME_MAX_LENGTH} characters"
-            AuthStatus.DUPLICATED_USERNAME -> "Nickname is already taken. Please pick another one"
+            AuthStatus.USERNAME_TOO_LONG -> "Username is too long. Maximum length is ${ModelConstraints.USERNAME_MAX_LENGTH} characters"
+            AuthStatus.DUPLICATED_USERNAME -> "Username is already taken. Please pick another one"
             AuthStatus.SUCCESS -> null
             AuthStatus.USER_NOT_FOUND -> "User not found"
             AuthStatus.WRONG_PASSWORD -> "Wrong password"
+            AuthStatus.NICKNAME_TOO_LONG -> "Nickname is too long. Maximum length is ${ModelConstraints.USERNAME_MAX_LENGTH} characters"
+            AuthStatus.INVALID_NICKNAME -> "The nickname cannot start with space:' '"
         }
     }
 }
