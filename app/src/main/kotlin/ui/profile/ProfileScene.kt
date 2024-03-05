@@ -623,7 +623,6 @@ fun SavedGameCard(
 
         Row(
             modifier = modifier
-                .fillMaxWidth()
                 .height(IntrinsicSize.Min)
         ) {
             AvatarImage(
@@ -656,7 +655,7 @@ fun SavedGameCard(
                 Text(text = "Opponent: $opponentName", modifier = Modifier.padding(4.dp))
             }
 
-            Column(modifier = Modifier.fillMaxSize(), horizontalAlignment = Alignment.End) {
+            Column(modifier = Modifier, horizontalAlignment = Alignment.End) {
                 var showMenu by remember { mutableStateOf(false) }
                 IconButton(
                     onClick = { showMenu = !showMenu }, modifier = Modifier
