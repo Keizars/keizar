@@ -65,6 +65,7 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     }
 
     suspend fun deleteGame(id: String) {
+        allGames.value = allGames.value.filter { it.dataId != id }
         gameDataService.deleteGame(id)
     }
 
