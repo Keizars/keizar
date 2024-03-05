@@ -13,12 +13,14 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -68,49 +70,51 @@ fun TutorialSelectionPage(
     onClickTutorial: (id: String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text("Rule Book", style = MaterialTheme.typography.titleLarge)
+    CompositionLocalProvider(LocalContentColor providesDefault MaterialTheme.colorScheme.onSurface) {
+        Column(modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text("Rule Book", style = MaterialTheme.typography.titleLarge)
 
-        Column(Modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            TutorialCard(
-                title = { Text(text = "Symbols") },
-                onClick = { onClickRuleBook(RuleBookPage.SYMBOLS) },
-                description = {
-                    Text("See the meaning of the symbols on the game board.")
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
+            Column(Modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                TutorialCard(
+                    title = { Text(text = "Symbols") },
+                    onClick = { onClickRuleBook(RuleBookPage.SYMBOLS) },
+                    description = {
+                        Text("See the meaning of the symbols on the game board.")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            TutorialCard(
-                title = { Text(text = "Rules") },
-                onClick = { onClickRuleBook(RuleBookPage.RULES) },
-                description = {
-                    Text("Read detailed game rules.")
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+                TutorialCard(
+                    title = { Text(text = "Rules") },
+                    onClick = { onClickRuleBook(RuleBookPage.RULES) },
+                    description = {
+                        Text("Read detailed game rules.")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
-        Text("Demo", style = MaterialTheme.typography.titleLarge)
+            Text("Demo", style = MaterialTheme.typography.titleLarge)
 
-        Column(Modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            TutorialCard(
-                title = { Text(text = "Moves Demo") },
-                onClick = { onClickTutorial(Tutorials.Refresher1.id) },
-                description = {
-                    Text("Learn how to move pieces as a pawn, a rook, a knight, a bishop, a queen and a king. ")
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
+            Column(Modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                TutorialCard(
+                    title = { Text(text = "Moves Demo") },
+                    onClick = { onClickTutorial(Tutorials.Refresher1.id) },
+                    description = {
+                        Text("Learn how to move pieces as a pawn, a rook, a knight, a bishop, a queen and a king. ")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
-            TutorialCard(
-                title = { Text(text = "Win Demo") },
-                onClick = { onClickTutorial(Tutorials.Refresher2.id) },
-                description = {
-                    Text("Learn how to end the game by staying on the Keizar tile.")
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
+                TutorialCard(
+                    title = { Text(text = "Win Demo") },
+                    onClick = { onClickTutorial(Tutorials.Refresher2.id) },
+                    description = {
+                        Text("Learn how to end the game by staying on the Keizar tile.")
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 }
