@@ -143,12 +143,12 @@ class RoundSessionImpl(
         return NeutralStats(
             whiteCaptured = ruleEngine.getLostPiecesCount(Role.BLACK).value,
             blackCaptured = ruleEngine.getLostPiecesCount(Role.WHITE).value,
-            whiteAverageTime = moveDurations.value.drop(1).zipWithNext { a, b -> b.epochSecond - a.epochSecond }.filterIndexed { index, _ -> index % 2 == 0 }.average(),
-            blackAverageTime = moveDurations.value.drop(1).zipWithNext { a, b -> b.epochSecond - a.epochSecond }.filterIndexed { index, _ -> index % 2 == 1 }.average(),
+            whiteAverageTime = moveDurations.value.drop(1).zipWithNext { a, b -> b.epochSecond - a.epochSecond }.filterIndexed { index, _ -> index % 2 == 1 }.average(),
+            blackAverageTime = moveDurations.value.drop(1).zipWithNext { a, b -> b.epochSecond - a.epochSecond }.filterIndexed { index, _ -> index % 2 == 0 }.average(),
             whiteMoves = whitePlayerMoves.value,
             blackMoves = blackPlayerMoves.value,
-            blackTime = moveDurations.value.drop(1).zipWithNext { a, b -> b.epochSecond - a.epochSecond }.filterIndexed { index, _ -> index % 2 == 1 }.sum().toInt(),
-            whiteTime = moveDurations.value.drop(1).zipWithNext { a, b -> b.epochSecond - a.epochSecond }.filterIndexed { index, _ -> index % 2 == 0 }.sum().toInt(),
+            blackTime = moveDurations.value.drop(1).zipWithNext { a, b -> b.epochSecond - a.epochSecond }.filterIndexed { index, _ -> index % 2 == 0 }.sum().toInt(),
+            whiteTime = moveDurations.value.drop(1).zipWithNext { a, b -> b.epochSecond - a.epochSecond }.filterIndexed { index, _ -> index % 2 == 1 }.sum().toInt(),
         )
     }
 
