@@ -51,11 +51,15 @@ fun Application.gameRoomRouting(context: ServerContext) {
 
         postAuthenticated("/room/{roomNumber}/create") {
             val roomNumber: UInt = getRoomNumberOrBadRequest()
-            if (!checkAuthentication()) return@postAuthenticated
+            val userId = getUserIdOrRespond() ?: return@postAuthenticated
+            val username = context.accounts.getUser(userId)?.username
+                ?: throw BadRequestException("Invalid user")
+            val userInfo = UserInfo(username)
             val properties = call.receive<BoardProperties>()
 
             logger.info("Creating room $roomNumber")
             rooms.createRoom(roomNumber, properties)
+            rooms.joinRoom(roomNumber, userInfo)
             logger.info("Room $roomNumber created")
 
             call.respond(HttpStatusCode.OK)
