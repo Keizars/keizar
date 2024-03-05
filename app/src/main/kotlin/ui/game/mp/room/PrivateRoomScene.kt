@@ -1,11 +1,18 @@
 package org.keizar.android.ui.game.mp.room
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -35,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -80,9 +88,7 @@ private fun AcceptArea(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        Modifier
-            .padding(bottom = 16.dp)
-            .fillMaxWidth(),
+        modifier,
         horizontalArrangement = Arrangement.End,
     ) {
         val accept by vm.accept.collectAsStateWithLifecycle(false)
@@ -120,22 +126,18 @@ private fun PrivateRoomPage(
                 },
             )
         },
-        bottomBar = {
-            if (!isSystemInLandscape()) {
-                AcceptArea(
-                    vm,
-                    modifier
-                        .navigationBarsPadding()
-                        .alpha(0.97f)
-                )
-            }
-        }
     ) { contentPadding ->
         if (isSystemInLandscape()) {
             Row(
                 Modifier
                     .systemBarsPadding()
-                    .padding(contentPadding)
+                    .padding(
+                        PaddingValues(
+                            start = contentPadding.calculateStartPadding(LocalLayoutDirection.current),
+                            top = contentPadding.calculateTopPadding(),
+                            end = contentPadding.calculateEndPadding(LocalLayoutDirection.current),
+                        )
+                    )
                     .fillMaxSize()
                     .padding(16.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
@@ -155,23 +157,41 @@ private fun PrivateRoomPage(
                 }
             }
         } else {
-            Column(
-                Modifier
-                    .systemBarsPadding()
-                    .fillMaxSize()
-                    .padding(contentPadding)
-                    .padding(all = 16.dp)
-                    .verticalScroll(rememberScrollState()),
-            ) {
-                val properties by vm.configuration.boardProperties.collectAsStateWithLifecycle(null)
-                BoardLayoutPreview(
-                    boardProperties = properties,
-                    playAs = Role.WHITE,
-                )
+            Box(Modifier) {
+                Column(
+                    Modifier
+                        .systemBarsPadding()
+                        .fillMaxSize()
+                        .padding(contentPadding)
+                        .padding(all = 16.dp)
+                        .verticalScroll(rememberScrollState()),
+                ) {
+                    val properties by vm.configuration.boardProperties.collectAsStateWithLifecycle(null)
+                    BoardLayoutPreview(
+                        boardProperties = properties,
+                        playAs = Role.WHITE,
+                    )
 
-                Configurations(vm, Modifier.padding(top = 8.dp))
+                    Configurations(vm, Modifier.padding(top = 8.dp))
+
+                    Spacer(modifier = Modifier.height(64.dp))
+                }
+
+                if (!isSystemInLandscape()) {
+                    Column(Modifier.align(Alignment.BottomCenter)) {
+                        HorizontalDivider()
+                        AcceptArea(
+                            vm,
+                            modifier
+                                .fillMaxWidth()
+                                .alpha(0.90f)
+                                .background(MaterialTheme.colorScheme.surface)
+                                .padding(vertical = 8.dp)
+                                .navigationBarsPadding()
+                        )
+                    }
+                }
             }
-
         }
     }
 }
@@ -268,6 +288,7 @@ private fun RoomIdTextField(roomId: UInt, modifier: Modifier = Modifier) {
 }
 
 @Preview
+@Preview(heightDp = 800)
 @Preview(device = Devices.TABLET)
 @Preview(fontScale = 2f)
 @Composable
