@@ -48,7 +48,7 @@ import org.keizar.android.tutorial.respond
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.GameBoard
 import org.keizar.android.ui.game.GameBoardScaffold
-import org.keizar.android.ui.game.GameBoardTopBar
+import org.keizar.android.ui.game.actions.GameBoardTopBar
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
