@@ -19,14 +19,14 @@ class MongoGameDataDbControl(
 
     override suspend fun removeGameData(gameDataId: UUID): Boolean {
         return gameDataTable.updateOne(
-            Filters.eq("id", gameDataId),
+            Filters.eq("_id", gameDataId),
             Updates.set("userSaved", false)
         ).wasAcknowledged()
     }
 
     override suspend fun getGameDataById(gameDataId: UUID): GameDataModel{
         return gameDataTable.find(
-            Filters.eq("id", gameDataId)
+            Filters.eq("_id", gameDataId)
         ).first()
     }
 
