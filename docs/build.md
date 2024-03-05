@@ -56,7 +56,7 @@ variables are **required**:
 ***Others***
 
 - `TOKEN_SECRET`: RSA key used to encrypt user tokens. For
-  example: `d6yHBc5hXQrUjBKTK8Z3WFx7i6Zm6Ufm`.
+  example: `MkutjehjQXkEEc4LNRsdEgQ8dQBvR0NL`.
 - `PORT`: The port the server listens on. Default is `4392`.
 
 ### IDE Run Configuration

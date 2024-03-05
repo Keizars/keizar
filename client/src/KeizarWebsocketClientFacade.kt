@@ -22,12 +22,12 @@ class KeizarWebsocketClientFacade(
         parentCoroutineContext: CoroutineContext,
     ): GameRoomClient {
         val token = clientToken.first() ?: throw IllegalStateException("User token not available")
-        val roomInfo = client.getRoom(roomNumber, token)
         if (!client.postRoomJoin(roomNumber, token)) {
             throw RoomFullException()
         }
         val self = client.getSelf(token)
         val websocketSession = client.getRoomWebsocketSession(roomNumber, token)
+        val roomInfo = client.getRoom(roomNumber, token)
         return GameRoomClient.create(
             self = self,
             roomInfo = roomInfo,
