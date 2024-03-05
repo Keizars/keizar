@@ -1,6 +1,8 @@
 package org.keizar.android.client
 
+import kotlinx.serialization.json.JsonElement
 import org.keizar.utils.communication.game.GameDataGet
+import org.keizar.utils.communication.game.GameDataId
 import org.keizar.utils.communication.game.GameDataStore
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -13,7 +15,10 @@ interface GameDataService {
      * Uploads a game data to the server.
      */
     @POST("games")
-    suspend fun sendGameData(@Body gameData: GameDataStore)
+    suspend fun autoSaveData(@Body gameData: GameDataStore) : GameDataId
+
+    @POST("games/save/{dataId}")
+    suspend fun userSaveData(@Path("dataId") dataId: String) : String
 
     /**
      * Retrieves all the games of the user currently logged in.

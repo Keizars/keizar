@@ -164,6 +164,8 @@ interface GameBoardViewModel : HasBackgroundScope {
     @Stable
     val latestRoundStats: Flow<RoundStats>
 
+    var currentGameDataId : String
+
 
     // clicking
 
@@ -249,16 +251,26 @@ sealed class PlayableGameBoardViewModel(
     selfPlayer: Player,
 ) : BaseGameBoardViewModel(game, selfPlayer) {
 
-    suspend fun saveResults(userSaved: Boolean = false) {
-        var opponentName: String? = null
-        val userName = sessionManager.self.value?.username
+    override var currentGameDataId: String = ""
+
+    suspend fun userSave() {
+        val gameDataService: GameDataService by inject()
+        this.launchInBackground{
+            gameDataService.userSaveData(currentGameDataId)
+        }
+    }
+
+    suspend fun autoSave() {
+        var opponentName: String? = "Computer"
+        var userName = sessionManager.self.value?.username
         val gameDataService: GameDataService by inject()
         if (this is MultiplayerGameBoardViewModel) {
             this.launchInBackground {
                 opponentName = opponentUser.first().username
             }
-        } else if (userName != null){
-            opponentName = "Computer"
+        }
+        if (userName == null) {
+            userName = "Unknown"
         }
         val gameData = GameDataStore(
             null,
@@ -268,10 +280,10 @@ sealed class PlayableGameBoardViewModel(
             userName,
             opponentName,
             Instant.now().toString(),
-            userSaved
         )
         this.launchInBackground {
-            gameDataService.sendGameData(gameData)
+            val id = gameDataService.autoSaveData(gameData)
+            currentGameDataId = id.id
         }
     }
 
@@ -341,7 +353,7 @@ class SinglePlayerGameBoardViewModel(
         launchInBackground {
             game.finalWinner.distinctUntilChanged().collect {
                 if (it != null) {
-                    saveResults()
+                    autoSave()
                 }
             }
         }

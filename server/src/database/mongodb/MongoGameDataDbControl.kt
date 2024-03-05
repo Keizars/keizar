@@ -4,7 +4,6 @@ import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
-import org.bson.codecs.configuration.CodecConfigurationException
 
 import org.keizar.server.database.GameDataDBControl
 import org.keizar.server.database.models.GameDataModel
@@ -41,5 +40,12 @@ class MongoGameDataDbControl(
             )
         ).toList(list)
         return list
+    }
+
+    override suspend fun saveGameData(dataId: UUID) {
+        gameDataTable.updateOne(
+            Filters.eq("id", dataId),
+            Updates.set("userSaved", true)
+        )
     }
 }

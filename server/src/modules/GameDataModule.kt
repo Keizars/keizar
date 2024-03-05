@@ -11,8 +11,9 @@ import java.util.UUID
 
 interface GameDataModule {
     suspend fun getGameDataByUsedID(userId: UUID): List<GameDataGet>
-    suspend fun addGameData(gameData: GameDataStore): Boolean
+    suspend fun addGameData(gameData: GameDataStore): String
     suspend fun removeGameData(id: UUID): Boolean
+    suspend fun saveGameData(fromString: UUID)
 }
 
 class GameDataModuleImpl (
@@ -23,12 +24,18 @@ class GameDataModuleImpl (
         return gameDataModels.map { modelToDataGet(it) }
     }
 
-    override suspend fun addGameData(gameData: GameDataStore): Boolean {
-        return database.gameData.addGameData(dataToModel( gameData) )
+    override suspend fun addGameData(gameData: GameDataStore): String {
+        val model = dataToModel( gameData)
+        database.gameData.addGameData(model)
+        return model.id.toString()
     }
 
     override suspend fun removeGameData(id: UUID): Boolean {
         return database.gameData.removeGameData(id)
+    }
+
+    override suspend fun saveGameData(fromString: UUID) {
+        database.gameData.saveGameData(fromString)
     }
 
     private suspend fun modelToDataGet(model: GameDataModel): GameDataGet {

@@ -36,6 +36,9 @@ class TutorialGameBoardViewModel(
 ) : BaseGameBoardViewModel(game, selfPlayer) {
     override val startConfiguration: GameStartConfiguration = GameStartConfiguration.random()
     override var arePiecesClickable: Boolean = false
+    override var currentGameDataId: String
+        get() = ""
+        set(value) {}
 
     init {
         tutorialSession.requests.requestingShowPossibleMoves

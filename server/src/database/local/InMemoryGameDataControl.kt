@@ -42,4 +42,8 @@ class InMemoryGameDataControl: GameDataDBControl {
         return data { filter { (it.userId == userId) && it.userSaved }.map { it } }
     }
 
+    override suspend fun saveGameData(dataId: UUID) {
+        return data { find { it.id == dataId }?.let { it.userSaved = true } }
+    }
+
 }
