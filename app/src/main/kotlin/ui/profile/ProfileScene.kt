@@ -173,21 +173,12 @@ fun ProfileScene(
             Modifier
                 .padding(contentPadding)
         ) {
-            if (vm.refresh.value) {
-                ProfilePage(
-                    vm = vm,
-                    onSuccessfulEdit = onSuccessfulEdit,
-                    Modifier.fillMaxSize(),
-                    onClickPlayGame = onClickPlayGame
-                )
-            } else {
-                ProfilePage(
-                    vm = vm,
-                    onSuccessfulEdit = onSuccessfulEdit,
-                    Modifier.fillMaxSize(),
-                    onClickPlayGame = onClickPlayGame
-                )
-            }
+            ProfilePage(
+                vm = vm,
+                onSuccessfulEdit = onSuccessfulEdit,
+                Modifier.fillMaxSize(),
+                onClickPlayGame = onClickPlayGame
+            )
         }
     }
 }
@@ -578,6 +569,7 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
                     )
                 }
             }
+
             if (allGames.value.isNotEmpty()) {
                 GameDetailColumn(
                     modifier = modifier,
