@@ -335,6 +335,7 @@ fun NicknameEditDialog(
             OutlinedTextField(
                 value = vm.editNickname.value,
                 onValueChange = { vm.setEditNickname(it) },
+                modifier = Modifier.fillMaxWidth(),
                 isError = (nicknameError != null),
                 label = { Text("New nickname") },
                 shape = RoundedCornerShape(8.dp),
@@ -859,6 +860,14 @@ private fun PreviewSavedBoardCardTablet() {
 @Preview(showBackground = true)
 @Composable
 private fun PreviewDialog() {
+    val vm = ProfileViewModel()
+    NicknameEditDialog(vm = vm, onSuccessfulEdit = {})
+}
+
+@Preview(showBackground = true)
+@Preview(showBackground = true, device = Devices.TABLET)
+@Composable
+private fun PreviewDialogInTablet() {
     val vm = ProfileViewModel()
     NicknameEditDialog(vm = vm, onSuccessfulEdit = {})
 }
