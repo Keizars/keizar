@@ -9,7 +9,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.BaseGamePage
-import org.keizar.android.ui.game.UndoButton
+import org.keizar.android.ui.game.actions.UndoButton
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.rememberSinglePlayerGameBoardViewModel
 import org.keizar.game.Difficulty

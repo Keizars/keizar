@@ -42,7 +42,12 @@ import kotlin.time.Duration.Companion.seconds
 
 
 /**
- * Composes pieces on the board.
+ * Composes all the pieces on the board.
+ *
+ * This composable takes the maximum size available using [BoxWithConstraints] and arranges the pieces accordingly to fill that size.
+ *
+ * Pieces do not layout in a centered manner if `maxWidth` and `maxHeight` is not a square.
+ * Therefore, you would like to place [BoardPieces] in a square container in order to see the correct piece layout.
  *
  * @see BoardTiles
  */
@@ -127,17 +132,19 @@ fun BoardPieces(
                     .size(tileSize), // placement modifiers
                 contentAlignment = Alignment.Center,
             ) {
-                PlayerIconFitted(tileSize, pick?.piece == piece, piece.role.pieceColor())
+                PieceIconFitted(tileSize, pick?.piece == piece, piece.role.pieceColor())
             }
         }
     }
 }
 
 /**
- * Player icon fitted into tile size
+ * [PieceIcon] fitted into tile size.
+ *
+ * @param isPicked gives a shadow effect if true.
  */
 @Composable
-fun PlayerIconFitted(
+fun PieceIconFitted(
     tileSize: DpSize,
     isPicked: Boolean,
     color: Color,
@@ -156,18 +163,26 @@ fun PlayerIconFitted(
                 }
             )
     ) {
-        PlayerIcon(color = color, Modifier.matchParentSize())
+        PieceIcon(color = color, Modifier.matchParentSize())
     }
 }
 
+/**
+ * Returns the color of the piece according to the role.
+ */
 @Stable
 fun Role.pieceColor() =
     if (this == Role.BLACK) Color.Black else Color.White
 
+/**
+ * A filled circle with a border and shadow, representing the piece.
+ *
+ * It's size is zero by default. You should specify the size using the [modifier].
+ */
 @Composable
-internal fun PlayerIcon(
+internal fun PieceIcon(
     color: Color,
-    modifier: Modifier = Modifier,
+    modifier: Modifier,
 ) {
     Box(
         modifier = modifier
@@ -209,7 +224,7 @@ private fun PreviewBoardPiecesWithBackground() {
 private fun PreviewFlashKeizar() {
     val vm = rememberSinglePlayerGameBoardForPreview()
     Box(modifier = Modifier.alpha(vm.boardTransitionController.winningPieceAlpha)) {
-        PlayerIconFitted(
+        PieceIconFitted(
             tileSize = DpSize(320.dp, 320.dp),
             isPicked = false,
             color = MaterialTheme.colorScheme.primary,

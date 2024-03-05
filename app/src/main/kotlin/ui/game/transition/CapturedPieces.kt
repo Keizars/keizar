@@ -57,13 +57,23 @@ class CapturedPieceSlot {
         internal set
 }
 
+/**
+ * A state that manages the captured pieces.
+ *
+ * To create a new instance of [CapturedPieceHostState], use the [CapturedPieceHostState] factory function.
+ *
+ * @see [CapturedPiecesHost]
+ */
 interface CapturedPieceHostState {
     /**
-     * Slots of the captured pieces where captured pieces can be placed in.
+     * UI Slots of the captured pieces where captured pieces can be placed in.
      */
     @Stable
     val slots: List<CapturedPieceSlot>
 
+    /**
+     * Number of pieces currently captured.
+     */
     val capturedPieceCount: Int
         @Composable
         get() = remember {
@@ -83,15 +93,25 @@ interface CapturedPieceHostState {
         }
     }
 
+    /**
+     * Removes all captured pieces.
+     */
     fun clear() {
         slots.forEach { it.pieceIndex = null }
     }
 }
 
+/**
+ * Creates a new instance of [CapturedPieceHostState].
+ *
+ * @param slotCount the number of slots to be created.
+ * This must be 2 times the number of pieces that can be captured for each player.
+ * E.g. 32 for a standard game of Keizar.
+ */
 fun CapturedPieceHostState(
     // Actually only 16 pieces can be captured, 
     // but currently the game crashes on clicking "Next Round" so we use 32 here.
-    slotCount: Int = 32, 
+    slotCount: Int = 32,
 ): CapturedPieceHostState {
     return object : CapturedPieceHostState {
         override val slots: List<CapturedPieceSlot> =
@@ -106,8 +126,44 @@ fun CapturedPieceHostState(
 /**
  * A row that allocates space for the captured pieces.
  *
+ * [CapturedPiecesHost] is designed to be used along with a board (a reference object in general).
+ * Each [slot][CapturedPieceSlot] in the captured pieces host is positioned relative to the top-left corner of the board,
+ * allowing [BoardPieces] to automatically move captured pieces to the slot.
+ *
+ * The [BoardTransitionController] can be used to animate captured pieces from their positions on the board to the slot.
+ *
+ * ## Example Usage with [BoardTransitionController]
+ *
+ * ```
+ * // In composable:
+ * val controller = remember { BoardTransitionController() }
+ *
+ * CapturedPiecesHost(
+ *    capturedPieceHostState = controller.myCapturedPieceHostState, // or `.theirCapturedPieceHostState` for opponents
+ *    slotSize = tileSize,
+ *    sourceCoordinates = boardGlobalCoordinates,
+ *    Modifier.fillMaxWidth()
+ * )
+ *
+ * // In view model:
+ * val pieceOffset = BoardTransitionController.pieceOffset(
+ *    piece = piece,
+ *    arrangedPos = pieceArranger.offsetFor(pos).collectAsStateWithLifecycle(DpOffset.Zero)
+ * )
+ *
+ * // Called when rule engine thinks a piece is captured:
+ * fun capturePiece(pieceIndex: Int) {
+ *    // Marks that pieceIndex as captured,
+ *    // then [BoardTransitionController] will change the piece's offset to the slot.
+ *    capturedPieceHostState.capture(pieceIndex)
+ * }
+ * ```
+ *
  * @param sourceCoordinates coordinates of a source component that will be used to calculate the offset of the slots.
  * This can typically be the offset of the top-left corner of the board in the parent layout.
+ * @param slotSize the number of slots to be created.
+ * This must be 2 times the number of pieces that can be captured for each player.
+ * E.g. 32 for a standard game of Keizar.
  */
 @Composable
 fun CapturedPiecesHost(
@@ -122,10 +178,11 @@ fun CapturedPiecesHost(
         modifier,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-//        horizontalArrangement = horizontalArrangement,
-//        verticalAlignment = Alignment.CenterVertically,
-        ) {
+        Box {
+            // Note that all the slots are placed in a box, so they effectively only take one [slotSize].
+            // We still need multiple slots for it to be easier to animate captured pieces 
+            // from their positions on the board to the slot.
+
             for (item in capturedPieceHostState.slots) {
                 key(sourceCoordinatesUpdated) { // Recompose when the source coordinates are updated
                     CapturedPieceSlot(

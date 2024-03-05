@@ -47,7 +47,7 @@ fun PossibleMovesOverlay(
                         .size(tileSize),
                     contentAlignment = Alignment.Center
                 ) {
-                    PlayerIconFitted(color = player.pieceColor(), isPicked = false, tileSize = tileSize)
+                    PieceIconFitted(color = player.pieceColor(), isPicked = false, tileSize = tileSize)
                 }
             }
         }

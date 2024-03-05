@@ -15,6 +15,11 @@ import org.keizar.utils.communication.game.BoardPos
 
 /**
  * Arranges the pieces on the board.
+ *
+ * It gives each piece a [Flow] of [DpOffset] which represents the position of the piece on the board,
+ * calculated interactively based on the logical position of the piece.
+ *
+ * To create a new instance of [PieceArranger], use the [PieceArranger] factory function.
  */
 interface PieceArranger {
     /**
