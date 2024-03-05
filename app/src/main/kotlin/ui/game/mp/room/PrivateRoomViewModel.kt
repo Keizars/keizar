@@ -75,7 +75,8 @@ class PrivateRoomViewModelImpl(
 
     override val playersReady: SharedFlow<Boolean> = flow {
         while (currentCoroutineContext().isActive) {
-            emit(roomService.getRoom(roomId.toString()).playerInfo.all { it.isReady })
+            val playerInfo = roomService.getRoom(roomId.toString()).playerInfo
+            emit(playerInfo.size == 2 && playerInfo.all { it.isReady })
             delay(2.seconds)
         }
     }.flowOn(Dispatchers.IO)
@@ -103,7 +104,7 @@ class PrivateRoomViewModelImpl(
 
     private val selfPlayer = client.map { it.selfPlayer }
 
-    private val opponentPlayer = client.map { it.opponentPlayer}
+    private val opponentPlayer = client.map { it.opponentPlayer }
 
     override val connectRoomError: MutableStateFlow<ConnectRoomError?> = MutableStateFlow(null)
 

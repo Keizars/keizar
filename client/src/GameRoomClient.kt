@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -245,8 +246,8 @@ class GameRoomClientImpl internal constructor(
                  * halfway through the game, the playerAllocation and gameSnapshot should
                  * still be able to be set up properly.
                  */
-                val selfPlayer = playerAllocation.first { it != null }!!
-                val gameSnapshot = gameSnapshot.first { it != null }!!
+                val selfPlayer = playerAllocation.filterNotNull().first()
+                val gameSnapshot = gameSnapshot.filterNotNull().first()
                 websocketSessionHandler.close()
 
                 val wsHandler = GameSessionWsHandlerImpl(

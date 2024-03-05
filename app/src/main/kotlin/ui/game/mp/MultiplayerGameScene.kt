@@ -22,10 +22,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import me.him188.ani.utils.logging.error
+import me.him188.ani.utils.logging.info
 import org.keizar.android.BuildConfig
 import org.keizar.android.client.SessionManager
 import org.keizar.android.ui.external.placeholder.placeholder
@@ -73,25 +75,29 @@ private class MultiplayerGameConnector(
 
     val client: SharedFlow<GameRoomClient> = flow {
         while (true) {
-            emit(
-                try {
-                    clientFacade.connect(roomId, backgroundScope.coroutineContext)
-                } catch (e: RoomFullException) {
-                    error.value = ConnectionError.NetworkError(e)
-                    continue
-                } catch (e: Exception) {
-                    logger.error(e) { "Failed to get self" }
-                    delay(5.seconds)
-                    continue
-                }
-            )
+            try {
+                emit(clientFacade.connect(roomId, backgroundScope.coroutineContext))
+                logger.info { "Successfully connected to room" }
+            } catch (e: RoomFullException) {
+                error.value = ConnectionError.NetworkError(e)
+                logger.error(e) { "Failed to connect to room: RoomFullException" }
+                delay(5.seconds)
+                continue
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to get self" }
+                delay(5.seconds)
+                continue
+            }
             return@flow
         }
-    }.shareInBackground()
+    }.shareInBackground(SharingStarted.Eagerly)
 
     val session = client.mapLatest {
-        it.getGameSession()
-    }.shareInBackground()
+        logger.info { "Connecting GameSession" }
+        val session = it.getGameSession()
+        logger.info { "Connected to GameSession: $session" }
+        session
+    }.shareInBackground(SharingStarted.Eagerly)
 
     val selfPlayer = client.map { it.selfPlayer }
 
@@ -145,19 +151,21 @@ fun MultiplayerGameScene(
     val client by connector.client.collectAsStateWithLifecycle(null)
     val session by connector.session.collectAsStateWithLifecycle(null)
 
-    session?.let { s ->
-        client?.let { c ->
+    if (client == null) {
+        ConnectingRoomDialog(extra = {
+            if (BuildConfig.DEBUG) {
+                Text(text = "Debug info: client is still null")
+            }
+        })
+    }
+
+    client?.let { c ->
+        session?.let { s ->
             val vm = remember {
                 MultiplayerGameBoardViewModel(s, s.player, c.selfPlayer, c.opponentPlayer)
             }
             MultiplayerGamePage(vm, onClickHome, onClickGameConfig, modifier)
         }
-    } ?: run {
-        ConnectingRoomDialog(extra = {
-            if (BuildConfig.DEBUG) {
-                Text(text = "Debug info: RemoteGameSession.player is still null")
-            }
-        })
     }
 }
 
