@@ -204,7 +204,7 @@ fun MainScreen() {
                         onClickHome = { navController.navigate("home") },
                         onJoinGame = { roomId ->
                             navController.navigate(
-                                navController.graph["game/multiplayer"].id,
+                                navController.graph["game/room"].id,
                                 Bundle().apply {
                                     putString("roomId", roomId)
                                 })
