@@ -1,6 +1,5 @@
 package org.keizar.server.database.mongodb
 
-import com.mongodb.client.model.Filters
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
@@ -11,7 +10,7 @@ class MongoSeedBankDbControl(
     private val seedBankTable: MongoCollection<SeedBankModel>
 ) : SeedBankDbControl {
     override suspend fun addSeed(userId: String, seed: String): Boolean {
-        return seedBankTable.insertOne(SeedBankModel(userId, seed)).wasAcknowledged()
+        return seedBankTable.insertOne(SeedBankModel(userId = userId, gameSeed = seed)).wasAcknowledged()
     }
 
     override suspend fun removeSeed(userId: String, seed: String): Boolean {

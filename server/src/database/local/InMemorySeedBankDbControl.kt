@@ -2,8 +2,8 @@ package org.keizar.server.database.local
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.keizar.server.database.models.SeedBankModel
 import org.keizar.server.database.SeedBankDbControl
+import org.keizar.server.database.models.SeedBankModel
 
 class InMemorySeedBankDbControl : SeedBankDbControl {
     private val _data: MutableList<SeedBankModel> = mutableListOf()
@@ -14,15 +14,15 @@ class InMemorySeedBankDbControl : SeedBankDbControl {
 
     override suspend fun addSeed(userId: String, seed: String): Boolean {
         return data {
-            val seedBankModel = SeedBankModel(userId, seed)
-            if (contains(seedBankModel)) return@data false
+            val seedBankModel = SeedBankModel(userId = userId, gameSeed = seed)
+            if (any { it.userId == userId && it.gameSeed == seed }) return@data false
             add(seedBankModel)
             return@data true
         }
     }
 
     override suspend fun removeSeed(userId: String, seed: String): Boolean {
-        return data { remove(SeedBankModel(userId, seed)) }
+        return data { removeIf { it.userId == userId && it.gameSeed == seed } }
     }
 
     override suspend fun getSeeds(userId: String): List<String> {
