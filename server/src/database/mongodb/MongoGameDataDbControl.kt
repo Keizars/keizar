@@ -33,9 +33,8 @@ class MongoGameDataDbControl(
     override suspend fun getGameDataByUser(userId: String): List<GameDataModel> {
         val list = mutableListOf<GameDataModel>()
         gameDataTable.find(
-            Filters.or(
-                Filters.eq("userId1", userId),
-                Filters.eq("userId2", userId),
+            Filters.and(
+                Filters.eq("userId", userId),
                 Filters.eq("userSaved", true)
             )
         ).toList(list)

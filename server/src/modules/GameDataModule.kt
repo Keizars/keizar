@@ -20,7 +20,8 @@ class GameDataModuleImpl (
     private val database: DatabaseManager,
 ) : GameDataModule {
     override suspend fun getGameDataByUsedID(userId: UUID): List<GameDataGet> {
-        val gameDataModels = database.gameData.getGameDataByUser(userId.toString())
+        val username = database.user.getUserById(userId.toString())?.username ?: "Unknown"
+        val gameDataModels = database.gameData.getGameDataByUser(username)
         return gameDataModels.map { modelToDataGet(it) }
     }
 
@@ -39,10 +40,8 @@ class GameDataModuleImpl (
     }
 
     private suspend fun modelToDataGet(model: GameDataModel): GameDataGet {
-        val userId = model.userId
-        val userName = database.user.getUserById(userId!!)?.username ?: "Unknown"
-        val opponentId = model.opponentId
-        val opponentName = database.user.getUserById(opponentId!!)?.username ?: "Unknown"
+        val userName = model.userId!!
+        val opponentName = model.opponentId!!
         return GameDataGet(
             userName,
             opponentName,

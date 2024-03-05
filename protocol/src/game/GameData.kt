@@ -33,6 +33,10 @@ data class GameDataId(
     val id: String
 )
 
+data class GameDataList(
+    val gameData: List<GameDataGet>
+)
+
 @Serializable
 data class NeutralStats(
     val whiteCaptured: Int,
