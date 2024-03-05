@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.widthIn
@@ -32,6 +33,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Devices
@@ -106,7 +108,8 @@ private fun PrivateRoomPage(
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
-        modifier.fillMaxSize(),
+        modifier
+            .fillMaxSize(),
         topBar = {
             TopAppBar(
                 title = { Text(text = "Private Room") },
@@ -119,7 +122,12 @@ private fun PrivateRoomPage(
         },
         bottomBar = {
             if (!isSystemInLandscape()) {
-                AcceptArea(vm, modifier)
+                AcceptArea(
+                    vm,
+                    modifier
+                        .navigationBarsPadding()
+                        .alpha(0.97f)
+                )
             }
         }
     ) { contentPadding ->
@@ -149,6 +157,7 @@ private fun PrivateRoomPage(
         } else {
             Column(
                 Modifier
+                    .systemBarsPadding()
                     .fillMaxSize()
                     .padding(contentPadding)
                     .padding(all = 16.dp)

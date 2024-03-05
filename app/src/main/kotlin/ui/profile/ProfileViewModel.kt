@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.keizar.android.GameStartConfigurationEncoder
@@ -90,18 +92,28 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     // Change time to refresh the seeds
     val time = MutableStateFlow(0)
 
+    var isLoadingSeeds = mutableStateOf(true)
+    
     val allSeeds: MutableStateFlow<List<SavedSeed>> = time.map {
         seedBankService.getSeeds()
-    }.map {seeds -> seeds.map{SavedSeed(it)}
+    }.onStart { isLoadingSeeds.value = true }.map { seeds ->
+        seeds.map { SavedSeed(it) }
+    }.onEach {
+        isLoadingSeeds.value = false
     }.localCachedStateFlow(emptyList())
 
     val selectedSeed: MutableStateFlow<SavedSeed?> = MutableStateFlow(null)
 
     val selectedGame: MutableStateFlow<GameDataGet?> = MutableStateFlow(null)
 
+    var isLoadingGames = mutableStateOf(true)
+    
     val allGames: MutableStateFlow<List<GameDataGet>> = time.map {
         gameDataService.getGames()
+    }.onStart { isLoadingGames.value = true }.onEach {
+        isLoadingGames.value = false
     }.localCachedStateFlow(emptyList())
+
 
     val showNicknameEditDialog = mutableStateOf(false)
 
