@@ -9,6 +9,7 @@ import io.ktor.server.routing.post
 import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import org.keizar.server.ServerContext
+import org.keizar.server.utils.deleteAuthenticated
 import org.keizar.server.utils.getAuthenticated
 import org.keizar.server.utils.getUserIdOrRespond
 import org.keizar.utils.communication.game.GameDataStore
@@ -30,8 +31,9 @@ fun Application.gameDataRouting(context: ServerContext) {
             }
 
 
-            delete("/{id}") {
-                val id = call.parameters["id"] ?: return@delete
+            deleteAuthenticated("/{id}") {
+                val userId = getUserIdOrRespond() ?: return@deleteAuthenticated
+                val id = call.parameters["id"] ?: return@deleteAuthenticated
                 gameDataTable.removeGameData(UUID.fromString(id))
             }
         }
