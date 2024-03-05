@@ -1,7 +1,5 @@
 package org.keizar.android.ui.profile
 
-//noinspection UsingMaterialAndMaterial3Libraries
-//noinspection UsingMaterialAndMaterial3Libraries
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -572,15 +570,15 @@ fun SavedBoardCard(
 @Composable
 fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
     if (vm.isLoadingGames.value) {
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                CircularProgressIndicator()
-                Text(text = "Loading Games")
-            }
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            CircularProgressIndicator()
+            Text(text = "Loading Games")
+        }
     }
     val allGames = vm.allGames.collectAsStateWithLifecycle(emptyList())
     val selectedGame by vm.selectedGame.collectAsStateWithLifecycle()
@@ -673,52 +671,67 @@ fun SavedGameCard(
                     .padding(8.dp)
             ) {
 
-                val winningStatus = if (round1stats.winner!! == round2stats.winner!!) {
-                    if (round1stats.winner == round1stats.player) {
-                        "Win"
-                    } else {
-                        "Lose"
-                    }
+                val winner: Player? = if (round1stats.winner!! == round2stats.winner!!) {
+                    round1stats.winner!!
                 } else {
-                    "Draw"
+                    if (round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured >
+                        round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured
+                    ) {
+                        Player.FirstBlackPlayer
+                    } else if (round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured <
+                        round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured) {
+                        Player.FirstWhitePlayer
+                    } else {
+                        null
+                    }
                 }
 
-                Text(
-                    text = "$winningStatus - ${gameData.timeStamp}",
-                    modifier = Modifier.padding(4.dp)
-                )
-                Text(text = "Opponent: $opponentName", modifier = Modifier.padding(4.dp))
-            }
-
-            Column(modifier = Modifier, horizontalAlignment = Alignment.End) {
-                var showMenu by remember { mutableStateOf(false) }
-                Box(
-                    Modifier,
-                    contentAlignment = Alignment.TopEnd
-                ) {
-                    IconButton(
-                        onClick = { showMenu = !showMenu }, modifier = Modifier
-                            .size(42.dp)
-                            .padding(8.dp)
-                    ) {
-                        Icon(Icons.Filled.MoreVert, contentDescription = "More options")
+                val winningStatus = if (winner == null) {
+                    "Draw"
+                } else {
+                    if (winner == round1stats.player) {
+                        "Win"
+                    } else {
+                        "Loss"
                     }
-
-                    DropdownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false }
+                }
+                Row {
+                    Text(
+                        text = "$winningStatus - ${gameData.timeStamp}",
+                        modifier = Modifier.padding(4.dp)
+                    )
+                    var showMenu by remember { mutableStateOf(false) }
+                    Column(
+                        Modifier,
                     ) {
+                        IconButton(
+                            onClick = { showMenu = !showMenu }, modifier = Modifier
+                                .size(42.dp)
+                                .padding(8.dp)
+                        ) {
+                            Icon(Icons.Filled.MoreVert, contentDescription = "More options")
+                        }
 
-                        DropdownMenuItem(onClick = {
-                            showMenu = false
-                            vm.launchInBackground {
-                                vm.deleteGame(gameData.dataId)
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+
+                            DropdownMenuItem(onClick = {
+                                showMenu = false
+                                vm.launchInBackground {
+                                    vm.deleteGame(gameData.dataId)
+                                }
+                            }) {
+                                Text("Delete")
                             }
-                        }) {
-                            Text("Delete")
                         }
                     }
                 }
+                Text(text = "Opponent: $opponentName", modifier = Modifier.padding(4.dp))
+
+                VerticalDivider(Modifier.padding(horizontal = 8.dp))
+
                 if (showDetails && !isSystemInLandscape()) {
                     GameDetailsDialog(
                         gameData = gameData, onDismissRequest = { showDetails = false },
@@ -1064,7 +1077,6 @@ private fun PreviewSavedGames() {
         ),
         round1Stats, round1Stats, "1"
     )
-    val vm = ProfileViewModel()
     GameDetailColumn(gameData = gameData, modifier = Modifier)
 }
 
