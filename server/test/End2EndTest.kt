@@ -80,7 +80,7 @@ class End2EndTest {
                 json()
             }
         }
-        val username = "user-${random.nextUInt().toInt() % 1000}"
+        val username = "user-${random.nextInt() % 1000}"
         val token = client.post("$endpoint/users/register") {
             contentType(ContentType.Application.Json)
             setBody(AuthRequest(username = username, password = username))
@@ -129,7 +129,7 @@ class End2EndTest {
                 json()
             }
         }
-        val username = "user-${random.nextUInt().toInt() % 1000}"
+        val username = "user-${random.nextInt() % 1000}"
         val token = client.post("$endpoint/users/register") {
             contentType(ContentType.Application.Json)
             setBody(AuthRequest(username = username, password = username))
