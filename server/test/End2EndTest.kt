@@ -150,6 +150,6 @@ class End2EndTest {
 
     @AfterEach
     fun tearDown() {
-        server.stop(0, 0)
+        server.stop(1000, 1000)
     }
 }
