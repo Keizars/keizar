@@ -85,7 +85,11 @@ fun GameConfigurationScene(
                 putString("configuration", configuration)
             })
         },
-        onClickLogin = { navController.navigate("auth/login") }
+        onClickLogin = {
+            navController.navigate("auth/login") {
+                launchSingleTop = true
+            }
+        }
     )
 }
 

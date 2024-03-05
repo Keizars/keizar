@@ -185,7 +185,9 @@ fun MainScreen() {
                 null -> {}
                 false -> {
                     SideEffect {
-                        navController.navigate("auth/login")
+                        navController.navigate("auth/login") {
+                            launchSingleTop = true
+                        }
                     }
                 }
 
@@ -371,7 +373,9 @@ fun MainScreen() {
 private fun LoginChecker(navController: NavHostController) {
     LaunchedEffect(true) {
         if (GlobalContext.get().get<SessionManager>().self.first() == null) {
-            navController.navigate("auth/login")
+            navController.navigate("auth/login") {
+                launchSingleTop = true
+            }
         }
     }
 }
@@ -426,7 +430,9 @@ fun HomePage(navController: NavController) {
                     confirmButton = {
                         Button(onClick = {
                             showLogInDialog = false
-                            navController.navigate("auth/login")
+                            navController.navigate("auth/login") {
+                                launchSingleTop = true
+                            }
                         }) {
                             Text("OK")
                         }

@@ -49,7 +49,11 @@ fun SinglePlayerGameScene(
                 launchSingleTop = true
             }
         },
-        onClickLogin = { navController.navigate("auth/login") },
+        onClickLogin = {
+            navController.navigate("auth/login") {
+                launchSingleTop = true
+            }
+        },
         actions = {
             UndoButton(vm = vm)
         }

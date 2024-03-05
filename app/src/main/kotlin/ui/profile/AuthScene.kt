@@ -54,11 +54,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.keizar.android.R
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.foundation.moveFocusOnEnter
 import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
+import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun AuthScene(
@@ -317,6 +319,10 @@ fun AuthPage(
             }
         }
 
+        if (viewModel.isProcessing.collectAsStateWithLifecycle().value) {
+            ConnectingRoomDialog()
+        }
+
         Button(
             onClick = {
                 if (viewModel.isRegister.value && !viewModel.agreementChecked.value) {
@@ -325,15 +331,16 @@ fun AuthPage(
                 }
                 if (viewModel.isProcessing.compareAndSet(expect = false, update = true)) {
                     viewModel.launchInBackground {
-                        val result = try {
-                            viewModel.proceedLogin()
+                        try {
+                            val result = viewModel.proceedLogin()
+                            if (result) {
+                                withContext(Dispatchers.Main) {
+                                    delay(1.seconds)
+                                    onSuccess()
+                                }
+                            }
                         } finally {
                             viewModel.isProcessing.compareAndSet(expect = true, update = false)
-                        }
-                        if (result) {
-                            withContext(Dispatchers.Main) {
-                                onSuccess()
-                            }
                         }
                     }
                 }
