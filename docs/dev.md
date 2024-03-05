@@ -3,7 +3,7 @@
 ## Module Structure
 
 💡*For a visual representation of the module structure, see
-the [diagram](./.images/project-architecture.png) on Lark.*
+this [diagram](./.images/project-architecture.png).*
 
 [gradle]: https://docs.gradle.org/current/userguide/userguide.html
 
