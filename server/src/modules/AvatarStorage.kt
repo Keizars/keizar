@@ -33,6 +33,8 @@ class AwsAvatarStorage(
                 "contentType" to contentType
             )
             body = FileContent(file)
+//            checksumAlgorithm = ChecksumAlgorithm.Crc32
+//            checksumCrc32 = file.inputStream().use { it.readBytes().contentToString().hashCode().toLong() }
         }
 
         // "https://keizar.s3.amazonaws.com/avatars/test0.png"

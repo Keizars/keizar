@@ -8,6 +8,7 @@ dependencies {
     api(libs.kotlinx.serialization.json)
     implementation(project(":rule-engine"))
     implementation(projects.protocol)
+    implementation(projects.utils.slf4jKt)
     implementation(kotlin("reflect"))
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.server.auth)

@@ -3,6 +3,8 @@ package org.keizar.server.modules
 import io.ktor.http.ContentType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import me.him188.ani.utils.logging.info
+import me.him188.ani.utils.logging.logger
 import org.keizar.server.database.DatabaseManager
 import org.keizar.server.database.models.UserModel
 import org.keizar.server.utils.AuthTokenManager
@@ -35,6 +37,8 @@ class AccountModuleImpl(
     private val authTokenManager: AuthTokenManager,
     private val avatarStorage: AvatarStorage,
 ) : AccountModule {
+    private val logger = logger(AccountModuleImpl::class)
+
     override suspend fun register(username: String, hash: ByteArray): AuthResponse {
         if (isUsernameTaken(username)) {
             return AuthResponse(AuthStatus.DUPLICATED_USERNAME)
@@ -106,6 +110,7 @@ class AccountModuleImpl(
         }
 
         val digest = MessageDigest.getInstance("SHA-256").digest(file.readBytes()).toHexString()
+        logger.info { "Uploading avatar for `$uid` with digest `$digest`" }
         val newUrl = avatarStorage.uploadAvatar(uid.toString(), file, filename = digest, contentType.toString())
         withContext(Dispatchers.IO) {
             file.delete()
