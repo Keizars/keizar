@@ -7,6 +7,11 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.lerp
 
 
+/**
+ * A [Modifier] that offsets the tab indicator based on the current page and page offset of a [androidx.compose.foundation.pager.PagerState].
+ *
+ * Useful with [androidx.compose.material3.TabRow] to animate the tab indicator when scrolling through pages.
+ */
 fun Modifier.pagerTabIndicatorOffset(
     pagerState: androidx.compose.foundation.pager.PagerState,
     tabPositions: List<TabPosition>,

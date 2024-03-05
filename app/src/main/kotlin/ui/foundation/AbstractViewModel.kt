@@ -19,6 +19,15 @@ interface Disposable {
 
 /**
  * A view model that provides a background scope and automatically disposes of it when it is no longer needed.
+ *
+ * All view models should extend this class.
+ *
+ * ## Lifecycle Management
+ *
+ * [AbstractViewModel] is a [RememberObserver], which means it can and must be remembered and forgotten by Compose.
+ * When it is remembered, it will create a background scope and call [init]. When it is forgotten, it will dispose of the background scope.
+ *
+ * A typical usage is to remember the view model in a composable, so that Compose can automatically manage the lifecycle.
  */
 abstract class AbstractViewModel : RememberObserver, ViewModel(), HasBackgroundScope, Disposable {
     protected val logger by lazy { logger(this::class) }

@@ -12,6 +12,14 @@ import org.koin.dsl.module
 
 /**
  * Gets a Koin module for the Android app.
+ *
+ * # Dependency Injection in the App
+ *
+ * The app uses Koin for dependency injection.
+ *
+ * Koin is started in the very beginning of the app, [KeizarApplication.onCreate].
+ *
+ * ## Retrieving
  */
 fun getKoinModule(client: Client = Client(BuildConfig.SERVER_ENDPOINT)): Module {
     return module {

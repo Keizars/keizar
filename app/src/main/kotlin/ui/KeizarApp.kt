@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocal
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -17,10 +18,16 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import org.keizar.android.ui.theme.AppTheme
 import org.keizar.android.ui.theme.myDarkColorTheme
 import org.keizar.android.ui.theme.myLightColorTheme
 
+/**
+ * The root composable function to provide theming and necessary [CompositionLocal] values for running the app in production.
+ *
+ * It also provides the features:
+ * - Adds a uniform background color to the whole app.
+ * - Clear focus and hide keyboard when clicking any background area.
+ */
 @Composable
 inline fun KeizarApp(
     colorScheme: ColorScheme = if (isSystemInDarkTheme()) myDarkColorTheme() else myLightColorTheme(),
@@ -32,7 +39,7 @@ inline fun KeizarApp(
         MaterialTheme(colorScheme) {
             Box(
                 modifier = Modifier
-                    .background(AppTheme.colorScheme.background)
+                    .background(MaterialTheme.colorScheme.background)
                     .focusable(false)
                     .clickable(
                         remember { MutableInteractionSource() },

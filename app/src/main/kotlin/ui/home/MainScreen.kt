@@ -81,6 +81,11 @@ import org.koin.core.context.GlobalContext
 
 private val json = Json { ignoreUnknownKeys = true }
 
+/**
+ * The content of the main activity.
+ *
+ * It is a navigation controller
+ */
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
