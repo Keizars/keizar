@@ -679,7 +679,7 @@ fun SavedGameCard(
                         Text("Delete")
                     }
                 }
-                if (showDetails) {
+                if (showDetails && !isSystemInLandscape()) {
                     GameDetailsDialog(
                         gameData = gameData, onDismissRequest = { showDetails = false },
                     )

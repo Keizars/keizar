@@ -65,21 +65,6 @@ fun GameBoard(
 ) {
     var boardGlobalCoordinates: LayoutCoordinates? by remember { mutableStateOf(null) }
     val tileSize by vm.pieceArranger.tileSize.collectAsStateWithLifecycle(DpSize.Zero)
-//    Row(
-//        modifier.fillMaxWidth().padding(16.dp).height(48.dp),
-//        verticalAlignment = Alignment.CenterVertically
-//    ) {
-//        Box(
-//            modifier = modifier.weight(1f).height(48.dp)
-//        ) {
-//            // TODO: Avatar
-//        }
-//        Text(
-//            text = "Opponent Username",
-//            modifier.weight(3f),
-//            fontSize = 18.sp
-//        )
-//    }
 
     Column {
         Row(Modifier.align(Alignment.Start), verticalAlignment = CenterVertically) {
