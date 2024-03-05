@@ -1,7 +1,6 @@
 package org.keizar.server.utils
 
 import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.auth.UserIdPrincipal
@@ -9,13 +8,11 @@ import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.principal
 import io.ktor.server.response.respond
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.Routing
 import io.ktor.server.routing.delete
 import io.ktor.server.routing.get
 import io.ktor.server.routing.patch
 import io.ktor.server.routing.post
 import io.ktor.server.routing.put
-import io.ktor.server.routing.routing
 import io.ktor.server.websocket.DefaultWebSocketServerSession
 import io.ktor.server.websocket.WebSocketServerSession
 import io.ktor.server.websocket.webSocket
@@ -26,9 +23,10 @@ import java.util.UUID
 @KtorDsl
 inline fun Route.getAuthenticated(
     path: String = "",
+    optional: Boolean = false,
     crossinline block: suspend PipelineContext<Unit, ApplicationCall>.() -> Unit
 ) {
-    authenticate("auth-bearer") {
+    authenticate("auth-bearer", optional = optional) {
         get(path) { block() }
     }
 }
@@ -36,9 +34,10 @@ inline fun Route.getAuthenticated(
 @KtorDsl
 inline fun Route.postAuthenticated(
     path: String = "",
+    optional: Boolean = false,
     crossinline block: suspend PipelineContext<Unit, ApplicationCall>.() -> Unit
 ) {
-    authenticate("auth-bearer") {
+    authenticate("auth-bearer", optional = optional) {
         post(path) { block() }
     }
 }
@@ -46,9 +45,10 @@ inline fun Route.postAuthenticated(
 @KtorDsl
 inline fun Route.putAuthenticated(
     path: String = "",
+    optional: Boolean = false,
     crossinline block: suspend PipelineContext<Unit, ApplicationCall>.() -> Unit
 ) {
-    authenticate("auth-bearer") {
+    authenticate("auth-bearer", optional = optional) {
         put(path) { block() }
     }
 }
@@ -56,9 +56,10 @@ inline fun Route.putAuthenticated(
 @KtorDsl
 inline fun Route.patchAuthenticated(
     path: String = "",
+    optional: Boolean = false,
     crossinline block: suspend PipelineContext<Unit, ApplicationCall>.() -> Unit
 ) {
-    authenticate("auth-bearer") {
+    authenticate("auth-bearer", optional = optional) {
         patch(path) { block() }
     }
 }
@@ -66,9 +67,10 @@ inline fun Route.patchAuthenticated(
 @KtorDsl
 inline fun Route.deleteAuthenticated(
     path: String = "",
+    optional: Boolean = false,
     crossinline block: suspend PipelineContext<Unit, ApplicationCall>.() -> Unit
 ) {
-    authenticate("auth-bearer") {
+    authenticate("auth-bearer", optional = optional) {
         delete(path) { block() }
     }
 }
@@ -76,14 +78,18 @@ inline fun Route.deleteAuthenticated(
 @KtorDsl
 inline fun Route.websocketAuthenticated(
     path: String = "",
+    optional: Boolean = false,
     crossinline block: suspend DefaultWebSocketServerSession.() -> Unit
 ) {
-    authenticate("auth-bearer") {
+    authenticate("auth-bearer", optional = optional) {
         webSocket(path) { block() }
     }
 }
 
-suspend fun PipelineContext<Unit, ApplicationCall>.getUserId(): UUID? {
+/**
+ * Returns the user id if the user is authenticated, otherwise responds with [HttpStatusCode.Unauthorized] and returns `null`.
+ */
+suspend fun PipelineContext<Unit, ApplicationCall>.getUserIdOrRespond(): UUID? {
     val uid = call.principal<UserIdPrincipal>()?.name?.formatToUuidOrNull()
     if (uid == null) {
         call.respond(HttpStatusCode.Unauthorized)
@@ -92,13 +98,21 @@ suspend fun PipelineContext<Unit, ApplicationCall>.getUserId(): UUID? {
     return uid
 }
 
+/**
+ * Returns the user id if the user is authenticated, otherwise returns `null`.
+ * Does not respond to the client.
+ */
+fun PipelineContext<Unit, ApplicationCall>.getUserIdOrNull(): UUID? {
+    return call.principal<UserIdPrincipal>()?.name?.formatToUuidOrNull()
+}
+
 suspend fun PipelineContext<Unit, ApplicationCall>.checkAuthentication(): Boolean {
     return (call.principal<UserIdPrincipal>() != null).also {
         if (!it) call.respond(HttpStatusCode.Unauthorized)
     }
 }
 
-suspend fun WebSocketServerSession.getUserId(): UUID? {
+suspend fun WebSocketServerSession.getUserIdOrRespond(): UUID? {
     val uidStr = call.principal<UserIdPrincipal>()?.name
     if (uidStr == null) {
         call.respond(HttpStatusCode.Unauthorized)

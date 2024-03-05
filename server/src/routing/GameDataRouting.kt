@@ -10,7 +10,7 @@ import io.ktor.server.routing.route
 import io.ktor.server.routing.routing
 import org.keizar.server.ServerContext
 import org.keizar.server.utils.getAuthenticated
-import org.keizar.server.utils.getUserId
+import org.keizar.server.utils.getUserIdOrRespond
 import org.keizar.utils.communication.game.GameDataStore
 import java.util.UUID
 
@@ -25,7 +25,7 @@ fun Application.gameDataRouting(context: ServerContext) {
             }
 
             getAuthenticated {
-                val userId = getUserId() ?: return@getAuthenticated
+                val userId = getUserIdOrRespond() ?: return@getAuthenticated
                 call.respond(gameDataTable.getGameDataByUsedID(userId))
             }
 

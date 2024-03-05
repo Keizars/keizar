@@ -5,25 +5,20 @@ import io.ktor.server.application.Application
 import io.ktor.server.application.ApplicationCall
 import io.ktor.server.application.call
 import io.ktor.server.application.log
-import io.ktor.server.auth.authenticate
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.request.receive
 import io.ktor.server.response.respond
-import io.ktor.server.routing.get
-import io.ktor.server.routing.patch
-import io.ktor.server.routing.post
 import io.ktor.server.routing.routing
-import io.ktor.server.websocket.webSocket
 import io.ktor.util.pipeline.PipelineContext
 import org.keizar.game.BoardProperties
 import org.keizar.game.RoomInfo
 import org.keizar.server.ServerContext
-import org.keizar.server.modules.gameroom.GameRoom
 import org.keizar.server.modules.GameRoomModule
+import org.keizar.server.modules.gameroom.GameRoom
 import org.keizar.server.modules.gameroom.PlayerSession
 import org.keizar.server.utils.checkAuthentication
 import org.keizar.server.utils.getAuthenticated
-import org.keizar.server.utils.getUserId
+import org.keizar.server.utils.getUserIdOrRespond
 import org.keizar.server.utils.postAuthenticated
 import org.keizar.server.utils.websocketAuthenticated
 import org.keizar.utils.communication.message.UserInfo
@@ -35,7 +30,7 @@ fun Application.gameRoomRouting(context: ServerContext) {
         websocketAuthenticated("/room/{roomNumber}") {
             val roomNumber: UInt = call.parameters["roomNumber"]?.toUIntOrNull()
                 ?: throw BadRequestException("Invalid room number")
-            val userId = getUserId() ?: return@websocketAuthenticated
+            val userId = getUserIdOrRespond() ?: return@websocketAuthenticated
             val username = context.accounts.getUser(userId)?.username
                 ?: throw BadRequestException("Invalid user")
             val userInfo = UserInfo(username)
@@ -84,7 +79,7 @@ fun Application.gameRoomRouting(context: ServerContext) {
 
         postAuthenticated("/room/{roomNumber}/join") {
             val roomNumber: UInt = getRoomNumberOrBadRequest()
-            val userId = getUserId() ?: return@postAuthenticated
+            val userId = getUserIdOrRespond() ?: return@postAuthenticated
             val username = context.accounts.getUser(userId)?.username
                 ?: throw BadRequestException("Invalid user")
             val userInfo = UserInfo(username)
