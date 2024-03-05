@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -397,11 +398,18 @@ fun AvatarImage(url: String?, modifier: Modifier = Modifier, filePath: String? =
 }
 
 @Composable
-fun SavedBoards(
-    vm: ProfileViewModel,
-    modifier: Modifier = Modifier,
-    onClickPlayGame: (String) -> Unit
-) {
+fun SavedBoards(vm: ProfileViewModel, modifier: Modifier = Modifier, onClickPlayGame: (String) -> Unit) {
+    if (vm.isLoadingSeeds.value) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            CircularProgressIndicator()
+            Text(text = "Loading Boards")
+        }
+    }
     val allSeeds by vm.allSeeds.collectAsState()
     if (!isSystemInLandscape()) {
         SavedBoardCardsSummary(
@@ -563,6 +571,17 @@ fun SavedBoardCard(
 
 @Composable
 fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
+    if (vm.isLoadingGames.value) {
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                CircularProgressIndicator()
+                Text(text = "Loading Games")
+            }
+    }
     val allGames = vm.allGames.collectAsStateWithLifecycle(emptyList())
     val selectedGame by vm.selectedGame.collectAsStateWithLifecycle()
     if (isSystemInLandscape()) {
@@ -673,26 +692,31 @@ fun SavedGameCard(
 
             Column(modifier = Modifier, horizontalAlignment = Alignment.End) {
                 var showMenu by remember { mutableStateOf(false) }
-                IconButton(
-                    onClick = { showMenu = !showMenu }, modifier = Modifier
-                        .size(42.dp)
-                        .padding(8.dp)
+                Box(
+                    Modifier,
+                    contentAlignment = Alignment.TopEnd
                 ) {
-                    Icon(Icons.Filled.MoreVert, contentDescription = "More options")
-                }
+                    IconButton(
+                        onClick = { showMenu = !showMenu }, modifier = Modifier
+                            .size(42.dp)
+                            .padding(8.dp)
+                    ) {
+                        Icon(Icons.Filled.MoreVert, contentDescription = "More options")
+                    }
 
-                DropdownMenu(
-                    expanded = showMenu,
-                    onDismissRequest = { showMenu = false }
-                ) {
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
 
-                    DropdownMenuItem(onClick = {
-                        showMenu = false
-                        vm.launchInBackground {
-                            vm.deleteGame(gameData.dataId)
+                        DropdownMenuItem(onClick = {
+                            showMenu = false
+                            vm.launchInBackground {
+                                vm.deleteGame(gameData.dataId)
+                            }
+                        }) {
+                            Text("Delete")
                         }
-                    }) {
-                        Text("Delete")
                     }
                 }
                 if (showDetails && !isSystemInLandscape()) {
