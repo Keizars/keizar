@@ -12,13 +12,14 @@ import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import kotlinx.serialization.json.Json
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.keizar.client.KeizarWebsocketClientFacade
 import org.keizar.game.BoardProperties
 import org.keizar.utils.communication.GameRoomState
@@ -29,8 +30,8 @@ import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
-import kotlin.test.fail
 
+@TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class End2EndTest {
     private val coroutineScope = CoroutineScope(Job())
     private val env = EnvironmentVariables(
@@ -49,38 +50,39 @@ class End2EndTest {
 
     private suspend fun hostClientCoroutine() {
         val endpoint = "http://localhost:${env.port}"
-        val client = HttpClient {
+        HttpClient {
             install(ContentNegotiation) {
                 json()
             }
-        }
-        val username = "user-${Random.nextInt() % 1000}"
-        val token = client.post("$endpoint/users/register") {
-            contentType(ContentType.Application.Json)
-            setBody(AuthRequest(username = username, password = username))
-        }.body<AuthResponse>().token
-        assertNotNull(token)
+        }.use { client ->
+            val username = "user-${Random.nextInt() % 1000}"
+            val token = client.post("$endpoint/users/register") {
+                contentType(ContentType.Application.Json)
+                setBody(AuthRequest(username = username, password = username))
+            }.body<AuthResponse>().token
+            assertNotNull(token)
 
-        val roomNo = 5462
-        val responseCreate = client.post("$endpoint/room/$roomNo/create") {
-            contentType(ContentType.Application.Json)
-            setBody(BoardProperties.getStandardProperties())
-            bearerAuth(token)
-        }
-        assertEquals(HttpStatusCode.OK, responseCreate.status)
-        val responseJoin = client.post("$endpoint/room/$roomNo/join") {
-            bearerAuth(token)
-        }
-        assertEquals(HttpStatusCode.OK, responseJoin.status)
+            val roomNo = 5462
+            val responseCreate = client.post("$endpoint/room/$roomNo/create") {
+                contentType(ContentType.Application.Json)
+                setBody(BoardProperties.getStandardProperties())
+                bearerAuth(token)
+            }
+            assertEquals(HttpStatusCode.OK, responseCreate.status)
+            val responseJoin = client.post("$endpoint/room/$roomNo/join") {
+                bearerAuth(token)
+            }
+            assertEquals(HttpStatusCode.OK, responseJoin.status)
 
-        val clientFacade = KeizarWebsocketClientFacade(endpoint, MutableStateFlow(token))
-        val gameRoom = clientFacade.connect(roomNo.toUInt(), coroutineScope.coroutineContext)
+            val clientFacade = KeizarWebsocketClientFacade(endpoint, MutableStateFlow(token))
+            val gameRoom = clientFacade.connect(roomNo.toUInt(), coroutineScope.coroutineContext)
 
-        assertEquals(roomNo.toUInt(), gameRoom.roomNumber)
-        assertEquals(GameRoomState.STARTED, gameRoom.state.value)
-        assertEquals(username, gameRoom.self.username)
-        assertEquals(PlayerSessionState.STARTED, gameRoom.selfPlayer.state.value)
-        assertTrue(gameRoom.selfPlayer.isHost)
+            assertEquals(roomNo.toUInt(), gameRoom.roomNumber)
+            assertEquals(GameRoomState.STARTED, gameRoom.state.value)
+            assertEquals(username, gameRoom.self.username)
+            assertEquals(PlayerSessionState.STARTED, gameRoom.selfPlayer.state.value)
+            assertTrue(gameRoom.selfPlayer.isHost)
+        }
     }
 
     @BeforeEach
@@ -91,5 +93,7 @@ class End2EndTest {
     @AfterEach
     fun tearDown() {
         server.stop(0, 0)
+        coroutineScope.cancel()
+//        runBlocking { coroutineScope.coroutineContext[Job]!!.cancelAndJoin() }
     }
 }
