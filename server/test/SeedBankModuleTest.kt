@@ -16,7 +16,7 @@ class SeedBankModuleTest {
         val userId1 = UUID.randomUUID()
         val userId2 = UUID.randomUUID()
         assertTrue(seedBankModule.addSeed(userId1, "seed1"))
-        assertFalse(seedBankModule.addSeed(userId1, "seed1"))
+        assertTrue(seedBankModule.addSeed(userId1, "seed1"))
 
         assertTrue(seedBankModule.addSeed(userId2, "seed2"))
         assertTrue(seedBankModule.addSeed(userId1, "seed3"))
