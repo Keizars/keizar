@@ -93,13 +93,13 @@ private fun AcceptArea(
         modifier.wrapContentHeight(),
         horizontalArrangement = Arrangement.End,
     ) {
-        val accept by vm.accept.collectAsStateWithLifecycle(false)
+        val accept by vm.selfReady.collectAsStateWithLifecycle(false)
         if (accept) {
             Text(text = "Waiting for the other player...", style = MaterialTheme.typography.titleMedium)
         } else {
             Button(
                 modifier = if (!isSystemInLandscape()) Modifier.padding(end = 12.dp) else Modifier,
-                onClick = { vm.backgroundScope.launch { vm.accept() } }
+                onClick = { vm.backgroundScope.launch { vm.ready() } }
             ) {
                 Text(text = "Ready!")
             }
