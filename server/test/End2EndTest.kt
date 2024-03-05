@@ -99,7 +99,5 @@ class End2EndTest {
     @AfterEach
     fun tearDown() {
         server.stop(0, 0)
-        coroutineScope.cancel()
-//        runBlocking { coroutineScope.coroutineContext[Job]!!.cancelAndJoin() }
     }
 }
