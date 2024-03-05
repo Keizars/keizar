@@ -10,7 +10,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -75,7 +77,7 @@ interface PrivateRoomViewModel : HasBackgroundScope {
     @Stable
     val opponentAvatar: Flow<String>
 
-    suspend fun getAvatar(username: String) : String
+    suspend fun getAvatar(username: String): String
 
 }
 
@@ -86,16 +88,6 @@ class PrivateRoomViewModelImpl(
     private val roomService: RoomService by inject()
     private val userService: UserService by inject()
     private val sessionManager: SessionManager by inject()
-
-    override val playersReady: SharedFlow<Boolean> = flow {
-        while (currentCoroutineContext().isActive) {
-            val playerInfo = roomService.getRoom(roomId.toString()).playerInfo
-            emit(playerInfo.size == 2 && playerInfo.all { it.isReady })
-            delay(2.seconds)
-        }
-    }.flowOn(Dispatchers.IO)
-        .distinctUntilChanged()
-        .shareInBackground()
 
     private val client: Flow<GameRoomClient> = flow {
         while (currentCoroutineContext().isActive) {
@@ -118,12 +110,14 @@ class PrivateRoomViewModelImpl(
 
     private val selfPlayer = client.map { it.selfPlayer }
 
-    private val opponentPlayer = client.map { it.opponentPlayer }
+    private val opponentPlayer = client.flatMapLatest { it.opponentPlayer }
 
     override val connectRoomError: MutableStateFlow<ConnectRoomError?> = MutableStateFlow(null)
 
     override val configuration: GameConfigurationViewModel = GameConfigurationViewModel()
     override val selfReady: Flow<Boolean> = selfPlayer.flatMapLatest { it.state }.map { it == PlayerSessionState.READY }
+    val opponentReady: Flow<Boolean> =
+        opponentPlayer.flatMapLatest { it?.state ?: emptyFlow() }.map { it == PlayerSessionState.READY }
 
     private val showToast = mutableStateOf(false)
 
@@ -139,7 +133,15 @@ class PrivateRoomViewModelImpl(
     override val selfIsHost: Flow<Boolean> = selfPlayer.mapLatest { it.isHost }
 
     override val opponentName: Flow<String> = opponentPlayer.mapLatest { it?.username ?: "" }
-    override val opponentAvatar: Flow<String> = opponentPlayer.mapLatest { clientPlayer -> clientPlayer?.username?.let { getAvatar(it) } ?: "" }
+    override val opponentAvatar: Flow<String> =
+        opponentPlayer.mapLatest { clientPlayer -> clientPlayer?.username?.let { getAvatar(it) } ?: "" }
+
+    override val playersReady: SharedFlow<Boolean> =
+        combine(selfReady, opponentReady) { selfReady, opponentReady ->
+            selfReady && opponentReady
+        }.flowOn(Dispatchers.IO)
+            .distinctUntilChanged()
+            .shareInBackground()
 
     private suspend fun setSeed(seed: UInt) {
         client.first().changeSeed(seed)
