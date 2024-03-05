@@ -15,17 +15,7 @@ class MongoGameDataDbControl(
 ): GameDataDBControl {
     override suspend fun addGameData(gameData: GameDataModel): Boolean {
         // add data if id not in list and username and time is not the same
-        return try {
-            gameDataTable.find(
-                filter = (Field("userId1") eq gameData.userId)
-                        and (Field("userId2") eq gameData.opponentId)
-                        and (Field("timeStamp") eq gameData.timeStamp)
-            ).first()
-            false
-        } catch (e: NoSuchElementException) {
-            gameDataTable.insertOne(gameData)
-            true
-        }
+        return gameDataTable.insertOne(gameData).wasAcknowledged()
     }
 
     override suspend fun removeGameData(gameDataId: UUID): Boolean {
