@@ -4,7 +4,6 @@ import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -143,7 +142,8 @@ class GameRoomClientImpl internal constructor(
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
     override val selfPlayer: ClientPlayer get() = players.first { it.username == self.username }
-    override val opponentPlayer: MutableStateFlow<ClientPlayer?> get() = MutableStateFlow(null)
+    override val opponentPlayer: MutableStateFlow<ClientPlayer?> =
+        MutableStateFlow(players.firstOrNull { it.username != self.username })
 
     private val _state = MutableSharedFlow<GameRoomState>(replay = 1)
     override val state: SharedFlow<GameRoomState> = _state

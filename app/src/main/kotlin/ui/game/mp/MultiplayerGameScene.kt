@@ -248,7 +248,7 @@ private fun PreviewMultiplayerGame() {
             buildGameSession {},
             Player.FirstWhitePlayer,
             selfClientPlayer = ClientPlayer("me", isHost = true, initialIsReady = true),
-            opponentClientPlayer = ClientPlayer("other", isHost = false, initialIsReady = true),
+            opponentClientPlayer = MutableStateFlow(ClientPlayer("other", isHost = false, initialIsReady = true)),
         )
     }
     ProvideCompositionalLocalsForPreview {

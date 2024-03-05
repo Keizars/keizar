@@ -18,6 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -164,7 +165,7 @@ interface GameBoardViewModel : HasBackgroundScope {
     @Stable
     val latestRoundStats: Flow<RoundStats>
 
-    var currentGameDataId : String
+    var currentGameDataId: String
 
 
     // clicking
@@ -255,7 +256,7 @@ sealed class PlayableGameBoardViewModel(
 
     suspend fun userSave() {
         val gameDataService: GameDataService by inject()
-        this.launchInBackground{
+        this.launchInBackground {
             gameDataService.userSaveData(currentGameDataId)
         }
     }
@@ -375,7 +376,7 @@ class MultiplayerGameBoardViewModel(
     game: GameSession,
     selfPlayer: Player,
     selfClientPlayer: ClientPlayer,
-    opponentClientPlayer: ClientPlayer?,
+    opponentClientPlayer: StateFlow<ClientPlayer?>,
 ) : PlayableGameBoardViewModel(game, selfPlayer), KoinComponent {
     private val userService: UserService by inject()
 
@@ -394,10 +395,8 @@ class MultiplayerGameBoardViewModel(
     }.shareInBackground()
 
     @Stable
-    val opponentUser: SharedFlow<User> = flow {
-        if (opponentClientPlayer != null) {
-            emit(userService.getUser(opponentClientPlayer.username))
-        }
+    val opponentUser: SharedFlow<User> = opponentClientPlayer.filterNotNull().map {
+        userService.getUser(it.username)
     }.shareInBackground()
 }
 
