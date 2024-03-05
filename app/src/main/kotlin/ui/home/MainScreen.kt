@@ -98,13 +98,21 @@ fun MainScreen() {
             SavedState.Empty -> {}
             is SavedState.SinglePlayerGame -> {
                 val configuration = savedState.configuration
-                navController.navigate(navController.graph["game/single-player"].id, Bundle().apply {
-                    putString(
-                        "configuration",
-                        ProtoBuf.encodeToHexString(GameStartConfiguration.serializer(), configuration)
-                    )
-                    putString("savedSnapshot", json.encodeToString(GameSnapshot.serializer(), savedState.snapshot))
-                })
+                navController.navigate(
+                    navController.graph["game/single-player"].id,
+                    Bundle().apply {
+                        putString(
+                            "configuration",
+                            ProtoBuf.encodeToHexString(
+                                GameStartConfiguration.serializer(),
+                                configuration
+                            )
+                        )
+                        putString(
+                            "savedSnapshot",
+                            json.encodeToString(GameSnapshot.serializer(), savedState.snapshot)
+                        )
+                    })
             }
         }
     }
@@ -195,14 +203,18 @@ fun MainScreen() {
                     MultiplayerLobbyScene(
                         onClickHome = { navController.navigate("home") },
                         onJoinGame = { roomId ->
-                            navController.navigate(navController.graph["game/multiplayer"].id, Bundle().apply {
-                                putString("roomId", roomId)
-                            })
+                            navController.navigate(
+                                navController.graph["game/multiplayer"].id,
+                                Bundle().apply {
+                                    putString("roomId", roomId)
+                                })
                         },
                         onRoomCreated = { roomId ->
-                            navController.navigate(navController.graph["game/room"].id, Bundle().apply {
-                                putString("roomId", roomId)
-                            })
+                            navController.navigate(
+                                navController.graph["game/room"].id,
+                                Bundle().apply {
+                                    putString("roomId", roomId)
+                                })
                         },
                         Modifier.fillMaxSize(),
                         vm = matchViewModel,
@@ -221,9 +233,11 @@ fun MainScreen() {
                     }
                 },
                 onPlayersReady = {
-                    navController.navigate(navController.graph["game/multiplayer"].id, Bundle().apply {
-                        putString("roomId", roomId.toString())
-                    })
+                    navController.navigate(
+                        navController.graph["game/multiplayer"].id,
+                        Bundle().apply {
+                            putString("roomId", roomId.toString())
+                        })
                 },
                 Modifier.fillMaxSize(),
             )
@@ -334,9 +348,11 @@ fun MainScreen() {
                     navController.popBackStack()
                 },
                 onClickPlayGame = {
-                    navController.navigate(navController.graph["game/configuration"].id, Bundle().apply {
-                        putString("configuration", it)
-                    })
+                    navController.navigate(
+                        navController.graph["game/configuration"].id,
+                        Bundle().apply {
+                            putString("configuration", it)
+                        })
                 },
                 onClickPasswordEdit = {
                     navController.navigate("profile/edit")
@@ -353,9 +369,8 @@ fun MainScreen() {
                 onClickBack = {
                     if (navController.currentBackStackEntry != entry) {
                         return@AuthEditScene
-                    }
-                    if (navController.previousBackStackEntry?.destination?.route == "profile") {
-                        navController.popBackStack("profile", true)
+                    } else if (navController.previousBackStackEntry?.destination?.route == "profile") {
+                        navController.popBackStack("profile", false)
                     } else {
                         navController.popBackStack()
                     }
@@ -413,7 +428,10 @@ fun HomePage(navController: NavController) {
                 GlobalContext.get().get<SessionManager>().isLoggedIn
             }.collectAsStateWithLifecycle(null)
             // Single Player Button
-            Button(onClick = { navController.navigate("game/configuration") }, modifier = Modifier.width(170.dp)) {
+            Button(
+                onClick = { navController.navigate("game/configuration") },
+                modifier = Modifier.width(170.dp)
+            ) {
                 Text("Play vs Computer", textAlign = TextAlign.Center)
             }
 
@@ -463,7 +481,10 @@ fun HomePage(navController: NavController) {
             }
 
             // Saved game Button
-            Button(onClick = { navController.navigate("profile") }, modifier = Modifier.width(170.dp)) {
+            Button(
+                onClick = { navController.navigate("profile") },
+                modifier = Modifier.width(170.dp)
+            ) {
                 Text("Account", textAlign = TextAlign.Center)
             }
 
@@ -497,12 +518,18 @@ fun HomePage(navController: NavController) {
                 Text("Demo/Rules", textAlign = TextAlign.Center)
             }
 
-            Button(onClick = { navController.navigate("about") }, modifier = Modifier.width(170.dp)) {
+            Button(
+                onClick = { navController.navigate("about") },
+                modifier = Modifier.width(170.dp)
+            ) {
                 Text("About", textAlign = TextAlign.Center)
             }
 
             val context = LocalContext.current
-            Button(onClick = { if (context is Activity) context.finish() }, modifier = Modifier.width(170.dp)) {
+            Button(
+                onClick = { if (context is Activity) context.finish() },
+                modifier = Modifier.width(170.dp)
+            ) {
                 Text("Exit", textAlign = TextAlign.Center)
             }
         }
