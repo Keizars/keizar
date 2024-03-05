@@ -161,13 +161,17 @@ private fun PrivateRoomPage(
             Box(Modifier) {
                 Column(
                     Modifier
-                        .statusBarsPadding()
                         .fillMaxSize()
                         .padding(contentPadding)
                         .padding(horizontal = 16.dp)
                         .verticalScroll(rememberScrollState()),
                 ) {
                     val properties by vm.configuration.boardProperties.collectAsStateWithLifecycle(null)
+                    Spacer(
+                        modifier = Modifier
+                            .statusBarsPadding()
+                    )
+
                     BoardLayoutPreview(
                         boardProperties = properties,
                         playAs = Role.WHITE,
