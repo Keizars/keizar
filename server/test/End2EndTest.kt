@@ -29,8 +29,10 @@ import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.account.AuthRequest
 import org.keizar.utils.communication.account.AuthResponse
 import kotlin.random.Random
+import kotlin.random.nextUInt
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -78,7 +80,7 @@ class End2EndTest {
                 json()
             }
         }
-        val username = "user-${random.nextInt() % 1000}"
+        val username = "user-${random.nextUInt().toInt() % 1000}"
         val token = client.post("$endpoint/users/register") {
             contentType(ContentType.Application.Json)
             setBody(AuthRequest(username = username, password = username))
@@ -101,12 +103,20 @@ class End2EndTest {
         val gameRoom = clientFacade.connect(roomNo.toUInt(), coroutineScope.coroutineContext)
 
         assertEquals(roomNo.toUInt(), gameRoom.roomNumber)
-        assertEquals(GameRoomState.STARTED, gameRoom.state.value)
+        assertEquals(GameRoomState.STARTED, gameRoom.state.first())
         assertEquals(username, gameRoom.self.username)
         assertEquals(PlayerSessionState.STARTED, gameRoom.selfPlayer.state.value)
         assertTrue(gameRoom.selfPlayer.isHost)
 
         startGuest.value = true
+
+        val hostProposedSeed = 100
+        gameRoom.changeSeed(hostProposedSeed.toUInt())
+        gameRoom.setReady()
+
+//        gameRoom.state.first { it == GameRoomState.PLAYING }
+//        val game = gameRoom.getGameSession()
+//        assertEquals(hostProposedSeed, game.properties.seed)
     }
 
     private suspend fun guestClientCoroutine(
@@ -119,7 +129,7 @@ class End2EndTest {
                 json()
             }
         }
-        val username = "user-${random.nextInt() % 1000}"
+        val username = "user-${random.nextUInt().toInt() % 1000}"
         val token = client.post("$endpoint/users/register") {
             contentType(ContentType.Application.Json)
             setBody(AuthRequest(username = username, password = username))
@@ -136,11 +146,17 @@ class End2EndTest {
         val gameRoom = clientFacade.connect(roomNo.toUInt(), coroutineScope.coroutineContext)
 
         assertEquals(roomNo.toUInt(), gameRoom.roomNumber)
-        //assertEquals(GameRoomState.ALL_CONNECTED, gameRoom.state.value)
         assertEquals(username, gameRoom.self.username)
         assertEquals(PlayerSessionState.STARTED, gameRoom.selfPlayer.state.value)
         assertFalse(gameRoom.selfPlayer.isHost)
 
+        val guestProposedSeed = 200
+        gameRoom.changeSeed(guestProposedSeed.toUInt())
+        gameRoom.setReady()
+
+//        gameRoom.state.first { it == GameRoomState.PLAYING }
+//        val game = gameRoom.getGameSession()
+//        assertNotEquals(guestProposedSeed, game.properties.seed)
     }
 
     @BeforeEach

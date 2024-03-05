@@ -115,7 +115,7 @@ class PrivateRoomViewModelImpl(
     init {
         backgroundScope.launch {
             configuration.boardProperties.collect {
-                it.seed?.let { it1 -> setSeed(roomId, it1.toUInt()) }
+                it.seed?.let { it1 -> setSeed(it1.toUInt()) }
                 showToast.value = true
             }
         }
@@ -125,8 +125,8 @@ class PrivateRoomViewModelImpl(
 
     override val opponentName: Flow<String> = opponentPlayer.mapLatest { it?.username ?: "" }
 
-    private suspend fun setSeed(roomId: UInt, seed: UInt) {
-        client.first().changeSeed(roomId, seed)
+    private suspend fun setSeed(seed: UInt) {
+        client.first().changeSeed(seed)
     }
 
     override suspend fun accept() {

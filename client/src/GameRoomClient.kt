@@ -4,7 +4,9 @@ import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -71,7 +73,7 @@ interface GameRoomClient : AutoCloseable {
      * When all players are ready and the game starts, the state changes to [GameRoomState.PLAYING].
      * When the game is finished, the state changes to [GameRoomState.FINISHED].
      */
-    val state: StateFlow<GameRoomState>
+    val state: SharedFlow<GameRoomState>
 
     /**
      * Send a request to server attempting to change the seed of the room.
@@ -82,7 +84,7 @@ interface GameRoomClient : AutoCloseable {
      * Only the host can change the seed. If a non-host player calls this method,
      * it will have no effect.
      */
-    suspend fun changeSeed(roomNumber: UInt, seed: UInt)
+    suspend fun changeSeed(newSeed: UInt)
 
     /**
      * Send a request to server attempting to set the player's state to ready.
@@ -141,8 +143,8 @@ class GameRoomClientImpl internal constructor(
     override val selfPlayer: ClientPlayer get() = players.first { it.username == self.username }
     override val opponentPlayer: ClientPlayer? get() = players.firstOrNull { it.username != self.username }
 
-    private val _state: MutableStateFlow<GameRoomState> = MutableStateFlow(GameRoomState.STARTED)
-    override val state: StateFlow<GameRoomState> = _state
+    private val _state = MutableSharedFlow<GameRoomState>()
+    override val state: SharedFlow<GameRoomState> = _state
 
     /**
      *  These two variables are set by RemoteSessionSetup message from the server.
@@ -175,7 +177,7 @@ class GameRoomClientImpl internal constructor(
                             ?.setState(respond.newState)
                     }
 
-                    is RoomStateChange -> _state.value = respond.newState
+                    is RoomStateChange -> _state.emit(respond.newState)
 
                     is RemoteSessionSetup -> {
                         playerAllocation.value = respond.playerAllocation
@@ -209,9 +211,9 @@ class GameRoomClientImpl internal constructor(
         myCoroutineScope.cancel()
     }
 
-    override suspend fun changeSeed(roomNumber: UInt, seed: UInt) {
+    override suspend fun changeSeed(newSeed: UInt) {
         if (websocketSessionHandler.isClosed) return
-        val properties = BoardProperties.toJson(BoardProperties.getStandardProperties(seed.toInt()))
+        val properties = BoardProperties.toJson(BoardProperties.getStandardProperties(newSeed.toInt()))
         return websocketSessionHandler.sendRequest(ChangeBoard(properties))
     }
 
@@ -255,7 +257,7 @@ class GameRoomClientImpl internal constructor(
                             ?.setState(respond.newState)
                     },
                     onRoomStateChange = { respond ->
-                        _state.value = respond.newState
+                        _state.emit(respond.newState)
                     },
                 )
                 game = RemoteGameSession.createAndConnect(gameSnapshot, wsHandler)

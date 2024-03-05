@@ -313,10 +313,16 @@ class GameRoomImpl(
      */
 
     override fun ready(user: UserInfo): Boolean {
-        val curState = state.value as? ServerGameRoomState.AllConnected ?: return false
+        val curState = state.value
+        if (curState !is ServerGameRoomState.Started &&
+            curState !is ServerGameRoomState.AllConnected
+        ) return false
+
         val playerSession = players[user] ?: return false
         playerSession.setState(PlayerSessionState.READY)
-        checkAllPlayersReady(curState)
+        if (curState is ServerGameRoomState.AllConnected) {
+            checkAllPlayersReady(curState)
+        }
         return true
     }
 
@@ -374,8 +380,6 @@ class GameRoomImpl(
     }
 
     private suspend fun startGame() {
-        val curState = state.value as ServerGameRoomState.Playing
-
         players.values.map { player ->
             player.setState(PlayerSessionState.PLAYING)
         }
