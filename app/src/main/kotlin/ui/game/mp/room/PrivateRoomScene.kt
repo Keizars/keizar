@@ -237,14 +237,14 @@ private fun Configurations(
 
         HorizontalDivider(Modifier.padding(vertical = 16.dp))
 
-        ActionArea(vm.roomId, vm.opponentName.collectAsStateWithLifecycle("").value, vm)
+        val opponentAvatar by vm.opponentAvatar.collectAsStateWithLifecycle(null)
+        ActionArea(vm.roomId, vm.opponentName.collectAsStateWithLifecycle("").value, opponentAvatar)
     }
 }
 
 @Composable
-private fun ActionArea(roomId: UInt, value: String, vm: PrivateRoomViewModel) {
-    if (value == "") {
-        val opponentAvatar by vm.opponentAvatar.collectAsStateWithLifecycle(null)
+private fun ActionArea(roomId: UInt, opponentName: String, opponentAvatar: String?) {
+    if (opponentName == "") {
         Row(
             Modifier
                 .padding(bottom = 16.dp)
@@ -258,7 +258,6 @@ private fun ActionArea(roomId: UInt, value: String, vm: PrivateRoomViewModel) {
                     AvatarImage(url = opponentAvatar, modifier = Modifier.size(32.dp))
                 }
             }
-
         }
 
         RoomIdTextField(
@@ -273,7 +272,7 @@ private fun ActionArea(roomId: UInt, value: String, vm: PrivateRoomViewModel) {
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
-            Text(text = "Opponent: $value", style = MaterialTheme.typography.titleMedium)
+            Text(text = "Opponent: $opponentName", style = MaterialTheme.typography.titleMedium)
         }
 
     }
