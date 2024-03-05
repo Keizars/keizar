@@ -114,9 +114,9 @@ class End2EndTest {
         gameRoom.changeSeed(hostProposedSeed.toUInt())
         gameRoom.setReady()
 
-//        gameRoom.state.first { it == GameRoomState.PLAYING }
-//        val game = gameRoom.getGameSession()
-//        assertEquals(hostProposedSeed, game.properties.seed)
+        gameRoom.state.first { it == GameRoomState.PLAYING }
+        val game = gameRoom.getGameSession()
+        assertEquals(hostProposedSeed, game.properties.seed)
     }
 
     private suspend fun guestClientCoroutine(
@@ -154,9 +154,9 @@ class End2EndTest {
         gameRoom.changeSeed(guestProposedSeed.toUInt())
         gameRoom.setReady()
 
-//        gameRoom.state.first { it == GameRoomState.PLAYING }
-//        val game = gameRoom.getGameSession()
-//        assertNotEquals(guestProposedSeed, game.properties.seed)
+        gameRoom.state.first { it == GameRoomState.PLAYING }
+        val game = gameRoom.getGameSession()
+        assertNotEquals(guestProposedSeed, game.properties.seed)
     }
 
     @BeforeEach

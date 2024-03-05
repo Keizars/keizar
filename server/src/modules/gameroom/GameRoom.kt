@@ -182,26 +182,28 @@ class GameRoomImpl(
     private fun startReceivingPreGameRequests(player: PlayerSession) {
         val job = myCoroutineScope.launch {
             player.session.collectLatest {
-                try {
-                    val message = it?.receiveDeserialized<Request>() ?: return@collectLatest
-                    logger.info("Received request $message from $player")
-                    when (message) {
-                        is ChangeBoard -> {
-                            if (player.isHost) {
-                                changeBoard(BoardProperties.fromJson(message.boardProperties))
+                while (true) {
+                    try {
+                        val message = it?.receiveDeserialized<Request>() ?: return@collectLatest
+                        logger.info("Received request $message from $player")
+                        when (message) {
+                            is ChangeBoard -> {
+                                if (player.isHost) {
+                                    changeBoard(BoardProperties.fromJson(message.boardProperties))
+                                }
+                            }
+
+                            is SetReady -> {
+                                ready(player.user)
+                            }
+
+                            else -> {
+                                // ignore
                             }
                         }
-
-                        is SetReady -> {
-                            ready(player.user)
-                        }
-
-                        else -> {
-                            // ignore
-                        }
+                    } catch (e: WebsocketDeserializeException) {
+                        // ignore
                     }
-                } catch (e: WebsocketDeserializeException) {
-                    // ignore
                 }
             }
         }

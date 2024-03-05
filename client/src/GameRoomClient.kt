@@ -143,7 +143,7 @@ class GameRoomClientImpl internal constructor(
     override val selfPlayer: ClientPlayer get() = players.first { it.username == self.username }
     override val opponentPlayer: ClientPlayer? get() = players.firstOrNull { it.username != self.username }
 
-    private val _state = MutableSharedFlow<GameRoomState>()
+    private val _state = MutableSharedFlow<GameRoomState>(replay = 1)
     override val state: SharedFlow<GameRoomState> = _state
 
     /**
@@ -213,7 +213,8 @@ class GameRoomClientImpl internal constructor(
 
     override suspend fun changeSeed(newSeed: UInt) {
         if (websocketSessionHandler.isClosed) return
-        val properties = BoardProperties.toJson(BoardProperties.getStandardProperties(newSeed.toInt()))
+        val properties =
+            BoardProperties.toJson(BoardProperties.getStandardProperties(newSeed.toInt()))
         return websocketSessionHandler.sendRequest(ChangeBoard(properties))
     }
 
