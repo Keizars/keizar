@@ -106,7 +106,8 @@ private fun PrivateRoomPage(
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
-        modifier.fillMaxSize(),
+        modifier
+            .fillMaxSize(),
         topBar = {
             TopAppBar(
                 title = { Text(text = "Private Room") },
@@ -119,7 +120,9 @@ private fun PrivateRoomPage(
         },
         bottomBar = {
             if (!isSystemInLandscape()) {
-                AcceptArea(vm, modifier)
+                AcceptArea(
+                    vm, modifier.systemBarsPadding()
+                )
             }
         }
     ) { contentPadding ->
@@ -149,6 +152,7 @@ private fun PrivateRoomPage(
         } else {
             Column(
                 Modifier
+                    .systemBarsPadding()
                     .fillMaxSize()
                     .padding(contentPadding)
                     .padding(all = 16.dp)
