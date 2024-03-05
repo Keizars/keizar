@@ -294,7 +294,8 @@ class SinglePlayerGameBoardViewModel(
             Difficulty.EASY -> RandomGameAIImpl(
                 game,
                 Player.entries.first { it != selfPlayer },
-                backgroundScope.coroutineContext
+                backgroundScope.coroutineContext,
+                disableDelay = !BuildConfig.ENABLE_AI_DELAY,
             )
 
             else -> AlgorithmAI(
