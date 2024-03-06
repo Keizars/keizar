@@ -44,9 +44,6 @@ internal abstract class AbstractWebsocketSessionHandler(
             myCoroutineScope.launch {
                 session.messageInflow()
             }
-//            myCoroutineScope.launch {
-//                session.messageOutflow()
-//            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -65,20 +62,6 @@ internal abstract class AbstractWebsocketSessionHandler(
         if (_isClosed.compareAndSet(false, true)) {
             myCoroutineScope.cancel()
             if (cancelWebsocketOnExit) session.cancel()
-        }
-    }
-
-    private val outflowChannel: Channel<Request> = Channel()
-
-    private suspend fun DefaultClientWebSocketSession.messageOutflow() {
-        while (true) {
-            try {
-                val request = outflowChannel.receive()
-                println("Client sending: $request")
-                sendSerialized(request)
-            } catch (e: CancellationException) {
-                // ignore
-            }
         }
     }
 
