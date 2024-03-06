@@ -285,13 +285,13 @@ fun ProfilePage(
                     Text(text = "Saved Games")
                 }
             )
-            Tab(
-                selected = pagerState.currentPage == 1,
-                onClick = { scope.launch { pagerState.animateScrollToPage(2) } },
-                text = {
-                    Text(text = "Statistics")
-                }
-            )
+//            Tab(
+//                selected = pagerState.currentPage == 1,
+//                onClick = { scope.launch { pagerState.animateScrollToPage(2) } },
+//                text = {
+//                    Text(text = "Statistics")
+//                }
+//            )
         }
 
         if (vm.showNicknameEditDialog.value) {
