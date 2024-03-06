@@ -260,7 +260,7 @@ private fun ActionArea(roomId: UInt, opponentName: String, opponentAvatar: Strin
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
-            Text(text ="Waiting for opponent to join...")
+            Text(text = "Waiting for opponent to join...", style = MaterialTheme.typography.titleMedium)
         }
 
         RoomIdTextField(
