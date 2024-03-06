@@ -1,4 +1,4 @@
-package org.keizar.android.ui.profile
+package org.keizar.android.ui.profile.component
 
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
