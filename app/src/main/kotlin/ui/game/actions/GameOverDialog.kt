@@ -43,13 +43,13 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                                         "Time: ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) / 60} m ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) % 60} s \n" +
                                         "Your moves' average time in first round: ${
                                             String.format(
-                                                "%.4f",
+                                                "%.2f",
                                                 round1stats.neutralStats.blackAverageTime
                                             )
                                         } s\n" +
                                         "Your moves' average time in second round: ${
                                             String.format(
-                                                "%.4f",
+                                                "%.2f",
                                                 round2stats.neutralStats.whiteAverageTime
                                             )
                                         } s\n"
@@ -62,13 +62,13 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                                         "Time: ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) / 60} m ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) % 60} s \n" +
                                         "Your moves' average time in first round: ${
                                             String.format(
-                                                "%.4f",
+                                                "%.2f",
                                                 round1stats.neutralStats.whiteAverageTime
                                             )
                                         } s\n" +
                                         "Your moves' average time in second round: ${
                                             String.format(
-                                                "%.4f",
+                                                "%.2f",
                                                 round2stats.neutralStats.blackAverageTime
                                             )
                                         } s\n"
@@ -85,13 +85,13 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                                         "Time: ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime / 60)} m ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) % 60} s \n" +
                                         "Your moves' average time in first round: ${
                                             String.format(
-                                                "%.4f",
+                                                "%.2f",
                                                 round1stats.neutralStats.blackAverageTime
                                             )
                                         } s\n" +
                                         "Your moves' average time in second round: ${
                                             String.format(
-                                                "%.4f",
+                                                "%.2f",
                                                 round2stats.neutralStats.whiteAverageTime
                                             )
                                         } \ns"
@@ -104,13 +104,13 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                                         "Time: ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) / 60} m ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) % 60} s \n" +
                                         "Your moves' average time in first round: ${
                                             String.format(
-                                                "%.4f",
+                                                "%.2f",
                                                 round1stats.neutralStats.whiteAverageTime
                                             )
                                         } s\n" +
                                         "Your moves' average time in second round: ${
                                             String.format(
-                                                "%.4f",
+                                                "%.2f",
                                                 round2stats.neutralStats.blackAverageTime
                                             )
                                         } s\n"
@@ -162,13 +162,13 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                                         "Time: ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) / 60} m ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) % 60} s \n" +
                                         "Your moves' average time in first round: ${
                                             String.format(
-                                                "%.4f",
+                                                "%.2",
                                                 round1stats.neutralStats.blackAverageTime
                                             )
                                         } s\n" +
                                         "Your moves' average time in second round: ${
                                             String.format(
-                                                "%.4f",
+                                                "%.2f",
                                                 round2stats.neutralStats.whiteAverageTime
                                             )
                                         } s\n"
@@ -181,13 +181,13 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                                         "Time: ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) / 60} m ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) % 60} s \n" +
                                         "Your moves' average time in first round: ${
                                             String.format(
-                                                "%.4f",
+                                                "%.2f",
                                                 round1stats.neutralStats.whiteAverageTime
                                             )
                                         } s\n" +
                                         "Your moves' average time in second round: ${
                                             String.format(
-                                                "%.4f",
+                                                "%.2f",
                                                 round2stats.neutralStats.blackAverageTime
                                             )
                                         } s\n"
@@ -204,13 +204,13 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                                         "Time: ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) / 60} m ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) % 60} s \n" +
                                         "Your moves' average time in first round: ${
                                             String.format(
-                                                "%.4f",
+                                                "%.2f",
                                                 round1stats.neutralStats.blackAverageTime
                                             )
                                         } s\n" +
                                         "Your moves' average time in second round: ${
                                             String.format(
-                                                "%.4f",
+                                                "%.2f",
                                                 round2stats.neutralStats.whiteAverageTime
                                             )
                                         } s\n"
@@ -223,13 +223,13 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                                         "Time: ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) / 60} m ${(round1stats.neutralStats.whiteTime + round2stats.neutralStats.blackTime) % 60} s \n" +
                                         "Your moves' average time in first round: ${
                                             String.format(
-                                                "%.4f",
+                                                "%.2f",
                                                 round1stats.neutralStats.whiteAverageTime
                                             )
                                         } s\n" +
                                         "Your moves' average time in second round: ${
                                             String.format(
-                                                "%.4f",
+                                                "%.2f",
                                                 round2stats.neutralStats.blackAverageTime
                                             )
                                         } s\n"
