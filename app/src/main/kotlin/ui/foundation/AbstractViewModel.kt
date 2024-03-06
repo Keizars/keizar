@@ -1,17 +1,23 @@
 package org.keizar.android.ui.foundation
 
+import android.widget.Toast
 import androidx.annotation.CallSuper
 import androidx.compose.runtime.RememberObserver
 import androidx.lifecycle.ViewModel
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.logging.trace
+import org.keizar.android.KeizarApplication
 
 interface Disposable {
     fun dispose()
@@ -86,9 +92,21 @@ abstract class AbstractViewModel : RememberObserver, ViewModel(), HasBackgroundS
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     private fun createBackgroundScope(): CoroutineScope {
         return CoroutineScope(CoroutineExceptionHandler { _, throwable ->
             logger.error(throwable) { "Unhandled exception in background scope" }
+
+            GlobalScope.launch(Dispatchers.Main) {
+                try {
+                    Toast.makeText(
+                        KeizarApplication.instance,
+                        "Network error, please try again later",
+                        Toast.LENGTH_LONG
+                    ).show()
+                } catch (_: Throwable) {
+                }
+            }
         } + SupervisorJob())
     }
 
