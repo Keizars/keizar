@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
@@ -30,6 +29,7 @@ import org.keizar.client.Room
 import org.keizar.client.exception.RoomFullException
 import org.keizar.client.services.RoomService
 import org.keizar.client.services.UserService
+import org.keizar.utils.communication.GameRoomState
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.account.User
 import org.koin.core.component.KoinComponent
@@ -160,9 +160,7 @@ class PrivateRoomViewModelImpl(
         .shareInBackground(started = SharingStarted.Eagerly)
 
     override val playersReady: SharedFlow<Boolean> =
-        combine(selfReady, opponentReady) { selfReady, opponentReady ->
-            selfReady && opponentReady
-        }.flowOn(Dispatchers.IO)
+        client.flatMapLatest { it.state }.map { it == GameRoomState.PLAYING }.flowOn(Dispatchers.IO)
             .distinctUntilChanged()
             .shareInBackground()
 
