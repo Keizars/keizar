@@ -21,6 +21,7 @@ import org.keizar.client.services.StreamingServiceImpl
 import org.keizar.client.services.UserService
 import org.keizar.utils.communication.CommunicationModule
 import org.keizar.utils.coroutines.childSupervisorScope
+import org.koin.core.Koin
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.koin.core.module.Module
@@ -74,10 +75,12 @@ private class ClientImpl(
     }
 }
 
-private class RetrofitProvider(
+internal class RetrofitProvider(
     baseUrl: String,
     parentCoroutineContext: CoroutineContext = EmptyCoroutineContext,
+    private val koin: Koin? = null,
 ) : KoinComponent {
+    override fun getKoin(): Koin = koin ?: super.getKoin()
     private val scope = parentCoroutineContext.childSupervisorScope()
     private val accessTokenProvider: AccessTokenProvider by inject()
 

@@ -8,6 +8,7 @@ import org.keizar.client.internal.KeizarHttpClient
 import org.keizar.client.internal.KeizarHttpClientImpl
 import org.keizar.game.BoardProperties
 import org.keizar.game.RoomInfo
+import org.koin.core.Koin
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import retrofit2.http.Body
@@ -69,7 +70,9 @@ internal class RoomServiceImpl
 constructor(
     baseUrl: String,
     private val generated: BaseRoomService,
+    private val koin: Koin? = null
 ) : RoomService, BaseRoomService by generated, KoinComponent {
+    override fun getKoin(): Koin = koin ?: super.getKoin()
     private val client: KeizarHttpClient = KeizarHttpClientImpl(baseUrl)
     private val accessTokenProvider: AccessTokenProvider by inject()
 
