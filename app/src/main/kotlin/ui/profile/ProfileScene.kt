@@ -51,7 +51,6 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -97,6 +96,10 @@ import org.keizar.utils.communication.game.NeutralStats
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.game.RoundStats
 import java.io.File
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun ProfileScene(
@@ -426,8 +429,6 @@ fun SavedBoards(vm: ProfileViewModel, modifier: Modifier = Modifier, onClickPlay
                 onClickPlayGame = onClickPlayGame
             )
 
-            VerticalDivider(Modifier.padding(horizontal = 8.dp))
-
             Column(
                 modifier = Modifier
                     .fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally
@@ -593,7 +594,9 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
                     SavedGameCard(
                         vm = vm,
                         gameData = gameData,
-                        modifier = Modifier.padding(4.dp),
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .defaultMinSize(200.dp),
                         onclick = { vm.selectedGame.value = gameData }
                     )
                 }
@@ -608,7 +611,7 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
         }
     } else {
         LazyColumn(
-            modifier = modifier
+            modifier = Modifier
                 .padding(4.dp)
                 .wrapContentSize()
         ) {
@@ -679,7 +682,8 @@ fun SavedGameCard(
                     ) {
                         Player.FirstBlackPlayer
                     } else if (round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured <
-                        round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured) {
+                        round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured
+                    ) {
                         Player.FirstWhitePlayer
                     } else {
                         null
@@ -695,42 +699,22 @@ fun SavedGameCard(
                         "Loss"
                     }
                 }
-                Row {
-                    Text(
-                        text = "$winningStatus - ${gameData.timeStamp}",
-                        modifier = Modifier.padding(4.dp)
-                    )
-                    var showMenu by remember { mutableStateOf(false) }
-                    Column(
-                        Modifier,
-                    ) {
-                        IconButton(
-                            onClick = { showMenu = !showMenu }, modifier = Modifier
-                                .size(42.dp)
-                                .padding(8.dp)
-                        ) {
-                            Icon(Icons.Filled.MoreVert, contentDescription = "More options")
-                        }
 
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
-
-                            DropdownMenuItem(onClick = {
-                                showMenu = false
-                                vm.launchInBackground {
-                                    vm.deleteGame(gameData.dataId)
-                                }
-                            }) {
-                                Text("Delete")
-                            }
-                        }
-                    }
+                val localDateTime =
+                    remember { LocalDateTime.ofInstant(Instant.parse(gameData.timeStamp), ZoneId.systemDefault()) }
+                val formatter = remember {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                 }
+                val formattedTimeStamp = remember {
+                    formatter.format(localDateTime)
+                }
+                Text(
+                    text = "$winningStatus - $formattedTimeStamp",
+                    modifier = Modifier.padding(4.dp)
+                )
+
                 Text(text = "Opponent: $opponentName", modifier = Modifier.padding(4.dp))
 
-                VerticalDivider(Modifier.padding(horizontal = 8.dp))
 
                 if (showDetails && !isSystemInLandscape()) {
                     GameDetailsDialog(
@@ -738,10 +722,42 @@ fun SavedGameCard(
                     )
                 }
             }
+            Column(modifier = modifier, horizontalAlignment = Alignment.End) {
+                var showMenu by remember { mutableStateOf(false) }
+                Box(
+                    contentAlignment = Alignment.TopEnd
+                ) {
+                    IconButton(
+                        onClick = { showMenu = !showMenu }
+                    ) {
+                        Icon(
+                            Icons.Filled.MoreVert,
+                            contentDescription = "More options",
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+
+                        DropdownMenuItem(onClick = {
+                            showMenu = false
+                            vm.launchInBackground {
+                                vm.deleteGame(gameData.dataId)
+                            }
+                        }) {
+                            Text("Delete")
+                        }
+                    }
+                }
+            }
+
         }
     }
-
 }
+
 
 @Composable
 private fun GameDetailColumn(
@@ -909,7 +925,7 @@ private fun PreviewProfilePage() {
 
                     allGames.value = listOf(
                         GameDataGet(
-                            "harrison", "harry", "2023-02-19", GameStartConfigurationEncoder.encode(
+                            "harrison", "harry", "2023-03-05T21:15:11.188631Z", GameStartConfigurationEncoder.encode(
                                 GameStartConfiguration(
                                     layoutSeed = 123,
                                     playAs = Role.WHITE,
@@ -930,7 +946,7 @@ private fun PreviewProfilePage() {
 
                         ),
                         GameDataGet(
-                            "harrison", "harry", "2023-02-19", GameStartConfigurationEncoder.encode(
+                            "harrison", "harry", "2023-03-05T21:15:11.188631Z", GameStartConfigurationEncoder.encode(
                                 GameStartConfiguration(
                                     layoutSeed = 456,
                                     playAs = Role.WHITE,
