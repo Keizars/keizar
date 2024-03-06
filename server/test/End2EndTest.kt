@@ -26,7 +26,6 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.keizar.client.KeizarWebsocketClientFacade
 import org.keizar.client.RemoteGameSession
 import org.keizar.game.BoardProperties
 import org.keizar.game.Role

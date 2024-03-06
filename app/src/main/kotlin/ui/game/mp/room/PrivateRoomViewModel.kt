@@ -21,12 +21,10 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.keizar.android.data.SessionManager
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.game.configuration.GameConfigurationViewModel
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
-import org.keizar.client.KeizarWebsocketClientFacade
 import org.keizar.client.Room
 import org.keizar.client.exception.RoomFullException
 import org.keizar.client.services.RoomService
@@ -117,15 +115,13 @@ interface PrivateRoomViewModel : HasBackgroundScope {
 class PrivateRoomViewModelImpl(
     override val roomId: UInt
 ) : PrivateRoomViewModel, AbstractViewModel(), KoinComponent {
-    private val facade: KeizarWebsocketClientFacade by inject()
     private val roomService: RoomService by inject()
     private val userService: UserService by inject()
-    private val sessionManager: SessionManager by inject()
 
     private val client: Flow<Room> = flow {
         while (currentCoroutineContext().isActive) {
             val client = try {
-                facade.connect(roomId, parentCoroutineContext = backgroundScope.coroutineContext)
+                roomService.connect(roomId, parentCoroutineContext = backgroundScope.coroutineContext)
             } catch (e: RoomFullException) {
                 e.printStackTrace()
                 connectRoomError.value = ConnectRoomError.ROOM_FULL

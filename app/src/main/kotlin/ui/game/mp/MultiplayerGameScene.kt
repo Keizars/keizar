@@ -39,9 +39,9 @@ import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
 import org.keizar.android.ui.game.transition.CapturedPiecesHost
 import org.keizar.android.ui.profile.AvatarImage
 import org.keizar.client.ClientPlayer
-import org.keizar.client.KeizarWebsocketClientFacade
 import org.keizar.client.Room
 import org.keizar.client.exception.RoomFullException
+import org.keizar.client.services.RoomService
 import org.keizar.game.snapshot.buildGameSession
 import org.keizar.utils.communication.game.Player
 import org.koin.core.component.KoinComponent
@@ -67,14 +67,14 @@ private sealed class ConnectionError(
 private class MultiplayerGameConnector(
     roomId: UInt
 ) : AbstractViewModel(), KoinComponent {
-    private val clientFacade: KeizarWebsocketClientFacade by inject()
+    private val roomService: RoomService by inject()
 
     val error: MutableStateFlow<ConnectionError?> = MutableStateFlow(null)
 
     val client: SharedFlow<Room> = flow {
         while (true) {
             try {
-                emit(clientFacade.connect(roomId, backgroundScope.coroutineContext))
+                emit(roomService.connect(roomId, backgroundScope.coroutineContext))
                 logger.info { "Successfully connected to room" }
             } catch (e: RoomFullException) {
                 error.value = ConnectionError.NetworkError(e)

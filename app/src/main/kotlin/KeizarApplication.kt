@@ -9,7 +9,6 @@ import org.keizar.android.persistent.savedStateStore
 import org.keizar.client.AccessTokenProvider
 import org.keizar.client.Client
 import org.keizar.client.ClientConfig
-import org.keizar.client.KeizarWebsocketClientFacade
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.startKoin
 import org.koin.core.module.Module
@@ -45,12 +44,6 @@ class KeizarApplication : Application() {
         ): Module = module {
             includes(RepositoryModules) // data layer repositories
 
-            single<KeizarWebsocketClientFacade> {
-                KeizarWebsocketClientFacade(
-                    BuildConfig.SERVER_ENDPOINT,
-                    get<SessionManager>().token
-                )
-            }
             single<SavedStateRepository> { SavedStateRepository(androidContext().savedStateStore) }
             single<SessionManager> { SessionManager() }
             single<AccessTokenProvider> {

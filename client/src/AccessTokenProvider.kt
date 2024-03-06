@@ -2,6 +2,9 @@ package org.keizar.client
 
 /**
  * A provider for access token.
+ *
+ * It is designed to provide access token for [Client],
+ * not intended to be used via dependency injection in view models.
  */
 interface AccessTokenProvider {
     /**

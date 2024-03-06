@@ -10,8 +10,11 @@ import okhttp3.Interceptor
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
 import okhttp3.Response
+import org.keizar.client.annotations.InternalClientApi
+import org.keizar.client.services.BaseRoomService
 import org.keizar.client.services.GameDataService
 import org.keizar.client.services.RoomService
+import org.keizar.client.services.RoomServiceImpl
 import org.keizar.client.services.SeedBankService
 import org.keizar.client.services.StreamingService
 import org.keizar.client.services.StreamingServiceImpl
@@ -28,8 +31,6 @@ import kotlin.coroutines.EmptyCoroutineContext
 
 /**
  * A facade that provides access to the services provided by the server.
- *
- * All
  */
 interface Client {
     /**
@@ -60,7 +61,13 @@ private class ClientImpl(
     override val servicesModule: Module = module {
         single<RetrofitProvider> { RetrofitProvider(config.baseUrl, parentCoroutineContext) }
         single<UserService> { get<RetrofitProvider>().retrofit.create(UserService::class.java) }
-        single<RoomService> { get<RetrofitProvider>().retrofit.create(RoomService::class.java) }
+        single<RoomService> {
+            @OptIn(InternalClientApi::class)
+            RoomServiceImpl(
+                baseUrl = config.baseUrl,
+                generated = get<RetrofitProvider>().retrofit.create(BaseRoomService::class.java)
+            )
+        }
         single<SeedBankService> { get<RetrofitProvider>().retrofit.create(SeedBankService::class.java) }
         single<StreamingService> { StreamingServiceImpl(config.baseUrl) }
         single<GameDataService> { get<RetrofitProvider>().retrofit.create(GameDataService::class.java) }
