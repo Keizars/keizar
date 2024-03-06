@@ -43,7 +43,7 @@ class MongoGameDataDbControl(
 
     override suspend fun saveGameData(dataId: UUID) {
         gameDataTable.updateOne(
-            Filters.eq("id", dataId),
+            Filters.eq("_id", dataId),
             Updates.set("userSaved", true)
         )
     }
