@@ -1,4 +1,4 @@
-package org.keizar.android.client
+package org.keizar.android.data
 
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
@@ -14,6 +14,7 @@ import me.him188.ani.utils.logging.logger
 import org.keizar.android.persistent.TokenRepository
 import org.keizar.android.ui.foundation.BackgroundScope
 import org.keizar.android.ui.foundation.HasBackgroundScope
+import org.keizar.client.services.UserService
 import org.keizar.utils.communication.account.User
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -77,6 +78,9 @@ interface SessionManager : AutoCloseable {
     suspend fun setToken(token: String)
 }
 
+/**
+ * Creates a new [SessionManager] instance.
+ */
 fun SessionManager(): SessionManager = SessionManagerImpl()
 
 private class SessionManagerImpl : SessionManager, KoinComponent, HasBackgroundScope by BackgroundScope() {

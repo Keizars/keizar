@@ -1,4 +1,4 @@
-package org.keizar.android.client
+package org.keizar.client.services
 
 import org.keizar.utils.communication.account.AuthRequest
 import org.keizar.utils.communication.account.AuthResponse
@@ -18,7 +18,7 @@ import retrofit2.http.Query
 /**
  * The service for user-related operations.
  */
-interface UserService {
+interface UserService : ClientService {
     /**
      * Attempts to register a new user.
      *

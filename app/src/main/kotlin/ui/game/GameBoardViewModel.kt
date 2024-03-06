@@ -30,11 +30,9 @@ import me.him188.ani.utils.logging.info
 import org.keizar.aiengine.AlgorithmAI
 import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.BuildConfig
-import org.keizar.android.client.GameDataService
-import org.keizar.android.client.SessionManager
-import org.keizar.android.client.UserService
 import org.keizar.android.data.SavedState
 import org.keizar.android.data.SavedStateRepository
+import org.keizar.android.data.SessionManager
 import org.keizar.android.encode
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
@@ -45,6 +43,8 @@ import org.keizar.android.ui.game.transition.BoardTransitionController
 import org.keizar.android.ui.game.transition.CapturedPieceHostState
 import org.keizar.android.ui.game.transition.PieceArranger
 import org.keizar.client.ClientPlayer
+import org.keizar.client.services.GameDataService
+import org.keizar.client.services.UserService
 import org.keizar.game.BoardProperties
 import org.keizar.game.Difficulty
 import org.keizar.game.GameSession

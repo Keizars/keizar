@@ -13,11 +13,11 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
 import org.keizar.android.GameStartConfigurationEncoder
-import org.keizar.android.client.SeedBankService
-import org.keizar.android.client.SessionManager
+import org.keizar.android.data.SessionManager
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.Disposable
 import org.keizar.android.ui.foundation.HasBackgroundScope
+import org.keizar.client.services.SeedBankService
 import org.keizar.game.BoardProperties
 import org.keizar.game.Difficulty
 import org.keizar.game.Role

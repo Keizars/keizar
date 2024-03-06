@@ -51,9 +51,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
 import org.keizar.android.GameStartConfigurationEncoder
 import org.keizar.android.R
-import org.keizar.android.client.SessionManager
 import org.keizar.android.data.SavedState
 import org.keizar.android.data.SavedStateRepository
+import org.keizar.android.data.SessionManager
 import org.keizar.android.tutorial.Tutorials
 import org.keizar.android.ui.about.AboutScene
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview

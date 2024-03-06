@@ -2,13 +2,15 @@ package org.keizar.client
 
 import kotlinx.coroutines.flow.Flow
 import org.keizar.client.internal.GameSessionWsHandler
+import org.keizar.client.internal.RemoteRoundSession
+import org.keizar.client.internal.RemoteRoundSessionImpl
 import org.keizar.game.GameSession
 import org.keizar.game.RoundSessionImpl
 import org.keizar.game.snapshot.GameSnapshot
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.game.RoundStats
 
-interface RemoteGameSession : GameSession {
+sealed interface RemoteGameSession : GameSession {
     /**
      * The player allocation of the user using this session:
      * either a [Player.FirstWhitePlayer] or a [Player.FirstBlackPlayer]
@@ -36,7 +38,7 @@ interface RemoteGameSession : GameSession {
     }
 }
 
-class RemoteGameSessionImpl internal constructor(
+private class RemoteGameSessionImpl(
     private val game: GameSession,
     private val gameSessionWsHandler: GameSessionWsHandler,
 ) : GameSession by game, RemoteGameSession {

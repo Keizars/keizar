@@ -5,9 +5,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.keizar.android.client.RoomService
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
+import org.keizar.client.services.RoomService
 import org.keizar.game.BoardProperties
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

@@ -29,7 +29,6 @@ import kotlinx.coroutines.flow.mapLatest
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import org.keizar.android.BuildConfig
-import org.keizar.android.client.SessionManager
 import org.keizar.android.ui.external.placeholder.placeholder
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
@@ -40,8 +39,8 @@ import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
 import org.keizar.android.ui.game.transition.CapturedPiecesHost
 import org.keizar.android.ui.profile.AvatarImage
 import org.keizar.client.ClientPlayer
-import org.keizar.client.GameRoomClient
 import org.keizar.client.KeizarWebsocketClientFacade
+import org.keizar.client.Room
 import org.keizar.client.exception.RoomFullException
 import org.keizar.game.snapshot.buildGameSession
 import org.keizar.utils.communication.game.Player
@@ -68,12 +67,11 @@ private sealed class ConnectionError(
 private class MultiplayerGameConnector(
     roomId: UInt
 ) : AbstractViewModel(), KoinComponent {
-    private val sessionManager: SessionManager by inject()
     private val clientFacade: KeizarWebsocketClientFacade by inject()
 
     val error: MutableStateFlow<ConnectionError?> = MutableStateFlow(null)
 
-    val client: SharedFlow<GameRoomClient> = flow {
+    val client: SharedFlow<Room> = flow {
         while (true) {
             try {
                 emit(clientFacade.connect(roomId, backgroundScope.coroutineContext))

@@ -21,16 +21,16 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import org.keizar.android.client.RoomService
-import org.keizar.android.client.SessionManager
-import org.keizar.android.client.UserService
+import org.keizar.android.data.SessionManager
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.game.configuration.GameConfigurationViewModel
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
-import org.keizar.client.GameRoomClient
 import org.keizar.client.KeizarWebsocketClientFacade
+import org.keizar.client.Room
 import org.keizar.client.exception.RoomFullException
+import org.keizar.client.services.RoomService
+import org.keizar.client.services.UserService
 import org.keizar.utils.communication.PlayerSessionState
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -122,7 +122,7 @@ class PrivateRoomViewModelImpl(
     private val userService: UserService by inject()
     private val sessionManager: SessionManager by inject()
 
-    private val client: Flow<GameRoomClient> = flow {
+    private val client: Flow<Room> = flow {
         while (currentCoroutineContext().isActive) {
             val client = try {
                 facade.connect(roomId, parentCoroutineContext = backgroundScope.coroutineContext)

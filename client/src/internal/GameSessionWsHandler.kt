@@ -8,17 +8,14 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import org.keizar.client.RemoteRoundSession
 import org.keizar.game.GameSession
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
-import org.keizar.game.snapshot.GameSnapshot
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.message.ConfirmNextRound
 import org.keizar.utils.communication.message.Move
 import org.keizar.utils.communication.message.PlayerStateChange
-import org.keizar.utils.communication.message.RemoteSessionSetup
 import org.keizar.utils.communication.message.Respond
 import org.keizar.utils.communication.message.RoomStateChange
 import kotlin.coroutines.CoroutineContext
@@ -69,6 +66,7 @@ internal class GameSessionWsHandlerImpl(
                     ConfirmNextRound -> {
                         gameSession.confirmNextRound(selfPlayer.opponent())
                     }
+
                     is Move -> {
                         val round = gameSession.currentRound.first()
                         getUnderlyingRound(round).move(respond.from, respond.to)

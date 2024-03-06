@@ -1,4 +1,4 @@
-package org.keizar.android.client
+package org.keizar.client.services
 
 import org.keizar.game.BoardProperties
 import org.keizar.game.RoomInfo
@@ -7,7 +7,7 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
 
-interface RoomService {
+interface RoomService : ClientService {
     /**
      * Create a room with a specific room number and board properties.
      * Return OK if the room is created successfully.

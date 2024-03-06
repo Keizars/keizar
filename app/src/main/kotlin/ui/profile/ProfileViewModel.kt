@@ -14,12 +14,12 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.keizar.android.GameStartConfigurationEncoder
-import org.keizar.android.client.GameDataService
-import org.keizar.android.client.SeedBankService
-import org.keizar.android.client.SessionManager
-import org.keizar.android.client.StreamingService
-import org.keizar.android.client.UserService
+import org.keizar.android.data.SessionManager
 import org.keizar.android.ui.foundation.AbstractViewModel
+import org.keizar.client.services.GameDataService
+import org.keizar.client.services.SeedBankService
+import org.keizar.client.services.StreamingService
+import org.keizar.client.services.UserService
 import org.keizar.game.BoardProperties
 import org.keizar.utils.communication.LiteralChecker
 import org.keizar.utils.communication.account.AuthStatus
@@ -99,7 +99,7 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
                     input.copyTo(output)
                 }
             }
-            streamingService.uploadAvatar(temp)
+            streamingService.uploadSelfAvatar(temp)
         } finally {
             temp.delete()
         }

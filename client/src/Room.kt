@@ -32,7 +32,13 @@ import org.keizar.utils.communication.message.SetReady
 import kotlin.coroutines.CoroutineContext
 
 
-interface GameRoomClient : AutoCloseable {
+/**
+ * A game room for the 2-player games that contains information of the room and the players in the room.
+ *
+ * ## [Room] is stateful
+ * It maintains a connection with the server and synchronizes the state of the room and the players.
+ */
+interface Room : AutoCloseable {
     /**
      * Room number of the game room
      */
@@ -61,6 +67,9 @@ interface GameRoomClient : AutoCloseable {
 
     /**
      * Player information of the the self user.
+     *
+     * The flow emits not null iff all players are connected to the room,
+     * i.e. [state] is [GameRoomState.ALL_CONNECTED] or further.
      */
     val opponentPlayer: StateFlow<ClientPlayer?>
 
@@ -81,7 +90,8 @@ interface GameRoomClient : AutoCloseable {
      *
      * When called in state [GameRoomState.STARTED] or [GameRoomState.ALL_CONNECTED],
      * room seed will be changed to the new seed.
-     * Otherwise, it will have no effect.
+     *
+     * Otherwise, this function immediately returns.
      * Only the host can change the seed. If a non-host player calls this method,
      * it will have no effect.
      */
@@ -110,8 +120,8 @@ interface GameRoomClient : AutoCloseable {
             roomInfo: RoomInfo,
             websocketSession: DefaultClientWebSocketSession,
             parentCoroutineContext: CoroutineContext
-        ): GameRoomClient {
-            return GameRoomClientImpl(
+        ): Room {
+            return RoomImpl(
                 self = self,
                 roomNumber = roomInfo.roomNumber,
                 players = roomInfo.playerInfo.map {
@@ -128,7 +138,7 @@ interface GameRoomClient : AutoCloseable {
     }
 }
 
-class GameRoomClientImpl internal constructor(
+private class RoomImpl(
     override val self: User,
     override val roomNumber: UInt,
     override val players: MutableList<ClientPlayer>,
@@ -137,7 +147,7 @@ class GameRoomClientImpl internal constructor(
      */
     private val session: DefaultClientWebSocketSession,
     parentCoroutineContext: CoroutineContext
-) : GameRoomClient {
+) : Room {
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 

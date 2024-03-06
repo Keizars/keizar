@@ -5,8 +5,8 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withTimeout
-import org.keizar.android.client.UserService
 import org.keizar.android.ui.foundation.AbstractViewModel
+import org.keizar.client.services.UserService
 import org.keizar.utils.communication.account.AuthStatus
 import org.keizar.utils.communication.account.ChangePasswordRequest
 import org.keizar.utils.communication.account.ModelConstraints

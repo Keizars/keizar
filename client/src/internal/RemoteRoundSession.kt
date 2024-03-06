@@ -1,20 +1,19 @@
-package org.keizar.client
+package org.keizar.client.internal
 
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flowOf
-import org.keizar.client.internal.GameSessionWsHandler
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.NeutralStats
 
-interface RemoteRoundSession: RoundSession
+internal sealed interface RemoteRoundSession : RoundSession
 
-class RemoteRoundSessionImpl internal constructor(
+internal class RemoteRoundSessionImpl internal constructor(
     private val round: RoundSession,
     private val websocketHandler: GameSessionWsHandler,
-): RoundSession by round, RemoteRoundSession {
+) : RoundSession by round, RemoteRoundSession {
     init {
         websocketHandler.bind(this, round)
     }

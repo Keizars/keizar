@@ -1,11 +1,11 @@
-package org.keizar.android.client
+package org.keizar.client.services
 
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
 
-interface SeedBankService {
+interface SeedBankService : ClientService {
     @GET("seed-bank")
     suspend fun getSeeds(): List<String>
 
