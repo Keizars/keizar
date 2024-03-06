@@ -32,7 +32,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
-import org.keizar.android.encode
+import org.keizar.android.data.encode
 import org.keizar.android.ui.KeizarApp
 import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.game.configuration.GameStartConfiguration

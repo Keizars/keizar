@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.protobuf.ProtoNumber
-import org.keizar.android.GameStartConfigurationEncoder
+import org.keizar.android.data.GameStartConfigurationEncoder
 import org.keizar.android.data.SessionManager
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.Disposable

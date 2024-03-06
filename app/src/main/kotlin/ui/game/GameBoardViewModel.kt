@@ -33,7 +33,7 @@ import org.keizar.android.BuildConfig
 import org.keizar.android.data.SavedState
 import org.keizar.android.data.SavedStateRepository
 import org.keizar.android.data.SessionManager
-import org.keizar.android.encode
+import org.keizar.android.data.encode
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground

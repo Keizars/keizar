@@ -64,7 +64,7 @@ import coil3.request.crossfade
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.keizar.android.GameStartConfigurationEncoder
+import org.keizar.android.data.GameStartConfigurationEncoder
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.defaultFocus
 import org.keizar.android.ui.foundation.launchInBackground

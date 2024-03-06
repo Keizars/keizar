@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
-import org.keizar.android.GameStartConfigurationEncoder
+import org.keizar.android.data.GameStartConfigurationEncoder
 import org.keizar.android.data.SessionManager
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.client.services.GameDataService

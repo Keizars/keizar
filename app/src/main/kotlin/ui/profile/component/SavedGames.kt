@@ -38,7 +38,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import org.keizar.android.GameStartConfigurationEncoder
+import org.keizar.android.data.GameStartConfigurationEncoder
 import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.BoardTiles

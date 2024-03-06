@@ -49,8 +49,8 @@ import kotlinx.serialization.decodeFromHexString
 import kotlinx.serialization.encodeToHexString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.protobuf.ProtoBuf
-import org.keizar.android.GameStartConfigurationEncoder
 import org.keizar.android.R
+import org.keizar.android.data.GameStartConfigurationEncoder
 import org.keizar.android.data.SavedState
 import org.keizar.android.data.SavedStateRepository
 import org.keizar.android.data.SessionManager
