@@ -14,26 +14,28 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import org.junit.Rule
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.Timeout
 import org.keizar.client.KeizarWebsocketClientFacade
 import org.keizar.client.RemoteGameSession
 import org.keizar.game.BoardProperties
+import org.keizar.game.Role
 import org.keizar.utils.communication.GameRoomState
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.account.AuthRequest
 import org.keizar.utils.communication.account.AuthResponse
+import org.keizar.utils.communication.game.BoardPos
+import org.keizar.utils.communication.game.GameResult
 import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -54,8 +56,7 @@ class End2EndTest {
     private val server = getServer(env)
 
     @Test
-    @Timeout(30_000)
-    fun test() = runTest {
+    fun test() = runTest(timeout = 30.seconds) {
         val coroutineScope = CoroutineScope(Job())
         val startGuest = MutableStateFlow(false)
         val roomNo = 5462
@@ -121,7 +122,8 @@ class End2EndTest {
         val game = gameRoom.getGameSession()
         assertEquals(hostProposedSeed, game.properties.seed)
 
-        startGame(game, coroutineScope)
+        val result = startGame(game, coroutineScope)
+        // assertEquals(GameResult.Draw, result)
     }
 
     private suspend fun guestClientCoroutine(
@@ -163,38 +165,67 @@ class End2EndTest {
         val game = gameRoom.getGameSession()
         assertNotEquals(guestProposedSeed, game.properties.seed)
 
-        startGame(game, coroutineScope)
+        val result = startGame(game, coroutineScope)
+        // assertEquals(GameResult.Draw, result)
     }
 
-    private suspend fun startGame(game: RemoteGameSession, coroutineScope: CoroutineScope) {
+    private suspend fun startGame(
+        game: RemoteGameSession,
+        coroutineScope: CoroutineScope
+    ): GameResult {
         val selfPlayer = game.player
         val job1 = coroutineScope.launch {
             game.currentRound.collectLatest { round ->
                 delay(1000)
                 val roundNo = game.currentRoundNo.first()
                 val selfRole = game.getRole(selfPlayer, roundNo)
-                while (true) {
-                    round.curRole.first { it == selfRole }
-                    val from = round.getAllPiecesPos(selfRole).first().randomOrNull()
-                    val to = from?.let { round.getAvailableTargets(it).first().randomOrNull() }
-                    to?.let { round.move(from, it) }
+                var moveCnt = 0
+                round.curRole.filter { it == selfRole }.collect {
+                    val (from, to) = if (selfRole == Role.WHITE) {
+                        whiteMoves[moveCnt]
+                    } else {
+                        blackMoves[moveCnt]
+                    }
+                    round.move(BoardPos(from), BoardPos(to))
+                    ++moveCnt
                 }
             }
         }
         val job2 = coroutineScope.launch {
-            game.currentRound.collectLatest {  round ->
+            game.currentRound.collectLatest { round ->
                 round.winner.first { it != null }
                 game.confirmNextRound(selfPlayer)
             }
         }
-        game.finalWinner.first { it != null }
+        val finalWinner = game.finalWinner.filterNotNull().first()
         try {
             job1.cancel()
             job2.cancel()
         } catch (e: CancellationException) {
             // ignore
         }
+        return finalWinner
     }
+
+    private val whiteMoves = listOf(
+        "d2" to "d3",
+        "d3" to "d4",
+        "d4" to "d5",
+        "e2" to "e3",
+        "e3" to "e4",
+        "e4" to "e5",
+        "f2" to "f3",
+    )
+
+    private val blackMoves = listOf(
+        "h7" to "h6",
+        "h6" to "h5",
+        "h5" to "h4",
+        "h4" to "h3",
+        "g7" to "g6",
+        "g6" to "g5",
+        "g5" to "g4",
+    )
 
     @BeforeEach
     fun setUp() {
