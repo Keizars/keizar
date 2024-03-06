@@ -275,6 +275,13 @@ private fun ActionArea(roomId: UInt, opponentName: String, opponentAvatar: Strin
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
+            Text(
+                text = "Opponent:  ",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .align(Alignment.CenterVertically)
+            )
             AvatarImage(
                 url = opponentAvatar,
                 modifier = Modifier
@@ -282,7 +289,7 @@ private fun ActionArea(roomId: UInt, opponentName: String, opponentAvatar: Strin
                     .align(Alignment.CenterVertically)
             )
             Text(
-                text = "Opponent: $opponentName$readyMessage",
+                text = "$opponentName$readyMessage",
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier
                     .padding(start = 8.dp)
@@ -332,7 +339,6 @@ private fun PreviewMultiplayerRoomPage() {
     }
 }
 @Preview
-@Preview(heightDp = 800)
 @Preview(device = Devices.TABLET)
 @Preview(fontScale = 2f)
 @Composable
@@ -340,9 +346,9 @@ private fun PreviewOpponentSetting() {
     ProvideCompositionalLocalsForPreview {
         ActionArea(
             roomId = 123u,
-            opponentName = "Opponent",
+            opponentName = "Holger",
             opponentAvatar = "https://ui-avatars.com/api/?name=123",
-            opponentIsReady = false
+            opponentIsReady = true
         )
     }
 }
