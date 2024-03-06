@@ -62,6 +62,9 @@ import org.keizar.android.ui.profile.AvatarImage
 import org.keizar.game.Role
 
 
+/**
+ * Private room where two players can see each other's name and change seeds.
+ */
 @Composable
 fun PrivateRoomScene(
     roomId: UInt,

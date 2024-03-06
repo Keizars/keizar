@@ -117,7 +117,7 @@ fun MainScreen() {
         }
     }
 
-    val matchViewModel = remember {
+    val lobbyViewModel = remember {
         MatchViewModel()
     }
     NavHost(navController, startDestination = "home") {
@@ -201,7 +201,12 @@ fun MainScreen() {
 
                 true -> {
                     MultiplayerLobbyScene(
-                        onClickHome = { navController.navigate("home") },
+                        onClickHome = {
+                            if (lobbyViewModel.selfRoomId.value != null) {
+                                lobbyViewModel.removeSelfRoom()
+                            }
+                            navController.navigate("home")
+                        },
                         onJoinGame = { roomId ->
                             navController.navigate(
                                 navController.graph["game/room"].id,
@@ -217,7 +222,7 @@ fun MainScreen() {
                                 })
                         },
                         Modifier.fillMaxSize(),
-                        vm = matchViewModel,
+                        vm = lobbyViewModel,
                     )
                 }
             }
@@ -254,7 +259,7 @@ fun MainScreen() {
                 },
                 onClickGameConfig = {
                     navController.navigate("game/lobby")
-                    matchViewModel.removeSelfRoom()
+                    lobbyViewModel.removeSelfRoom()
                 },
                 Modifier.fillMaxSize()
             )

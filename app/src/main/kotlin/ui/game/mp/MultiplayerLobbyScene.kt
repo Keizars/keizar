@@ -53,6 +53,9 @@ import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
 
+/**
+ * 2-player lobby scene, where players can join a room or create a room.
+ */
 @Composable
 fun MultiplayerLobbyScene(
     onClickHome: () -> Unit,
