@@ -54,7 +54,7 @@ class ClientConfig(
 private class ClientImpl(
     private val config: ClientConfig,
     parentCoroutineContext: CoroutineContext = EmptyCoroutineContext,
-) : KoinComponent, Client {
+) : Client {
     /**
      * Koin module that provides the services like [UserService].
      */
