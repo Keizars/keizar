@@ -2,11 +2,11 @@ package org.keizar.server.database.local
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.keizar.server.database.GameDataDBControl
+import org.keizar.server.database.GameDataRepository
 import org.keizar.server.database.models.GameDataModel
 import java.util.UUID
 
-class InMemoryGameDataControl: GameDataDBControl {
+class InMemoryGameDataRepository: GameDataRepository {
     private val _data: MutableList<GameDataModel> = mutableListOf()
     private val mutex = Mutex()
 

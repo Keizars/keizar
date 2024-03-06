@@ -7,29 +7,32 @@ import com.mongodb.client.model.Indexes
 import com.mongodb.kotlin.client.coroutine.MongoClient
 import org.bson.UuidRepresentation
 import org.bson.codecs.configuration.CodecRegistries
-import org.keizar.server.database.local.InMemoryGameDataControl
-import org.keizar.server.database.local.InMemorySeedBankDbControl
-import org.keizar.server.database.local.InMemoryUserDbControl
+import org.keizar.server.database.local.InMemoryGameDataRepository
+import org.keizar.server.database.local.InMemorySeedBankRepository
+import org.keizar.server.database.local.InMemoryUserRepository
 import org.keizar.server.database.models.GameDataModel
 import org.keizar.server.database.models.SeedBankModel
 import org.keizar.server.database.models.UserModel
 import org.keizar.server.database.mongodb.KeizarCodecRegistry
-import org.keizar.server.database.mongodb.MongoGameDataDbControl
-import org.keizar.server.database.mongodb.MongoSeedBankDbControl
-import org.keizar.server.database.mongodb.MongoUserDbControl
+import org.keizar.server.database.mongodb.MongoGameDataRepository
+import org.keizar.server.database.mongodb.MongoSeedBankRepository
+import org.keizar.server.database.mongodb.MongoUserRepository
 import org.keizar.server.plugins.ServerJson
 
+/**
+ * [DatabaseManager] is an interface that provides access to different repositories in the database.
+ */
 interface DatabaseManager {
-    val user: UserDbControl
-    val seedBank: SeedBankDbControl
-    val gameData: GameDataDBControl
+    val user: UserRepository
+    val seedBank: SeedBankRepository
+    val gameData: GameDataRepository
     suspend fun initialize() {}
 }
 
 class InMemoryDatabaseManagerImpl : DatabaseManager {
-    override val user: UserDbControl = InMemoryUserDbControl()
-    override val seedBank: SeedBankDbControl = InMemorySeedBankDbControl()
-    override val gameData: GameDataDBControl = InMemoryGameDataControl()
+    override val user: UserRepository = InMemoryUserRepository()
+    override val seedBank: SeedBankRepository = InMemorySeedBankRepository()
+    override val gameData: GameDataRepository = InMemoryGameDataRepository()
 }
 
 class MongoDatabaseManagerImpl(
@@ -58,7 +61,7 @@ class MongoDatabaseManagerImpl(
         )
     }
 
-    override val user: UserDbControl = MongoUserDbControl(userTable)
-    override val seedBank: SeedBankDbControl = MongoSeedBankDbControl(seedBankTable)
-    override val gameData: GameDataDBControl = MongoGameDataDbControl(gameDataTable)
+    override val user: UserRepository = MongoUserRepository(userTable)
+    override val seedBank: SeedBankRepository = MongoSeedBankRepository(seedBankTable)
+    override val gameData: GameDataRepository = MongoGameDataRepository(gameDataTable)
 }

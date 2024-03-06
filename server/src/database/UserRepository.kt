@@ -2,7 +2,7 @@ package org.keizar.server.database
 
 import org.keizar.server.database.models.UserModel
 
-interface UserDbControl {
+interface UserRepository {
     suspend fun addUser(userModel: UserModel): Boolean
     suspend fun update(
         userId: String,
@@ -17,6 +17,6 @@ interface UserDbControl {
     suspend fun getUserByUsername(username: String): UserModel?
 }
 
-abstract class AbstractUserDbControl : UserDbControl {
+abstract class AbstractUserRepository : UserRepository {
     protected open fun UserModel.sanitized() = copy(username = username.lowercase())
 }

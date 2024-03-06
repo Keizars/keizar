@@ -4,12 +4,12 @@ import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import kotlinx.coroutines.flow.firstOrNull
-import org.keizar.server.database.AbstractUserDbControl
+import org.keizar.server.database.AbstractUserRepository
 import org.keizar.server.database.models.UserModel
 
-class MongoUserDbControl(
+class MongoUserRepository(
     private val userTable: MongoCollection<UserModel>
-) : AbstractUserDbControl() {
+) : AbstractUserRepository() {
 
     override suspend fun addUser(userModel: UserModel): Boolean {
         return userTable.insertOne(userModel.sanitized()).wasAcknowledged()

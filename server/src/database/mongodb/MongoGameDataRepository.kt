@@ -5,13 +5,13 @@ import com.mongodb.client.model.Updates
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 
-import org.keizar.server.database.GameDataDBControl
+import org.keizar.server.database.GameDataRepository
 import org.keizar.server.database.models.GameDataModel
 import java.util.UUID
 
-class MongoGameDataDbControl(
+class MongoGameDataRepository(
     private val gameDataTable: MongoCollection<GameDataModel>
-): GameDataDBControl {
+): GameDataRepository {
     override suspend fun addGameData(gameData: GameDataModel): Boolean {
         // add data if id not in list and username and time is not the same
         return gameDataTable.insertOne(gameData).wasAcknowledged()

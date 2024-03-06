@@ -2,10 +2,10 @@ package org.keizar.server.database.local
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.keizar.server.database.SeedBankDbControl
+import org.keizar.server.database.SeedBankRepository
 import org.keizar.server.database.models.SeedBankModel
 
-class InMemorySeedBankDbControl : SeedBankDbControl {
+class InMemorySeedBankRepository : SeedBankRepository {
     private val _data: MutableList<SeedBankModel> = mutableListOf()
     private val mutex = Mutex()
     private suspend inline fun <T> data(crossinline block: MutableList<SeedBankModel>.() -> T): T {

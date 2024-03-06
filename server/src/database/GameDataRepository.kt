@@ -3,7 +3,7 @@ package org.keizar.server.database
 import org.keizar.server.database.models.GameDataModel
 import java.util.UUID
 
-interface GameDataDBControl {
+interface GameDataRepository {
 
     suspend fun addGameData(gameData: GameDataModel): Boolean
 

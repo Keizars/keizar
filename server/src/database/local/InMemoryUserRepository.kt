@@ -2,10 +2,10 @@ package org.keizar.server.database.local
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.keizar.server.database.AbstractUserDbControl
+import org.keizar.server.database.AbstractUserRepository
 import org.keizar.server.database.models.UserModel
 
-class InMemoryUserDbControl : AbstractUserDbControl() {
+class InMemoryUserRepository : AbstractUserRepository() {
     private val _data: MutableList<UserModel> = mutableListOf()
     private val mutex = Mutex()
     private suspend inline fun <T> data(crossinline block: MutableList<UserModel>.() -> T): T {

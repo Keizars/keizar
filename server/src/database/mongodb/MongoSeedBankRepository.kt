@@ -3,12 +3,12 @@ package org.keizar.server.database.mongodb
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
-import org.keizar.server.database.SeedBankDbControl
+import org.keizar.server.database.SeedBankRepository
 import org.keizar.server.database.models.SeedBankModel
 
-class MongoSeedBankDbControl(
+class MongoSeedBankRepository(
     private val seedBankTable: MongoCollection<SeedBankModel>
-) : SeedBankDbControl {
+) : SeedBankRepository {
     override suspend fun addSeed(userId: String, seed: String): Boolean {
         return seedBankTable.insertOne(SeedBankModel(userId = userId, gameSeed = seed)).wasAcknowledged()
     }
