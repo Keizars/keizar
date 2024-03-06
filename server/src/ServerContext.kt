@@ -19,8 +19,8 @@ import java.security.SecureRandom
 import kotlin.time.Duration.Companion.days
 
 /**
- * The [ServerContext] class represents the context for the server application, providing access
- * to various modules and managers needed for its operation.
+ * The [ServerContext] class represents a context object for the server application in order to
+ * achieve dependency injection. It contains all the service modules used by the server.
  */
 class ServerContext(
     parentCoroutineScope: CoroutineScope,

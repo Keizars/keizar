@@ -20,6 +20,9 @@ import org.keizar.server.plugins.configureSecurity
 import org.keizar.server.plugins.configureSerialization
 import org.keizar.server.plugins.configureSockets
 
+/**
+ * Server entry point
+ */
 fun main() {
     getServer().start(wait = true)
 }
