@@ -1,4 +1,4 @@
-package org.keizar.android
+package org.keizar.android.data
 
 import kotlinx.serialization.decodeFromHexString
 import kotlinx.serialization.encodeToHexString
