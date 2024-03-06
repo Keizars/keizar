@@ -226,6 +226,7 @@ private fun Configurations(
             )
         }
 
+        val isHost = vm.selfIsHost.collectAsStateWithLifecycle(false).value
 
         BoardSeedTextField(
             text = vm.configuration.configurationSeedText.collectAsStateWithLifecycle().value,
@@ -234,7 +235,7 @@ private fun Configurations(
             isError = vm.configuration.isConfigurationSeedTextError.collectAsStateWithLifecycle(
                 false
             ).value,
-            refreshEnable = vm.configuration.freshButtonEnable.collectAsStateWithLifecycle(true).value,
+            refreshEnable = vm.configuration.freshButtonEnable.collectAsStateWithLifecycle(true).value && isHost,
             supportingText = {
                 Text(text = "Explore new board layouts by changing the seed. Other player can also see this board.")
             },
@@ -259,7 +260,7 @@ private fun ActionArea(roomId: UInt, opponentName: String, opponentAvatar: Strin
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
-
+            Text(text ="Waiting for opponent to join...")
         }
 
         RoomIdTextField(
