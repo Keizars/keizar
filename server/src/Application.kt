@@ -22,6 +22,9 @@ import org.keizar.server.plugins.configureSockets
 
 /**
  * Server entry point
+ *
+ * Refer to the [Ktor documentation](https://ktor.io/docs/server-create-a-new-project.html)
+ * for server structure and setup
  */
 fun main() {
     getServer().start(wait = true)
@@ -44,7 +47,7 @@ internal fun getServer(
     )
 }
 
-fun Application.module(env: EnvironmentVariables) {
+private fun Application.module(env: EnvironmentVariables) {
     val serverCoroutineScope = CoroutineScope(SupervisorJob())
     val context = setupServerContext(serverCoroutineScope, log, env)
 

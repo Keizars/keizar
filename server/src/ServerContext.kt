@@ -60,7 +60,7 @@ class ServerContext(
     val gameData = GameDataModuleImpl(databaseManager)
 }
 
-fun setupServerContext(
+internal fun setupServerContext(
     coroutineScope: CoroutineScope,
     logger: Logger,
     env: EnvironmentVariables = EnvironmentVariables(),
