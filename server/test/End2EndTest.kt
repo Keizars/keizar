@@ -26,29 +26,24 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.junit.rules.Timeout
+import org.junit.jupiter.api.Timeout
 import org.keizar.client.KeizarWebsocketClientFacade
 import org.keizar.client.RemoteGameSession
 import org.keizar.game.BoardProperties
-import org.keizar.game.GameSession
 import org.keizar.utils.communication.GameRoomState
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.account.AuthRequest
 import org.keizar.utils.communication.account.AuthResponse
 import kotlin.random.Random
-import kotlin.random.nextUInt
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.seconds
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class End2EndTest {
-    @JvmField
-    @Rule
-    val timeout: Timeout = Timeout.seconds(30)
-
     private val env = EnvironmentVariables(
         port = 4392,
         testing = true,
@@ -59,6 +54,7 @@ class End2EndTest {
     private val server = getServer(env)
 
     @Test
+    @Timeout(30_000)
     fun test() = runTest {
         val coroutineScope = CoroutineScope(Job())
         val startGuest = MutableStateFlow(false)
