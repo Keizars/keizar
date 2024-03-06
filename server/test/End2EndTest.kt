@@ -21,10 +21,12 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import org.junit.Rule
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import org.junit.rules.Timeout
 import org.keizar.client.KeizarWebsocketClientFacade
 import org.keizar.client.RemoteGameSession
 import org.keizar.game.BoardProperties
@@ -43,6 +45,10 @@ import kotlin.test.assertTrue
 
 @TestInstance(TestInstance.Lifecycle.PER_METHOD)
 class End2EndTest {
+    @JvmField
+    @Rule
+    val timeout: Timeout = Timeout.seconds(30)
+
     private val env = EnvironmentVariables(
         port = 4392,
         testing = true,
