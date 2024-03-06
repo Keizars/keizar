@@ -10,7 +10,7 @@ dependencies {
     implementation(projects.utils.coroutines)
     implementation(libs.retrofit)
     implementation(libs.retrofit.kotlinx.serialization)
-    implementation(libs.koin.core)
+    api(libs.koin.core)
     implementation(libs.ktor.client.auth)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.ktor.client.core)
