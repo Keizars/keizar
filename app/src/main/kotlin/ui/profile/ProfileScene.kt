@@ -310,7 +310,6 @@ fun ProfilePage(
                     )
 
                     1 -> SavedGames(vm = vm)
-                    2 -> Statistics()
                 }
             }
         }
@@ -901,11 +900,6 @@ private fun Detail(
             }
         }
     }
-}
-
-@Composable
-private fun Statistics(modifier: Modifier = Modifier) {
-    // TODO: Statistics
 }
 
 @Preview(showBackground = true)
