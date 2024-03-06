@@ -56,7 +56,7 @@ fun WinningRoundDialog(
                                                 "Time: ${stats.neutralStats.blackTime / 60} m ${stats.neutralStats.blackTime % 60} s \n" +
                                                 "Your moves' average time: ${
                                                     String.format(
-                                                        "%.4f",
+                                                        "%.2f",
                                                         stats.neutralStats.blackAverageTime
                                                     )
                                                 } s",
@@ -71,7 +71,7 @@ fun WinningRoundDialog(
                                                 "Time: ${stats.neutralStats.whiteTime / 60} m ${stats.neutralStats.whiteTime % 60} s \n" +
                                                 "Your moves' average time: ${
                                                     String.format(
-                                                        "%.4f",
+                                                        "%.2f",
                                                         stats.neutralStats.whiteAverageTime
                                                     )
                                                 } s",
@@ -89,7 +89,7 @@ fun WinningRoundDialog(
                                                 "Time: ${stats.neutralStats.whiteTime / 60} m ${stats.neutralStats.whiteTime % 60} s \n" +
                                                 "Your moves' average time: ${
                                                     String.format(
-                                                        "%.4f",
+                                                        "%.2f",
                                                         stats.neutralStats.whiteAverageTime
                                                     )
                                                 } s",
@@ -104,7 +104,7 @@ fun WinningRoundDialog(
                                                 "Time: ${stats.neutralStats.blackTime / 60} m ${stats.neutralStats.blackTime % 60} s \n" +
                                                 "Your moves' average time: ${
                                                     String.format(
-                                                        "%.4f",
+                                                        "%.2f",
                                                         stats.neutralStats.blackAverageTime
                                                     )
                                                 } s",
