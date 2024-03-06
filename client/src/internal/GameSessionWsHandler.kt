@@ -25,8 +25,8 @@ internal interface GameSessionWsHandler : AutoCloseable {
     fun getSelfPlayer(): Player
     fun bind(session: GameSession)
     fun bind(remote: RemoteRoundSession, round: RoundSession)
-    fun sendConfirmNextRound()
-    fun sendMove(from: BoardPos, to: BoardPos)
+    suspend fun sendConfirmNextRound()
+    suspend fun sendMove(from: BoardPos, to: BoardPos)
     suspend fun start()
 }
 
@@ -120,11 +120,11 @@ internal class GameSessionWsHandlerImpl(
         return underlyingRoundSessionMap[remote]!!
     }
 
-    override fun sendConfirmNextRound() {
+    override suspend fun sendConfirmNextRound() {
         websocketSessionHandler.sendRequest(ConfirmNextRound)
     }
 
-    override fun sendMove(from: BoardPos, to: BoardPos) {
+    override suspend fun sendMove(from: BoardPos, to: BoardPos) {
         websocketSessionHandler.sendRequest(Move(from, to))
     }
 }

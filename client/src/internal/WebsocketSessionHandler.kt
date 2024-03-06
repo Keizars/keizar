@@ -20,7 +20,7 @@ import kotlin.coroutines.CoroutineContext
 internal interface WebsocketSessionHandler : AutoCloseable {
     val isClosed: Boolean
     suspend fun start()
-    fun sendRequest(request: Request)
+    suspend fun sendRequest(request: Request)
 }
 
 /**
@@ -44,9 +44,9 @@ internal abstract class AbstractWebsocketSessionHandler(
             myCoroutineScope.launch {
                 session.messageInflow()
             }
-            myCoroutineScope.launch {
-                session.messageOutflow()
-            }
+//            myCoroutineScope.launch {
+//                session.messageOutflow()
+//            }
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
@@ -95,9 +95,8 @@ internal abstract class AbstractWebsocketSessionHandler(
     }
 
     abstract suspend fun processResponse(respond: Respond)
-    override fun sendRequest(request: Request) {
-        myCoroutineScope.launch {
-            outflowChannel.send(request)
-        }
+    override suspend fun sendRequest(request: Request) {
+        println("Client sending: $request")
+        session.sendSerialized(request)
     }
 }
