@@ -55,7 +55,7 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
-    if (vm.isLoadingGames.value) {
+    if (vm.isLoadingGames.collectAsStateWithLifecycle().value) {
         Column(
             modifier = Modifier
                 .padding(16.dp)

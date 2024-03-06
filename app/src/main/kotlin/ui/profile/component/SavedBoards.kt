@@ -52,7 +52,7 @@ import org.keizar.game.BoardProperties
 
 @Composable
 fun SavedBoards(vm: ProfileViewModel, modifier: Modifier = Modifier, onClickPlayGame: (String) -> Unit) {
-    if (vm.isLoadingSeeds.value) {
+    if (vm.isLoadingSeeds.collectAsStateWithLifecycle().value) {
         Column(
             modifier = Modifier
                 .padding(16.dp)

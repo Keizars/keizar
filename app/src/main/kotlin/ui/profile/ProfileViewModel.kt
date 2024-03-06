@@ -63,8 +63,8 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     suspend fun logout() {
         sessionManager.invalidateToken()
     }
-    
-    
+
+
     /**
      * Deletes a saved game from the server. If the request fails, the game is not removed from the local cache.
      */
@@ -75,7 +75,6 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
             return
         }
         allGames.value = allGames.value.filter { it.dataId != id }
-        
     }
 
     /**
@@ -88,7 +87,6 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
             return
         }
         allSeeds.value = allSeeds.value.filter { it.configurationSeed != seed }
-        
     }
 
     suspend fun uploadAvatar(avatar: InputStream) {
@@ -115,8 +113,8 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     /**
      * a flag to indicate if the seeds are being loaded, used in the UI to show a loading spinner
      */
-    var isLoadingSeeds = mutableStateOf(true)
-    
+    val isLoadingSeeds = MutableStateFlow(true)
+
     /**
      * A flow of all the saved seeds of the user
      */
@@ -141,8 +139,8 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     /**
      * a flag to indicate if the games are being loaded, used in the UI to show a loading spinner
      */
-    var isLoadingGames = mutableStateOf(true)
-    
+    var isLoadingGames = MutableStateFlow(true)
+
     /**
      * A flow of all the saved games of the user
      */

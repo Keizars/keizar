@@ -9,13 +9,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -200,23 +198,13 @@ interface HasBackgroundScope {
      */
     fun <T> Flow<T>.localCachedStateFlow(
         initialValue: T,
-        started: SharingStarted = SharingStarted.WhileSubscribed(5.seconds),
+//        started: SharingStarted = SharingStarted.WhileSubscribed(5.seconds),
     ): MutableStateFlow<T> {
         val localFlow = MutableStateFlow(initialValue)
-        val mergedFlow: StateFlow<T> = merge(this, localFlow).stateInBackground(initialValue)
-        return object : MutableStateFlow<T> by localFlow {
-            override var value: T
-                get() = mergedFlow.value
-                set(value) {
-                    localFlow.value = value
-                }
-
-            override val replayCache: List<T> get() = mergedFlow.replayCache
-
-            override suspend fun collect(collector: FlowCollector<T>): Nothing {
-                mergedFlow.collect(collector)
-            }
+        launchInBackground { 
+            collect { localFlow.value = it }
         }
+        return localFlow
     }
 }
 
