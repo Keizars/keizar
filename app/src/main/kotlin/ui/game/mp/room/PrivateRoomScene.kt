@@ -96,9 +96,7 @@ private fun AcceptArea(
         horizontalArrangement = Arrangement.End,
     ) {
         val accept by vm.selfReady.collectAsStateWithLifecycle(false)
-        if (accept) {
-            Text(text = "Waiting for the other player...", style = MaterialTheme.typography.titleMedium)
-        } else {
+        if (!accept) {
             Button(
                 modifier = if (!isSystemInLandscape()) Modifier.padding(end = 12.dp) else Modifier,
                 onClick = { vm.backgroundScope.launch { vm.ready() } }
@@ -146,13 +144,18 @@ private fun PrivateRoomPage(
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
                 Column(Modifier.fillMaxHeight(), verticalArrangement = Arrangement.Center) {
-                    val properties by vm.configuration.boardProperties.collectAsStateWithLifecycle(null)
+                    val properties by vm.configuration.boardProperties.collectAsStateWithLifecycle(
+                        null
+                    )
                     BoardLayoutPreview(
                         boardProperties = properties,
                         playAs = Role.WHITE,
                     )
                 }
-                Column(Modifier.wrapContentWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    Modifier.wrapContentWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Column(Modifier.widthIn(max = 360.dp)) {
                         Configurations(vm)
                         AcceptArea(vm, Modifier)
@@ -168,7 +171,9 @@ private fun PrivateRoomPage(
                         .padding(horizontal = 16.dp)
                         .verticalScroll(rememberScrollState()),
                 ) {
-                    val properties by vm.configuration.boardProperties.collectAsStateWithLifecycle(null)
+                    val properties by vm.configuration.boardProperties.collectAsStateWithLifecycle(
+                        null
+                    )
                     Spacer(
                         modifier = Modifier
                             .statusBarsPadding()
@@ -226,7 +231,9 @@ private fun Configurations(
             text = vm.configuration.configurationSeedText.collectAsStateWithLifecycle().value,
             onValueChange = { vm.configuration.setConfigurationSeedText(it) },
             onClickRandom = { vm.configuration.updateRandomSeed() },
-            isError = vm.configuration.isConfigurationSeedTextError.collectAsStateWithLifecycle(false).value,
+            isError = vm.configuration.isConfigurationSeedTextError.collectAsStateWithLifecycle(
+                false
+            ).value,
             refreshEnable = vm.configuration.freshButtonEnable.collectAsStateWithLifecycle(true).value,
             supportingText = {
                 Text(text = "Explore new board layouts by changing the seed. Other player can also see this board.")
@@ -238,12 +245,13 @@ private fun Configurations(
         HorizontalDivider(Modifier.padding(vertical = 16.dp))
 
         val opponentAvatar by vm.opponentAvatar.collectAsStateWithLifecycle(null)
-        ActionArea(vm.roomId, vm.opponentName.collectAsStateWithLifecycle("").value, opponentAvatar)
+        val opponentIsReady by vm.opponentReady.collectAsStateWithLifecycle(false)
+        ActionArea(vm.roomId, vm.opponentName.collectAsStateWithLifecycle("").value, opponentAvatar, opponentIsReady)
     }
 }
 
 @Composable
-private fun ActionArea(roomId: UInt, opponentName: String, opponentAvatar: String?) {
+private fun ActionArea(roomId: UInt, opponentName: String, opponentAvatar: String?, opponentIsReady: Boolean) {
     if (opponentName == "") {
         Row(
             Modifier
@@ -251,13 +259,7 @@ private fun ActionArea(roomId: UInt, opponentName: String, opponentAvatar: Strin
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
-            if (opponentAvatar == "") {
-                Text(text = "Waiting for the other player...", style = MaterialTheme.typography.titleMedium)
-            } else {
-                Column {
-                    AvatarImage(url = opponentAvatar, modifier = Modifier.size(32.dp))
-                }
-            }
+
         }
 
         RoomIdTextField(
@@ -266,13 +268,26 @@ private fun ActionArea(roomId: UInt, opponentName: String, opponentAvatar: Strin
                 .fillMaxWidth()
         )
     } else {
+        val readyMessage = if (opponentIsReady) " is ready!" else " is not ready yet."
         Row(
             Modifier
                 .padding(bottom = 16.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
-            Text(text = "Opponent: $opponentName", style = MaterialTheme.typography.titleMedium)
+            AvatarImage(
+                url = opponentAvatar,
+                modifier = Modifier
+                    .size(32.dp)
+                    .align(Alignment.CenterVertically)
+            )
+            Text(
+                text = "Opponent: $opponentName$readyMessage",
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .align(Alignment.CenterVertically)
+            )
         }
 
     }
@@ -314,5 +329,20 @@ private fun PreviewMultiplayerRoomPage() {
             )
         },
             onClickHome = { })
+    }
+}
+@Preview
+@Preview(heightDp = 800)
+@Preview(device = Devices.TABLET)
+@Preview(fontScale = 2f)
+@Composable
+private fun PreviewOpponentSetting() {
+    ProvideCompositionalLocalsForPreview {
+        ActionArea(
+            roomId = 123u,
+            opponentName = "Opponent",
+            opponentAvatar = "https://ui-avatars.com/api/?name=123",
+            opponentIsReady = false
+        )
     }
 }

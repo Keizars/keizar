@@ -77,6 +77,9 @@ interface PrivateRoomViewModel : HasBackgroundScope {
     @Stable
     val opponentAvatar: Flow<String>
 
+    @Stable
+    val opponentReady: Flow<Boolean>
+
     suspend fun getAvatar(username: String): String
 
 }
@@ -116,7 +119,7 @@ class PrivateRoomViewModelImpl(
 
     override val configuration: GameConfigurationViewModel = GameConfigurationViewModel()
     override val selfReady: Flow<Boolean> = selfPlayer.flatMapLatest { it.state }.map { it == PlayerSessionState.READY }
-    val opponentReady: Flow<Boolean> =
+    override val opponentReady: Flow<Boolean> =
         opponentPlayer.flatMapLatest { it?.state ?: emptyFlow() }.map { it == PlayerSessionState.READY }
 
     private val showToast = mutableStateOf(false)
@@ -154,7 +157,7 @@ class PrivateRoomViewModelImpl(
     }
 
     override suspend fun getAvatar(username: String): String {
-        return userService.getUser(username).avatarUrl
+        return userService.getUser(username).avatarUrlOrDefault()
     }
 
 
