@@ -22,6 +22,7 @@ import org.koin.dsl.module
 class KeizarApplication : Application() {
     override fun onCreate() {
         super.onCreate()
+        instance = this
 
         startKoin {
             androidContext(this@KeizarApplication)
@@ -30,6 +31,9 @@ class KeizarApplication : Application() {
     }
 
     companion object {
+        var instance: KeizarApplication? = null
+            private set
+
         /**
          * Gets a Koin module for the Android app.
          *
