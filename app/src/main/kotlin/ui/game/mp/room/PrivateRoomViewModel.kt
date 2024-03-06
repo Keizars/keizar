@@ -109,7 +109,7 @@ class PrivateRoomViewModelImpl(
     private val roomService: RoomService by inject()
     private val userService: UserService by inject()
 
-    private val client: Flow<Room> = flow {
+    private val client: SharedFlow<Room> = flow {
         while (currentCoroutineContext().isActive) {
             val client = try {
                 roomService.connect(roomId, parentCoroutineContext = backgroundScope.coroutineContext)
@@ -177,5 +177,10 @@ class PrivateRoomViewModelImpl(
     override fun dispose() {
         super.dispose()
         configuration.dispose()
+        client.replayCache.firstOrNull()?.let { room ->
+            runCatching {
+                room.close()
+            }
+        }
     }
 }
