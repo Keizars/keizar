@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
@@ -30,6 +31,7 @@ import org.keizar.client.exception.RoomFullException
 import org.keizar.client.services.RoomService
 import org.keizar.client.services.UserService
 import org.keizar.utils.communication.PlayerSessionState
+import org.keizar.utils.communication.account.User
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import kotlin.time.Duration.Companion.seconds
@@ -91,24 +93,13 @@ interface PrivateRoomViewModel : HasBackgroundScope {
      * The name of the opponent player.
      */
     @Stable
-    val opponentName: Flow<String>
-
-    /**
-     * The avatar of the opponent player.
-     */
-    @Stable
-    val opponentAvatar: Flow<String>
+    val opponentUser: Flow<User>
 
     /**
      * Whether the opponent player is ready to start the game.
      */
     @Stable
     val opponentReady: Flow<Boolean>
-
-    /**
-     * Disposes the view model.
-     */
-    suspend fun getAvatar(username: String): String
 
 }
 
@@ -160,10 +151,13 @@ class PrivateRoomViewModelImpl(
     }
 
     override val selfIsHost: Flow<Boolean> = selfPlayer.mapLatest { it.isHost }
-
-    override val opponentName: Flow<String> = opponentPlayer.mapLatest { it?.username ?: "" }
-    override val opponentAvatar: Flow<String> =
-        opponentPlayer.mapLatest { clientPlayer -> clientPlayer?.username?.let { getAvatar(it) } ?: "" }
+    override val opponentUser: Flow<User> = opponentPlayer
+        .mapLatest { it?.username }
+        .filterNotNull()
+        .map {
+            userService.getUser(it)
+        }
+        .shareInBackground(started = SharingStarted.Eagerly)
 
     override val playersReady: SharedFlow<Boolean> =
         combine(selfReady, opponentReady) { selfReady, opponentReady ->
@@ -181,11 +175,6 @@ class PrivateRoomViewModelImpl(
             client.first().setReady()
         }
     }
-
-    override suspend fun getAvatar(username: String): String {
-        return userService.getUser(username).avatarUrlOrDefault()
-    }
-
 
     override fun dispose() {
         super.dispose()

@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -44,6 +45,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.AnnotatedString
@@ -245,15 +247,19 @@ private fun Configurations(
 
         HorizontalDivider(Modifier.padding(vertical = 16.dp))
 
-        val opponentAvatar by vm.opponentAvatar.collectAsStateWithLifecycle(null)
-        val opponentIsReady by vm.opponentReady.collectAsStateWithLifecycle(false)
-        ActionArea(vm.roomId, vm.opponentName.collectAsStateWithLifecycle("").value, opponentAvatar, opponentIsReady)
+        val opponentUser by vm.opponentUser.collectAsStateWithLifecycle(null)
+        ActionArea(
+            roomId = vm.roomId,
+            opponentName = opponentUser?.nickname,
+            opponentAvatar = opponentUser?.avatarUrlOrDefault(),
+            opponentIsReady = vm.opponentReady.collectAsStateWithLifecycle(false).value
+        )
     }
 }
 
 @Composable
-private fun ActionArea(roomId: UInt, opponentName: String, opponentAvatar: String?, opponentIsReady: Boolean) {
-    if (opponentName == "") {
+private fun ActionArea(roomId: UInt, opponentName: String?, opponentAvatar: String?, opponentIsReady: Boolean) {
+    if (opponentName == null) {
         Row(
             Modifier
                 .padding(bottom = 16.dp)
@@ -269,32 +275,36 @@ private fun ActionArea(roomId: UInt, opponentName: String, opponentAvatar: Strin
                 .fillMaxWidth()
         )
     } else {
-        val readyMessage = if (opponentIsReady) " is ready!" else " is not ready yet."
+        val readyMessage = if (opponentIsReady) " is ready!" else " is not ready yet"
         Row(
             Modifier
                 .padding(bottom = 16.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
                 text = "Opponent:  ",
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .align(Alignment.CenterVertically)
+                modifier = Modifier.padding(start = 8.dp)
             )
             AvatarImage(
                 url = opponentAvatar,
-                modifier = Modifier
+                Modifier
+                    .clip(CircleShape)
                     .size(32.dp)
-                    .align(Alignment.CenterVertically)
             )
             Text(
-                text = "$opponentName$readyMessage",
+                text = "$opponentName",
                 style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
                     .padding(start = 8.dp)
-                    .align(Alignment.CenterVertically)
+            )
+            Text(
+                text = readyMessage,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier
             )
         }
 
@@ -339,6 +349,7 @@ private fun PreviewMultiplayerRoomPage() {
             onClickHome = { })
     }
 }
+
 @Preview
 @Preview(device = Devices.TABLET)
 @Preview(fontScale = 2f)
@@ -347,7 +358,7 @@ private fun PreviewOpponentSetting() {
     ProvideCompositionalLocalsForPreview {
         ActionArea(
             roomId = 123u,
-            opponentName = "Holger",
+            opponentName = "Test",
             opponentAvatar = "https://ui-avatars.com/api/?name=123",
             opponentIsReady = true
         )
