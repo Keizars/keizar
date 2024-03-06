@@ -4,7 +4,7 @@ import java.util.*
 
 /**
  * A manager for creating and validating authentication tokens.
- * Created by and accessed from the [ServerContext].
+ * Created in and accessible from the [ServerContext].
  */
 interface AuthTokenManager {
     /**

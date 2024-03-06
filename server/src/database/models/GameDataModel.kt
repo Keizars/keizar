@@ -13,7 +13,7 @@ data class GameDataModel(
     @BsonId
     val id: UUID, // Primary Key
     val userId: String? = null, // Foreign Key -> Users, Index
-    val opponentId: String? = null, // Foreign Key -> Users, Index
+    val opponentId: String? = null, // Foreign Key -> Users
     val round1Statistics: JsonElement,
     val round2Statistics: JsonElement,
     val timeStamp: String,

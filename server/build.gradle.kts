@@ -22,7 +22,6 @@ dependencies {
     implementation(libs.h2database)
     implementation(libs.ktor.server.call.logging)
     implementation(libs.mongodb.driver.kotlin.coroutine)
-    testImplementation("org.testng:testng:6.9.6")
     runtimeOnly(libs.slf4j.simple)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(project(":client"))

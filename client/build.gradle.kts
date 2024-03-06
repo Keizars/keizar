@@ -8,7 +8,7 @@ dependencies {
     implementation(project(":rule-engine"))
     implementation(projects.protocol)
     implementation(projects.utils.coroutines)
-    implementation(libs.retrofit)
+    api(libs.retrofit)
     implementation(libs.retrofit.kotlinx.serialization)
     api(libs.koin.core)
     implementation(libs.ktor.client.auth)
