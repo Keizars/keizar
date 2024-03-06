@@ -367,6 +367,7 @@ fun NicknameEditDialog(
     )
 }
 
+// AvatarImage can be retrieved from a file path or a url
 @Composable
 fun AvatarImage(url: String?, modifier: Modifier = Modifier, filePath: String? = null) {
     AsyncImage(
