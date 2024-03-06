@@ -25,38 +25,89 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 interface GameConfigurationViewModel : Disposable, HasBackgroundScope {
+    /**
+     * The current game configuration.
+     */
     val configuration: StateFlow<GameStartConfiguration>
+
+    /**
+     * The current game configuration board seed.
+     */
     val configurationSeed: Flow<String>
+
+    /**
+     * Update game configuration board seed with random seed.
+     */
     fun updateRandomSeed()
 
+    /**
+     * The board properties of the current seed.
+     */
     @Stable
     val boardProperties: SharedFlow<BoardProperties>
 
+    /**
+     * The rendered text of current game configuration board .
+     */
     @Stable
     val configurationSeedText: StateFlow<String>
+
+    /**
+     * Change the rendered text of current game configuration board and update current board seed.
+     */
     fun setConfigurationSeedText(value: String)
 
+    /**
+     * Whether the current game configuration board seed text has an error.
+     */
     @Stable
     val isConfigurationSeedTextError: Flow<Boolean>
 
+    /**
+     * The role of the current player.
+     * Role is either WHITE or BLACK.
+     */
     @Stable
     val playAs: Flow<Role>
 
+    /**
+     * injected seed bank service
+     */
     @Stable
     val seedBankService: SeedBankService
 
+    /**
+     * injected session manager service
+     */
     @Stable
     val sessionManagerService: SessionManager
 
+    /**
+     * Set the role of the current player.
+     */
     fun setPlayAs(role: Role)
 
+    /**
+     * The difficulty of the current game.
+     * Difficulty is either EASY, MEDIUM, or HARD.
+     */
     @Stable
     val difficulty: Flow<Difficulty>
+
+    /**
+     * Set the difficulty of the current game.
+     */
     fun setDifficulty(difficulty: Difficulty)
 
+    /**
+     * Whether the fresh button is enabled.
+     */
     @Stable
     val freshButtonEnable: Flow<Boolean>
 
+    /**
+     * Set the fresh button enable value.
+     */
     fun setFreshButtonEnable(value: Boolean)
 }
 
@@ -169,7 +220,7 @@ private class GameConfigurationViewModelImpl(
 
 private class SinglePlayerGameConfigurationViewModelImpl(
     initialConfiguration: GameStartConfiguration = GameStartConfiguration.random(),
-) :  GameConfigurationViewModel, AbstractViewModel(), KoinComponent{
+) : GameConfigurationViewModel, AbstractViewModel(), KoinComponent {
 
     override val configuration: MutableStateFlow<GameStartConfiguration> =
         MutableStateFlow(initialConfiguration)
@@ -226,6 +277,7 @@ private class SinglePlayerGameConfigurationViewModelImpl(
             GameStartConfiguration.random()
         }
     }
+
     override val isConfigurationSeedTextError: Flow<Boolean> = configurationSeedText.map {
         GameStartConfigurationEncoder.decode(it) == null
     }
