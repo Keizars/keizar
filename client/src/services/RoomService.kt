@@ -22,7 +22,7 @@ import kotlin.coroutines.CoroutineContext
  * See also [BaseRoomService] for available APIs.
  */
 @OptIn(InternalClientApi::class)
-interface RoomService : BaseRoomService {
+sealed interface RoomService : BaseRoomService {
     /**
      * Connect to server by websocket and create a game room session
      * @throws RoomFullException if the join room failed
