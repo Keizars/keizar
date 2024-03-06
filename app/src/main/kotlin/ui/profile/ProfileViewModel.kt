@@ -63,15 +63,32 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     suspend fun logout() {
         sessionManager.invalidateToken()
     }
-
+    
+    
+    /**
+     * Deletes a saved game from the server. If the request fails, the game is not removed from the local cache.
+     */
     suspend fun deleteGame(id: String) {
+        try {
+            gameDataService.deleteGame(id)
+        } catch (error: Throwable) {
+            return
+        }
         allGames.value = allGames.value.filter { it.dataId != id }
-        gameDataService.deleteGame(id)
+        
     }
 
+    /**
+     * Deletes a saved board from the server. If the request fails, the board is not removed from the local cache.
+     */
     suspend fun removeSeed(seed: String) {
+        try {
+            seedBankService.removeSeed(seed)
+        } catch (error: Throwable) {
+            return
+        }
         allSeeds.value = allSeeds.value.filter { it.configurationSeed != seed }
-        seedBankService.removeSeed(seed)
+        
     }
 
     suspend fun uploadAvatar(avatar: InputStream) {
@@ -90,11 +107,19 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
         }
     }
 
-    // Change time to refresh the seeds
+    /**
+     *  A dummy flow to trigger refreshes of saved seeds and games
+     */
     val time = MutableStateFlow(0)
 
+    /**
+     * a flag to indicate if the seeds are being loaded, used in the UI to show a loading spinner
+     */
     var isLoadingSeeds = mutableStateOf(true)
     
+    /**
+     * A flow of all the saved seeds of the user
+     */
     val allSeeds: MutableStateFlow<List<SavedSeed>> = time.map {
         seedBankService.getSeeds()
     }.onStart { isLoadingSeeds.value = true }.map { seeds ->
@@ -103,12 +128,24 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
         isLoadingSeeds.value = false
     }.localCachedStateFlow(emptyList())
 
+    /**
+     * The selected seed to be used to display the board layout when the user selects a saved board
+     */
     val selectedSeed: MutableStateFlow<SavedSeed?> = MutableStateFlow(null)
 
+    /**
+     * The selected game to be used to display the game details when the user selects a saved game
+     */
     val selectedGame: MutableStateFlow<GameDataGet?> = MutableStateFlow(null)
 
+    /**
+     * a flag to indicate if the games are being loaded, used in the UI to show a loading spinner
+     */
     var isLoadingGames = mutableStateOf(true)
     
+    /**
+     * A flow of all the saved games of the user
+     */
     val allGames: MutableStateFlow<List<GameDataGet>> = time.map {
         gameDataService.getGames()
     }.onStart { isLoadingGames.value = true }.onEach {
