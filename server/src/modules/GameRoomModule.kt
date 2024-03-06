@@ -66,7 +66,7 @@ class GameRoomsModuleImpl(
         val room = getRoom(roomNumber)
         if (!room.join(userInfo)) {
             logger.info("Failure: join room $roomNumber failed, possibly due to room full or game started")
-            throw NotFoundException("Join room failed")
+            throw BadRequestException("Join room failed")
         }
     }
 
