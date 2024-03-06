@@ -45,15 +45,30 @@ enum class ConnectRoomError {
  * View model for the [MultiplayerLobbyScene]
  */
 interface PrivateRoomViewModel : HasBackgroundScope {
+    /**
+     * The room id of the room.
+     */
     @Stable
     val roomId: UInt
 
+    /**
+     * The error that occurred when trying to connect to the room.
+     * If ROOM_FULL, it shows that the there are already 2 players in the room.
+     * If NETWORK_ERROR, the error that occurred is network error..
+     * If null, no error occurred.
+     */
     @Stable
     val connectRoomError: StateFlow<ConnectRoomError?>
 
+    /**
+     * Whether both players are ready to start the game.
+     */
     @Stable
     val playersReady: SharedFlow<Boolean>
 
+    /**
+     * The game configuration of the room.
+     */
     @Stable
     val configuration: GameConfigurationViewModel
 
@@ -68,18 +83,33 @@ interface PrivateRoomViewModel : HasBackgroundScope {
      */
     suspend fun ready()
 
+    /**
+     * Whether the self player is the host of the room.
+     */
     @Stable
     val selfIsHost: Flow<Boolean>
 
+    /**
+     * The name of the opponent player.
+     */
     @Stable
     val opponentName: Flow<String>
 
+    /**
+     * The avatar of the opponent player.
+     */
     @Stable
     val opponentAvatar: Flow<String>
 
+    /**
+     * Whether the opponent player is ready to start the game.
+     */
     @Stable
     val opponentReady: Flow<Boolean>
 
+    /**
+     * Disposes the view model.
+     */
     suspend fun getAvatar(username: String): String
 
 }
