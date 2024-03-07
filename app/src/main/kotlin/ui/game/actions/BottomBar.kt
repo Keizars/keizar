@@ -95,9 +95,9 @@ fun RoundOneBottomBar(
             },
             icon = { Icon(Icons.Default.Assessment, null) },
             text = { Text(text = "Results", fontSize = 10.sp) })
-
+        
         if (showDialog) {
-            WinningRoundDialog(winner = vm.winner.collectAsState().value, vm, showResults)
+            WinningRoundOneDialog(winner = vm.winner.collectAsState().value, vm, showResults)
         }
 
         val context = LocalContext.current

@@ -139,7 +139,10 @@ interface GameBoardViewModel : HasBackgroundScope {
     val round2Winner: StateFlow<Role?>
 
     @Stable
-    val endRoundAnnounced: MutableStateFlow<Boolean>
+    val endRoundOneAnnounced: MutableStateFlow<Boolean>
+    
+    @Stable
+    val endRoundTwoAnnounced: MutableStateFlow<Boolean>
 
     @Stable
     val gameOverReadyToBeAnnounced: MutableStateFlow<Boolean>
@@ -221,7 +224,7 @@ interface GameBoardViewModel : HasBackgroundScope {
 
     fun replayGame()
 
-    fun setEndRoundAnnouncement(flag: Boolean)
+    fun setEndRoundAnnouncement(flag: Boolean, setAll: Boolean=false)
 
     fun setGameOverReadyToBeAnnouncement(flag: Boolean)
 
@@ -495,10 +498,15 @@ abstract class BaseGameBoardViewModel(
     @Stable
     override val round2Winner: StateFlow<Role?> = game.rounds[1].winner
 
-    private val _endRoundAnnounced = MutableStateFlow(false)
+    private val _endRoundOneAnnounced = MutableStateFlow(false)
+    
+    private val _endRoundTwoAnnounced = MutableStateFlow(false)
 
     @Stable
-    override val endRoundAnnounced = _endRoundAnnounced
+    override val endRoundOneAnnounced = _endRoundOneAnnounced
+    
+    @Stable
+    override val endRoundTwoAnnounced = _endRoundTwoAnnounced
 
     private val _gameOverReadyToBeAnnounced = MutableStateFlow(false)
 
@@ -664,16 +672,26 @@ abstract class BaseGameBoardViewModel(
     }
 
     override fun replayGame() {
-        setEndRoundAnnouncement(false)
+        setEndRoundAnnouncement(false, setAll = true)
         launchInMain(start = CoroutineStart.UNDISPATCHED) {
             boardTransitionController.turnBoard()
         }
         game.replayGame()
     }
 
-    override fun setEndRoundAnnouncement(flag: Boolean) {
-        _endRoundAnnounced.value = flag
+    override fun setEndRoundAnnouncement(flag: Boolean, setAll: Boolean) {
+        if (setAll) {
+            _endRoundOneAnnounced.value = flag
+            _endRoundTwoAnnounced.value = flag
+        } else {
+            if (currentRoundCount.value == 0) {
+                _endRoundOneAnnounced.value = flag
+            } else {
+                _endRoundTwoAnnounced.value = flag
+            }
+        }
     }
+    
 
     override fun setGameOverReadyToBeAnnouncement(flag: Boolean) {
         _gameOverReadyToBeAnnounced.value = flag

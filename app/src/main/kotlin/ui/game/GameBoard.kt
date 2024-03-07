@@ -33,7 +33,8 @@ import org.keizar.android.ui.game.actions.GameOverDialog
 import org.keizar.android.ui.game.actions.LandscapeBottomBar
 import org.keizar.android.ui.game.actions.RoundOneBottomBar
 import org.keizar.android.ui.game.actions.RoundTwoBottomBar
-import org.keizar.android.ui.game.actions.WinningRoundDialog
+import org.keizar.android.ui.game.actions.WinningRoundOneDialog
+import org.keizar.android.ui.game.actions.WinningRoundTwoDialog
 import org.keizar.android.ui.game.transition.CapturedPiecesHost
 
 /**
@@ -139,16 +140,21 @@ fun DialogsAndBottomBar(
 ) {
     val winner by vm.winner.collectAsState()
     val finalWinner by vm.finalWinner.collectAsState()
+    val currentRoundCount by vm.currentRoundCount.collectAsState()
     val showRoundOneBottomBar =
-        (winner != null && vm.currentRoundCount.collectAsState().value == 0)
+        (winner != null && currentRoundCount == 0)
 
     val showRoundTwoBottomBar =
-        (winner != null && vm.currentRoundCount.collectAsState().value == 1)
+        (winner != null && currentRoundCount == 1)
 
     val playingTransition = vm.boardTransitionController.isPlayingTransition.collectAsState().value
 
     if (!playingTransition) {
-        WinningRoundDialog(winner, vm)
+        if (currentRoundCount == 0) {
+            WinningRoundOneDialog(winner, vm)
+        } else {
+            WinningRoundTwoDialog(winner, vm)
+        }
         GameOverDialog(vm, finalWinner, onClickHome)
 
         if (showRoundOneBottomBar) {
