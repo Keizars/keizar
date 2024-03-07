@@ -35,8 +35,7 @@ import org.keizar.server.plugins.ServerJson
  * 1. Create a new model in the `database.models` package representing the structure of the table entries
  * 2. Create a new repository interface in the `database` package, adding the necessary methods to manipulate the table
  * 3. Create and implement a new in-memory repository implementation in the `database.local` package
- * 4. Add a new collection to the MongoDB database through their web API
- * 5. Create and implement a new MongoDB repository implementation in the `database.mongodb` package connecting to the new collection
+ * 5. Create and implement a new MongoDB repository implementation in the `database.mongodb` package (The collection will be automatically created in the remote database)
  * 6. Register the new repository in the [DatabaseManager] interface, and register the implementations in the [InMemoryDatabaseManagerImpl] and [MongoDatabaseManagerImpl] classes
  * 7. Access the new repository through the [DatabaseManager] instance in the [ServerContext]
  */
