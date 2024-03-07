@@ -173,8 +173,8 @@ class GameRoomImpl(
 
     private fun startNotifyStateChange(player: PlayerSession) {
         myCoroutineScope.launch {
-            for (receiver in players.values) {
-                player.state.collect { newState ->
+            player.state.collect { newState ->
+                for (receiver in players.values) {
                     logger.info("Notify player $receiver of player $player state change: $newState")
                     receiver.session.value?.sendRespond(
                         PlayerStateChange(player.user.username, newState)
