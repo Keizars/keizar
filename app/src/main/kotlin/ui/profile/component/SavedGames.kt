@@ -42,7 +42,6 @@ import org.keizar.android.data.GameStartConfigurationEncoder
 import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.BoardTiles
-import org.keizar.android.ui.profile.AvatarImage
 import org.keizar.android.ui.profile.ProfileViewModel
 import org.keizar.game.BoardProperties
 import org.keizar.utils.communication.game.GameDataGet

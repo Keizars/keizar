@@ -58,7 +58,7 @@ import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.game.configuration.BoardLayoutPreview
 import org.keizar.android.ui.game.configuration.BoardSeedTextField
-import org.keizar.android.ui.profile.AvatarImage
+import org.keizar.android.ui.profile.component.AvatarImage
 import org.keizar.game.Role
 
 

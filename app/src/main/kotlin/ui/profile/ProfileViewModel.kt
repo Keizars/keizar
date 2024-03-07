@@ -6,11 +6,13 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.keizar.android.data.GameStartConfigurationEncoder
@@ -47,14 +49,23 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     private val gameDataService: GameDataService by inject()
 
     /**
+     *  A dummy flow to trigger refreshes of saved seeds and games
+     */
+    val time = MutableStateFlow(0L)
+
+    private fun refreshAll() {
+        time.value = System.currentTimeMillis()
+    }
+
+    /**
      * Current user's information.
      */
-    val self: SharedFlow<User> = sessionManager.token.mapLatest {
-        userService.self()
-    }.shareInBackground()
-
-    val nickname = self.mapLatest { it.nickname }
-        .localCachedStateFlow(null)
+    val self: StateFlow<User?> = time.transformLatest {
+        emit(null)
+        emitAll(sessionManager.token.mapLatest {
+            userService.self()
+        })
+    }.stateInBackground()
 
     suspend fun getAvatarUrl(opponentUserName: String): String {
         return userService.getUser(opponentUserName).avatarUrlOrDefault()
@@ -100,15 +111,11 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
                 }
             }
             streamingService.uploadSelfAvatar(temp)
+            refreshAll()
         } finally {
             temp.delete()
         }
     }
-
-    /**
-     *  A dummy flow to trigger refreshes of saved seeds and games
-     */
-    val time = MutableStateFlow(0)
 
     /**
      * a flag to indicate if the seeds are being loaded, used in the UI to show a loading spinner
@@ -157,7 +164,7 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     val editNickname: State<String> get() = _editNickname
 
     val nicknameError: MutableStateFlow<String?> = MutableStateFlow(null)
-    fun showDialog() {
+    fun showEditNicknameDialog() {
         showNicknameEditDialog.value = true
     }
 
@@ -178,7 +185,7 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
         val newNickname = editNickname.value
         return userService.editUser(EditUserRequest(nickname = newNickname)).success.also { success ->
             if (success) {
-                nickname.value = newNickname
+                refreshAll()
             }
         }
     }

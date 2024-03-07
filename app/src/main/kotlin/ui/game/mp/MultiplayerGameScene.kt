@@ -29,7 +29,7 @@ import org.keizar.android.ui.game.GameBoard
 import org.keizar.android.ui.game.MultiplayerGameBoardViewModel
 import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
 import org.keizar.android.ui.game.transition.CapturedPiecesHost
-import org.keizar.android.ui.profile.AvatarImage
+import org.keizar.android.ui.profile.component.AvatarImage
 import org.keizar.client.ClientPlayer
 import org.keizar.game.snapshot.buildGameSession
 import org.keizar.utils.communication.game.Player

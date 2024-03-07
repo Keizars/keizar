@@ -1,19 +1,11 @@
 package org.keizar.android.ui.profile
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -21,17 +13,14 @@ import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
@@ -47,10 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
@@ -58,32 +44,30 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.keizar.android.data.GameStartConfigurationEncoder
-import org.keizar.android.ui.external.placeholder.placeholder
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.defaultFocus
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.foundation.onKey
 import org.keizar.android.ui.foundation.pagerTabIndicatorOffset
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
+import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
 import org.keizar.android.ui.profile.component.GameDetailColumn
 import org.keizar.android.ui.profile.component.GameDetailsDialog
 import org.keizar.android.ui.profile.component.SavedBoardCard
 import org.keizar.android.ui.profile.component.SavedBoards
 import org.keizar.android.ui.profile.component.SavedGameCard
 import org.keizar.android.ui.profile.component.SavedGames
-import org.keizar.android.ui.profile.component.rememberImagePicker
+import org.keizar.android.ui.profile.component.UserInfoRow
 import org.keizar.game.Difficulty
 import org.keizar.game.Role
 import org.keizar.utils.communication.game.GameDataGet
 import org.keizar.utils.communication.game.NeutralStats
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.game.RoundStats
-import java.io.File
 
 @Composable
 fun ProfileScene(
@@ -180,76 +164,35 @@ fun ProfilePage(
     Column(
         modifier = modifier
     ) {
-        Row(
-            Modifier
-                .background(MaterialTheme.colorScheme.surface)
-                .align(Alignment.CenterHorizontally)
-                .padding(16.dp)
-                .fillMaxWidth()
-                .height(64.dp),
-        ) {
-            val context = LocalContext.current
-            val imagePicker = rememberImagePicker(onImageSelected = { files ->
-                vm.launchInBackground {
-                    context.contentResolver.openInputStream(files.first())?.use {
-                        vm.uploadAvatar(it)
-                    } ?: throw IllegalArgumentException("Failed to open input stream for $files")
-                }
-            })
+        val context = LocalContext.current
 
-            Box(
-                Modifier
-                    .clip(CircleShape)
-                    .clickable {
-                        imagePicker.launchPhotoPicker()
-                    }
-            ) {
-                AvatarImage(
-                    url = self?.avatarUrlOrDefault(),
-                    Modifier
-                        .placeholder(self == null)
-                        .size(64.dp),
-                )
-            }
-
-            Column(
-                Modifier
-                    .padding(start = 16.dp)
-                    .fillMaxHeight()
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    val nickname by vm.nickname.collectAsStateWithLifecycle()
-                    Text(
-                        text = nickname ?: "Loading...",
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier.placeholder(nickname == null),
-                    )
-
-                    Box(
-                        modifier = Modifier
-                            .padding(start = 12.dp)
-                            .size(20.dp)
-                            .clickable(onClick = { vm.showDialog() })
-                    ) {
-                        Icon(
-                            Icons.Default.Edit,
-                            contentDescription = "Edit",
-                            tint = MaterialTheme.colorScheme.primary,
-                        )
-                    }
-                }
-
-//                Spacer(modifier = Modifier.weight(1f))
-
-                Text(
-                    text = self?.username ?: "Loading...",
-                    Modifier
-                        .placeholder(self?.username == null)
-                        .padding(top = 4.dp),
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
+        var showUploading by remember { mutableStateOf(false) }
+        if (showUploading) {
+            ConnectingRoomDialog(
+                text = { Text(text = "Updating...") }
+            )
         }
+
+        UserInfoRow(
+            self,
+            onPickAvatar = { file ->
+                if (showUploading) return@UserInfoRow
+                vm.launchInBackground {
+                    showUploading = true
+                    try {
+                        context.contentResolver.openInputStream(file)?.use {
+                            vm.uploadAvatar(it)
+                        } ?: throw IllegalArgumentException("Failed to open input stream for $file")
+                    } finally {
+                        showUploading = false
+                    }
+                }
+            },
+            onClickEditNickname = { vm.showEditNicknameDialog() },
+            Modifier
+                .align(Alignment.CenterHorizontally)
+                .fillMaxWidth(),
+        )
 
 //        HorizontalDivider(Modifier.padding(vertical = 16.dp))
 
@@ -305,6 +248,7 @@ fun ProfilePage(
         }
     }
 }
+
 
 @Composable
 fun NicknameEditDialog(
@@ -371,20 +315,6 @@ fun NicknameEditDialog(
         modifier = modifier
     )
 }
-
-// AvatarImage can be retrieved from a file path or a url
-@Composable
-fun AvatarImage(url: String?, modifier: Modifier = Modifier, filePath: String? = null) {
-    AsyncImage(
-        model = if (filePath != null) File(filePath) else url,
-        contentDescription = "Avatar",
-        modifier,
-        placeholder = rememberVectorPainter(Icons.Default.Person),
-        error = rememberVectorPainter(Icons.Default.Person),
-        contentScale = ContentScale.Crop,
-    )
-}
-
 
 @Preview(showBackground = true)
 @Preview(showBackground = true, fontScale = 2f)
