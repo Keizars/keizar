@@ -317,7 +317,6 @@ fun Detail(
                 Column(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
-                        .background(MaterialTheme.colorScheme.secondaryContainer)
                         .padding(8.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
