@@ -75,7 +75,7 @@ fun Application.gameRoomRouting(context: ServerContext) {
 
             val info = RoomInfo(
                 roomNumber = room.roomNumber,
-                properties = room.properties,
+                properties = room.properties.value,
                 playerInfo = room.listPlayers(),
             )
             call.respond(info)

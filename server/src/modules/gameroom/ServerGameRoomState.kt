@@ -1,5 +1,6 @@
 package org.keizar.server.modules.gameroom
 
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.keizar.game.BoardProperties
@@ -14,11 +15,11 @@ sealed interface ServerGameRoomState {
     val players: Map<UserInfo, PlayerSession>
 
     sealed interface StateWithModifiableBoardPropertiesServer: ServerGameRoomState {
-        var boardProperties: BoardProperties
+        val boardProperties: MutableStateFlow<BoardProperties>
     }
 
     data class Started(
-        override var boardProperties: BoardProperties,
+        override val boardProperties: MutableStateFlow<BoardProperties>,
     ) : ServerGameRoomState, StateWithModifiableBoardPropertiesServer {
         private val _players = mutableMapOf<UserInfo, PlayerSession>()
         private val _playersMutex = Mutex()
@@ -53,10 +54,10 @@ sealed interface ServerGameRoomState {
 
     data class AllConnected(
         override val players: Map<UserInfo, PlayerSession>,
-        override var boardProperties: BoardProperties,
+        override var boardProperties: MutableStateFlow<BoardProperties>,
     ) : ServerGameRoomState, StateWithModifiableBoardPropertiesServer {
         fun toPlaying(): Playing {
-            return Playing(players, boardProperties)
+            return Playing(players, boardProperties.value)
         }
     }
 

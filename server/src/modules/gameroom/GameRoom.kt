@@ -12,6 +12,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -29,7 +30,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import org.keizar.game.GameSession
 import org.keizar.game.PlayerInfo
-import org.keizar.game.snapshot.GameSnapshot
 import org.keizar.utils.communication.message.ChangeBoard
 import org.keizar.utils.communication.message.ConfirmNextRound
 import org.keizar.utils.communication.message.Move
@@ -80,8 +80,17 @@ interface GameRoom : AutoCloseable {
      */
     fun getIfPlayersReady(): Map<UserInfo, Boolean>
 
+    /**
+     * The room number of the game room.
+     */
     val roomNumber: UInt
-    val properties: BoardProperties
+
+    /**
+     * The current properties of the board.
+     * New value of board properties will be emitted in this flow if the host changes the board properties.
+     * New value will only be emitted when the room state is in [ServerGameRoomState.Started] or [ServerGameRoomState.AllConnected].
+     */
+    val properties: StateFlow<BoardProperties>
 
     /**
      * Indicate the state of the room.
@@ -103,7 +112,7 @@ interface GameRoom : AutoCloseable {
 
 class GameRoomImpl(
     override val roomNumber: UInt,
-    override val properties: BoardProperties,
+    initialProperties: BoardProperties,
     parentCoroutineContext: CoroutineContext,
     private val logger: Logger,
     private val heartbeatInterval: Long = 5.seconds.inWholeMilliseconds,
@@ -118,6 +127,8 @@ class GameRoomImpl(
                 SupervisorJob(parent = parentCoroutineContext[Job]) +
                 exceptionHandler
     )
+
+    override val properties: MutableStateFlow<BoardProperties> = MutableStateFlow(initialProperties)
 
     override val state: MutableStateFlow<ServerGameRoomState> =
         MutableStateFlow(ServerGameRoomState.Started(properties))
@@ -220,7 +231,7 @@ class GameRoomImpl(
     private suspend fun changeBoard(newProperties: BoardProperties): Boolean {
         val curState = state.value as? ServerGameRoomState.StateWithModifiableBoardPropertiesServer
             ?: return false
-        curState.boardProperties = newProperties
+        curState.boardProperties.value = newProperties
         when (curState) {
             is ServerGameRoomState.Started -> {
                 curState.players {
@@ -295,7 +306,7 @@ class GameRoomImpl(
         val allocation = player.playerAllocation
         val gameSnapshot = when (val curState = state.value) {
             is ServerGameRoomState.StateWithModifiableBoardPropertiesServer ->
-                GameSession.create(curState.boardProperties).getSnapshot()
+                GameSession.create(curState.boardProperties.value).getSnapshot()
 
             is ServerGameRoomState.Playing -> curState.serverGame.getSnapshot()
             is ServerGameRoomState.Finished -> return
