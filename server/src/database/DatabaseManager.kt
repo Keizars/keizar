@@ -5,6 +5,10 @@ import com.mongodb.MongoClientSettings
 import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.Indexes
 import com.mongodb.kotlin.client.coroutine.MongoClient
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.flatMapLatest
 import org.bson.UuidRepresentation
 import org.bson.codecs.configuration.CodecRegistries
 import org.keizar.server.database.local.InMemoryGameDataRepository
@@ -84,14 +88,20 @@ class MongoDatabaseManagerImpl(
     private val seedBankTable = db.getCollection<SeedBankModel>("seeds")
     private val gameDataTable = db.getCollection<GameDataModel>("collections")
 
-    override suspend fun initialize() {
-        seedBankTable.createIndex(
-            keys = Indexes.compoundIndex(Indexes.text("userId"), Indexes.text("gameSeed")),
-            options = IndexOptions().unique(true)
-        )
-    }
+    override suspend fun initialize() {}
 
     override val user: UserRepository = MongoUserRepository(userTable)
     override val seedBank: SeedBankRepository = MongoSeedBankRepository(seedBankTable)
     override val gameData: GameDataRepository = MongoGameDataRepository(gameDataTable)
+
+    suspend fun buildIndex() {
+        seedBankTable.createIndex(
+            keys = Indexes.compoundIndex(Indexes.text("userId"), Indexes.text("gameSeed")),
+            options = IndexOptions().unique(true)
+        )
+        gameDataTable.createIndex(
+            keys = Indexes.text("userId"),
+            options = IndexOptions().unique(false)
+        )
+    }
 }

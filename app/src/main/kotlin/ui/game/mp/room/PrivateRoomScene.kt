@@ -101,7 +101,8 @@ private fun AcceptArea(
         horizontalArrangement = Arrangement.End,
     ) {
         val accept by vm.selfReady.collectAsStateWithLifecycle(false)
-        if (!accept) {
+        val opponentPlayer by vm.opponentPlayer.collectAsStateWithLifecycle(null)
+        if (!accept && opponentPlayer != null) {
             Button(
                 modifier = if (!isSystemInLandscape()) Modifier.padding(end = 12.dp) else Modifier,
                 onClick = { vm.backgroundScope.launch { vm.ready() } }
@@ -109,7 +110,6 @@ private fun AcceptArea(
                 Text(text = "Ready!")
             }
         }
-
     }
 }
 

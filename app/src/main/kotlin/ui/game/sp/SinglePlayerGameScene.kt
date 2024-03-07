@@ -86,4 +86,7 @@ private fun TestEndGameWhenNoPiecesCanMove() {
         onClickHome = { },
         onClickGameConfig = { }
     )
+
 }
+
+
