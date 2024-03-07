@@ -43,7 +43,7 @@ dependencies {
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.logging)
     implementation(libs.ktor.client.auth)
-    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.okhttp)
     implementation(libs.koin.android)
     implementation(libs.retrofit)
     implementation(libs.retrofit.kotlinx.serialization)
