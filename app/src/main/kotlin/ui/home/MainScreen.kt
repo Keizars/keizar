@@ -236,6 +236,7 @@ fun MainScreen() {
                     if (navController.currentBackStackEntry?.destination?.route == "game/room") {
                         navController.popBackStack("home", false)
                     }
+                    lobbyViewModel.removeSelfRoom()
                 },
                 onPlayersReady = {
                     navController.navigate(
