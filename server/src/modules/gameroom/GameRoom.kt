@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.keizar.game.BoardProperties
@@ -36,6 +37,7 @@ import org.keizar.utils.communication.message.Move
 import org.keizar.utils.communication.message.RoomStateChange
 import org.keizar.utils.communication.message.SetReady
 import org.keizar.utils.communication.message.UserInfo
+import kotlin.math.log
 import kotlin.time.Duration.Companion.seconds
 
 interface GameRoom : AutoCloseable {
@@ -178,7 +180,7 @@ class GameRoomImpl(
         myCoroutineScope.launch {
             player.state.collect { newState ->
                 for (receiver in players.values) {
-                    logger.info("Notify player $receiver of player $player state change: $newState")
+                    logger.info("Notify player ${receiver.username} of player ${player.username} state change: $newState")
                     receiver.session.value?.sendRespond(
                         PlayerStateChange(player.user.username, newState)
                     )
@@ -187,19 +189,20 @@ class GameRoomImpl(
         }
         myCoroutineScope.launch {
             this@GameRoomImpl.state.collect { newState ->
-                logger.info("Notify player $player of room state change: $newState")
+                logger.info("Notify player ${player.username} of room state change: $newState")
                 player.session.value?.sendRespond(RoomStateChange(newState.toGameRoomState()))
             }
         }
     }
 
     private fun startReceivingPreGameRequests(player: PlayerSession) {
+        if (state.value is ServerGameRoomState.Playing || state.value is ServerGameRoomState.Finished) return
         val job = myCoroutineScope.launch {
             player.session.collectLatest {
                 while (true) {
                     try {
                         val message = it?.receiveDeserialized<Request>() ?: return@collectLatest
-                        logger.info("Received request $message from $player")
+                        logger.info("Received request $message from ${player.username}")
                         when (message) {
                             is ChangeBoard -> {
                                 if (player.isHost) {
@@ -299,7 +302,7 @@ class GameRoomImpl(
                 session.sendRespond(PlayerStateChange(player.user.username, player.state.value))
             }
         }
-        logger.info("Session of user $user changed to $session")
+        logger.info("Session of user ${user.username} changed to $session")
         return playerSession
     }
 
@@ -314,7 +317,7 @@ class GameRoomImpl(
             is ServerGameRoomState.Playing -> curState.serverGame.getSnapshot()
             is ServerGameRoomState.Finished -> return
         }
-        logger.info("Notify user $player of allocation $allocation and gameSnapshot")
+        logger.info("Notify user ${player.username} of allocation $allocation and gameSnapshot")
         player.session.value?.sendRespond(
             RemoteSessionSetup(
                 allocation,
@@ -403,15 +406,11 @@ class GameRoomImpl(
         val (player1, player2) = players.values.toList()
 
         myCoroutineScope.launch {
-            player2.session.collectLatest {
-                forwardMessages(player2, player1)
-            }
+            forwardMessages(player2, player1)
         }
 
         myCoroutineScope.launch {
-            player1.session.collectLatest {
-                forwardMessages(player1, player2)
-            }
+            forwardMessages(player1, player2)
         }
     }
 
@@ -421,40 +420,59 @@ class GameRoomImpl(
     ) {
         val player = from.playerAllocation
         val curState = state.value as ServerGameRoomState.Playing
-        while (true) {
-            try {
-                val message = from.session.value?.receiveDeserialized<Request>() ?: return
-                logger.info("Received request $message from $from")
-                myCoroutineScope.launch {
-                    when (message) {
-                        ConfirmNextRound -> {
-                            if (!curState.serverGame.confirmNextRound(player)) {
-                                logger.info("Player $from sends invalid confirmNextRound")
-                            }
-                            to.session.value?.sendRequest(message)
-                        }
-
-                        Exit -> {
-                            from.setState(PlayerSessionState.TERMINATING)
-                            logger.info("$from exiting")
-                        }
-
-                        is Move -> {
-                            if (!curState.serverGame.currentRound.first()
-                                    .move(message.from, message.to)
-                            ) {
-                                logger.info("Player $from sends invalid move $message")
-                            }
-                            to.session.value?.sendRequest(message)
-                        }
-
-                        else -> {
-                            // ignore
-                        }
-                    }
+        from.session.filterNotNull().collectLatest { session ->
+            logger.info("Start collecting ${from.username}'s request from session $session")
+            while (true) {
+                try {
+                    val message = session.receiveDeserialized<Request>()
+                    logger.info("Received request $message from ${from.session.value}")
+                    processRequest(message, curState, player, from, to)
+                } catch (e: WebsocketDeserializeException) {
+                    // ignore
+                } catch (e: Exception) {
+                    logger.error(e.message)
+                    return@collectLatest
                 }
-                logger.info("Forwarded request $message to $to")
-            } catch (e: WebsocketDeserializeException) {
+            }
+        }
+    }
+
+    private suspend fun processRequest(
+        message: Request,
+        curState: ServerGameRoomState.Playing,
+        player: Player,
+        from: PlayerSession,
+        to: PlayerSession
+    ) {
+        when (message) {
+            ConfirmNextRound -> {
+                if (!curState.serverGame.confirmNextRound(player)) {
+                    logger.info("Player ${from.username} sends invalid confirmNextRound")
+                }
+                to.session.value?.apply {
+                    logger.info("Forwarded request $message to ${to.session.value}")
+                    sendRequest(message)
+                }
+            }
+
+            Exit -> {
+                from.setState(PlayerSessionState.TERMINATING)
+                logger.info("${from.username} exiting")
+            }
+
+            is Move -> {
+                if (!curState.serverGame.currentRound.first()
+                        .move(message.from, message.to)
+                ) {
+                    logger.info("Player ${from.username} sends invalid move $message")
+                }
+                to.session.value?.apply {
+                    logger.info("Forwarded request $message to ${to.session.value}")
+                    sendRequest(message)
+                }
+            }
+
+            else -> {
                 // ignore
             }
         }

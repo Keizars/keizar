@@ -14,6 +14,7 @@ interface PlayerSession {
     val session: StateFlow<DefaultWebSocketServerSession?>
     val state: StateFlow<PlayerSessionState>
     val user: UserInfo
+    val username: String
     val isHost: Boolean
     val playerAllocation: Player
     fun setState(newState: PlayerSessionState)
@@ -36,6 +37,8 @@ class PlayerSessionImpl(
     override var session: MutableStateFlow<DefaultWebSocketServerSession?> = MutableStateFlow(null)
     private val _state = MutableStateFlow(PlayerSessionState.STARTED)
     override val state: StateFlow<PlayerSessionState> = _state.asStateFlow()
+
+    override val username: String get() = user.username
 
     override fun setState(newState: PlayerSessionState) {
         _state.value = newState

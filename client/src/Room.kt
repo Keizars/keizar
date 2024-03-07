@@ -197,6 +197,7 @@ private class RoomImpl(
             cancelWebsocketOnExit = false
         ) {
             override suspend fun processResponse(respond: Respond) {
+                println("Pregame websocket handler processing: $respond")
                 when (respond) {
                     is PlayerStateChange -> {
                         val player = players.firstOrNull { it.username == respond.username }
@@ -242,10 +243,12 @@ private class RoomImpl(
      */
     private suspend fun start() {
         websocketSessionHandler.start()
+        println("Pregame websocket handler started")
     }
 
     override fun close() {
         websocketSessionHandler.close()
+        println("Pregame websocket handler closed")
         myCoroutineScope.cancel()
     }
 
@@ -286,6 +289,7 @@ private class RoomImpl(
                 val selfPlayer = playerAllocation.first()
                 val gameSnapshot = gameSnapshot.first()
                 websocketSessionHandler.close()
+                println("Pregame websocket handler closed")
 
                 val wsHandler = GameSessionWsHandlerImpl(
                     parentCoroutineContext = myCoroutineScope.coroutineContext,

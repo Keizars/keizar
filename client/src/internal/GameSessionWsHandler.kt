@@ -62,6 +62,7 @@ internal class GameSessionWsHandlerImpl(
             cancelWebsocketOnExit = true
         ) {
             override suspend fun processResponse(respond: Respond) {
+                println("Game websocket handler processing: $respond")
                 when (respond) {
                     ConfirmNextRound -> {
                         gameSession.confirmNextRound(selfPlayer.opponent())
@@ -83,10 +84,12 @@ internal class GameSessionWsHandlerImpl(
 
     override suspend fun start() {
         websocketSessionHandler.start()
+        println("Game websocket handler started")
     }
 
     override fun close() {
         websocketSessionHandler.close()
+        println("Game websocket handler closed")
         myCoroutineScope.cancel()
     }
 
