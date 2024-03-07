@@ -42,7 +42,7 @@ import org.keizar.android.ui.foundation.moveFocusOnEnter
 import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
 
 @Composable
-fun AuthEditScene(
+fun EditPasswordScene(
     onClickBack: () -> Unit,
     onSuccessPasswordEdit: () -> Unit,
     modifier: Modifier = Modifier,
@@ -53,7 +53,7 @@ fun AuthEditScene(
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = "Edit Account")
+                    Text(text = "Edit Password")
                 },
                 navigationIcon = {
                     IconButton(onClick = onClickBack) {
@@ -70,7 +70,7 @@ fun AuthEditScene(
                 .padding(contentPadding)
                 .padding(16.dp)
         ) {
-            AuthEditPage(
+            ProfileEditPage(
                 viewModel = vm,
                 onSuccessPasswordEdit = onSuccessPasswordEdit,
                 Modifier.fillMaxSize()
@@ -81,7 +81,7 @@ fun AuthEditScene(
 
 
 @Composable
-fun AuthEditPage(
+fun ProfileEditPage(
     viewModel: UserEditViewModel,
     onSuccessPasswordEdit: () -> Unit,
     modifier: Modifier = Modifier
@@ -186,7 +186,7 @@ fun AuthEditPage(
             enabled = !viewModel.isProcessing.collectAsStateWithLifecycle().value,
             modifier = Modifier.padding(8.dp),
         ) {
-            Text("Update Account")
+            Text("Update Password")
         }
     }
 }
@@ -194,9 +194,9 @@ fun AuthEditPage(
 @Preview
 @Preview(device = Devices.TABLET)
 @Composable
-private fun PreviewNickname() {
+private fun PreviewEdit() {
     ProvideCompositionalLocalsForPreview {
-        AuthEditScene(
+        EditPasswordScene(
             onClickBack = {},
             onSuccessPasswordEdit = {},
             Modifier

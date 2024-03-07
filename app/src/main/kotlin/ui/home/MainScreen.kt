@@ -65,8 +65,8 @@ import org.keizar.android.ui.game.mp.MultiplayerGameScene
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
 import org.keizar.android.ui.game.mp.room.PrivateRoomScene
 import org.keizar.android.ui.game.sp.SinglePlayerGameScene
-import org.keizar.android.ui.profile.AuthEditScene
 import org.keizar.android.ui.profile.AuthScene
+import org.keizar.android.ui.profile.EditPasswordScene
 import org.keizar.android.ui.profile.ProfileScene
 import org.keizar.android.ui.profile.ProfileViewModel
 import org.keizar.android.ui.rules.RuleBookPage
@@ -371,10 +371,10 @@ fun MainScreen() {
         composable(
             "profile/edit",
         ) { entry ->
-            AuthEditScene(
+            EditPasswordScene(
                 onClickBack = {
                     if (navController.currentBackStackEntry != entry) {
-                        return@AuthEditScene
+                        return@EditPasswordScene
                     } else if (navController.previousBackStackEntry?.destination?.route == "profile") {
                         navController.popBackStack("profile", false)
                     } else {
