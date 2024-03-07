@@ -1,7 +1,15 @@
 package org.keizar.android
 
 import android.app.Application
+import coil.ImageLoader
+import coil.ImageLoaderFactory
+import coil.decode.SvgDecoder
 import kotlinx.coroutines.flow.firstOrNull
+import me.him188.ani.utils.logging.info
+import me.him188.ani.utils.logging.logger
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
+import okhttp3.Response
 import org.keizar.android.data.SavedStateRepository
 import org.keizar.android.data.SessionManager
 import org.keizar.android.persistent.RepositoryModules
@@ -19,7 +27,7 @@ import org.koin.dsl.module
  *
  * Mainly used to start dependency injection modules with Koin.
  */
-class KeizarApplication : Application() {
+class KeizarApplication : Application(), ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
         instance = this
@@ -73,6 +81,28 @@ class KeizarApplication : Application() {
             )
             return createKoinModule(client)
         }
+    }
+
+    private val logger = logger("Coil-OkHttp")
+    private val loggingInterceptor: (Interceptor.Chain) -> Response = { chain ->
+        val request = chain.request()
+        chain.proceed(request).also { response ->
+            logger.info { "${request.method} ${request.url}: ${response.code} ${response.message}" }
+        }
+    }
+
+    override fun newImageLoader(): ImageLoader {
+        return ImageLoader.Builder(this).apply {
+            crossfade(true)
+            okHttpClient {
+                OkHttpClient.Builder().apply {
+                    addInterceptor(loggingInterceptor)
+                }.build()
+            }
+            components {
+                add(SvgDecoder.Factory())
+            }
+        }.build()
     }
 }
 

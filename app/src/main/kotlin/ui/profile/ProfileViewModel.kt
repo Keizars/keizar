@@ -54,7 +54,7 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     }.shareInBackground()
 
     val nickname = self.mapLatest { it.nickname }
-        .localCachedStateFlow("Loading...")
+        .localCachedStateFlow(null)
 
     suspend fun getAvatarUrl(opponentUserName: String): String {
         return userService.getUser(opponentUserName).avatarUrlOrDefault()

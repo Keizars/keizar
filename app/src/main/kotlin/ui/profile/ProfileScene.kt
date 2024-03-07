@@ -58,13 +58,12 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImage
-import coil3.request.ImageRequest
-import coil3.request.crossfade
+import coil.compose.AsyncImage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.keizar.android.data.GameStartConfigurationEncoder
+import org.keizar.android.ui.external.placeholder.placeholder
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.defaultFocus
 import org.keizar.android.ui.foundation.launchInBackground
@@ -207,7 +206,9 @@ fun ProfilePage(
             ) {
                 AvatarImage(
                     url = self?.avatarUrlOrDefault(),
-                    Modifier.size(64.dp),
+                    Modifier
+                        .placeholder(self == null)
+                        .size(64.dp),
                 )
             }
 
@@ -217,9 +218,11 @@ fun ProfilePage(
                     .fillMaxHeight()
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    val nickname by vm.nickname.collectAsStateWithLifecycle()
                     Text(
-                        text = vm.nickname.collectAsStateWithLifecycle().value,
-                        style = MaterialTheme.typography.titleMedium
+                        text = nickname ?: "Loading...",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.placeholder(nickname == null),
                     )
 
                     Box(
@@ -240,7 +243,9 @@ fun ProfilePage(
 
                 Text(
                     text = self?.username ?: "Loading...",
-                    Modifier.padding(top = 4.dp),
+                    Modifier
+                        .placeholder(self?.username == null)
+                        .padding(top = 4.dp),
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -371,10 +376,7 @@ fun NicknameEditDialog(
 @Composable
 fun AvatarImage(url: String?, modifier: Modifier = Modifier, filePath: String? = null) {
     AsyncImage(
-        model = if (filePath != null) ImageRequest.Builder(LocalContext.current)
-            .data(File(filePath))
-            .crossfade(true)
-            .build() else url,
+        model = if (filePath != null) File(filePath) else url,
         contentDescription = "Avatar",
         modifier,
         placeholder = rememberVectorPainter(Icons.Default.Person),
