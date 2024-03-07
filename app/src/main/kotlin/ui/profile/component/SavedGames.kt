@@ -122,7 +122,12 @@ fun SavedGameCard(
     var showDetails by remember { mutableStateOf(false) }
     val round1stats = gameData.round1Stats
     val round2stats = gameData.round2Stats
-
+    val savedGameCardViewModel = remember(gameData) {
+        SavedGameViewModel(
+            gameData = gameData,
+            vm = vm
+        )
+    }
     val opponentName = gameData.opponentUsername
     Card(
         modifier = modifier,
@@ -131,15 +136,8 @@ fun SavedGameCard(
             onclick()
         }
     ) {
-        var avatarUrl = ""
-        var filePath: String? = null
-        if (opponentName == "Computer") {
-            filePath = "app/src/main/res/drawable/robot_icon.png"
-        } else {
-            vm.launchInBackground {
-                avatarUrl = vm.getAvatarUrl(opponentName)
-            }
-        }
+        val avatarUrl by savedGameCardViewModel.avatarUrl.collectAsStateWithLifecycle()
+        val filePath by savedGameCardViewModel.filePath.collectAsStateWithLifecycle()
 
         Row(
             modifier = modifier
