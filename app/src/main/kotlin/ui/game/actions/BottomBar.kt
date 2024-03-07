@@ -109,7 +109,6 @@ fun RoundOneBottomBar(
         ActionButton(
             onClick = {
                 vm.startNextRound(vm.selfPlayer)
-                vm.setEndRoundAnnouncement(false)
             },
             icon = { Icon(Icons.Default.SkipNext, null) },
             text = { Text("Next Round", fontSize = 10.sp, softWrap = false) },
