@@ -2,6 +2,7 @@ package org.keizar.client.services
 
 import org.keizar.utils.communication.game.GameDataGet
 import org.keizar.utils.communication.game.GameDataId
+import org.keizar.utils.communication.game.GameDataResponse
 import org.keizar.utils.communication.game.GameDataStore
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -20,7 +21,7 @@ interface GameDataService : ClientService {
     suspend fun autoSaveData(@Body gameData: GameDataStore): GameDataId
 
     @POST("games/save/{dataId}")
-    suspend fun userSaveData(@Path("dataId") dataId: String): String
+    suspend fun userSaveData(@Path("dataId") dataId: String): GameDataResponse
 
     /**
      * Retrieves all the games of the user currently logged in.
@@ -33,5 +34,5 @@ interface GameDataService : ClientService {
      */
     @DELETE("games/{id}")
     // id is GameData id
-    suspend fun deleteGame(@Path("id") id: String)
+    suspend fun deleteGame(@Path("id") id: String): GameDataResponse
 }

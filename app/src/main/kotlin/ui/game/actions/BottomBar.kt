@@ -168,9 +168,15 @@ fun RoundTwoBottomBar(
                         val isLoggedIn = vm.sessionManager.isLoggedIn.first()
                         if (isLoggedIn) {
                             if (vm is PlayableGameBoardViewModel) {
-                                vm.userSave()
-                                withContext(Dispatchers.Main) {
-                                    Toast.makeText(context, "Game saved", Toast.LENGTH_SHORT).show()
+                                val success = vm.userSave()
+                                if (success) {
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(context, "Game saved", Toast.LENGTH_SHORT).show()
+                                    }
+                                } else {
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(context, "Game save failed", Toast.LENGTH_SHORT).show()
+                                    }
                                 }
                             }
                         } else {

@@ -33,7 +33,7 @@ fun Application.gameDataRouting(context: ServerContext) {
                 call.respond(gameDataTable.getGameDataByUsedID(userId))
             }
 
-            postAuthenticated ( "/save" ) {
+            postAuthenticated ( "/save/" ) {
                 call.respond(GameDataResponse(false))
             }
 

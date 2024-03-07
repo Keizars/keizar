@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -257,11 +258,12 @@ sealed class PlayableGameBoardViewModel(
 
     override var currentGameDataId: String = ""
 
-    suspend fun userSave() {
+    suspend fun userSave(): Boolean {
         val gameDataService: GameDataService by inject()
-        this.launchInBackground {
-            gameDataService.userSaveData(currentGameDataId)
+        val result = viewModelScope.async(Dispatchers.IO) {
+            gameDataService.userSaveData(currentGameDataId).success
         }
+        return result.await()
     }
 
     suspend fun autoSave() {
