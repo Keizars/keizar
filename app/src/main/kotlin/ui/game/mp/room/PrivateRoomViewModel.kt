@@ -1,6 +1,7 @@
 package org.keizar.android.ui.game.mp.room
 
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -23,12 +24,15 @@ import kotlinx.coroutines.launch
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.game.configuration.GameConfigurationViewModel
+import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
 import org.keizar.client.ClientPlayer
 import org.keizar.client.Room
 import org.keizar.client.exception.RoomFullException
 import org.keizar.client.services.RoomService
 import org.keizar.client.services.UserService
+import org.keizar.game.Difficulty
+import org.keizar.game.Role
 import org.keizar.utils.communication.GameRoomState
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.account.User
@@ -107,6 +111,11 @@ interface PrivateRoomViewModel : HasBackgroundScope {
     @Stable
     val opponentPlayer: Flow<ClientPlayer?>
 
+    /**
+     * The board change from other client.
+     */
+    suspend fun boardChangeFromOtherClientUpdate()
+
 }
 
 class PrivateRoomViewModelImpl(
@@ -118,7 +127,10 @@ class PrivateRoomViewModelImpl(
     private val client: SharedFlow<Room> = flow {
         while (currentCoroutineContext().isActive) {
             val client = try {
-                roomService.connect(roomId, parentCoroutineContext = backgroundScope.coroutineContext)
+                roomService.connect(
+                    roomId,
+                    parentCoroutineContext = backgroundScope.coroutineContext
+                )
             } catch (e: RoomFullException) {
                 e.printStackTrace()
                 connectRoomError.value = ConnectRoomError.ROOM_FULL
@@ -136,14 +148,21 @@ class PrivateRoomViewModelImpl(
 
     private val selfPlayer = client.map { it.selfPlayer }
 
+    private val boardChangeFromOtherClient = mutableStateOf(false)
+
     override val opponentPlayer = client.flatMapLatest { it.opponentPlayer }
+    override suspend fun boardChangeFromOtherClientUpdate() {
+        boardChangeFromOtherClient.value = false
+    }
 
     override val connectRoomError: MutableStateFlow<ConnectRoomError?> = MutableStateFlow(null)
 
     override val configuration: GameConfigurationViewModel = GameConfigurationViewModel()
-    override val selfReady: Flow<Boolean> = selfPlayer.flatMapLatest { it.state }.map { it == PlayerSessionState.READY }
+    override val selfReady: Flow<Boolean> =
+        selfPlayer.flatMapLatest { it.state }.map { it == PlayerSessionState.READY }
     override val opponentReady: Flow<Boolean> =
-        opponentPlayer.flatMapLatest { it?.state ?: emptyFlow() }.map { it == PlayerSessionState.READY }
+        opponentPlayer.flatMapLatest { it?.state ?: emptyFlow() }
+            .map { it == PlayerSessionState.READY }
 
     init {
         backgroundScope.launch {
@@ -152,7 +171,11 @@ class PrivateRoomViewModelImpl(
             }
         }
         backgroundScope.launch {
-
+            client.collect {
+                it.boardProperties.collect { boardProperties ->
+                    boardProperties.seed?.let { it1 -> changeBoardProperties(it1) }
+                }
+            }
         }
     }
 
@@ -171,7 +194,22 @@ class PrivateRoomViewModelImpl(
             .shareInBackground()
 
     private suspend fun setSeed(seed: UInt) {
-        client.first().changeSeed(seed)
+        if (boardChangeFromOtherClient.value) {
+            return
+        } else {
+            client.first().changeSeed(seed)
+        }
+    }
+
+    private fun changeBoardProperties(layoutSeed: Int) {
+        val newGameStartConfiguration =
+            GameStartConfiguration(
+                layoutSeed = layoutSeed,
+                playAs = Role.WHITE,
+                difficulty = Difficulty.MEDIUM
+            )
+        configuration.setNewConfiguration(newGameStartConfiguration)
+        boardChangeFromOtherClient.value = true
     }
 
     override suspend fun ready() {

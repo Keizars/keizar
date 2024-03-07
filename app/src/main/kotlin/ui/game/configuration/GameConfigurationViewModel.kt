@@ -109,6 +109,8 @@ interface GameConfigurationViewModel : Disposable, HasBackgroundScope {
      * Set the fresh button enable value.
      */
     fun setFreshButtonEnable(value: Boolean)
+
+    fun setNewConfiguration(configuration: GameStartConfiguration)
 }
 
 fun GameConfigurationViewModel(
@@ -183,6 +185,10 @@ private class GameConfigurationViewModelImpl(
     override val sessionManagerService: SessionManager by inject()
     override fun setFreshButtonEnable(value: Boolean) {
         freshButtonEnable.value = value
+    }
+
+    override fun setNewConfiguration(configuration: GameStartConfiguration) {
+        this.configuration.value = configuration
     }
 
     override fun setConfigurationSeedText(value: String) {
@@ -263,6 +269,10 @@ private class SinglePlayerGameConfigurationViewModelImpl(
     override val sessionManagerService: SessionManager by inject()
     override fun setFreshButtonEnable(value: Boolean) {
         freshButtonEnable.value = value
+    }
+
+    override fun setNewConfiguration(configuration: GameStartConfiguration) {
+        TODO("Not yet implemented")
     }
 
     override fun setConfigurationSeedText(value: String) {

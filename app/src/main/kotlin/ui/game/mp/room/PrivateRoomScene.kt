@@ -236,7 +236,10 @@ private fun Configurations(
         BoardSeedTextField(
             text = vm.configuration.configurationSeedText.collectAsStateWithLifecycle().value,
             onValueChange = { vm.configuration.setConfigurationSeedText(it) },
-            onClickRandom = { vm.configuration.updateRandomSeed() },
+            onClickRandom = {
+                vm.configuration.updateRandomSeed()
+                vm.backgroundScope.launch { vm.boardChangeFromOtherClientUpdate() }
+            },
             isError = vm.configuration.isConfigurationSeedTextError.collectAsStateWithLifecycle(
                 false
             ).value,
@@ -261,7 +264,12 @@ private fun Configurations(
 }
 
 @Composable
-private fun ActionArea(roomId: UInt, opponentName: String?, opponentAvatar: String?, opponentIsReady: Boolean) {
+private fun ActionArea(
+    roomId: UInt,
+    opponentName: String?,
+    opponentAvatar: String?,
+    opponentIsReady: Boolean
+) {
     if (opponentName == null) {
         Row(
             Modifier
@@ -269,7 +277,10 @@ private fun ActionArea(roomId: UInt, opponentName: String?, opponentAvatar: Stri
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
         ) {
-            Text(text = "Waiting for opponent to join...", style = MaterialTheme.typography.titleMedium)
+            Text(
+                text = "Waiting for opponent to join...",
+                style = MaterialTheme.typography.titleMedium
+            )
         }
 
         RoomIdTextField(
