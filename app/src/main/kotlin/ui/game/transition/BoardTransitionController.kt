@@ -36,24 +36,21 @@ import kotlin.time.Duration.Companion.milliseconds
  * - turning board animation
  */
 interface BoardTransitionController {
-    //    /**
-//     * Alpha value for the tiles that are viewed by the black player.
-//     */
-//    val blackViewedTilesAlpha: Float
-//        @Composable get
-//
-//    /**
-//     * Alpha value for the tiles that are viewed by the white player.
-//     */
-//    val whiteViewedTilesAlpha: Float
-//        @Composable get
-//
+    /**
+     * Alpha for the piece currently at the keizar tile.
+     */
     val winningPieceAlpha: Float
         @Composable get
 
+    /**
+     * The rotation of the board background.
+     */
     val boardBackgroundRotation: Float
         @Composable get
 
+    /**
+     * The animation spec for piece positions.
+     */
     val pieceMovementAnimationSpec: AnimationSpec<Dp>
         @Composable get
 

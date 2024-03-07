@@ -67,6 +67,8 @@ class CapturedPieceSlot {
 interface CapturedPieceHostState {
     /**
      * UI Slots of the captured pieces where captured pieces can be placed in.
+     *
+     * Implementation is [SnapshotStateList].
      */
     @Stable
     val slots: List<CapturedPieceSlot>
