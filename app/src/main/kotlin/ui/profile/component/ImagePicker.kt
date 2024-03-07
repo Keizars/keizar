@@ -19,16 +19,21 @@ interface ImagePicker {
 fun rememberImagePicker(
     maxSelectionCount: Int = 1,
     onImageSelected: (List<Uri>) -> Unit,
+    onDismissed: () -> Unit = {},
 ): ImagePicker {
     var selectedImages by remember {
-        mutableStateOf<List<Uri?>>(emptyList())
+        mutableStateOf<List<Uri>>(emptyList())
     }
 
     val singlePhotoPickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
         onResult = { uri ->
-            selectedImages = listOf(uri)
-            onImageSelected(selectedImages.filterNotNull())
+            selectedImages = listOfNotNull(uri)
+            if (selectedImages.isEmpty()) {
+                onDismissed()
+            } else {
+                onImageSelected(selectedImages)
+            }
         }
     )
 
@@ -42,7 +47,11 @@ fun rememberImagePicker(
         ),
         onResult = { uris ->
             selectedImages = uris
-            onImageSelected(selectedImages.filterNotNull())
+            if (selectedImages.isEmpty()) {
+                onDismissed()
+            } else {
+                onImageSelected(selectedImages)
+            }
         }
     )
 
