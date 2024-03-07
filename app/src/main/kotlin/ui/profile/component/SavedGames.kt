@@ -5,14 +5,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.icons.Icons
@@ -82,7 +83,7 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
             LazyColumn(
                 modifier = modifier
                     .padding(4.dp)
-                    .wrapContentSize()
+                    .width(600.dp)
             ) {
                 items(allGames.value) { gameData ->
                     SavedGameCard(
@@ -90,7 +91,7 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
                         gameData = gameData,
                         modifier = Modifier
                             .padding(4.dp)
-                            .defaultMinSize(200.dp),
+                            .fillMaxWidth(),
                         onclick = { vm.selectedGame.value = gameData }
                     )
                 }
@@ -153,13 +154,15 @@ fun SavedGameCard(
             modifier = modifier
                 .height(IntrinsicSize.Min)
         ) {
-            AvatarImage(
-                url = avatarUrl,
-                modifier = Modifier
-                    .size(72.dp)
-                    .padding(8.dp),
-                filePath = filePath
-            )
+            Box(modifier = Modifier.clip(CircleShape)) {
+                AvatarImage(
+                    url = avatarUrl,
+                    modifier = Modifier
+                        .size(72.dp)
+                        .padding(8.dp),
+                    filePath = filePath
+                )
+            }
 
             Column(
                 modifier = Modifier
@@ -393,3 +396,4 @@ fun Detail(
         }
     }
 }
+
