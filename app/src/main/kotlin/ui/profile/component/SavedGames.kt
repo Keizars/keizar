@@ -67,6 +67,16 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
     }
     val allGames = vm.allGames.collectAsStateWithLifecycle(emptyList())
     val selectedGame by vm.selectedGame.collectAsStateWithLifecycle()
+    if (allGames.value.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(text = "No saved games")
+        }
+    }
     if (isSystemInLandscape()) {
         Row {
             LazyColumn(

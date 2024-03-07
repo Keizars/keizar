@@ -64,6 +64,17 @@ fun SavedBoards(vm: ProfileViewModel, modifier: Modifier = Modifier, onClickPlay
         }
     }
     val allSeeds by vm.allSeeds.collectAsState()
+    if (allSeeds.isEmpty()) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(text = "No saved boards")
+        }
+    }
+    
     if (!isSystemInLandscape()) {
         SavedBoardCardsSummary(
             modifier = Modifier.fillMaxWidth(),
