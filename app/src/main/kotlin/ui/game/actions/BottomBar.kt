@@ -269,6 +269,8 @@ private fun ActionButton(
 
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, device = Devices.TABLET)
+@Preview(showBackground = true, fontScale = 2f)
 @Composable
 private fun PreviewRoundOneBottomBar() {
     RoundOneBottomBar(
@@ -278,6 +280,8 @@ private fun PreviewRoundOneBottomBar() {
 }
 
 @Preview(showBackground = true)
+@Preview(showBackground = true, device = Devices.TABLET)
+@Preview(showBackground = true, fontScale = 2f)
 @Composable
 private fun PreviewRoundTwoBottomBar() {
     RoundTwoBottomBar(
