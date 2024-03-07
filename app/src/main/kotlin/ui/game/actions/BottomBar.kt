@@ -162,35 +162,36 @@ fun RoundTwoBottomBar(
             }
 
             val context = LocalContext.current
-            ActionButton(
-                onClick = {
-                    vm.launchInBackground {
-                        val isLoggedIn = vm.sessionManager.isLoggedIn.first()
-                        if (isLoggedIn) {
-                            if (vm is PlayableGameBoardViewModel) {
-                                val success = vm.userSave()
-                                if (success) {
-                                    withContext(Dispatchers.Main) {
-                                        Toast.makeText(context, "Game saved", Toast.LENGTH_SHORT).show()
-                                    }
-                                } else {
-                                    withContext(Dispatchers.Main) {
-                                        Toast.makeText(context, "Game save failed", Toast.LENGTH_SHORT).show()
+            if (vm.currentGameDataId != "") {
+                ActionButton(
+                    onClick = {
+                        vm.launchInBackground {
+                            val isLoggedIn = vm.sessionManager.isLoggedIn.first()
+                            if (isLoggedIn) {
+                                if (vm is PlayableGameBoardViewModel) {
+                                    val success = vm.userSave()
+                                    if (success) {
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(context, "Game saved", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } else {
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(context, "Game save failed", Toast.LENGTH_SHORT).show()
+                                        }
                                     }
                                 }
-                            }
-                        } else {
-                            withContext(Dispatchers.Main) {
-                                onClickLogin()
+                            } else {
+                                withContext(Dispatchers.Main) {
+                                    onClickLogin()
+                                }
                             }
                         }
-                    }
-                },
-                icon = { Icon(Icons.Default.Save, null) },
-                text = { Text(text = "Save Game", fontSize = 10.sp, softWrap = false) },
-                Modifier.width(IntrinsicSize.Max)
-            )
-
+                    },
+                    icon = { Icon(Icons.Default.Save, null) },
+                    text = { Text(text = "Save Game", fontSize = 10.sp, softWrap = false) },
+                    modifier = Modifier.width(IntrinsicSize.Max)
+                )
+            }
             ActionButton(
                 onClick = { vm.setShowGameOverResults(true) },
                 icon = { Icon(Icons.Default.Assessment, null) },

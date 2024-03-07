@@ -58,7 +58,7 @@ private class RemoteGameSessionImpl(
     override fun replayCurrentRound(): Boolean = false
     override fun replayGame(): Boolean = false
 
-    override fun getRoundStats(roundNo: Int): Flow<RoundStats> {
-        return game.getRoundStats(roundNo)
+    override fun getRoundStats(roundNo: Int, selfPlayer: Player): Flow<RoundStats> {
+        return game.getRoundStats(roundNo, selfPlayer)
     }
 }

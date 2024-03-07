@@ -536,13 +536,13 @@ abstract class BaseGameBoardViewModel(
     @Stable
     override val sessionManager: SessionManager by inject()
 
-    override var round1Statistics: Flow<RoundStats> = game.getRoundStats(0)
+    override var round1Statistics: Flow<RoundStats> = game.getRoundStats(0, selfPlayer)
 
-    override var round2Statistics: Flow<RoundStats> = game.getRoundStats(1)
+    override var round2Statistics: Flow<RoundStats> = game.getRoundStats(1, selfPlayer)
 
     override val latestRoundStats: Flow<RoundStats>
         get() {
-            val stats = game.currentRoundNo.flatMapLatest { game.getRoundStats(it) }
+            val stats = game.currentRoundNo.flatMapLatest { game.getRoundStats(it, selfPlayer) }
             return stats
         }
 

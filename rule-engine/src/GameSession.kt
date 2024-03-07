@@ -77,7 +77,7 @@ interface GameSession {
     fun getRole(player: Player, roundNo: Int): Role
     fun getRoundWinner(roundNo: Int): Flow<Player?>
 
-    fun getRoundStats(roundNo: Int): Flow<RoundStats>
+    fun getRoundStats(roundNo: Int, selfPlayer: Player): Flow<RoundStats>
 
     fun getSavedRoundStats(roundNo: Int): Flow<RoundStats>?
 
@@ -273,12 +273,12 @@ class GameSessionImpl(
         return rounds[roundNo].winner.map { it?.let { role -> getPlayer(role, roundNo) } }
     }
 
-    override fun getRoundStats(roundNo: Int): Flow<RoundStats> {
+    override fun getRoundStats(roundNo: Int, selfPlayer: Player): Flow<RoundStats> {
 
         val stats = getRoundWinner(roundNo).map { winner ->
             RoundStats(
                 neutralStats = rounds[roundNo].getNeutralStatistics(),
-                player = getPlayer(Role.WHITE, roundNo),
+                player = selfPlayer,
                 winner = winner,
                 )
         }
