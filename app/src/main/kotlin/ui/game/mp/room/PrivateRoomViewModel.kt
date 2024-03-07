@@ -1,7 +1,6 @@
 package org.keizar.android.ui.game.mp.room
 
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -25,6 +24,7 @@ import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.game.configuration.GameConfigurationViewModel
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
+import org.keizar.client.ClientPlayer
 import org.keizar.client.Room
 import org.keizar.client.exception.RoomFullException
 import org.keizar.client.services.RoomService
@@ -101,6 +101,12 @@ interface PrivateRoomViewModel : HasBackgroundScope {
     @Stable
     val opponentReady: Flow<Boolean>
 
+    /**
+     * The opponent player in the room.
+     */
+    @Stable
+    val opponentPlayer: Flow<ClientPlayer?>
+
 }
 
 class PrivateRoomViewModelImpl(
@@ -130,7 +136,7 @@ class PrivateRoomViewModelImpl(
 
     private val selfPlayer = client.map { it.selfPlayer }
 
-    private val opponentPlayer = client.flatMapLatest { it.opponentPlayer }
+    override val opponentPlayer = client.flatMapLatest { it.opponentPlayer }
 
     override val connectRoomError: MutableStateFlow<ConnectRoomError?> = MutableStateFlow(null)
 
@@ -139,14 +145,14 @@ class PrivateRoomViewModelImpl(
     override val opponentReady: Flow<Boolean> =
         opponentPlayer.flatMapLatest { it?.state ?: emptyFlow() }.map { it == PlayerSessionState.READY }
 
-    private val showToast = mutableStateOf(false)
-
     init {
         backgroundScope.launch {
             configuration.boardProperties.collect {
                 it.seed?.let { it1 -> setSeed(it1.toUInt()) }
-                showToast.value = true
             }
+        }
+        backgroundScope.launch {
+
         }
     }
 
