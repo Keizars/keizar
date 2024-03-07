@@ -5,6 +5,7 @@ import androidx.annotation.CallSuper
 import androidx.compose.runtime.RememberObserver
 import androidx.lifecycle.ViewModel
 import kotlinx.atomicfu.atomic
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -18,6 +19,7 @@ import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.logging.trace
 import org.keizar.android.KeizarApplication
+import retrofit2.HttpException
 
 interface Disposable {
     fun dispose()
@@ -94,9 +96,17 @@ abstract class AbstractViewModel : RememberObserver, ViewModel(), HasBackgroundS
 
     @OptIn(DelicateCoroutinesApi::class)
     private fun createBackgroundScope(): CoroutineScope {
+        fun shouldIgnoreException(throwable: Throwable): Boolean {
+            if (throwable is CancellationException) return true
+            if (throwable is HttpException && throwable.code() == 401) return true
+            return false
+        }
+
         return CoroutineScope(CoroutineExceptionHandler { _, throwable ->
             logger.error(throwable) { "Unhandled exception in background scope" }
-
+            if (shouldIgnoreException(throwable)) {
+                return@CoroutineExceptionHandler
+            }
             GlobalScope.launch(Dispatchers.Main) {
                 try {
                     Toast.makeText(
