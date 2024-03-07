@@ -159,10 +159,10 @@ class PrivateRoomViewModelImpl(
 
     override val configuration: GameConfigurationViewModel = GameConfigurationViewModel()
     override val selfReady: Flow<Boolean> =
-        selfPlayer.flatMapLatest { it.state }.map { it == PlayerSessionState.READY }
+        selfPlayer.flatMapLatest { it.state }.map { it >= PlayerSessionState.READY }
     override val opponentReady: Flow<Boolean> =
         opponentPlayer.flatMapLatest { it?.state ?: emptyFlow() }
-            .map { it == PlayerSessionState.READY }
+            .map { it >= PlayerSessionState.READY }
 
     init {
         backgroundScope.launch {
