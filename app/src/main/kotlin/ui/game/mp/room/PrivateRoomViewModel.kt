@@ -171,10 +171,8 @@ class PrivateRoomViewModelImpl(
             }
         }
         backgroundScope.launch {
-            client.collect {
-                it.boardProperties.collect { boardProperties ->
-                    boardProperties.seed?.let { it1 -> changeBoardProperties(it1) }
-                }
+            client.flatMapLatest { it.boardProperties }.collect { boardProperties ->
+                boardProperties.seed?.let { it1 -> changeBoardProperties(it1) }
             }
         }
     }
