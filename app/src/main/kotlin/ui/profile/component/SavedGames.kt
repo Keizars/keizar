@@ -83,7 +83,7 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
             LazyColumn(
                 modifier = modifier
                     .padding(4.dp)
-                    .width(600.dp)
+                    .width(400.dp)
             ) {
                 items(allGames.value) { gameData ->
                     SavedGameCard(

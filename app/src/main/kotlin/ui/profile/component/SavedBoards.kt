@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -94,7 +95,7 @@ fun SavedBoards(vm: ProfileViewModel, modifier: Modifier = Modifier, onClickPlay
 
             Column(
                 modifier = Modifier
-                    .fillMaxHeight(), horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 val boardProperties = remember(selectedSeed) {
                     selectedSeed?.boardProperties ?: BoardProperties.getStandardProperties()
@@ -103,7 +104,8 @@ fun SavedBoards(vm: ProfileViewModel, modifier: Modifier = Modifier, onClickPlay
                     Modifier
                         .size(500.dp)
                         .clip(RoundedCornerShape(4.dp))
-                        .alpha(if (selectedSeed == null) 0.0f else 1f)
+                        .alpha(if (selectedSeed == null) 0.0f else 1f),
+                    contentAlignment = Alignment.Center
                 ) {
                     BoardTiles(
                         rotationDegrees = 0f,
