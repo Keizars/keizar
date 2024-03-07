@@ -4,12 +4,14 @@ import io.ktor.client.plugins.websocket.DefaultClientWebSocketSession
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -86,6 +88,16 @@ interface Room : AutoCloseable {
     val state: SharedFlow<GameRoomState>
 
     /**
+     * The current board properties of the game.
+     *
+     * When the room is in state [GameRoomState.STARTED] or [GameRoomState.ALL_CONNECTED],
+     * the room may receive RemoteSessionSetup messages from the server indicating that the
+     * host has changed the seed of the room. In this case, the boardProperties flow will emit
+     * the new board properties.
+     */
+    val boardProperties: Flow<BoardProperties>
+
+    /**
      * Send a request to server attempting to change the seed of the room.
      *
      * When called in state [GameRoomState.STARTED] or [GameRoomState.ALL_CONNECTED],
@@ -160,11 +172,13 @@ private class RoomImpl(
 
     /**
      *  These two variables are set by RemoteSessionSetup message from the server.
-     *  The values are guaranteed to be non-null when the room state changes to
-     *  [GameRoomState.ALL_CONNECTED].
+     *  After the room connects to the server, the server will send a RemoteSessionSetup message,
+     *  and the room will emit values to these two flows upon receiving the message.
      */
-    private val playerAllocation: MutableStateFlow<Player?> = MutableStateFlow(null)
-    private val gameSnapshot: MutableStateFlow<GameSnapshot?> = MutableStateFlow(null)
+    private val playerAllocation: MutableSharedFlow<Player> = MutableSharedFlow(replay = 1)
+    private val gameSnapshot: MutableSharedFlow<GameSnapshot> = MutableSharedFlow(replay = 1)
+
+    override val boardProperties: Flow<BoardProperties> = gameSnapshot.map { it.properties }
 
     /**
      * This websocket session handler is active until the room state changes to
@@ -202,10 +216,12 @@ private class RoomImpl(
                     is RoomStateChange -> _state.emit(respond.newState)
 
                     is RemoteSessionSetup -> {
-                        playerAllocation.value = respond.playerAllocation
-                        gameSnapshot.value = Json.decodeFromJsonElement(
-                            GameSnapshot.serializer(),
-                            respond.gameSnapshot
+                        playerAllocation.emit(respond.playerAllocation)
+                        gameSnapshot.emit(
+                            Json.decodeFromJsonElement(
+                                GameSnapshot.serializer(),
+                                respond.gameSnapshot
+                            )
                         )
                     }
 
@@ -267,8 +283,8 @@ private class RoomImpl(
                  * halfway through the game, the playerAllocation and gameSnapshot should
                  * still be able to be set up properly.
                  */
-                val selfPlayer = playerAllocation.filterNotNull().first()
-                val gameSnapshot = gameSnapshot.filterNotNull().first()
+                val selfPlayer = playerAllocation.first()
+                val gameSnapshot = gameSnapshot.first()
                 websocketSessionHandler.close()
 
                 val wsHandler = GameSessionWsHandlerImpl(
