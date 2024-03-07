@@ -165,7 +165,10 @@ class GameRoomImpl(
     private fun startHeartbeat(player: PlayerSession) {
         myCoroutineScope.launch {
             while (true) {
-                player.checkConnection()
+                val curState = state.value
+                val hasFinalWinner = (curState is ServerGameRoomState.Playing)
+                        && (curState.serverGame.finalWinner.first() != null)
+                player.checkConnection(hasFinalWinner)
                 delay(heartbeatInterval)
             }
         }

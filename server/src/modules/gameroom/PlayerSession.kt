@@ -18,7 +18,7 @@ interface PlayerSession {
     val playerAllocation: Player
     fun setState(newState: PlayerSessionState)
     fun cancel(message: String)
-    fun checkConnection()
+    fun checkConnection(terminateOnDisconnected: Boolean = false)
     fun connect(newSession: DefaultWebSocketServerSession)
 
     companion object {
@@ -41,9 +41,11 @@ class PlayerSessionImpl(
         _state.value = newState
     }
 
-    override fun checkConnection() {
+    override fun checkConnection(terminateOnDisconnected: Boolean) {
         if (session.value?.isActive != true) {
-            if (state.value == PlayerSessionState.READY) {
+            if (terminateOnDisconnected) {
+                setState(PlayerSessionState.TERMINATING)
+            } else if (state.value == PlayerSessionState.READY) {
                 setState(PlayerSessionState.STARTED)
             } else if (state.value == PlayerSessionState.PLAYING) {
                 setState(PlayerSessionState.DISCONNECTED)

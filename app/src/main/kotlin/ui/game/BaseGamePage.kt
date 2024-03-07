@@ -1,5 +1,6 @@
 package org.keizar.android.ui.game
 
+import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.icons.rounded.Home
@@ -19,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -117,13 +120,21 @@ fun BaseGamePage(
             } else {
                 BoxWithConstraints {
                     val size = min(maxWidth, maxHeight)
-                    GameBoardScaffold(
-                        vm,
-                        board = { board(size) },
-                        modifier = Modifier.fillMaxSize(),
-                        bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickGameConfig, onClickLogin) },
-                        actions = actions,
-                    )
+                    CompositionLocalProvider(
+                        LocalOverscrollConfiguration provides null
+                    ) {
+                        LazyColumn(modifier = Modifier.fillMaxSize()) {
+                            item {
+                                GameBoardScaffold(
+                                    vm,
+                                    board = { board(size) },
+                                    modifier = Modifier.fillMaxSize(),
+                                    bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickGameConfig, onClickLogin) },
+                                    actions = actions,
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }
