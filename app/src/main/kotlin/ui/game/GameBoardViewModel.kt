@@ -401,6 +401,16 @@ class MultiplayerGameBoardViewModel(
     val opponentUser: SharedFlow<User> = opponentClientPlayer.filterNotNull().map {
         userService.getUser(it.username)
     }.shareInBackground()
+
+    init {
+        launchInBackground {
+            game.finalWinner.distinctUntilChanged().collect {
+                if (it != null) {
+                    autoSave()
+                }
+            }
+        }
+    }
 }
 
 @Suppress("LeakingThis")
