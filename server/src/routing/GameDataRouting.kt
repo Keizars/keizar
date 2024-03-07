@@ -13,6 +13,7 @@ import org.keizar.server.utils.getAuthenticated
 import org.keizar.server.utils.getUserIdOrRespond
 import org.keizar.server.utils.postAuthenticated
 import org.keizar.utils.communication.game.GameDataId
+import org.keizar.utils.communication.game.GameDataResponse
 import org.keizar.utils.communication.game.GameDataStore
 import java.util.UUID
 
@@ -32,18 +33,22 @@ fun Application.gameDataRouting(context: ServerContext) {
                 call.respond(gameDataTable.getGameDataByUsedID(userId))
             }
 
+            postAuthenticated ( "/save" ) {
+                call.respond(GameDataResponse(false))
+            }
+
             postAuthenticated ( "/save/{dataId}" ) {
                 val dataId = call.parameters["dataId"] ?: return@postAuthenticated
                 gameDataTable.saveGameData(UUID.fromString(dataId))
-                call.respond("Game data saved")
+                call.respond(GameDataResponse(true))
             }
 
 
             deleteAuthenticated("/{id}") {
                 val userId = getUserIdOrRespond() ?: return@deleteAuthenticated
                 val id = call.parameters["id"] ?: return@deleteAuthenticated
-                gameDataTable.removeGameData(UUID.fromString(id))
-                call.respond("Game data removed")
+                val success = gameDataTable.removeGameData(UUID.fromString(id))
+                call.respond(GameDataResponse(success))
             }
         }
     }

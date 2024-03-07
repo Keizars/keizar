@@ -13,7 +13,7 @@ interface GameDataRepository {
 
     suspend fun getGameDataByUser(userId: String): List<GameDataModel>
 
-    suspend fun saveGameData(dataId: UUID)
+    suspend fun saveGameData(dataId: UUID): Boolean
 
 
 }

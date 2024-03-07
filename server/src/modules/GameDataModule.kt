@@ -13,7 +13,7 @@ interface GameDataModule {
     suspend fun getGameDataByUsedID(userId: UUID): List<GameDataGet>
     suspend fun addGameData(gameData: GameDataStore): String
     suspend fun removeGameData(id: UUID): Boolean
-    suspend fun saveGameData(fromString: UUID)
+    suspend fun saveGameData(fromString: UUID): Boolean
 }
 
 class GameDataModuleImpl (
@@ -35,8 +35,8 @@ class GameDataModuleImpl (
         return database.gameData.removeGameData(id)
     }
 
-    override suspend fun saveGameData(fromString: UUID) {
-        database.gameData.saveGameData(fromString)
+    override suspend fun saveGameData(fromString: UUID): Boolean {
+        return database.gameData.saveGameData(fromString)
     }
 
     private suspend fun modelToDataGet(model: GameDataModel): GameDataGet {

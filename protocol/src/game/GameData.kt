@@ -33,8 +33,14 @@ data class GameDataId(
     val id: String
 )
 
+@Serializable
 data class GameDataList(
     val gameData: List<GameDataGet>
+)
+
+@Serializable
+data class GameDataResponse(
+    val success: Boolean
 )
 
 @Serializable

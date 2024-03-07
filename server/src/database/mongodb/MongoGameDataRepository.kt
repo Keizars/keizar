@@ -41,10 +41,17 @@ class MongoGameDataRepository(
         return list
     }
 
-    override suspend fun saveGameData(dataId: UUID) {
+    override suspend fun saveGameData(dataId: UUID): Boolean {
         gameDataTable.updateOne(
             Filters.eq("_id", dataId),
             Updates.set("userSaved", true)
         )
+        val list = mutableListOf<GameDataModel>()
+        return gameDataTable.find(
+            Filters.and(
+                Filters.eq("_id", dataId),
+                Filters.eq("userSaved", true)
+            )
+        ).toList(list).isNotEmpty()
     }
 }
