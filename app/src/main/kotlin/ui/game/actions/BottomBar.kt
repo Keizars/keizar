@@ -27,12 +27,12 @@ import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ProvideTextStyle
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -45,7 +45,6 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
@@ -206,12 +205,8 @@ fun RoundTwoBottomBar(
             verticalAlignment = Alignment.Top
         ) {
             val context = LocalContext.current
-            Button(
+            TextButton(
                 onClick = { if (context is Activity) context.finish() },
-                colors = ButtonDefaults.buttonColors(
-                    Color.Transparent,
-                    contentColor = Color.Black
-                )
             ) {
                 Text(text = "Exit", textAlign = TextAlign.Center)
             }
