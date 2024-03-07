@@ -5,8 +5,12 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -31,8 +35,20 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                 val round2stats = vm.round2Statistics.collectAsState(initial = null).value
                 var statText = ""
                 if (vm is MultiplayerGameBoardViewModel) {
-                    val myName by vm.myUser.collectAsState(initial = "")
-                    val opponentName by vm.opponentUser.collectAsState(initial = "")
+                    var myName by remember { mutableStateOf("") }
+                    var opponentName by remember { mutableStateOf("") }
+
+                    LaunchedEffect(key1 = "myUser") {
+                        vm.myUser.collect { user ->
+                            myName = user.username
+                        }
+                    }
+
+                    LaunchedEffect(key1 = "opponentUser") {
+                        vm.opponentUser.collect { user ->
+                            opponentName = user.username
+                        }
+                    }
                     if (round1stats != null && round2stats != null) {
                         if (vm.selfPlayer == Player.FirstBlackPlayer) {
                             statText =
@@ -150,8 +166,21 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                 var statText = ""
                 val winnerText = if (finalWinner.player == vm.selfPlayer) "You Win" else "You Lose"
                 if (vm is MultiplayerGameBoardViewModel) {
-                    val myName by vm.myUser.collectAsState(initial = "")
-                    val opponentName by vm.opponentUser.collectAsState(initial = "")
+                    var myName by remember { mutableStateOf("") }
+                    var opponentName by remember { mutableStateOf("") }
+
+                    LaunchedEffect(key1 = "myUser") {
+                        vm.myUser.collect { user ->
+                            myName = user.username
+                        }
+                    }
+
+                    LaunchedEffect(key1 = "opponentUser") {
+                        vm.opponentUser.collect { user ->
+                            opponentName = user.username
+                        }
+                    }
+
                     if (round1stats != null && round2stats != null) {
                         if (vm.selfPlayer == Player.FirstBlackPlayer) {
                             statText =
@@ -162,7 +191,7 @@ fun GameOverDialog(vm: GameBoardViewModel, finalWinner: GameResult?, onClickHome
                                         "Time: ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) / 60} m ${(round1stats.neutralStats.blackTime + round2stats.neutralStats.whiteTime) % 60} s \n" +
                                         "Your moves' average time in first round: ${
                                             String.format(
-                                                "%.2",
+                                                "%.2f",
                                                 round1stats.neutralStats.blackAverageTime
                                             )
                                         } s\n" +
