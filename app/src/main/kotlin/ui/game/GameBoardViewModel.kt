@@ -139,18 +139,30 @@ interface GameBoardViewModel : HasBackgroundScope {
     @Stable
     val round2Winner: StateFlow<Role?>
 
+    /**
+     * `true` if the end of the first round is announced.
+     */
     @Stable
     val endRoundOneAnnounced: MutableStateFlow<Boolean>
     
+    /**
+     * `true` if the end of the second round is announced.
+     */
     @Stable
     val endRoundTwoAnnounced: MutableStateFlow<Boolean>
 
     @Stable
     val gameOverReadyToBeAnnounced: MutableStateFlow<Boolean>
 
+    /**
+     * `true` if the game over results are ready to be announced.
+     */
     @Stable
     val showGameOverResults: MutableStateFlow<Boolean>
 
+    /**
+     * flag to indicate if the the undo button should be clickable
+     */
     @Stable
     val canUndo: StateFlow<Boolean>
 
