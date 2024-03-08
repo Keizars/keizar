@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
 import org.keizar.client.exception.NetworkFailureException
 import org.keizar.utils.communication.message.Request
@@ -73,6 +74,9 @@ internal abstract class AbstractWebsocketSessionHandler(
                 processResponse(respond)
             } catch (e: WebsocketDeserializeException) {
                 // ignore
+            } catch (e: ClosedReceiveChannelException) {
+                println("Websocket session $session closed")
+                return
             }
         }
     }
