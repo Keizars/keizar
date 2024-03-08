@@ -152,14 +152,14 @@ fun SavedGameCard(
 
         Row(
             modifier = modifier
-                .height(IntrinsicSize.Min)
+                .height(IntrinsicSize.Min),
         ) {
-            Box(modifier = Modifier.clip(CircleShape)) {
+            Box(modifier = Modifier.size(72.dp), contentAlignment = Alignment.Center) {
                 AvatarImage(
                     url = avatarUrl,
                     modifier = Modifier
-                        .size(72.dp)
-                        .padding(8.dp),
+                        .clip(CircleShape)
+                        .size(54.dp),
                     filePath = filePath
                 )
             }
