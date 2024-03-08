@@ -94,19 +94,6 @@ fun Application.usersRouting(context: ServerContext) {
                 val available = !accounts.isUsernameTaken(username)
                 call.respond(UsernameValidityResponse(available))
             }
-//            get("/{uid}/avatar") {
-//                val uid = try {
-//                    UUID.fromString(call.parameters.getOrFail("uid"))
-//                } catch (e: IllegalArgumentException) {
-//                    throw NotFoundException("Invalid UserId")
-//                }
-//
-//                val (avatar, contentType) = accounts.getUserAvatar(uid) ?: kotlin.run {
-//                    call.respond(HttpStatusCode.NotFound)
-//                    return@get
-//                }
-//                call.respond(LocalFileContent(avatar, contentType))
-//            }
         }
     }
 }
