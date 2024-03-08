@@ -179,7 +179,7 @@ interface GameBoardViewModel : HasBackgroundScope {
     @Stable
     val latestRoundStats: Flow<RoundStats>
 
-    var currentGameDataId: String
+    val currentGameDataId: StateFlow<String>
 
 
     // clicking
@@ -266,12 +266,11 @@ sealed class PlayableGameBoardViewModel(
     selfPlayer: Player,
 ) : BaseGameBoardViewModel(game, selfPlayer) {
 
-    override var currentGameDataId: String = ""
-
+    override val currentGameDataId: StateFlow<String> = MutableStateFlow("")
     suspend fun userSave(): Boolean {
         val gameDataService: GameDataService by inject()
         val result = viewModelScope.async(Dispatchers.IO) {
-            gameDataService.userSaveData(currentGameDataId).success
+            gameDataService.userSaveData(currentGameDataId.value).success
         }
         return result.await()
     }
@@ -296,7 +295,7 @@ sealed class PlayableGameBoardViewModel(
             Instant.now().toString(),
         )
         val id = gameDataService.autoSaveData(gameData)
-        currentGameDataId = id.id
+        (currentGameDataId as MutableStateFlow).value = id.id
     }
 
 

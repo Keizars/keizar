@@ -3,6 +3,7 @@ package org.keizar.android.ui.tutorial
 import androidx.compose.runtime.Stable
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.mapLatest
@@ -36,8 +37,8 @@ class TutorialGameBoardViewModel(
 ) : BaseGameBoardViewModel(game, selfPlayer) {
     override val startConfiguration: GameStartConfiguration = GameStartConfiguration.random()
     override var arePiecesClickable: Boolean = false
-    override var currentGameDataId: String
-        get() = ""
+    override var currentGameDataId: StateFlow<String>
+        get() = TODO()
         set(value) {}
 
     init {

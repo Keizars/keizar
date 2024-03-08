@@ -196,7 +196,7 @@ fun RoundTwoBottomBar(
             }
 
             val context = LocalContext.current
-            if (vm.currentGameDataId != "") {
+            if (vm.currentGameDataId.collectAsState().value != "") {
                 ActionButton(
                     onClick = {
                         vm.launchInBackground {
@@ -391,7 +391,6 @@ private fun PreviewBottomBar1() = ProvideCompositionalLocalsForPreview {
 @Composable
 private fun PreviewBottomBarSinglePlayerSaved() = ProvideCompositionalLocalsForPreview {
     val vm = rememberSinglePlayerGameBoardForPreview()
-    vm.currentGameDataId = "1"
     GameBoardScaffold(
         vm,
         board = {
