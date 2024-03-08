@@ -18,6 +18,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -52,6 +53,7 @@ import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
+import retrofit2.HttpException
 
 /**
  * 2-player lobby scene, where players can join a room or create a room.
@@ -207,6 +209,17 @@ private fun PlayWithFriendsSection(
                     .weight(1f),
             )
 
+            var showRoomFullDialog by remember { mutableStateOf(false) }
+            if (showRoomFullDialog) {
+                AlertDialog(
+                    onDismissRequest = { showRoomFullDialog = false },
+                    confirmButton = {
+                        Button(onClick = { showRoomFullDialog = false }) { Text(text = "OK") }
+                    },
+                    text = { Text(text = "Room is full") }
+                )
+            }
+
             Button(
                 onClick = {
                     vm.launchInBackground {
@@ -216,8 +229,14 @@ private fun PlayWithFriendsSection(
                             withContext(Dispatchers.Main) {
                                 onJoinRoom(roomId)
                             }
+                        } catch (e: HttpException) {
+                            Log.e(null, "Error in joinRoom", e)
+                            if (e.code() == 500) {
+                                // room full
+                                showRoomFullDialog = true
+                            }
                         } catch (e: Exception) {
-                            Log.e(null, "Error", e)
+                            Log.e(null, "Error in joinRoom", e)
                         } finally {
                             joiningRoom = false
                         }
