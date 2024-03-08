@@ -144,7 +144,7 @@ interface GameBoardViewModel : HasBackgroundScope {
      */
     @Stable
     val endRoundOneAnnounced: MutableStateFlow<Boolean>
-    
+
     /**
      * `true` if the end of the second round is announced.
      */
@@ -237,7 +237,7 @@ interface GameBoardViewModel : HasBackgroundScope {
 
     fun replayGame()
 
-    fun setEndRoundAnnouncement(flag: Boolean, setAll: Boolean=false)
+    fun setEndRoundAnnouncement(flag: Boolean, setAll: Boolean = false)
 
     fun setGameOverReadyToBeAnnouncement(flag: Boolean)
 
@@ -523,12 +523,12 @@ abstract class BaseGameBoardViewModel(
     override val round2Winner: StateFlow<Role?> = game.rounds[1].winner
 
     private val _endRoundOneAnnounced = MutableStateFlow(false)
-    
+
     private val _endRoundTwoAnnounced = MutableStateFlow(false)
 
     @Stable
     override val endRoundOneAnnounced = _endRoundOneAnnounced
-    
+
     @Stable
     override val endRoundTwoAnnounced = _endRoundTwoAnnounced
 
@@ -693,6 +693,8 @@ abstract class BaseGameBoardViewModel(
     override fun replayCurrentRound() {
         setEndRoundAnnouncement(false)
         game.replayCurrentRound()
+        myCapturedPieceHostState.clear()
+        theirCapturedPieceHostState.clear()
     }
 
     override fun replayGame() {
@@ -715,7 +717,7 @@ abstract class BaseGameBoardViewModel(
             }
         }
     }
-    
+
 
     override fun setGameOverReadyToBeAnnouncement(flag: Boolean) {
         _gameOverReadyToBeAnnounced.value = flag
