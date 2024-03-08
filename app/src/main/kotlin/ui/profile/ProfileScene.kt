@@ -242,7 +242,7 @@ fun ProfilePage(
                         onClickPlayGame = onClickPlayGame
                     )
 
-                    1 -> SavedGames(vm = vm)
+                    1 -> SavedGames(vm = vm, onClickPlayGame = onClickPlayGame)
                 }
             }
         }

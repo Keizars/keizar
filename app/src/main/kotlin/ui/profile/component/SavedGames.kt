@@ -4,12 +4,13 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -26,7 +27,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -61,7 +61,7 @@ import java.time.format.DateTimeFormatter
 
 
 @Composable
-fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
+fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel, onClickPlayGame: (String) -> Unit = {},) {
     if (vm.isLoadingGames.collectAsStateWithLifecycle().value) {
         Column(
             modifier = Modifier
@@ -99,7 +99,8 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
                         modifier = Modifier
                             .padding(4.dp)
                             .fillMaxWidth(),
-                        onclick = { vm.selectedGame.value = gameData }
+                        onclick = { vm.selectedGame.value = gameData },
+                        onClickPlayGame = onClickPlayGame
                     )
                 }
             }
@@ -123,7 +124,8 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
                     gameData = gameData,
                     modifier = Modifier
                         .padding(4.dp)
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
+                    onClickPlayGame = onClickPlayGame
                 )
             }
         }
@@ -135,6 +137,7 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel) {
 fun SavedGameCard(
     modifier: Modifier = Modifier,
     onclick: () -> Unit = {},
+    onClickPlayGame: (String) -> Unit = {},
     vm: ProfileViewModel, gameData: GameDataGet
 ) {
     var showDetails by remember { mutableStateOf(false) }
@@ -156,128 +159,140 @@ fun SavedGameCard(
     ) {
         val avatarUrl by savedGameCardViewModel.avatarUrl.collectAsStateWithLifecycle()
         val filePath by savedGameCardViewModel.filePath.collectAsStateWithLifecycle()
-
-        Row(
-            modifier = modifier
-                .height(IntrinsicSize.Min),
-        ) {
-            Box(modifier = Modifier.size(72.dp), contentAlignment = Alignment.Center) {
-                val tint = savedGameCardViewModel.isComputer.collectAsStateWithLifecycle().value
-                AvatarImage(
-                    url = avatarUrl,
-                    modifier = Modifier
-                        .then(if (tint) Modifier else Modifier.clip(CircleShape))
-                        .size(54.dp),
-                    filePath = filePath,
-                    colorFilter = if (tint) {
-                        ColorFilter.tint(LocalContentColor.current)
-                    } else {
-                        null
-                    }
-                )
-            }
-
-            Column(
-                modifier = Modifier
-                    .padding(8.dp)
+        Column (modifier = Modifier.fillMaxSize()) {
+            Row(
+                modifier = modifier,
             ) {
-
-                val winner: Player? = if (round1stats.winner!! == round2stats.winner!!) {
-                    round1stats.winner!!
-                } else {
-                    if (round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured >
-                        round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured
-                    ) {
-                        Player.FirstBlackPlayer
-                    } else if (round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured <
-                        round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured
-                    ) {
-                        Player.FirstWhitePlayer
-                    } else {
-                        null
-                    }
-                }
-
-                val winningStatus = if (winner == null) {
-                    "Draw"
-                } else {
-                    if (winner == round1stats.player) {
-                        "Win"
-                    } else {
-                        "Loss"
-                    }
-                }
-
-                val localDateTime =
-                    remember { LocalDateTime.ofInstant(Instant.parse(gameData.timeStamp), ZoneId.systemDefault()) }
-                val formatter = remember {
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                }
-                val formattedTimeStamp = remember {
-                    formatter.format(localDateTime)
-                }
-                Text(
-                    text = "$winningStatus - $formattedTimeStamp",
-                    modifier = Modifier.padding(4.dp),
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                Text(
-                    text = "Opponent: $opponentName",
-                    modifier = Modifier.padding(4.dp),
-                    overflow = TextOverflow.Ellipsis
-                )
-
-
-                if (showDetails && !isSystemInLandscape()) {
-                    GameDetailsDialog(
-                        gameData = gameData, onDismissRequest = { showDetails = false },
+                Box(modifier = Modifier.size(72.dp), contentAlignment = Alignment.Center) {
+                    val tint = savedGameCardViewModel.isComputer.collectAsStateWithLifecycle().value
+                    AvatarImage(
+                        url = avatarUrl,
+                        modifier = Modifier
+                            .then(if (tint) Modifier else Modifier.clip(CircleShape))
+                            .size(54.dp),
+                        filePath = filePath,
+                        colorFilter = if (tint) {
+                            ColorFilter.tint(LocalContentColor.current)
+                        } else {
+                            null
+                        }
                     )
                 }
-            }
-            Column(modifier = modifier, horizontalAlignment = Alignment.End) {
-                var showMenu by remember { mutableStateOf(false) }
-                Box(
-                    contentAlignment = Alignment.TopEnd
-                ) {
-                    IconButton(
-                        onClick = { showMenu = !showMenu }
-                    ) {
-                        Icon(
-                            Icons.Filled.MoreVert,
-                            contentDescription = "More options",
-                            modifier = Modifier.size(24.dp)
-                        )
-                    }
-                    val context =  LocalContext.current
-                    DropdownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false }
-                    ) {
 
-                        DropdownMenuItem(onClick = {
-                            showMenu = false
-                            val clipboard =
-                                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            val clip =
-                                ClipData.newPlainText("Copied seed", gameData.gameConfiguration)
-                            clipboard.setPrimaryClip(clip)
-                        }) {
-                            Text("Copy seed")
+                Column(
+                    modifier = Modifier
+                        .padding(8.dp)
+                ) {
+                    val winner: Player? = if (round1stats.winner!! == round2stats.winner!!) {
+                        round1stats.winner!!
+                    } else {
+                        if (round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured >
+                            round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured
+                        ) {
+                            Player.FirstBlackPlayer
+                        } else if (round1stats.neutralStats.blackCaptured + round2stats.neutralStats.whiteCaptured <
+                            round1stats.neutralStats.whiteCaptured + round2stats.neutralStats.blackCaptured
+                        ) {
+                            Player.FirstWhitePlayer
+                        } else {
+                            null
+                        }
+                    }
+                    
+                    val localDateTime =
+                        remember { LocalDateTime.ofInstant(Instant.parse(gameData.timeStamp), ZoneId.systemDefault()) }
+                    val formatter = remember {
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                    }
+                    val formattedTimeStamp = remember {
+                        formatter.format(localDateTime)
+                    }
+                    val winningStatus = if (winner == null) {
+                        "Draw"
+                    } else {
+                        if (winner == round1stats.player) {
+                            "Win"
+                        } else {
+                            "Loss"
+                        }
+                    }
+                    
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "$winningStatus - $formattedTimeStamp",
+                            modifier = Modifier.padding(4.dp),
+                            overflow = TextOverflow.Ellipsis,
+                        )
+
+                        var showMenu by remember { mutableStateOf(false) }
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.TopEnd
+                        ) {
+                            Box(
+                                Modifier.clickable {
+                                    showMenu = !showMenu
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Filled.MoreVert,
+                                    contentDescription = "More options",
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            val context = LocalContext.current
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+
+                                DropdownMenuItem(onClick = {
+                                    showMenu = false
+                                    val clipboard =
+                                        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                    val clip =
+                                        ClipData.newPlainText("Copied seed", gameData.gameConfiguration)
+                                    clipboard.setPrimaryClip(clip)
+                                }) {
+                                    Text("Copy seed")
+                                }
+
+                                DropdownMenuItem(onClick = {
+                                    showMenu = false
+                                    vm.launchInBackground {
+                                        vm.deleteGame(gameData.dataId)
+                                    }
+                                }) {
+                                    Text("Delete")
+                                }
+                            }
                         }
                         
-                        DropdownMenuItem(onClick = {
-                            showMenu = false
-                            vm.launchInBackground {
-                                vm.deleteGame(gameData.dataId)
+                    }
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        Text(
+                            text = "Opponent: $opponentName",
+                            modifier = Modifier.padding(4.dp),
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        Box(modifier = Modifier   .padding(8.dp)) {
+                            Button(onClick = {onClickPlayGame(gameData.gameConfiguration)}) {
+                                Text(text = "Play")
                             }
-                        }) {
-                            Text("Delete")
                         }
+                    }
+
+
+                    if (showDetails && !isSystemInLandscape()) {
+                        GameDetailsDialog(
+                            gameData = gameData, onDismissRequest = { showDetails = false },
+                        )
                     }
                 }
             }
-
         }
     }
 }
