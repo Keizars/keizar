@@ -281,9 +281,7 @@ sealed class PlayableGameBoardViewModel(
         var userName = sessionManager.self.value?.username
         val gameDataService: GameDataService by inject()
         if (this is MultiplayerGameBoardViewModel) {
-            this.launchInBackground {
-                opponentName = opponentUser.first().username
-            }
+            opponentName = opponentUser.first().username
         }
         if (userName == null) {
             userName = "Unknown"
@@ -297,10 +295,8 @@ sealed class PlayableGameBoardViewModel(
             opponentName,
             Instant.now().toString(),
         )
-        this.launchInBackground {
-            val id = gameDataService.autoSaveData(gameData)
-            currentGameDataId = id.id
-        }
+        val id = gameDataService.autoSaveData(gameData)
+        currentGameDataId = id.id
     }
 
 
