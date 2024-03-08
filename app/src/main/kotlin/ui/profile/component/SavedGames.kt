@@ -1,5 +1,8 @@
 package org.keizar.android.ui.profile.component
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -245,12 +249,23 @@ fun SavedGameCard(
                             modifier = Modifier.size(24.dp)
                         )
                     }
-
+                    val context =  LocalContext.current
                     DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
                     ) {
 
+                        DropdownMenuItem(onClick = {
+                            showMenu = false
+                            val clipboard =
+                                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip =
+                                ClipData.newPlainText("Copied seed", gameData.gameConfiguration)
+                            clipboard.setPrimaryClip(clip)
+                        }) {
+                            Text("Copy seed")
+                        }
+                        
                         DropdownMenuItem(onClick = {
                             showMenu = false
                             vm.launchInBackground {
