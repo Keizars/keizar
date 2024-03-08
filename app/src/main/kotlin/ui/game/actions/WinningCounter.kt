@@ -32,7 +32,9 @@ fun WinningCounter(
     // Whenever winningCounter updates, set the corresponding token state to flipped
     LaunchedEffect(winningCounter) {
         if (winningCounter in 1..3) {
-            flippedStates[winningCounter - 1] = false
+            for (i in 0 until winningCounter) {
+                flippedStates[i] = false
+            }
         } else {
             for (i in 0 until 3) {
                 flippedStates[i] = true
