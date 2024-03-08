@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -19,7 +18,7 @@ import kotlinx.serialization.json.Json
 import org.keizar.client.internal.AbstractWebsocketSessionHandler
 import org.keizar.client.internal.GameSessionWsHandlerImpl
 import org.keizar.game.BoardProperties
-import org.keizar.game.RoomInfo
+import org.keizar.game.protocol.RoomInfo
 import org.keizar.game.snapshot.GameSnapshot
 import org.keizar.utils.communication.GameRoomState
 import org.keizar.utils.communication.PlayerSessionState

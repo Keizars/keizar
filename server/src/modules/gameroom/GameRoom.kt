@@ -31,14 +31,13 @@ import kotlin.coroutines.CoroutineContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import org.keizar.game.GameSession
-import org.keizar.game.PlayerInfo
+import org.keizar.game.protocol.PlayerInfo
 import org.keizar.utils.communication.message.ChangeBoard
 import org.keizar.utils.communication.message.ConfirmNextRound
 import org.keizar.utils.communication.message.Move
 import org.keizar.utils.communication.message.RoomStateChange
 import org.keizar.utils.communication.message.SetReady
 import org.keizar.utils.communication.message.UserInfo
-import kotlin.math.log
 import kotlin.time.Duration.Companion.seconds
 
 interface GameRoom : AutoCloseable {

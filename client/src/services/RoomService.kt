@@ -7,7 +7,7 @@ import org.keizar.client.exception.RoomFullException
 import org.keizar.client.internal.KeizarHttpClient
 import org.keizar.client.internal.KeizarHttpClientImpl
 import org.keizar.game.BoardProperties
-import org.keizar.game.RoomInfo
+import org.keizar.game.protocol.RoomInfo
 import org.koin.core.Koin
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

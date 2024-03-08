@@ -11,7 +11,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.routing
 import io.ktor.util.pipeline.PipelineContext
 import org.keizar.game.BoardProperties
-import org.keizar.game.RoomInfo
+import org.keizar.game.protocol.RoomInfo
 import org.keizar.server.ServerContext
 import org.keizar.server.modules.GameRoomModule
 import org.keizar.server.modules.gameroom.GameRoom

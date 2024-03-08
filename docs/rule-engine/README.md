@@ -69,7 +69,37 @@ fun pieceAt(pos: BoardPos): Role?
 
 ### GameSession
 The `GameSession` class is the most important class and also the entry point of this module. 
-It represents a whole KEIZAR game consisting of 2 rounds, in each of which players compete to
-stay in the KEIZAR tile for 3 opponent's turns. The two rounds have the exact same game rule and 
-board setup, except that the players switch sides in the second round.
+It represents a whole KEIZAR game consisting of 2 rounds. The two rounds have the exact same 
+game rules and board setup, except that the players switch sides in the second round. 
+
+The `GameSession` class maintains the instances of `RoundSession` and other game states 
+and properties, including a `BoardProperties` object which stores the randomly generated
+board configuration and a set of game rules. They can be accessed via the fields of the class:
+```kotlin
+val properties: BoardProperties
+val rounds: List<RoundSession>
+val currentRound: Flow<RoundSession>
+val currentRoundNo: StateFlow<Int>
+val finalWinner: Flow<GameResult?>
+```
+
+Similar to `RoundSession`, players can interact with the game by calling the methods of the class:
+```kotlin
+suspend fun confirmNextRound(player: Player): Boolean
+fun replayCurrentRound(): Boolean
+fun replayGame(): Boolean
+```
+
+And players can also call methods to get useful information about the current game:
+```kotlin
+fun currentRole(player: Player): StateFlow<Role>
+fun wonRounds(player: Player): Flow<Int>
+fun lostPieces(player: Player): Flow<Int>
+fun getRoundWinner(roundNo: Int): Flow<Player?>
+```
+
+You can use the `GameSession.create` factory method to create a `GameSession` instance.
+You can optionally pass in a seed or a `BoardProperties` object to customize the game rules and board setup.
+You can also get a serializable snapshot of a `GameSession` instance by calling `GameSession.getSnapshot()`, 
+and restores a `GameSession` instance from the snapshot by calling `GameSession.restore()`.
 

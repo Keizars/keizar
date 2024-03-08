@@ -10,23 +10,16 @@ import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.plugins.websocket.webSocketSession
 import io.ktor.client.request.bearerAuth
 import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.client.request.patch
 import io.ktor.client.request.post
-import io.ktor.client.request.setBody
 import io.ktor.client.statement.HttpResponse
-import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
-import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.keizar.client.exception.NetworkFailureException
-import org.keizar.game.BoardProperties
-import org.keizar.game.RoomInfo
+import org.keizar.game.protocol.RoomInfo
 import org.keizar.utils.communication.CommunicationModule
 import org.keizar.utils.communication.account.User
-import org.keizar.utils.communication.message.UserInfo
 
 private val ClientJson = Json {
     ignoreUnknownKeys = true

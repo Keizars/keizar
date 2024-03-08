@@ -1,6 +1,7 @@
-package org.keizar.game
+package org.keizar.game.protocol
 
 import kotlinx.serialization.Serializable
+import org.keizar.game.BoardProperties
 import org.keizar.utils.communication.message.UserInfo
 
 @Serializable
