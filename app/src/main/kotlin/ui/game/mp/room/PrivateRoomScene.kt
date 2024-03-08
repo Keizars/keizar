@@ -244,11 +244,11 @@ private fun Configurations(
                 false
             ).value,
             refreshEnable = vm.configuration.freshButtonEnable.collectAsStateWithLifecycle(true).value && isHost,
+            readOnly = true,// vm.selfIsHost.collectAsStateWithLifecycle(false).value,
+            modifier = Modifier.fillMaxWidth(),
             supportingText = {
                 Text(text = "Explore new board layouts by changing the seed. Other player can also see this board.")
             },
-            readOnly = vm.selfIsHost.collectAsStateWithLifecycle(false).value,
-            modifier = Modifier.fillMaxWidth(),
         )
 
         HorizontalDivider(Modifier.padding(vertical = 16.dp))
