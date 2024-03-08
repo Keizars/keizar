@@ -62,7 +62,7 @@ import org.keizar.android.ui.profile.component.SavedBoards
 import org.keizar.android.ui.profile.component.SavedGameCard
 import org.keizar.android.ui.profile.component.SavedGames
 import org.keizar.android.ui.profile.component.UserInfoRow
-import org.keizar.game.Difficulty
+import org.keizar.utils.communication.game.Difficulty
 import org.keizar.game.Role
 import org.keizar.utils.communication.game.GameDataGet
 import org.keizar.utils.communication.game.NeutralStats

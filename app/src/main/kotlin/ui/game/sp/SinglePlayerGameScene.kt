@@ -14,7 +14,7 @@ import org.keizar.android.ui.game.BaseGamePage
 import org.keizar.android.ui.game.actions.UndoButton
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.rememberSinglePlayerGameBoardViewModel
-import org.keizar.game.Difficulty
+import org.keizar.utils.communication.game.Difficulty
 import org.keizar.game.GameSession
 import org.keizar.game.Role
 import org.keizar.game.snapshot.buildGameSession

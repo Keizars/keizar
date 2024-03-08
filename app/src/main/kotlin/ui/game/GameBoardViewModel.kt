@@ -46,7 +46,7 @@ import org.keizar.client.ClientPlayer
 import org.keizar.client.services.GameDataService
 import org.keizar.client.services.UserService
 import org.keizar.game.BoardProperties
-import org.keizar.game.Difficulty
+import org.keizar.utils.communication.game.Difficulty
 import org.keizar.game.GameSession
 import org.keizar.game.Piece
 import org.keizar.game.Role

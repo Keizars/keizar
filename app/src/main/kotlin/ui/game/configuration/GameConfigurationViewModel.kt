@@ -19,7 +19,7 @@ import org.keizar.android.ui.foundation.Disposable
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.client.services.SeedBankService
 import org.keizar.game.BoardProperties
-import org.keizar.game.Difficulty
+import org.keizar.utils.communication.game.Difficulty
 import org.keizar.game.Role
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

@@ -1,13 +1,17 @@
 package org.keizar.server
 
+import io.ktor.http.ContentType
 import kotlinx.coroutines.test.runTest
 import org.keizar.server.data.InMemoryDatabaseManagerImpl
 import org.keizar.server.logic.AccountModuleImpl
 import org.keizar.server.data.InMemoryAvatarStorage
 import org.keizar.server.utils.AuthTokenManager
 import org.keizar.utils.communication.account.AuthStatus
+import java.io.File
+import java.net.URL
 import java.util.UUID
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -88,6 +92,26 @@ class AccountModuleTest {
         )
 
         assertNull(accountModule.getUser(UUID.randomUUID()))
+
+        val respond = accountModule.register("test", byteArrayOf(1))
+        assertEquals(AuthStatus.SUCCESS, respond.status)
+        assertNotNull(respond.token)
+        val userId = plainAuthTokenManager.matchToken(respond.token!!)
+        assertNotNull(userId)
+
+        val user = accountModule.getUser(UUID.fromString(userId))!!
+        assertEquals("test", user.username)
+        assertEquals("test", user.nickname)
+    }
+
+    @Test
+    fun `test getUserByName`() = runTest {
+        val accountModule = AccountModuleImpl(
+            database = InMemoryDatabaseManagerImpl(),
+            authTokenManager = plainAuthTokenManager,
+            avatarStorage = InMemoryAvatarStorage(),
+        )
+
         assertNull(accountModule.getUserByUsername("blah"))
 
         val respond = accountModule.register("test", byteArrayOf(1))
@@ -96,11 +120,8 @@ class AccountModuleTest {
         val userId = plainAuthTokenManager.matchToken(respond.token!!)
         assertNotNull(userId)
 
-        val user1 = accountModule.getUser(UUID.fromString(userId))
-        val user2 = accountModule.getUser(UUID.fromString(userId))
-        assertEquals(user1!!, user2!!)
-        assertEquals("test", user1.username)
-        assertEquals("test", user1.nickname)
+        val user = accountModule.getUserByUsername("test")!!
+        assertEquals("test", user.nickname)
     }
 
     @Test
@@ -133,5 +154,37 @@ class AccountModuleTest {
         val updatedUser = accountModule.getUser(UUID.fromString(userId))!!
         assertEquals(newNickname, updatedUser.nickname)
         assertEquals(newUsername, updatedUser.username)
+    }
+
+    @Test
+    fun `test uploadNewAvatar`() = runTest {
+        val accountModule = AccountModuleImpl(
+            database = InMemoryDatabaseManagerImpl(),
+            authTokenManager = plainAuthTokenManager,
+            avatarStorage = InMemoryAvatarStorage(),
+        )
+
+        val respond = accountModule.register("test", byteArrayOf(1))
+        assertEquals(AuthStatus.SUCCESS, respond.status)
+        assertNotNull(respond.token)
+        val userId = plainAuthTokenManager.matchToken(respond.token!!)
+        assertNotNull(userId)
+
+        val user = accountModule.getUser(UUID.fromString(userId))
+        assertEquals("test", user!!.username)
+        assertEquals("test", user.nickname)
+        assertEquals("", user.avatarUrl)
+
+        val avatarFile = File("test/testAvatar.png").absoluteFile
+        avatarFile.inputStream().use {
+            accountModule.uploadNewAvatar(
+                uid = UUID.fromString(userId),
+                input = it,
+                contentType = ContentType.Image.PNG,
+            )
+        }
+
+        val updatedAvatarUrl = accountModule.getUser(UUID.fromString(userId))!!.avatarUrl
+        assertNotNull(updatedAvatarUrl)
     }
 }

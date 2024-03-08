@@ -65,7 +65,7 @@ import org.keizar.android.ui.game.BoardTileLabels
 import org.keizar.android.ui.game.BoardTiles
 import org.keizar.android.ui.game.transition.PieceArranger
 import org.keizar.game.BoardProperties
-import org.keizar.game.Difficulty
+import org.keizar.utils.communication.game.Difficulty
 import org.keizar.game.Role
 import org.keizar.game.Role.BLACK
 import org.keizar.game.Role.WHITE

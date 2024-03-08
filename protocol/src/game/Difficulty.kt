@@ -1,4 +1,4 @@
-package org.keizar.game
+package org.keizar.utils.communication.game
 
 
 enum class Difficulty {
