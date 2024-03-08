@@ -10,6 +10,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.SelectClause0
 import org.keizar.client.exceptions.NetworkFailureException
 import org.keizar.utils.communication.message.Request
 import org.keizar.utils.communication.message.Respond
@@ -19,6 +20,13 @@ import kotlin.coroutines.CoroutineContext
 
 internal interface WebsocketSessionHandler : AutoCloseable {
     val isClosed: Boolean
+
+    /**
+     * A clause completes when the websocket session is closed,
+     * either by calling [close] or by network connection lost.
+     */
+    val onComplete: SelectClause0
+
     suspend fun start()
     suspend fun sendRequest(request: Request)
 }
@@ -38,6 +46,9 @@ internal abstract class AbstractWebsocketSessionHandler(
 ) : WebsocketSessionHandler {
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
+
+    override val onComplete: SelectClause0
+        get() = myCoroutineScope.coroutineContext[Job]!!.onJoin
 
     override suspend fun start() {
         try {
@@ -75,6 +86,7 @@ internal abstract class AbstractWebsocketSessionHandler(
                 // ignore
             } catch (e: ClosedReceiveChannelException) {
                 println("Websocket session $session closed")
+                close()
                 return
             }
         }
