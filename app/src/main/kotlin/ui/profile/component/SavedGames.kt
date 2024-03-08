@@ -65,7 +65,8 @@ import java.time.format.DateTimeFormatter
 
 @Composable
 fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel, onClickPlayGame: (String) -> Unit = {}) {
-    if (vm.isLoadingGames.collectAsStateWithLifecycle().value) {
+    val isLoadingGames by vm.isLoadingGames.collectAsStateWithLifecycle()
+    if (isLoadingGames) {
         Column(
             modifier = Modifier
                 .padding(16.dp)
@@ -78,7 +79,7 @@ fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel, onClickPlayG
     }
     val allGames = vm.allGames.collectAsStateWithLifecycle(emptyList())
     val selectedGame by vm.selectedGame.collectAsStateWithLifecycle()
-    if (allGames.value.isEmpty()) {
+    if (allGames.value.isEmpty() && !isLoadingGames) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()

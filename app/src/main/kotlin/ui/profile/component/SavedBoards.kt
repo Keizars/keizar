@@ -56,7 +56,8 @@ import org.keizar.game.BoardProperties
 
 @Composable
 fun SavedBoards(vm: ProfileViewModel, modifier: Modifier = Modifier, onClickPlayGame: (String) -> Unit) {
-    if (vm.isLoadingSeeds.collectAsStateWithLifecycle().value) {
+    val isLoading by vm.isLoadingSeeds.collectAsStateWithLifecycle()
+    if (isLoading) {
         Column(
             modifier = Modifier
                 .padding(16.dp)
@@ -68,7 +69,7 @@ fun SavedBoards(vm: ProfileViewModel, modifier: Modifier = Modifier, onClickPlay
         }
     }
     val allSeeds by vm.allSeeds.collectAsState()
-    if (allSeeds.isEmpty()) {
+    if (allSeeds.isEmpty() && !isLoading) {
         Column(
             modifier = Modifier
                 .padding(16.dp)
