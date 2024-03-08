@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.keizar.game.BoardProperties
 import org.keizar.game.BoardPropertiesBuilder
 import org.keizar.game.BoardPropertiesPrototypes
 import org.keizar.game.BoardPropertiesPrototypes.Plain.piecesStartingPos
@@ -11,6 +12,7 @@ import org.keizar.game.Role
 import org.keizar.game.snapshot.GameSnapshotBuilder
 import org.keizar.game.snapshot.RoundSnapshotBuilder
 import org.keizar.game.snapshot.buildGameSession
+import org.keizar.game.snapshot.buildGameSnapshot
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
@@ -49,7 +51,7 @@ class GameSnapshotBuilderTest {
     @Test
     fun `test free move round builder`() = runTest {
         val game = buildGameSession {
-            tiles {  }
+            tiles { }
             round {
                 allowFreeMove()
                 resetPieces {
@@ -67,7 +69,7 @@ class GameSnapshotBuilderTest {
     @Test
     fun `test disable winner round builder`() = runTest {
         val game = buildGameSession {
-            tiles {  }
+            tiles { }
             round {
                 disableWinner()
                 resetPieces {
@@ -98,7 +100,7 @@ class GameSnapshotBuilderTest {
             round {
                 curRole { Role.BLACK }
                 resetPieces {
-                    addAll(role=Role.WHITE, piecesStartingPos[Role.WHITE]!!)
+                    addAll(role = Role.WHITE, piecesStartingPos[Role.WHITE]!!)
                 }
                 resetPieces {
                     white("b2")
@@ -117,28 +119,39 @@ class GameSnapshotBuilderTest {
 
 
     @Test
-    fun `test GameSnapshotBuilder`() = runTest{
-        val gameBuilder = GameSnapshotBuilder()
-        val gameSnapshot = gameBuilder.build()
-        val round = gameBuilder.round { winningCounter { 1 } }
-        val roundSnapshot = round.build()
-        round.prototype(roundSnapshot)
-        val roundSnapshot2 = round.build()
-        round.setPieces(true) {
-            white("b1")
-            black("g7")
+    fun `test GameSnapshotBuilder`() = runTest {
+        val gameBuilder1 = GameSnapshotBuilder()
+        val gameBuilder2 = GameSnapshotBuilder(BoardPropertiesPrototypes.Standard(0))
+        val buildInstr: GameSnapshotBuilder.() -> Unit = {
+            properties {
+                height { 8 }
+                width { 8 }
+                keizarTilePos { BoardPos.fromString("d5") }
+                winningCount { 3 }
+                startingRole { Role.WHITE }
+                roundsCount { 2 }
+                piecesStartingPos { piecesStartingPos.toMutableMap() }
+            }
+            val round1 = round {
+                winningCounter { 1 }
+            }
+            round {
+                prototype(round1.build())
+                setPieces(fromEmptyBoard = false) {
+                    white(BoardPos("b1"))
+                    black(BoardPos("g7"))
+                }
+            }
         }
-        val boardProperty = BoardPropertiesBuilder(prototype = BoardPropertiesPrototypes.Plain)
-        boardProperty.height { 8 }
-        boardProperty.width { 8 }
-        boardProperty.keizarTilePos { BoardPos.fromString("d5") }
-        boardProperty.winningCount { 3 }
-        boardProperty.startingRole { Role.WHITE }
-        boardProperty.roundsCount { 2 }
-        boardProperty.piecesStartingPos { piecesStartingPos.toMutableMap() }
-        assertEquals(2 ,gameSnapshot.rounds.size)
-        assertEquals(1, roundSnapshot.winningCounter)
-        assertEquals(1, roundSnapshot2.winningCounter)
+
+        val snapshot1 = gameBuilder1.apply(buildInstr).build()
+        val snapshot2 = gameBuilder2.apply(buildInstr).build()
+        assertEquals(2, snapshot1.rounds.size)
+        assertEquals(1, snapshot1.rounds[0].winningCounter)
+        assertEquals(1, snapshot1.rounds[1].winningCounter)
+        assertEquals(2, snapshot2.rounds.size)
+        assertEquals(1, snapshot2.rounds[0].winningCounter)
+        assertEquals(1, snapshot2.rounds[1].winningCounter)
     }
 
 }
