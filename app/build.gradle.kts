@@ -51,6 +51,7 @@ dependencies {
     implementation(projects.ruleEngine)
     implementation(projects.client)
     implementation(projects.utils.coroutines)
+    implementation(libs.stacktrace.decoroutinator.android)
 }
 
 android {

@@ -4,6 +4,7 @@ import android.app.Application
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.SvgDecoder
+import dev.reformator.stacktracedecoroutinator.runtime.DecoroutinatorRuntime
 import kotlinx.coroutines.flow.firstOrNull
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
@@ -28,6 +29,12 @@ import org.koin.dsl.module
  * Mainly used to start dependency injection modules with Koin.
  */
 class KeizarApplication : Application(), ImageLoaderFactory {
+    init {
+        if (BuildConfig.DEBUG) {
+            DecoroutinatorRuntime.load()
+        }
+    }
+
     override fun onCreate() {
         super.onCreate()
         instance = this

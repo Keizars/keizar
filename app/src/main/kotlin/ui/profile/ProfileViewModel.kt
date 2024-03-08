@@ -14,10 +14,10 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
 import org.keizar.android.data.GameStartConfigurationEncoder
 import org.keizar.android.data.SessionManager
 import org.keizar.android.ui.foundation.AbstractViewModel
+import org.keizar.android.ui.foundation.ErrorMessage
 import org.keizar.client.services.GameDataService
 import org.keizar.client.services.SeedBankService
 import org.keizar.client.services.StreamingService
@@ -53,6 +53,8 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
      */
     val time = MutableStateFlow(0L)
 
+    val errorDialog = MutableStateFlow<ErrorMessage?>(null)
+
     private fun refreshAll() {
         time.value = System.currentTimeMillis()
     }
@@ -82,8 +84,9 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     suspend fun deleteGame(id: String) {
         try {
             gameDataService.deleteGame(id)
-        } catch (error: Throwable) {
-            return
+        } catch (e: Throwable) {
+            this.errorDialog.value = ErrorMessage.networkError(e)
+            throw e
         }
         allGames.value = allGames.value.filter { it.dataId != id }
     }
@@ -94,8 +97,9 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     suspend fun removeSeed(seed: String) {
         try {
             seedBankService.removeSeed(seed)
-        } catch (error: Throwable) {
-            return
+        } catch (e: Throwable) {
+            this.errorDialog.value = ErrorMessage.networkError(e)
+            throw e
         }
         allSeeds.value = allSeeds.value.filter { it.configurationSeed != seed }
     }
@@ -168,8 +172,13 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
         showNicknameEditDialog.value = true
     }
 
-    suspend fun confirmDialog() {
-        val success = processedUpdate()
+    suspend fun confirmEditNickname() {
+        val success = try {
+            updateNickname()
+        } catch (e: Throwable) {
+            errorDialog.value = ErrorMessage.networkError(e)
+            return
+        }
         if (success) {
             showNicknameEditDialog.value = false
             _editNickname.value = _editNickname.value.trim()
@@ -189,13 +198,6 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
             }
         }
     }
-
-    private suspend fun processedUpdate(): Boolean {
-        return withTimeout(5000) {
-            updateNickname()
-        }
-    }
-
 
     fun setEditNickname(nickName: String) {
         flushErrors()

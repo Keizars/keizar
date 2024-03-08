@@ -48,6 +48,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.keizar.android.data.GameStartConfigurationEncoder
+import org.keizar.android.ui.foundation.ErrorDialogHost
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.defaultFocus
 import org.keizar.android.ui.foundation.launchInBackground
@@ -62,8 +63,8 @@ import org.keizar.android.ui.profile.component.SavedBoards
 import org.keizar.android.ui.profile.component.SavedGameCard
 import org.keizar.android.ui.profile.component.SavedGames
 import org.keizar.android.ui.profile.component.UserInfoRow
-import org.keizar.utils.communication.game.Difficulty
 import org.keizar.game.Role
+import org.keizar.utils.communication.game.Difficulty
 import org.keizar.utils.communication.game.GameDataGet
 import org.keizar.utils.communication.game.NeutralStats
 import org.keizar.utils.communication.game.Player
@@ -139,6 +140,8 @@ fun ProfileScene(
             )
         },
     ) { contentPadding ->
+        ErrorDialogHost(errorFlow = vm.errorDialog, clearError = true)
+        
         Column(
             Modifier
                 .padding(contentPadding)
@@ -280,7 +283,7 @@ fun NicknameEditDialog(
                 ),
                 keyboardActions = KeyboardActions(onDone = {
                     vm.launchInBackground {
-                        vm.confirmDialog()
+                        vm.confirmEditNickname()
                     }
                 }),
                 modifier = Modifier
@@ -288,7 +291,7 @@ fun NicknameEditDialog(
                     .defaultFocus()
                     .onKey(key = Key.Enter) {
                         vm.launchInBackground {
-                            vm.confirmDialog()
+                            vm.confirmEditNickname()
                         }
                     },
             )
@@ -296,7 +299,7 @@ fun NicknameEditDialog(
         confirmButton = {
             Button(onClick = {
                 vm.launchInBackground {
-                    vm.confirmDialog()
+                    vm.confirmEditNickname()
                     withContext(Dispatchers.Main) {
                         onSuccessfulEdit()
                     }
