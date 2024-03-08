@@ -5,9 +5,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
 import org.keizar.game.GameSession
@@ -238,19 +243,22 @@ class AlgorithmAI(
 
     override fun start() {
         myCoroutine.launch {
-            val rememberStates = mutableListOf<Pair<BoardPos, BoardPos>>()
-            game.currentRole(myPlayer).zip(game.currentRound) { myRole, session ->
-                myRole to session
-            }.collectLatest { (myRole, session) ->
-                session.curRole.collect { currentRole ->
+            combine(
+                game.currentRole(myPlayer),
+                game.currentRound,
+                game.currentRound.flatMapLatest { it.replayedRounds }) { myRole, session, replayed ->
+                Triple(myRole, session, replayed)
+            }.transformLatest { (myRole, session) ->
+                val rememberStates = mutableListOf<Pair<BoardPos, BoardPos>>()
+                emitAll(session.curRole.map { currentRole ->
                     if (myRole == currentRole && session.winner.first() == null) {
                         if (!disableDelay) {
                             delay(Random.nextLong(1000L..1500L))
                         }
                         findBestMove(session, currentRole, rememberStates)
                     }
-                }
-            }
+                })
+            }.collect()
         }
 
         myCoroutine.launch {
@@ -322,8 +330,12 @@ class AlgorithmAI(
                         val notRecOccupy =
                             tiles[notRecOccupyPos.index].type == TileType.BISHOP || tiles[notRecOccupyPos.index].type == TileType.KNIGHT || tiles[notRecOccupyPos.index].type == TileType.PLAIN && keizarCapture != null
                         val recOccupyPos =
-                            if (role == Role.WHITE) listOf(BoardPos("c4"), BoardPos("e4")) else listOf(BoardPos("c6"), BoardPos("e6"))
-                        val recOccupy = tiles[recOccupyPos[0].index].type == TileType.PLAIN || tiles[recOccupyPos[1].index].type == TileType.PLAIN
+                            if (role == Role.WHITE) listOf(BoardPos("c4"), BoardPos("e4")) else listOf(
+                                BoardPos("c6"),
+                                BoardPos("e6")
+                            )
+                        val recOccupy =
+                            tiles[recOccupyPos[0].index].type == TileType.PLAIN || tiles[recOccupyPos[1].index].type == TileType.PLAIN
                         val checkCapture =
                             tiles[node.position.index].type != TileType.PLAIN ||
                                     ((tiles[node.position.index].type == TileType.PLAIN) && node.position.col != parent.first.position.col)
