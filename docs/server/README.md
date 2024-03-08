@@ -86,7 +86,16 @@ It is defined in the `data` package. The data layer contains two components,
 the database and the static object storage.
 
 The database is managed by the `DatabaseManager` class. Refer to the documentation in the class file
-for its structure and detailed usage.
+for its structure and detailed usage. 
+
+The `DatabaseManager` class allows developers to seamlessly convert between test environment and production environment by using the `TESTING` environment variable.
+this allows the server to use an in-memory database for testing and a real database for production. 
+
 
 The static object storage currently only contains the `AvatarStorage` class, which is used to
 store and retrieve the avatar images of the users.
+
+### Data base Models
+Each Database table is abstracted as a data class in the `models` package. This include the `UserModel`, `SeedBank Model` and `GameDataModel`.
+Each model contains the necessary fields to interact with the database which is managed by the `DatabaseManager` class.
+
