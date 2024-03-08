@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.launchInBackground
+import org.keizar.android.ui.foundation.runUntilSuccess
 import org.keizar.android.ui.profile.ProfileViewModel
 import org.keizar.utils.communication.game.GameDataGet
 
@@ -22,11 +23,11 @@ class SavedGameViewModel(vm: ProfileViewModel, gameData: GameDataGet) : Abstract
                 _avatarUrl.value = "https://keizar.s3.amazonaws.com/avatars/robot_icon.png"
                 isComputer.value = true
             } else {
-                _avatarUrl.value = vm.getAvatarUrl(gameData.opponentUsername)
-                isComputer.value = false
+                while (true) {
+                    _avatarUrl.value = runUntilSuccess { vm.getAvatarUrl(gameData.opponentUsername) }
+                    isComputer.value = false
+                }
             }
         }
     }
-
-
 }

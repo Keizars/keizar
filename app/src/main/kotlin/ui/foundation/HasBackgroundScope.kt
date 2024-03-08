@@ -2,12 +2,16 @@ package org.keizar.android.ui.foundation
 
 import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
+import io.ktor.util.logging.error
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -16,7 +20,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.yield
+import kotlin.contracts.InvocationKind
+import kotlin.contracts.contract
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlin.time.Duration.Companion.seconds
@@ -201,7 +209,7 @@ interface HasBackgroundScope {
 //        started: SharingStarted = SharingStarted.WhileSubscribed(5.seconds),
     ): MutableStateFlow<T> {
         val localFlow = MutableStateFlow(initialValue)
-        launchInBackground { 
+        launchInBackground {
             collect { localFlow.value = it }
         }
         return localFlow
@@ -253,4 +261,25 @@ fun <V : HasBackgroundScope> V.launchInMain(
     return backgroundScope.launch(context + Dispatchers.Main, start) {
         block()
     }
+}
+
+/**
+ * Runs the block multiple times, returns when it succeeds the first time. with a delay between each attempt.
+ */
+suspend inline fun <R, V : HasBackgroundScope> V.runUntilSuccess(block: V.() -> R): R {
+    contract { callsInPlace(block, InvocationKind.AT_LEAST_ONCE) }
+    while (currentCoroutineContext().isActive) {
+        try {
+            return block()
+        } catch (e: Exception) {
+            if (this is AbstractViewModel) {
+                logger.error(e)
+            } else {
+                e.printStackTrace()
+            }
+            delay(3.seconds)
+        }
+    }
+    yield() // throws CancellationException()
+    throw CancellationException() // should not reach, defensive
 }

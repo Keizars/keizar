@@ -33,7 +33,7 @@ interface Disposable {
  * A typical usage is to remember the view model in a composable, so that Compose can automatically manage the lifecycle.
  */
 abstract class AbstractViewModel : RememberObserver, ViewModel(), HasBackgroundScope, Disposable {
-    protected val logger by lazy { logger(this::class) }
+    val logger by lazy { logger(this::class) }
 
     private val closed = atomic(false)
     private val isClosed get() = closed.value

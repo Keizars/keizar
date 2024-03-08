@@ -14,10 +14,12 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.withContext
+import me.him188.ani.utils.logging.error
 import org.keizar.android.data.GameStartConfigurationEncoder
 import org.keizar.android.data.SessionManager
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.ErrorMessage
+import org.keizar.android.ui.foundation.runUntilSuccess
 import org.keizar.client.services.GameDataService
 import org.keizar.client.services.SeedBankService
 import org.keizar.client.services.StreamingService
@@ -65,7 +67,7 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     val self: StateFlow<User?> = time.transformLatest {
         emit(null)
         emitAll(sessionManager.token.mapLatest {
-            userService.self()
+            runUntilSuccess { userService.self() }
         })
     }.stateInBackground()
 
@@ -116,6 +118,9 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
             }
             streamingService.uploadSelfAvatar(temp)
             refreshAll()
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to upload avatar" }
+            errorDialog.value = ErrorMessage.networkError(e)
         } finally {
             temp.delete()
         }
@@ -130,7 +135,7 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
      * A flow of all the saved seeds of the user
      */
     val allSeeds: MutableStateFlow<List<SavedSeed>> = time.map {
-        seedBankService.getSeeds()
+        runUntilSuccess { seedBankService.getSeeds() }
     }.onStart { isLoadingSeeds.value = true }.map { seeds ->
         seeds.map { SavedSeed(it) }
     }.onEach {
@@ -156,7 +161,7 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
      * A flow of all the saved games of the user
      */
     val allGames: MutableStateFlow<List<GameDataGet>> = time.map {
-        gameDataService.getGames()
+        runUntilSuccess { gameDataService.getGames() }
     }.onStart { isLoadingGames.value = true }.onEach {
         isLoadingGames.value = false
     }.localCachedStateFlow(emptyList())
