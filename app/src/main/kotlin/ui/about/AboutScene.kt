@@ -1,5 +1,7 @@
 package org.keizar.android.ui.about
 
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextAlign
@@ -107,7 +110,10 @@ fun AboutPage(modifier: Modifier = Modifier) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    ClickableText(text = AnnotatedString("MARTIN DURMAN & LUKE O'NEILL"), style = MaterialTheme.typography.bodyMedium) {
+                    ClickableText(
+                        text = AnnotatedString("MARTIN DURMAN & LUKE O'NEILL"),
+                        style = MaterialTheme.typography.bodyMedium
+                    ) {
                     }
                 }
 
@@ -118,12 +124,15 @@ fun AboutPage(modifier: Modifier = Modifier) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
-                    ClickableText(text = AnnotatedString("ÁKOS ZUBOR & DÓRA BÁNYAI"), style = MaterialTheme.typography.bodyMedium) {
+                    ClickableText(
+                        text = AnnotatedString("ÁKOS ZUBOR & DÓRA BÁNYAI"),
+                        style = MaterialTheme.typography.bodyMedium
+                    ) {
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(height))
-                
+
                 Text(text = "APP DEVELOPMENT:", style = MaterialTheme.typography.titleMedium)
 
                 Column(
@@ -131,9 +140,14 @@ fun AboutPage(modifier: Modifier = Modifier) {
                     verticalArrangement = Arrangement.spacedBy(2.dp)
                 ) {
                     Text(text = "Holger Pirk", style = MaterialTheme.typography.bodyMedium)
-                    
-                    ClickableText(text = AnnotatedString("Tianyi Guan"), style = MaterialTheme.typography.bodyMedium) {
 
+                    val context = LocalContext.current
+                    fun browse(url: String) {
+                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                        context.startActivity(browserIntent)
+                    }
+                    ClickableText(text = AnnotatedString("Tianyi Guan"), style = MaterialTheme.typography.bodyMedium) {
+                        browse("https://github.com/him188")
                     }
                     ClickableText(text = AnnotatedString("Shengyue Zhu"), style = MaterialTheme.typography.bodyMedium) {
 
@@ -152,32 +166,38 @@ fun AboutPage(modifier: Modifier = Modifier) {
                 Spacer(modifier = Modifier.height(height))
 
                 Text(text = "PUBLISHED BY", style = MaterialTheme.typography.titleMedium)
-                
-                Column(horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text(text = "ZUBOARD GAMES",style = MaterialTheme.typography.bodyMedium)
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Text(text = "ZUBOARD GAMES", style = MaterialTheme.typography.bodyMedium)
                 }
 
                 Spacer(modifier = Modifier.height(height))
 
-                Column(horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
                     Text(
                         text = "THIS IS A BETA VERSION\n FOR TESTING PURPOSES\n ALL DATA HANDLING IS\n" +
-                                "COVERED BY\n GDPR\n LAWS", style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center
+                                "COVERED BY\n GDPR\n LAWS",
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
                     )
                 }
 
                 Spacer(modifier = Modifier.height(height))
 
                 Text(text = "KEIZÁR®", style = MaterialTheme.typography.titleMedium)
-                
+
                 Spacer(modifier = Modifier.height(height))
-                
+
                 Text(text = "AND")
 
                 Spacer(modifier = Modifier.height(height))
-                
+
                 Row {
                     Spacer(modifier = Modifier.width(height))
                     painterResource(id = R.drawable.keizar).let {
@@ -190,15 +210,15 @@ fun AboutPage(modifier: Modifier = Modifier) {
                     }
                     Text(text = " ®")
                 }
-                
+
                 Spacer(modifier = Modifier.height(height))
-                
-                Text(text = "ARE REGISTERED TRADEMARKS", style = MaterialTheme.typography.bodyMedium) 
-                
+
+                Text(text = "ARE REGISTERED TRADEMARKS", style = MaterialTheme.typography.bodyMedium)
+
                 Spacer(modifier = Modifier.height(height))
-                
+
                 Text(text = "ALL GAME SYMBOLS ARE REGISTERED DESIGNS", style = MaterialTheme.typography.bodyMedium)
-                
+
             }
         }
 
