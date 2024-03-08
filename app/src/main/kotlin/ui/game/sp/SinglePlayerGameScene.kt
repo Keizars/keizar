@@ -1,14 +1,7 @@
 package org.keizar.android.ui.game.sp
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
@@ -16,7 +9,6 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
-import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.BaseGamePage
 import org.keizar.android.ui.game.actions.UndoButton
@@ -64,35 +56,15 @@ fun SinglePlayerGameScene(
         }
     }
 
-    if (isSystemInLandscape()) {
-        Row(Modifier.fillMaxSize(), horizontalArrangement = Arrangement.Center) {
-            Box {
-                BaseGamePage(
-                    vm,
-                    onClickHome = onClickHome,
-                    onClickGameConfig = onClickGameConfig,
-                    onClickLogin = onClickLogin,
-                    actions = {
-                        UndoButton(vm = vm)
-                    },
-                    modifier = Modifier.width(IntrinsicSize.Min)
-                )
-            }
-//            Box(Modifier.fillMaxHeight(), contentAlignment = Alignment.BottomCenter) {
-//                UndoButton(vm = vm)
-//            }
+    BaseGamePage(
+        vm,
+        onClickHome = onClickHome,
+        onClickGameConfig = onClickGameConfig,
+        onClickLogin = onClickLogin,
+        actions = {
+            UndoButton(vm = vm)
         }
-    } else {
-        BaseGamePage(
-            vm,
-            onClickHome = onClickHome,
-            onClickGameConfig = onClickGameConfig,
-            onClickLogin = onClickLogin,
-            actions = {
-                UndoButton(vm = vm)
-            }
-        )
-    }
+    )
 }
 
 
