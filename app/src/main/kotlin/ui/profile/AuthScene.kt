@@ -12,9 +12,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Visibility
@@ -93,17 +95,20 @@ fun AuthScene(
             )
         },
     ) { contentPadding ->
-        Column(
-            Modifier
-                .padding(contentPadding)
-                .padding(16.dp)
-                .imePadding()
-        ) {
-            AuthPage(
-                viewModel = vm,
-                onSuccess = onSuccess,
-                Modifier.fillMaxSize()
-            )
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(
+                Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(contentPadding)
+                    .padding(16.dp)
+                    .imePadding()
+            ) {
+                AuthPage(
+                    viewModel = vm,
+                    onSuccess = onSuccess,
+                    Modifier.fillMaxSize()
+                )
+            }
         }
     }
 }
