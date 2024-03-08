@@ -36,7 +36,7 @@ import org.keizar.client.Room
 import org.keizar.client.exceptions.RoomFullException
 import org.keizar.client.services.RoomService
 import org.keizar.client.services.UserService
-import org.keizar.utils.communication.game.Difficulty
+import org.keizar.game.Difficulty
 import org.keizar.game.Role
 import org.keizar.utils.communication.GameRoomState
 import org.keizar.utils.communication.PlayerSessionState
