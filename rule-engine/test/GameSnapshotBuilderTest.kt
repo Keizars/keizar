@@ -128,6 +128,14 @@ class GameSnapshotBuilderTest {
             white("b1")
             black("g7")
         }
+        val boardProperty = BoardPropertiesBuilder(prototype = BoardPropertiesPrototypes.Plain)
+        boardProperty.height { 8 }
+        boardProperty.width { 8 }
+        boardProperty.keizarTilePos { BoardPos.fromString("d5") }
+        boardProperty.winningCount { 3 }
+        boardProperty.startingRole { Role.WHITE }
+        boardProperty.roundsCount { 2 }
+        boardProperty.piecesStartingPos { piecesStartingPos.toMutableMap() }
         assertEquals(2 ,gameSnapshot.rounds.size)
         assertEquals(1, roundSnapshot.winningCounter)
         assertEquals(1, roundSnapshot2.winningCounter)
