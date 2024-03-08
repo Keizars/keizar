@@ -594,7 +594,7 @@ fun HomePage(navController: NavController) {
 @Composable
 fun CopyrightText() {
     Text(
-        "© Zuboard Games 2024",
+        "©2024 ZUBOARD GAMES",
         textAlign = TextAlign.Center,
         style = MaterialTheme.typography.labelMedium
     )
