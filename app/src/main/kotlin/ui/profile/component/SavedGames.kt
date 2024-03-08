@@ -3,16 +3,16 @@ package org.keizar.android.ui.profile.component
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
@@ -47,8 +47,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import org.keizar.android.data.GameStartConfigurationEncoder
 import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.foundation.launchInBackground
@@ -221,82 +219,78 @@ fun SavedGameCard(
                         }
                     }
 
-                    Row(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
                             text = "$winningStatus - $formattedTimeStamp",
-                            modifier = Modifier.padding(4.dp),
+                            modifier = Modifier.weight(1f),
                             overflow = TextOverflow.Ellipsis,
                         )
 
                         var showMenu by remember { mutableStateOf(false) }
                         Box(
-                            modifier = Modifier.fillMaxWidth(),
-                            contentAlignment = Alignment.TopEnd
-                        ) {
-                            Box(
-                                Modifier.clickable {
+                            Modifier
+                                .padding(start = 4.dp)
+                                .clickable {
                                     showMenu = !showMenu
                                 }
-                            ) {
-                                Icon(
-                                    Icons.Filled.MoreVert,
-                                    contentDescription = "More options",
-                                    modifier = Modifier.size(24.dp)
-                                )
+                                .requiredWidth(IntrinsicSize.Max)
+                        ) {
+                            Icon(
+                                Icons.Filled.MoreVert,
+                                contentDescription = "More options",
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                        val context = LocalContext.current
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+
+                            DropdownMenuItem(onClick = {
+                                showMenu = false
+                                val clipboard =
+                                    context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                val clip =
+                                    ClipData.newPlainText("Copied seed", gameData.gameConfiguration)
+                                clipboard.setPrimaryClip(clip)
+                            }) {
+                                Text("Copy seed")
                             }
-                            val context = LocalContext.current
-                            DropdownMenu(
-                                expanded = showMenu,
-                                onDismissRequest = { showMenu = false }
-                            ) {
 
-                                DropdownMenuItem(onClick = {
-                                    showMenu = false
-                                    val clipboard =
-                                        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                    val clip =
-                                        ClipData.newPlainText("Copied seed", gameData.gameConfiguration)
-                                    clipboard.setPrimaryClip(clip)
-                                }) {
-                                    Text("Copy seed")
+                            DropdownMenuItem(onClick = {
+                                showMenu = false
+                                vm.launchInBackground {
+                                    vm.deleteGame(gameData.dataId)
+                                    vm.selectedGame.value = null
                                 }
-
-                                DropdownMenuItem(onClick = {
-                                    showMenu = false
-                                    vm.launchInBackground {
-                                        try {
-                                            vm.deleteGame(gameData.dataId)
-                                            vm.selectedGame.value = null
-                                        } catch (e: Exception) {
-                                            withContext(Dispatchers.Main) {
-                                                Toast.makeText(
-                                                    context,
-                                                    "Failed to delete, please check your network connection",
-                                                    Toast.LENGTH_SHORT
-                                                ).show()
-                                            }
-                                            throw e
-                                        }
-                                    }
-                                }) {
-                                    Text("Delete")
-                                }
+                            }) {
+                                Text("Delete")
                             }
                         }
-
                     }
-                    Row(modifier = Modifier.fillMaxWidth()) {
+                    Row(modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(end = 8.dp)
+                        .padding(top = 4.dp)) {
                         Text(
                             text = "Opponent: $opponentName",
-                            modifier = Modifier.padding(4.dp),
-                            overflow = TextOverflow.Ellipsis
+                            modifier = Modifier.weight(1f),
+                            overflow = TextOverflow.Ellipsis,
+                            maxLines = 2
                         )
 
-                        Spacer(modifier = Modifier.weight(1f))
-
-                        Box(modifier = Modifier.padding(8.dp)) {
-                            Button(onClick = { onClickPlayGame(gameData.gameConfiguration) }) {
-                                Text(text = "Play")
+                        Box(
+                            modifier = Modifier
+                        ) {
+                            Button(
+                                onClick = { onClickPlayGame(gameData.gameConfiguration) },
+                                Modifier.requiredWidth(IntrinsicSize.Max)
+                            ) {
+                                Text(text = "Play", softWrap = false, modifier = Modifier.width(IntrinsicSize.Max))
                             }
                         }
                     }
