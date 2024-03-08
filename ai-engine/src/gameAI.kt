@@ -40,7 +40,7 @@ interface GameAI {
 }
 
 suspend fun findRandomMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos>? {
-    val allPieces = round.getAllPiecesPos(role).first()
+    val allPieces = round.getAllPiecesPos(role)
     if (allPieces.isEmpty()) {
         return null
     } else {
@@ -49,7 +49,7 @@ suspend fun findRandomMove(round: RoundSession, role: Role): Pair<BoardPos, Boar
 
         while (validTargets.isEmpty() && round.winner.first() == null) {
             randomPiece = allPieces.random()
-            validTargets = round.getAvailableTargets(randomPiece).first()
+            validTargets = round.getAvailableTargets(randomPiece)
         }
 
         return if (validTargets.isEmpty()) {
@@ -101,13 +101,13 @@ class RandomGameAIImpl(
     }
 
     override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos>? {
-        val allPieces = round.getAllPiecesPos(role).first()
+        val allPieces = round.getAllPiecesPos(role)
         var randomPiece = allPieces.random()
-        var validTargets = round.getAvailableTargets(randomPiece).first()
+        var validTargets = round.getAvailableTargets(randomPiece)
 
         do {
             randomPiece = allPieces.random()
-            validTargets = round.getAvailableTargets(randomPiece).first()
+            validTargets = round.getAvailableTargets(randomPiece)
             delay(1000L)
         } while (validTargets.isEmpty() && allPieces.isNotEmpty() && round.winner.first() == null)
 

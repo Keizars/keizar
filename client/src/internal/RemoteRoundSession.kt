@@ -24,8 +24,8 @@ internal class RemoteRoundSessionImpl internal constructor(
      * Returns false if the user tries to call [getAvailableTargets]
      * and [move] on their opponent's pieces
      */
-    override fun getAvailableTargets(from: BoardPos): Flow<List<BoardPos>> {
-        if (round.pieceAt(from) != selfRole.value) return flowOf(listOf())
+    override fun getAvailableTargets(from: BoardPos): List<BoardPos> {
+        if (round.pieceAt(from) != selfRole.value) return listOf()
         return round.getAvailableTargets(from)
     }
 

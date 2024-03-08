@@ -19,6 +19,7 @@ interface RoundSession {
     val curRole: StateFlow<Role>
     val canUndo: StateFlow<Boolean>
     val canRedo: StateFlow<Boolean>
+    
     // statistics
     val moveDurations: StateFlow<List<Instant>>
     val whitePlayerMoves: StateFlow<Int>
@@ -41,8 +42,8 @@ interface RoundSession {
     // Redo one turn, should only be called on offline multiplayer or free-move mode.
     fun recoverLast(): Boolean
 
-    fun getAvailableTargets(from: BoardPos): Flow<List<BoardPos>>
-    fun getAllPiecesPos(role: Role): Flow<List<BoardPos>>
+    fun getAvailableTargets(from: BoardPos): List<BoardPos>
+    fun getAllPiecesPos(role: Role): List<BoardPos>
     suspend fun move(from: BoardPos, to: BoardPos): Boolean
     fun getLostPiecesCount(role: Role): StateFlow<Int>
     fun reset()
@@ -105,16 +106,16 @@ class RoundSessionImpl(
         return ruleEngine.redo()
     }
 
-    override fun getAvailableTargets(from: BoardPos): Flow<List<BoardPos>> {
+    override fun getAvailableTargets(from: BoardPos): List<BoardPos> {
         return if (winner.value != null) {
-            flowOf(listOf())
+            listOf()
         } else {
-            flowOf(ruleEngine.showPossibleMoves(from))
+            ruleEngine.showPossibleMoves(from)
         }
     }
 
-    override fun getAllPiecesPos(role: Role): Flow<List<BoardPos>> {
-        return flowOf(ruleEngine.getAllPiecesPos(role))
+    override fun getAllPiecesPos(role: Role): List<BoardPos> {
+        return ruleEngine.getAllPiecesPos(role)
     }
 
     override fun pieceAt(pos: BoardPos): Role? {

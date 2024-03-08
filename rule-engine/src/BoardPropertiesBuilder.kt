@@ -98,8 +98,8 @@ class BoardPropertiesBuilder private constructor(
             return change(BoardPos.fromString(pos), type)
         }
 
-        fun change(pair: Pair<BoardPos, TileType>) {
-            tileArrangement[pair.first] = pair.second
+        fun change(pair: Pair<String, TileType>) {
+            return change(pair.first, pair.second)
         }
 
         fun build(): Pair<Map<BoardPos, TileType>, Int?> {
@@ -136,4 +136,18 @@ class BoardPropertiesBuilder private constructor(
             seed = tileArrangement.second,
         )
     }
+}
+
+private fun example() {
+    val customProperties = BoardPropertiesBuilder(
+        prototype = BoardPropertiesPrototypes.Standard(seed = 100),
+    ) {
+        winningCount { 5 }
+        roundsCount { 4 }
+        tiles {
+            change("d5" to TileType.PLAIN)
+            change("a1" to TileType.KEIZAR)
+            change("e8" to TileType.BISHOP)
+        }
+    }.build()
 }

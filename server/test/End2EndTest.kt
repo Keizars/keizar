@@ -1,15 +1,5 @@
 //package org.keizar.server
 //
-//import io.ktor.client.HttpClient
-//import io.ktor.client.call.body
-//import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-//import io.ktor.client.request.bearerAuth
-//import io.ktor.client.request.post
-//import io.ktor.client.request.setBody
-//import io.ktor.http.ContentType
-//import io.ktor.http.HttpStatusCode
-//import io.ktor.http.contentType
-//import io.ktor.serialization.kotlinx.json.json
 //import kotlinx.coroutines.CancellationException
 //import kotlinx.coroutines.CoroutineScope
 //import kotlinx.coroutines.Job
@@ -26,15 +16,25 @@
 //import org.junit.jupiter.api.BeforeEach
 //import org.junit.jupiter.api.Test
 //import org.junit.jupiter.api.TestInstance
+//import org.keizar.client.AccessTokenProvider
+//import org.keizar.client.Client
+//import org.keizar.client.ClientConfig
 //import org.keizar.client.RemoteGameSession
-//import org.keizar.game.BoardProperties
+//import org.keizar.client.annotations.InternalClientApi
+//import org.keizar.client.services.BaseRoomService
+//import org.keizar.client.services.RoomService
+//import org.keizar.client.services.UserService
 //import org.keizar.game.Role
 //import org.keizar.utils.communication.GameRoomState
 //import org.keizar.utils.communication.PlayerSessionState
 //import org.keizar.utils.communication.account.AuthRequest
-//import org.keizar.utils.communication.account.AuthResponse
 //import org.keizar.utils.communication.game.BoardPos
 //import org.keizar.utils.communication.game.GameResult
+//import org.koin.core.KoinApplication
+//import org.koin.core.context.GlobalContext
+//import org.koin.core.context.GlobalContext.startKoin
+//import org.koin.dsl.module
+//import retrofit2.Retrofit
 //import kotlin.random.Random
 //import kotlin.test.assertEquals
 //import kotlin.test.assertFalse
@@ -55,16 +55,18 @@
 //    private val server = getServer(env)
 //
 //    @Test
-//    fun test() = runTest(timeout = 30.seconds) {
+//    fun test() = runTest(timeout = 10.seconds) {
 //        val coroutineScope = CoroutineScope(Job())
 //        val startGuest = MutableStateFlow(false)
 //        val roomNo = 5462
+//        val endpoint = "http://localhost:${env.port}"
+//
 //        val hostJob = coroutineScope.launch {
-//            hostClientCoroutine(coroutineScope, roomNo, startGuest)
+//            hostClientCoroutine(coroutineScope, roomNo, endpoint, startGuest)
 //        }
 //        startGuest.first { it }
 //        val guestJob = coroutineScope.launch {
-//            guestClientCoroutine(coroutineScope, roomNo)
+//            guestClientCoroutine(coroutineScope, roomNo, endpoint)
 //        }
 //
 //        hostJob.join()
@@ -76,34 +78,60 @@
 //        }
 //    }
 //
+//    @OptIn(InternalClientApi::class)
+//    @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 //    private suspend fun hostClientCoroutine(
 //        coroutineScope: CoroutineScope,
 //        roomNo: Int,
+//        endpoint: String,
 //        startGuest: MutableStateFlow<Boolean>,
 //    ) {
-//        val endpoint = "http://localhost:${env.port}"
-//        val client = HttpClient {
-//            install(ContentNegotiation) {
-//                json()
-//            }
-//        }
 //        val username = "user-${random.nextInt() % 1000}"
-//        val token = client.post("$endpoint/users/register") {
-//            contentType(ContentType.Application.Json)
-//            setBody(AuthRequest(username = username, password = username))
-//        }.body<AuthResponse>().token
+//
+//        val tokenProvider = object : AccessTokenProvider {
+//            var token: String? = null
+//
+//            override suspend fun getAccessToken(): String {
+//                return token ?: ""
+//            }
+//
+//            override suspend fun invalidateToken() {
+//                return
+//            }
+//
+//        }
+//        val customKoin = KoinApplication.init().apply {
+//            modules(
+//                module {
+//                    single<AccessTokenProvider> { tokenProvider }
+//                }
+//            )
+//            modules(
+//                Client(
+//                    ClientConfig(baseUrl = endpoint),
+//                    coroutineScope.coroutineContext
+//                ).servicesModule
+//            )
+//        }.koin
+//
+//        val userService =
+//        val roomService = org.keizar.client.services.RoomServiceImpl(
+//            baseUrl = endpoint,
+//            generated = GlobalContext.get().get<org.keizar.client.RetrofitProvider>().retrofit.create(BaseRoomService::class.java),
+//            koin = customKoin,
+//        )
+//
+//        val token = userService.register(
+//            AuthRequest(
+//                username = username,
+//                password = username
+//            )
+//        ).token
+//        tokenProvider.token = token
 //        assertNotNull(token)
 //
-//        val responseCreate = client.post("$endpoint/room/$roomNo/create") {
-//            contentType(ContentType.Application.Json)
-//            setBody(BoardProperties.getStandardProperties())
-//            bearerAuth(token)
-//        }
-//        assertEquals(HttpStatusCode.OK, responseCreate.status)
-//        client.close()
-//
-//        val clientFacade = KeizarWebsocketClientFacade(endpoint, MutableStateFlow(token))
-//        val gameRoom = clientFacade.connect(roomNo.toUInt(), coroutineScope.coroutineContext)
+//        roomService.createRoom(roomNo.toString())
+//        val gameRoom = roomService.connect(roomNo.toUInt(), coroutineScope.coroutineContext)
 //
 //        assertEquals(roomNo.toUInt(), gameRoom.roomNumber)
 //        assertEquals(GameRoomState.STARTED, gameRoom.state.first())
@@ -117,7 +145,7 @@
 //        gameRoom.changeSeed(hostProposedSeed.toUInt())
 //        gameRoom.setReady()
 //
-//        gameRoom.state.first { it == GameRoomState.PLAYING }
+//        gameRoom.state.first{ it == GameRoomState.PLAYING }
 //        val game = gameRoom.getGameSession()
 //        assertEquals(hostProposedSeed, game.properties.seed)
 //
@@ -125,31 +153,58 @@
 //        // assertEquals(GameResult.Draw, result)
 //    }
 //
+//    @OptIn(InternalClientApi::class)
+//    @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
 //    private suspend fun guestClientCoroutine(
 //        coroutineScope: CoroutineScope,
 //        roomNo: Int,
+//        endpoint: String,
 //    ) {
-//        val endpoint = "http://localhost:${env.port}"
-//        val client = HttpClient {
-//            install(ContentNegotiation) {
-//                json()
-//            }
-//        }
 //        val username = "user-${random.nextInt() % 1000}"
-//        val token = client.post("$endpoint/users/register") {
-//            contentType(ContentType.Application.Json)
-//            setBody(AuthRequest(username = username, password = username))
-//        }.body<AuthResponse>().token
+//        val tokenProvider = object : AccessTokenProvider {
+//            var token: String? = null
+//
+//            override suspend fun getAccessToken(): String {
+//                return token ?: ""
+//            }
+//
+//            override suspend fun invalidateToken() {
+//                return
+//            }
+//
+//        }
+//        val customKoin = KoinApplication.init().apply {
+//            modules(
+//                module {
+//                    single<AccessTokenProvider> { tokenProvider }
+//                }
+//            )
+//            modules(
+//                Client(
+//                    ClientConfig(baseUrl = endpoint),
+//                    coroutineScope.coroutineContext
+//                ).servicesModule
+//            )
+//        }.koin
+//
+//        val userService = GlobalContext.get().get<UserService>()
+//        val roomService = org.keizar.client.services.RoomServiceImpl(
+//            baseUrl = endpoint,
+//            generated = GlobalContext.get().get<org.keizar.client.RetrofitProvider>().retrofit.create(BaseRoomService::class.java),
+//            koin = customKoin,
+//        )
+//
+//        val token = userService.register(
+//            AuthRequest(
+//                username = username,
+//                password = username
+//            )
+//        ).token
+//        tokenProvider.token = token
 //        assertNotNull(token)
 //
-//        val responseJoin = client.post("$endpoint/room/$roomNo/join") {
-//            bearerAuth(token)
-//        }
-//        assertEquals(HttpStatusCode.OK, responseJoin.status)
-//        client.close()
-//
-//        val clientFacade = KeizarWebsocketClientFacade(endpoint, MutableStateFlow(token))
-//        val gameRoom = clientFacade.connect(roomNo.toUInt(), coroutineScope.coroutineContext)
+//        roomService.joinRoom(roomNo.toString())
+//        val gameRoom = roomService.connect(roomNo.toUInt(), coroutineScope.coroutineContext)
 //
 //        assertEquals(roomNo.toUInt(), gameRoom.roomNumber)
 //        assertEquals(username, gameRoom.self.username)

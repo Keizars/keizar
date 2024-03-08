@@ -575,7 +575,7 @@ abstract class BaseGameBoardViewModel(
                 if (pick == null) {
                     flowOf(emptyList())
                 } else {
-                    turn.getAvailableTargets(pieceArranger.viewToLogical(pick.viewPos).first())
+                    flowOf(turn.getAvailableTargets(pieceArranger.viewToLogical(pick.viewPos).first()))
                 }
             }.map { list ->
                 list

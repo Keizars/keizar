@@ -30,21 +30,15 @@ class RoundSessionTest {
         val targets1 = round.getAvailableTargets(BoardPos("d2"))
         val targets2 = round.getAvailableTargets(BoardPos("e2"))
 
-        targets1.collect { list ->
-            assertEquals(listOf("d3").map { BoardPos.fromString(it) }.toSet(), list.toSet())
-        }
-        targets2.collect { list ->
-            assertEquals(listOf("e3", "e4").map { BoardPos.fromString(it) }.toSet(), list.toSet())
-        }
+        assertEquals(listOf("d3").map { BoardPos.fromString(it) }.toSet(), targets1.toSet())
+        assertEquals(listOf("e3", "e4").map { BoardPos.fromString(it) }.toSet(), targets2.toSet())
 
         assertTrue(round.move(BoardPos("d2"), BoardPos("d3")))
         val targets3 = round.getAvailableTargets(BoardPos("d3"))
-        targets3.collect { list ->
-            assertEquals(
-                setOf("d2", "d4", "e3", "e4", "c3", "c4").map { BoardPos.fromString(it) }.toSet(),
-                list.toSet()
-            )
-        }
+        assertEquals(
+            setOf("d2", "d4", "e3", "e4", "c3", "c4").map { BoardPos.fromString(it) }.toSet(),
+            targets3.toSet()
+        )
     }
 
     @Test
@@ -117,11 +111,11 @@ class RoundSessionTest {
         val round = game.currentRound.first()
         assertEquals(
             BoardPos.range("a1" to "h2").toSet(),
-            round.getAllPiecesPos(Role.WHITE).last().toSet(),
+            round.getAllPiecesPos(Role.WHITE).toSet(),
         )
         assertEquals(
             BoardPos.range("a7" to "h8").toSet(),
-            round.getAllPiecesPos(Role.BLACK).last().toSet(),
+            round.getAllPiecesPos(Role.BLACK).toSet(),
         )
 
         assertTrue(round.move(BoardPos("f2"), BoardPos("f4")))
@@ -130,7 +124,7 @@ class RoundSessionTest {
                 "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
                 "a2", "b2", "c2", "d2", "e2", "f4", "g2", "h2",
             ).map { BoardPos.fromString(it) }.toSet(),
-            round.getAllPiecesPos(Role.WHITE).last().toSet(),
+            round.getAllPiecesPos(Role.WHITE).toSet(),
         )
 
         assertTrue(round.move(BoardPos("e7"), BoardPos("e6")))
@@ -142,7 +136,7 @@ class RoundSessionTest {
                 "a1", "b1", "c1", "d1", "e1", "f1", "g1", "h1",
                 "a2", "b2", "c2", "d2", "e2", "g2", "h2",
             ).map { BoardPos.fromString(it) }.toSet(),
-            round.getAllPiecesPos(Role.WHITE).last().toSet(),
+            round.getAllPiecesPos(Role.WHITE).toSet(),
         )
 
         assertEquals(
@@ -150,7 +144,7 @@ class RoundSessionTest {
                 "a8", "b8", "c8", "d8", "e8", "f8", "g8", "h8",
                 "a7", "b7", "c7", "d7", "f7", "g7", "h7", "f5",
             ).map { BoardPos.fromString(it) }.toSet(),
-            round.getAllPiecesPos(Role.BLACK).last().toSet(),
+            round.getAllPiecesPos(Role.BLACK).toSet(),
         )
     }
 

@@ -428,7 +428,7 @@ class GameSessionTest {
         val gameSnapshot = buildGameSnapshot {
             properties {
                 tiles {
-                    change(BoardPos("c3") to TileType.QUEEN)
+                    change("c3" to TileType.QUEEN)
                 }
             }
 
@@ -487,7 +487,7 @@ class GameSessionTest {
         val gameSnapshot = buildGameSnapshot {
             properties {
                 tiles {
-                    change(BoardPos("c3") to TileType.QUEEN)
+                    change("c3" to TileType.QUEEN)
                 }
             }
 
@@ -527,7 +527,7 @@ class GameSessionTest {
         val gameSnapshot = buildGameSnapshot {
             properties {
                 tiles {
-                    change(BoardPos("c3") to TileType.QUEEN)
+                    change("c3" to TileType.QUEEN)
                 }
             }
 
@@ -568,8 +568,8 @@ class GameSessionTest {
 
         val game = GameSession.restore(gameSnapshot)
         val round = game.currentRound.first()
-        val whitePieces = round.getAllPiecesPos(Role.WHITE).first()
-        val whiteMoves = whitePieces.flatMap { round.getAvailableTargets(it).first() }
+        val whitePieces = round.getAllPiecesPos(Role.WHITE)
+        val whiteMoves = whitePieces.flatMap { round.getAvailableTargets(it) }
         assertTrue(whiteMoves.isEmpty())
         assertTrue(round.move(BoardPos("a2"), BoardPos("a1")))
         assertEquals(Role.BLACK, round.winner.value)
