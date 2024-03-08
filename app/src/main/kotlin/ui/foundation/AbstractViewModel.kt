@@ -1,6 +1,5 @@
 package org.keizar.android.ui.foundation
 
-import android.widget.Toast
 import androidx.annotation.CallSuper
 import androidx.compose.runtime.RememberObserver
 import androidx.lifecycle.ViewModel
@@ -9,16 +8,12 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
-import kotlinx.coroutines.launch
 import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.logger
 import me.him188.ani.utils.logging.trace
-import org.keizar.android.KeizarApplication
 import retrofit2.HttpException
 
 interface Disposable {
@@ -107,16 +102,16 @@ abstract class AbstractViewModel : RememberObserver, ViewModel(), HasBackgroundS
             if (shouldIgnoreException(throwable)) {
                 return@CoroutineExceptionHandler
             }
-            GlobalScope.launch(Dispatchers.Main) {
-                try {
-                    Toast.makeText(
-                        KeizarApplication.instance,
-                        "Network error, please try again later",
-                        Toast.LENGTH_LONG
-                    ).show()
-                } catch (_: Throwable) {
-                }
-            }
+//            GlobalScope.launch(Dispatchers.Main) {
+//                try {
+//                    Toast.makeText(
+//                        KeizarApplication.instance,
+//                        "Network error, please try again later",
+//                        Toast.LENGTH_LONG
+//                    ).show()
+//                } catch (_: Throwable) {
+//                }
+//            }
         } + SupervisorJob())
     }
 
