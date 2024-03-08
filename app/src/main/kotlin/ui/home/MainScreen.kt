@@ -259,6 +259,7 @@ fun MainScreen() {
                 },
                 onClickHome = {
                     navController.popBackStack("home", false)
+                    lobbyViewModel.removeSelfRoom()
                 },
                 onClickGameConfig = {
                     navController.navigate("game/lobby")
