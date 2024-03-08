@@ -1,8 +1,10 @@
 package org.keizar.game
 
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.DynamicTest
+import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.Tile
@@ -45,6 +47,7 @@ class RuleEngineCoreTest {
         Pair(Role.WHITE, BoardPos("h7")),
         Pair(Role.WHITE, BoardPos("g8")),
         Pair(Role.BLACK, BoardPos("e7")),
+        Pair(Role.BLACK, BoardPos("d5")),
     ).map { (player, pos) ->
         MutablePiece(index1++, player, MutableStateFlow(pos))
     }
@@ -82,6 +85,7 @@ class RuleEngineCoreTest {
         setOf(BoardPos("h8")),
         setOf(),
         setOf(BoardPos("e6"), BoardPos("e5")),
+        setOf()
     )
 
     @TestFactory
@@ -171,5 +175,25 @@ class RuleEngineCoreTest {
                 )
             }
         }
+    }
+
+    @Test
+    fun `test movement at Keizar` () = runTest {
+        val board = List(64) { Tile(TileType.PLAIN) }.toMutableList()
+        board[BoardPos("d5").index] = Tile(TileType.KEIZAR)
+        val piece = MutablePiece(0, Role.WHITE, MutableStateFlow(BoardPos("d5")))
+        board[BoardPos("d5").index].piece = piece
+        val moves = ruleEngineCore.showValidMoves(board, piece) { index }
+        assertEquals(0, moves.size)
+    }
+
+    @Test
+    fun `test black movement on the column next to d`() = runTest {
+        val board = List(64) { Tile(TileType.PLAIN) }.toMutableList()
+        board[BoardPos("d5").index] = Tile(TileType.KEIZAR)
+        val piece = MutablePiece(0, Role.BLACK, MutableStateFlow(BoardPos("c8")))
+        board[BoardPos("c8").index].piece = piece
+        val moves = ruleEngineCore.showValidMoves(board, piece) { index }
+        assertEquals(setOf(BoardPos("c7")), moves.toSet())
     }
 }

@@ -177,8 +177,7 @@ class RuleEngineCoreImpl(
 
         // If it is a black piece that is the first 2 piece on a column next to the KEIZAR column,
         // it can't move 2 steps
-        if (piece.role == Role.BLACK && abs(piece.pos.value.col - boardProperties.keizarTilePos.col)
-            == 1 && piece.pos.value.row == 7) {
+        if (piece.role == Role.BLACK && abs(piece.pos.value.col - boardProperties.keizarTilePos.col) == 1 && piece.pos.value.row == 7) {
             return false
         }
 
