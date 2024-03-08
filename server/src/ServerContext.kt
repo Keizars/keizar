@@ -24,7 +24,7 @@ import kotlin.time.Duration.Companion.days
  * The [ServerContext] class represents a context object for the server application in order to
  * achieve dependency injection. It contains all the service modules used by the server.
  *
- * Instances can be created using the constructor or the [setupServerContext] function.
+ * Instances can be created using the constructor or using the [setupServerContext] function.
  *
  * @param parentCoroutineScope The [CoroutineScope] used to launch coroutines in the server application.
  * @param logger The [org.slf4j.Logger] instance used by the server application to log messages.
@@ -74,7 +74,7 @@ class ServerContext internal constructor(
 
     /**
      * The service modules of the server application, containing the business logic
-     * of the server used by the HTTP routing layer.
+     * of the server used by the HTTP routing in access layer.
      * Uses the [databaseManager] to interact with the database.
      */
     val gameRooms = GameRoomsModuleImpl(parentCoroutineScope.coroutineContext, logger)
