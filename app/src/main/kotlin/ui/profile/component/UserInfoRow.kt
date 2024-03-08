@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onPlaced
@@ -136,7 +137,11 @@ fun UserInfoRow(
 
 // AvatarImage can be retrieved from a file path or a url
 @Composable
-fun AvatarImage(url: String?, modifier: Modifier = Modifier, filePath: String? = null) {
+fun AvatarImage(
+    url: String?, modifier: Modifier = Modifier,
+    filePath: String? = null,
+    colorFilter: ColorFilter? = null,
+) {
     AsyncImage(
         model = if (filePath != null) File(filePath) else url,
         contentDescription = "Avatar",
@@ -144,6 +149,7 @@ fun AvatarImage(url: String?, modifier: Modifier = Modifier, filePath: String? =
         placeholder = rememberVectorPainter(Icons.Default.Person),
         error = rememberVectorPainter(Icons.Default.Person),
         contentScale = ContentScale.Crop,
+        colorFilter = colorFilter
     )
 }
 
