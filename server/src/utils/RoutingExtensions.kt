@@ -20,6 +20,10 @@ import io.ktor.util.KtorDsl
 import io.ktor.util.pipeline.PipelineContext
 import java.util.UUID
 
+/**
+ * Shortcut functions for `authenticate("auth-bearer") { <routingMethod>("path") { ... } }`.
+ */
+
 @KtorDsl
 inline fun Route.getAuthenticated(
     path: String = "",
@@ -106,12 +110,20 @@ fun PipelineContext<Unit, ApplicationCall>.getUserIdOrNull(): UUID? {
     return call.principal<UserIdPrincipal>()?.name?.formatToUuidOrNull()
 }
 
+/**
+ * Checks if the user is authenticated, and responds with [HttpStatusCode.Unauthorized] if not.
+ * Returns `true` if the user is authenticated, `false` otherwise.
+ */
 suspend fun PipelineContext<Unit, ApplicationCall>.checkAuthentication(): Boolean {
     return (call.principal<UserIdPrincipal>() != null).also {
         if (!it) call.respond(HttpStatusCode.Unauthorized)
     }
 }
 
+/**
+ * Returns the user id if the user is authenticated, 
+ * otherwise responds with [HttpStatusCode.Unauthorized] and returns `null`.
+ */
 suspend fun WebSocketServerSession.getUserIdOrRespond(): UUID? {
     val uidStr = call.principal<UserIdPrincipal>()?.name
     if (uidStr == null) {

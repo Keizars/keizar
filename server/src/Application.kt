@@ -14,7 +14,6 @@ import io.ktor.server.plugins.statuspages.StatusPages
 import io.ktor.server.response.respond
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
-import org.keizar.server.plugins.configureDatabases
 import org.keizar.server.plugins.configureMultiplayerRouting
 import org.keizar.server.plugins.configureSecurity
 import org.keizar.server.plugins.configureSerialization
@@ -66,7 +65,6 @@ private fun Application.module(env: EnvironmentVariables) {
 
     configureSecurity(context)
     configureSerialization()
-    configureDatabases()
     configureSockets()
     configureMultiplayerRouting(context)
 }
