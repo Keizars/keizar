@@ -110,7 +110,7 @@ private fun TutorialSelectionPage(
                 contentAlignment = Alignment.Center,
             ) {
                 val size = if (isSystemInLandscape()) {
-                    min(maxWidth, maxHeight).coerceAtMost(460.dp)
+                    min(maxWidth, maxHeight).coerceAtMost(400.dp)
                 } else {
                     min(maxWidth, maxHeight)
                 }

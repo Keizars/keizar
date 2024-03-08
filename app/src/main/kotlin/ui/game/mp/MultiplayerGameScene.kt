@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -170,6 +171,7 @@ class CoroutineScopeOwner : RememberObserver, AbstractViewModel() {
 }
 
 @Preview
+@Preview(device = Devices.TABLET)
 @Composable
 private fun PreviewMultiplayerGame() {
     val vm = remember {

@@ -108,7 +108,7 @@ fun BaseGamePage(
         ) {
             if (isSystemInLandscape()) {
                 BoxWithConstraints(Modifier.padding(horizontal = 16.dp)) {
-                    val size = maxHeight - 200.dp
+                    val size = maxHeight - 240.dp
                     GameBoardScaffold(
                         vm,
                         board = { board(size) },
