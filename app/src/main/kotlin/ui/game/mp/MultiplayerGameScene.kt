@@ -10,7 +10,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.RememberObserver
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -81,7 +80,7 @@ fun MultiplayerGameScene(
     }
 
     ErrorDialogHost(errorFlow = connector.error, onClickCancel = {
-        goBack()
+        onClickHome()
     })
 
     val client by connector.client.collectAsStateWithLifecycle(null)
@@ -99,10 +98,6 @@ fun MultiplayerGameScene(
         session?.let { s ->
             val vm = remember(s, c) {
                 MultiplayerGameBoardViewModel(s, s.player, c.selfPlayer, c.opponentPlayer)
-            }
-
-            LaunchedEffect(vm) {
-
             }
 
             MultiplayerGamePage(vm, onClickHome, onClickGameConfig, modifier)
