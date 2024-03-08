@@ -3,6 +3,7 @@ package org.keizar.android.ui.profile.component
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -46,6 +47,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.keizar.android.data.GameStartConfigurationEncoder
 import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.foundation.launchInBackground
@@ -61,7 +64,7 @@ import java.time.format.DateTimeFormatter
 
 
 @Composable
-fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel, onClickPlayGame: (String) -> Unit = {},) {
+fun SavedGames(modifier: Modifier = Modifier, vm: ProfileViewModel, onClickPlayGame: (String) -> Unit = {}) {
     if (vm.isLoadingGames.collectAsStateWithLifecycle().value) {
         Column(
             modifier = Modifier
@@ -159,7 +162,7 @@ fun SavedGameCard(
     ) {
         val avatarUrl by savedGameCardViewModel.avatarUrl.collectAsStateWithLifecycle()
         val filePath by savedGameCardViewModel.filePath.collectAsStateWithLifecycle()
-        Column (modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
             Row(
                 modifier = modifier,
             ) {
@@ -198,7 +201,7 @@ fun SavedGameCard(
                             null
                         }
                     }
-                    
+
                     val localDateTime =
                         remember { LocalDateTime.ofInstant(Instant.parse(gameData.timeStamp), ZoneId.systemDefault()) }
                     val formatter = remember {
@@ -216,7 +219,7 @@ fun SavedGameCard(
                             "Loss"
                         }
                     }
-                    
+
                     Row(modifier = Modifier.fillMaxWidth()) {
                         Text(
                             text = "$winningStatus - $formattedTimeStamp",
@@ -260,14 +263,25 @@ fun SavedGameCard(
                                 DropdownMenuItem(onClick = {
                                     showMenu = false
                                     vm.launchInBackground {
-                                        vm.deleteGame(gameData.dataId)
+                                        try {
+                                            vm.deleteGame(gameData.dataId)
+                                        } catch (e: Exception) {
+                                            withContext(Dispatchers.Main) {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Failed to delete, please check your network connection",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+                                            throw e
+                                        }
                                     }
                                 }) {
                                     Text("Delete")
                                 }
                             }
                         }
-                        
+
                     }
                     Row(modifier = Modifier.fillMaxWidth()) {
                         Text(
@@ -275,11 +289,11 @@ fun SavedGameCard(
                             modifier = Modifier.padding(4.dp),
                             overflow = TextOverflow.Ellipsis
                         )
-                        
+
                         Spacer(modifier = Modifier.weight(1f))
 
-                        Box(modifier = Modifier   .padding(8.dp)) {
-                            Button(onClick = {onClickPlayGame(gameData.gameConfiguration)}) {
+                        Box(modifier = Modifier.padding(8.dp)) {
+                            Button(onClick = { onClickPlayGame(gameData.gameConfiguration) }) {
                                 Text(text = "Play")
                             }
                         }

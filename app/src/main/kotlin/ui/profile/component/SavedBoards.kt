@@ -3,6 +3,7 @@ package org.keizar.android.ui.profile.component
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,6 +44,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.BoardTiles
@@ -200,8 +203,15 @@ fun SavedBoardCard(
                         DropdownMenuItem(onClick = {
                             showMenu = false
                             vm.launchInBackground {
-                                vm.removeSeed(savedSeed.configurationSeed)
-                                vm.selectedSeed.value = null
+                                try {
+                                    vm.removeSeed(savedSeed.configurationSeed)
+                                    vm.selectedSeed.value = null
+                                } catch (e: Exception) {
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(context, "Failed to delete, please check your network connection", Toast.LENGTH_SHORT).show()
+                                    }
+                                    throw e
+                                }
                             }
                         }) {
                             Text("Delete")
