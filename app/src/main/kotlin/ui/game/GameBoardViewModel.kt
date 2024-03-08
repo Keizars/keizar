@@ -11,7 +11,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -61,7 +60,6 @@ import org.keizar.utils.communication.game.RoundStats
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.time.Instant
-import kotlin.time.Duration.Companion.seconds
 
 interface GameBoardViewModel : HasBackgroundScope {
     @Stable
@@ -338,9 +336,9 @@ class SinglePlayerGameBoardViewModel(
 
     init {
         launchInBackground {
-            if (BuildConfig.ENABLE_AI_DELAY) {
-                delay(5.seconds) // Wait a few seconds before computer starts as white
-            }
+//            if (BuildConfig.ENABLE_AI_DELAY) {
+//                delay(5.seconds) // Wait a few seconds before computer starts as white
+//            }
             gameAi.start()
         }
 
