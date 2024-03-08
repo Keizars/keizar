@@ -265,6 +265,7 @@ fun SavedGameCard(
                                     vm.launchInBackground {
                                         try {
                                             vm.deleteGame(gameData.dataId)
+                                            vm.selectedGame.value = null
                                         } catch (e: Exception) {
                                             withContext(Dispatchers.Main) {
                                                 Toast.makeText(

@@ -1,5 +1,9 @@
 package org.keizar.android.ui.game
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -11,10 +15,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.rounded.Home
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
@@ -29,22 +35,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
-import org.keizar.android.data.encode
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.keizar.android.data.GameStartConfigurationEncoder
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.isSystemInLandscape
+import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.actions.UndoButton
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
-import org.keizar.utils.communication.game.Difficulty
 import org.keizar.game.GameSession
 import org.keizar.game.Role
+import org.keizar.utils.communication.game.Difficulty
 import org.keizar.utils.communication.game.Player
 
 @Composable
@@ -82,21 +90,56 @@ fun BaseGamePage(
     Scaffold(
         modifier.fillMaxSize(),
         topBar = {
-            val clipboard = LocalClipboardManager.current
+            val savedSeed by remember {
+                mutableStateOf(GameStartConfigurationEncoder.encode(vm.startConfiguration))
+            }
             TopAppBar(
                 title = { Text(text = "Game") },
                 navigationIcon = {
                     IconButton(onClick = onClickHome) {
-//                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                         Icon(Icons.Rounded.Home, contentDescription = "Back")
                     }
                 },
                 actions = {
-                    IconButton(onClick = {
-                        showGameConfigurationDialog = true
-                        clipboard.setText(AnnotatedString(vm.startConfiguration.encode()))
-                    }) {
-                        Icon(Icons.Outlined.Share, contentDescription = "Share")
+                    var showMenu by remember { mutableStateOf(false) }
+                    val context = LocalContext.current
+                    IconButton(onClick = { showMenu = !showMenu }) {
+                        Icon(Icons.Filled.MoreVert, contentDescription = "More options")
+                    }
+
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+
+                        DropdownMenuItem(onClick = {
+                            showMenu = false
+                            val clipboard =
+                                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip =
+                                ClipData.newPlainText("Copied seed", savedSeed)
+                            clipboard.setPrimaryClip(clip)
+                        }) {
+                            Text("Copy seed")
+                        }
+                        DropdownMenuItem(onClick = {
+                            showMenu = false
+                            vm.launchInBackground {
+                                try {
+                                    vm.addSeed(savedSeed)
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(context, "Game board saved", Toast.LENGTH_SHORT).show()
+                                    }
+                                } catch (e: Exception) {
+                                    withContext(Dispatchers.Main) {
+                                        Toast.makeText(context, "Failed to save, please check your network connection", Toast.LENGTH_SHORT).show()
+                                    }
+                                    throw e
+                                }
+                            }
+                        }) {
+                            Text("Save Board")
+                        }
                     }
                 }
             )

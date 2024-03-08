@@ -44,15 +44,16 @@ import org.keizar.android.ui.game.transition.CapturedPieceHostState
 import org.keizar.android.ui.game.transition.PieceArranger
 import org.keizar.client.ClientPlayer
 import org.keizar.client.services.GameDataService
+import org.keizar.client.services.SeedBankService
 import org.keizar.client.services.UserService
 import org.keizar.game.BoardProperties
-import org.keizar.utils.communication.game.Difficulty
 import org.keizar.game.GameSession
 import org.keizar.game.Piece
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
 import org.keizar.utils.communication.account.User
 import org.keizar.utils.communication.game.BoardPos
+import org.keizar.utils.communication.game.Difficulty
 import org.keizar.utils.communication.game.GameDataStore
 import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
@@ -242,6 +243,8 @@ interface GameBoardViewModel : HasBackgroundScope {
     fun setShowGameOverResults(flag: Boolean)
 
     fun undo()
+    
+    suspend fun addSeed(seed: String)
 
 
     suspend fun removeSavedState() {}
@@ -594,6 +597,12 @@ abstract class BaseGameBoardViewModel(
 
     override val canUndo: StateFlow<Boolean> =
         game.currentRound.flatMapLatest { it.canUndo }.stateInBackground(false)
+    
+    private val seedBankService: SeedBankService by inject()
+    
+    override suspend fun addSeed(seed: String) {
+        seedBankService.addSeed(seed)
+    }
 
     init {
         backgroundScope.launch {
