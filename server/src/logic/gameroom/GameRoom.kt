@@ -51,14 +51,16 @@ interface GameRoom : AutoCloseable {
      * Connect to the user through a web socket session.
      * Calling connect() twice on the same [UserInfo] will override its registered [DefaultWebSocketServerSession].
      * The messages will be sent to the newest [DefaultWebSocketServerSession].
+     * If the player have not joined the room, return null.
+     * Otherwise, return the [PlayerSession] of the user.
      */
     fun connect(user: UserInfo, session: DefaultWebSocketServerSession): PlayerSession?
 
     /**
      * Make a user ready to start the game. If the user is already ready, return true.
-     * When two players are both ready, the game should start.
-     * On the server side, it should start to send and forward messages through the
-     * registered websockets.
+     * Should only be called when the room state is in [ServerGameRoomState.Started] or [ServerGameRoomState.AllConnected].
+     * If called when the room state is not in the two above, return false.
+     * When both players are ready, the game should start, and the room state will change to [ServerGameRoomState.Playing].
      */
     fun ready(user: UserInfo): Boolean
 
@@ -97,6 +99,7 @@ interface GameRoom : AutoCloseable {
     /**
      * Indicate the state of the room.
      * Can be one of [ServerGameRoomState.Started], [ServerGameRoomState.AllConnected], [ServerGameRoomState.Playing], [ServerGameRoomState.Finished].
+     * Also stores values and functions that are specific to the state.
      */
     val state: Flow<ServerGameRoomState>
 
