@@ -6,11 +6,13 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -33,7 +35,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.coerceAtMost
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,6 +49,7 @@ import kotlinx.coroutines.withContext
 import org.keizar.android.tutorial.Tutorial
 import org.keizar.android.tutorial.Tutorials
 import org.keizar.android.tutorial.respond
+import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.GameBoard
 import org.keizar.android.ui.game.GameBoardScaffold
@@ -101,13 +106,17 @@ private fun TutorialSelectionPage(
             BoxWithConstraints(
                 Modifier
                     .padding(contentPadding)
-                    .weight(1f),
-                contentAlignment = Alignment.Center
+                    .fillMaxSize(),
+                contentAlignment = Alignment.Center,
             ) {
-                val size = min(maxWidth, maxHeight)
+                val size = if (isSystemInLandscape()) {
+                    min(maxWidth, maxHeight).coerceAtMost(460.dp)
+                } else {
+                    min(maxWidth, maxHeight)
+                }
                 GameBoardScaffold(
                     vm,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.then(if (isSystemInLandscape()) Modifier.width(IntrinsicSize.Min) else Modifier.fillMaxSize()),
                     topBar = { GameBoardTopBar(vm = vm, turnStatusIndicator = null) },
                     actions = {
                         Box(
@@ -222,6 +231,8 @@ private fun PreviewTooltip() {
 }
 
 @Preview
+@Preview(fontScale = 2f)
+@Preview(device = Devices.TABLET)
 @Composable
 private fun PreviewTutorialPage() {
     TutorialSelectionPage(
