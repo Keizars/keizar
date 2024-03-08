@@ -27,8 +27,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import me.him188.ani.utils.logging.info
+import org.keizar.aiengine.AIParameters
 import org.keizar.aiengine.AlgorithmAI
-import org.keizar.aiengine.RandomGameAIImpl
 import org.keizar.android.BuildConfig
 import org.keizar.android.data.SavedState
 import org.keizar.android.data.SavedStateRepository
@@ -243,7 +243,7 @@ interface GameBoardViewModel : HasBackgroundScope {
     fun setShowGameOverResults(flag: Boolean)
 
     fun undo()
-    
+
     suspend fun addSeed(seed: String)
 
 
@@ -317,11 +317,17 @@ class SinglePlayerGameBoardViewModel(
 
     private val gameAi =
         when (difficulty) {
-            Difficulty.EASY -> RandomGameAIImpl(
+            Difficulty.EASY -> AlgorithmAI(
                 game,
                 Player.entries.first { it != selfPlayer },
                 backgroundScope.coroutineContext,
                 disableDelay = !BuildConfig.ENABLE_AI_DELAY,
+                aiParameters = AIParameters(
+                    keizarThreshold = 1,
+                    possibleMovesThreshold = 4,
+                    noveltyLevel = 0.6,
+                    allowCaptureKeizarThreshold = 0.6
+                )
             )
 
             else -> AlgorithmAI(
@@ -597,9 +603,9 @@ abstract class BaseGameBoardViewModel(
 
     override val canUndo: StateFlow<Boolean> =
         game.currentRound.flatMapLatest { it.canUndo }.stateInBackground(false)
-    
+
     private val seedBankService: SeedBankService by inject()
-    
+
     override suspend fun addSeed(seed: String) {
         seedBankService.addSeed(seed)
     }
