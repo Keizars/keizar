@@ -387,7 +387,7 @@ class MultiplayerGameBoardViewModel(
     game: GameSession,
     selfPlayer: Player,
     selfClientPlayer: ClientPlayer,
-    opponentClientPlayer: StateFlow<ClientPlayer?>,
+    private val opponentClientPlayer: StateFlow<ClientPlayer?>,
 ) : PlayableGameBoardViewModel(game, selfPlayer), KoinComponent {
     private val userService: UserService by inject()
 
@@ -419,11 +419,27 @@ class MultiplayerGameBoardViewModel(
             }
         }
     }
+
+
+    override fun startNextRound(selfPlayer: Player) {
+        logger.info { "startNextRound, selfPlayer = $selfPlayer" }
+        // UNDISPATCHED is necessary here
+        launchInMain(start = CoroutineStart.UNDISPATCHED) {
+            val curr = game.currentRoundNo.first()
+            if (currentRoundCount.value != 1) {
+                game.currentRoundNo.filter { curr != it }.first()
+                boardTransitionController.turnBoard()
+            }
+        }
+        launchInBackground(Dispatchers.IO) {
+            game.confirmNextRound(selfPlayer)
+        }
+    }
 }
 
 @Suppress("LeakingThis")
 abstract class BaseGameBoardViewModel(
-    private val game: GameSession,
+    protected val game: GameSession,
     @Stable override val selfPlayer: Player,
 ) : AbstractViewModel(), GameBoardViewModel, KoinComponent {
 
