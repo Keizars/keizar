@@ -54,13 +54,13 @@ class BoardPropertiesBuilder internal constructor(
         this.piecesStartingPos = piecesStartingPos()
     }
 
-    fun tiles(tileArrangementInstructions: TileArrangementBuilder.() -> Unit = {}) {
+    fun tiles(tileArrangementInstructions: TileArrangementBuilder.() -> Unit) {
         this.tileArrangement = TileArrangementBuilder(tileArrangementInstructions)
     }
 
     @BoardPropertiesDslMarker
     class TileArrangementBuilder(
-        instructions: TileArrangementBuilder.() -> Unit = {},
+        instructions: TileArrangementBuilder.() -> Unit,
     ) {
         private var seed: Int?
         private var tileArrangement: MutableMap<BoardPos, TileType>
