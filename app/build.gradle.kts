@@ -87,7 +87,7 @@ android {
     buildTypes {
         val endpoint = getPropertyOrNull("keizar.server.endpoint") ?: "http://home.him188.moe:4392"
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -95,6 +95,16 @@ android {
             )
             buildConfigField("boolean", "ENABLE_AI_DELAY", "true")
             buildConfigField("String", "SERVER_ENDPOINT", "\"$endpoint\"")
+        }
+        create("debugMinified") {
+            isMinifyEnabled = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                *sharedAndroidProguardRules(),
+            )
+            buildConfigField("boolean", "ENABLE_AI_DELAY", "false")
+            buildConfigField("String", "SERVER_ENDPOINT", "\"$endpoint\"")
+            signingConfig = signingConfigs.getByName("debug")
         }
         debug {
             isMinifyEnabled = false
