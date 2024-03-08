@@ -1,16 +1,24 @@
-# AI api
+# Rule Engine API for AI Training
 
-## Introduction
-The AI API is used to send the parameters to the AI model and get the next move from the model. The AI model is trained to predict the result based on the input parameters, which is trained using the historical data and the model is used to predict the future data. The current model is based on Q-table learning. In the future, it can be improved by DNN with reinforcement learning.
+The AI API is used to send the parameters to the AI model and get the next move from the model. The
+AI model is trained to predict the result based on the input parameters, which is trained using the
+historical data and the model is used to predict the future data. The current model is based on
+Q-table learning. In the future, it can be improved by DNN with reinforcement learning.
 
 ## API
+
 ### Get Board information
-The parameters passed to the API `findBestMove` are `round: RoundSession` and `role: Role`, which records the current round state and which role the AI is. The return value is the best move for the current round. The `game: GameSession` is also used to show key information of the game.
+
+The parameters passed to the API `findBestMove` are `round: RoundSession` and `role: Role`, which
+records the current round state and which role the AI is. The return value is the best move for the
+current round. The `game: GameSession` is also used to show key information of the game.
 
 The board information can be collected by the properties of the round session.
-1. pieces positions of role on the board: `roundSession.getALlPiecesPos(role).first()`, where role can be `Role.BLACK` or `Role.WHITE`.
+
+1. pieces positions of role on the board: `roundSession.getAllPiecesPos(role).first()`, where role
+   can be `Role.BLACK` or `Role.WHITE`.
 2. board seed: `game.properties.seed`
-3. possible moves: 
+3. possible moves:
     ```kotlin
             val moves = round.getAllPiecesPos(role).first().flatMap { source ->
                 round.getAvailableTargets(source).first().map { dest ->
@@ -22,11 +30,16 @@ The board information can be collected by the properties of the round session.
 5. keizar position: `game.properties.keizarPos`
 
 ### HTTP Request
-The HTTP request is a POST request to the endpoint `/AI/black` or `/AI/white` based on the role of ai. The request body is a JSON object with the following fields:
-We can set the body by using `buildJsonObject` with `put(${key}, ${value})` and `add(${value})` to build the JSON object.
-Then we should get the move from the response body and parse to the format of `Pair<BoardPos, BoardPos>`.
+
+The HTTP request is a POST request to the endpoint `/AI/black` or `/AI/white` based on the role of
+ai. The request body is a JSON object with the following fields:
+We can set the body by using `buildJsonObject` with `put(${key}, ${value})` and `add(${value})` to
+build the JSON object.
+Then we should get the move from the response body and parse to the format
+of `Pair<BoardPos, BoardPos>`.
 
 ## Examples
+
 ```kotlin
 override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPos, BoardPos> {
     val moves = round.getAllPiecesPos(role).first().flatMap { source ->
@@ -79,4 +92,8 @@ override suspend fun findBestMove(round: RoundSession, role: Role): Pair<BoardPo
 ```
 
 ## Conclusion
-The AI API can give information of the current board state which can be used for future AI development. More parameters and information can be got from `game:GameSession` and `round:RoundSession` to improve the AI model, which can be improved by using DNN with reinforcement learning in the future.
+
+The AI API can give information of the current board state which can be used for future AI
+development. More parameters and information can be got from `game:GameSession`
+and `round:RoundSession` to improve the AI model, which can be improved by using DNN with
+reinforcement learning in the future.

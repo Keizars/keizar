@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -121,7 +122,7 @@ class GameRoomImpl(
     private val dyingHeartbeatThreshold: Int = 60,
 ) : GameRoom {
     private val exceptionHandler = CoroutineExceptionHandler { _, e ->
-        logger.error(e.message)
+        logger.error(e.stackTraceToString())
     }
 
     private val myCoroutineScope: CoroutineScope = CoroutineScope(
@@ -220,6 +221,8 @@ class GameRoomImpl(
                         }
                     } catch (e: WebsocketDeserializeException) {
                         // ignore
+                    } catch (e: ClosedReceiveChannelException) {
+                        return@collectLatest
                     }
                 }
             }
@@ -294,7 +297,16 @@ class GameRoomImpl(
 
     override fun connect(user: UserInfo, session: DefaultWebSocketServerSession): PlayerSession? {
         val playerSession = players[user] ?: return null
-        playerSession.connect(session)
+        playerSession.connect(
+            newSession = session,
+            recoverToState = when (state.value) {
+                is ServerGameRoomState.Started,
+                is ServerGameRoomState.AllConnected -> PlayerSessionState.STARTED
+
+                is ServerGameRoomState.Playing,
+                is ServerGameRoomState.Finished -> PlayerSessionState.PLAYING
+            }
+        )
         myCoroutineScope.launch {
             notifyRemoteSessionSetup(playerSession)
             session.sendRespond(RoomStateChange(state.value.toGameRoomState()))
@@ -429,8 +441,7 @@ class GameRoomImpl(
                     processRequest(message, curState, player, from, to)
                 } catch (e: WebsocketDeserializeException) {
                     // ignore
-                } catch (e: Exception) {
-                    logger.error(e.message)
+                } catch (e: ClosedReceiveChannelException) {
                     return@collectLatest
                 }
             }
