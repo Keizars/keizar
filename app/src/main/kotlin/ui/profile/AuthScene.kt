@@ -2,12 +2,14 @@ package org.keizar.android.ui.profile
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.text.ClickableText
@@ -95,6 +97,7 @@ fun AuthScene(
             Modifier
                 .padding(contentPadding)
                 .padding(16.dp)
+                .imePadding()
         ) {
             AuthPage(
                 viewModel = vm,
@@ -194,11 +197,11 @@ fun AuthPage(
                 },
                 trailingIcon = {
                     if (hide) {
-                        IconButton(onClick = { hide = false }) {
+                        IconButton(onClick = { hide = false }, Modifier.focusable(false)) {
                             Icon(Icons.Default.VisibilityOff, contentDescription = "Hide")
                         }
                     } else {
-                        IconButton(onClick = { hide = true }) {
+                        IconButton(onClick = { hide = true }, Modifier.focusable(false)) {
                             Icon(Icons.Default.Visibility, contentDescription = "Show")
                         }
                     }
@@ -232,11 +235,11 @@ fun AuthPage(
                     },
                     trailingIcon = {
                         if (hide) {
-                            IconButton(onClick = { hide = false }) {
+                            IconButton(onClick = { hide = false }, Modifier.focusable(false)) {
                                 Icon(Icons.Default.VisibilityOff, contentDescription = "Hide")
                             }
                         } else {
-                            IconButton(onClick = { hide = true }) {
+                            IconButton(onClick = { hide = true }, Modifier.focusable(false)) {
                                 Icon(Icons.Default.Visibility, contentDescription = "Show")
                             }
                         }
