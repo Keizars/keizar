@@ -220,7 +220,13 @@ fun RoundTwoBottomBar(
             Button(
                 onClick = { onClickGameConfig() },
             ) {
-                Text(text = "New Game", textAlign = TextAlign.Center, softWrap = false, maxLines = 1)
+                Text(
+                    text = "New Game",
+                    textAlign = TextAlign.Center,
+                    softWrap = false,
+                    maxLines = 1,
+                    modifier = Modifier.width(IntrinsicSize.Max)
+                )
             }
 
         }
