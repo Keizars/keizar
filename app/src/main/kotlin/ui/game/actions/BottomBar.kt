@@ -95,7 +95,7 @@ fun RoundOneBottomBar(
             },
             icon = { Icon(Icons.Default.Assessment, null) },
             text = { Text(text = "Results", fontSize = 10.sp) })
-        
+
         if (showDialog) {
             WinningRoundOneDialog(winner = vm.winner.collectAsState().value, vm, showResults)
         }
@@ -169,15 +169,20 @@ fun RoundTwoBottomBar(
                             val isLoggedIn = vm.sessionManager.isLoggedIn.first()
                             if (isLoggedIn) {
                                 if (vm is PlayableGameBoardViewModel) {
-                                    val success = vm.userSave()
-                                    if (success) {
+                                    try {
+                                        vm.userSave()
                                         withContext(Dispatchers.Main) {
                                             Toast.makeText(context, "Game saved", Toast.LENGTH_SHORT).show()
                                         }
-                                    } else {
+                                    } catch (e: Exception) {
                                         withContext(Dispatchers.Main) {
-                                            Toast.makeText(context, "Game save failed", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(
+                                                context,
+                                                "Game save failed, please check your network connection",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
                                         }
+                                        throw e
                                     }
                                 }
                             } else {

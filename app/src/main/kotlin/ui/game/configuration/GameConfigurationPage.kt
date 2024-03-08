@@ -241,9 +241,16 @@ private fun SaveSeedButton(vm: GameConfigurationViewModel, onClickLogin: () -> U
                 val isLoggedIn = vm.sessionManagerService.isLoggedIn.first()
                 if (isLoggedIn) {
                     val seed = vm.configurationSeed.first()
-                    vm.seedBankService.addSeed(seed)
-                    withContext(Dispatchers.Main) {
-                        Toast.makeText(context, "Seed saved", Toast.LENGTH_SHORT).show()
+                    try {
+                        vm.seedBankService.addSeed(seed)
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "Seed saved", Toast.LENGTH_SHORT).show()
+                        }
+                    } catch (e: Exception) {
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "Failed to save seed, please check your network connection", Toast.LENGTH_SHORT).show()
+                        }
+                        throw e
                     }
                 } else {
                     withContext(Dispatchers.Main) {
