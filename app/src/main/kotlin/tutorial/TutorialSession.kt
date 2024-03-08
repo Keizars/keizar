@@ -59,7 +59,7 @@ interface TutorialSession {
 
     /**
      * Revokes the current **and** the last step.
-     * The tutorial will be returned to the state when the player is just started playing the last step.
+     * The tutorial will be returned to the state when the player has just started playing the last step.
      *
      * Example timeline:
      * ```
@@ -94,10 +94,12 @@ private class Revoker(
 private class Revokers {
     val revokers = mutableListOf<Revoker>()
 
+    @Synchronized
     fun add(name: String, action: suspend () -> Unit) {
         revokers.add(Revoker(name, action))
     }
 
+    @Synchronized
     fun clear() {
         revokers.clear()
     }
