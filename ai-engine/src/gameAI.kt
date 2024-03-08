@@ -249,6 +249,9 @@ class AlgorithmAI(
                 game.currentRound.flatMapLatest { it.replayedRounds }) { myRole, session, replayed ->
                 Triple(myRole, session, replayed)
             }.transformLatest { (myRole, session) ->
+                if (!disableDelay) {
+                    delay(Random.nextLong(3000L..4500L))
+                }
                 val rememberStates = mutableListOf<Pair<BoardPos, BoardPos>>()
                 emitAll(session.curRole.map { currentRole ->
                     if (myRole == currentRole && session.winner.first() == null) {
