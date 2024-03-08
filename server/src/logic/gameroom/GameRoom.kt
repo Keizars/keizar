@@ -185,7 +185,8 @@ class GameRoomImpl(
                 for (receiver in players.values) {
                     logger.info("Notify player ${receiver.username} of player ${player.username} state change: $newState")
                     receiver.session.value?.sendRespond(
-                        PlayerStateChange(player.user.username, newState)
+                        PlayerStateChange(player.user.username, newState),
+                        logger,
                     )
                 }
             }
@@ -193,7 +194,7 @@ class GameRoomImpl(
         myCoroutineScope.launch {
             this@GameRoomImpl.state.collect { newState ->
                 logger.info("Notify player ${player.username} of room state change: $newState")
-                player.session.value?.sendRespond(RoomStateChange(newState.toGameRoomState()))
+                player.session.value?.sendRespond(RoomStateChange(newState.toGameRoomState()), logger)
             }
         }
     }
@@ -311,9 +312,9 @@ class GameRoomImpl(
         )
         myCoroutineScope.launch {
             notifyRemoteSessionSetup(playerSession)
-            session.sendRespond(RoomStateChange(state.value.toGameRoomState()))
+            session.sendRespond(RoomStateChange(state.value.toGameRoomState()), logger)
             for (player in players.values) {
-                session.sendRespond(PlayerStateChange(player.user.username, player.state.value))
+                session.sendRespond(PlayerStateChange(player.user.username, player.state.value), logger)
             }
         }
         logger.info("Session of user ${user.username} changed to $session")
@@ -336,7 +337,8 @@ class GameRoomImpl(
             RemoteSessionSetup(
                 allocation,
                 Json.encodeToJsonElement(gameSnapshot)
-            )
+            ),
+            logger
         )
     }
 
@@ -464,7 +466,7 @@ class GameRoomImpl(
                 }
                 to.session.value?.apply {
                     logger.info("Forwarded request $message to ${to.session.value}")
-                    sendRequest(message)
+                    sendRequest(message, logger)
                 }
             }
 
@@ -481,7 +483,7 @@ class GameRoomImpl(
                 }
                 to.session.value?.apply {
                     logger.info("Forwarded request $message to ${to.session.value}")
-                    sendRequest(message)
+                    sendRequest(message, logger)
                 }
             }
 
@@ -492,10 +494,22 @@ class GameRoomImpl(
     }
 }
 
-suspend inline fun DefaultWebSocketServerSession.sendRespond(message: Respond) {
-    sendSerialized(message)
+suspend inline fun DefaultWebSocketServerSession.sendRespond(message: Respond, logger: Logger): Boolean {
+    return try {
+        sendSerialized(message)
+        true
+    } catch (e: Exception) {
+        logger.info("Failed to send message to session $this")
+        false
+    }
 }
 
-suspend inline fun DefaultWebSocketServerSession.sendRequest(message: Request) {
-    sendSerialized(message)
+suspend inline fun DefaultWebSocketServerSession.sendRequest(message: Request, logger: Logger): Boolean {
+    return try {
+        sendSerialized(message)
+        true
+    } catch (e: Exception) {
+        logger.info("Failed to send message to session $this")
+        false
+    }
 }
