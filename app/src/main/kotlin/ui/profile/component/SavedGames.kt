@@ -38,6 +38,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -213,10 +214,15 @@ fun SavedGameCard(
                 }
                 Text(
                     text = "$winningStatus - $formattedTimeStamp",
-                    modifier = Modifier.padding(4.dp)
+                    modifier = Modifier.padding(4.dp),
+                    overflow = TextOverflow.Ellipsis,
                 )
 
-                Text(text = "Opponent: $opponentName", modifier = Modifier.padding(4.dp))
+                Text(
+                    text = "Opponent: $opponentName",
+                    modifier = Modifier.padding(4.dp),
+                    overflow = TextOverflow.Ellipsis
+                )
 
 
                 if (showDetails && !isSystemInLandscape()) {
