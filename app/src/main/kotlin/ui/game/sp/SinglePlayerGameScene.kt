@@ -1,7 +1,15 @@
 package org.keizar.android.ui.game.sp
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
@@ -14,10 +22,10 @@ import org.keizar.android.ui.game.BaseGamePage
 import org.keizar.android.ui.game.actions.UndoButton
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.rememberSinglePlayerGameBoardViewModel
-import org.keizar.utils.communication.game.Difficulty
 import org.keizar.game.GameSession
 import org.keizar.game.Role
 import org.keizar.game.snapshot.buildGameSession
+import org.keizar.utils.communication.game.Difficulty
 import org.keizar.utils.communication.game.Player
 
 
@@ -37,6 +45,32 @@ fun SinglePlayerGameScene(
         difficulty = startConfiguration.difficulty,
     )
 
+    var showConfirmExitDialog by remember { mutableStateOf(false) }
+    if (showConfirmExitDialog) {
+        AlertDialog(onDismissRequest = { showConfirmExitDialog = false },
+            confirmButton = {
+                Button(onClick = {
+                    showConfirmExitDialog = false
+
+                    vm.launchInBackground(start = CoroutineStart.UNDISPATCHED) {
+                        removeSavedState()
+                        withContext(Dispatchers.Main) {
+                            navController.popBackStack("home", false)
+                        }
+                    }
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmExitDialog = false }) {
+                    Text(text = "Cancel")
+                }
+            },
+            text = { Text(text = "Are you sure to exit the game?") })
+    }
+
+    
     val onClickLogin = {
         navController.navigate("auth/login") {
             launchSingleTop = true
@@ -48,12 +82,10 @@ fun SinglePlayerGameScene(
         }
     }
     val onClickHome: () -> Unit = {
-        vm.launchInBackground(start = CoroutineStart.UNDISPATCHED) {
-            removeSavedState()
-            withContext(Dispatchers.Main) {
-                navController.popBackStack("home", false)
-            }
-        }
+        showConfirmExitDialog = true
+    }
+    BackHandler {
+        onClickHome()
     }
 
     BaseGamePage(
