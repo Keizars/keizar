@@ -232,7 +232,7 @@ interface ErrorMessage {
          * @param cause internal cause of the error, to be displayed when the app is built in debug mode
          */
         fun networkErrorRecovering(cause: Throwable? = null): ErrorMessage =
-            SimpleErrorMessage("Network error, reconnecting...", cause, isRecovering = true)
+            SimpleErrorMessage("Connection lost, reconnecting...", cause, isRecovering = true)
 
         /**
          * A network error that is not automatically recovering.
