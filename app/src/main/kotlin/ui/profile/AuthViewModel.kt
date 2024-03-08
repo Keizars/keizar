@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.withTimeout
 import org.keizar.android.data.SessionManager
 import org.keizar.android.ui.foundation.AbstractViewModel
+import org.keizar.android.ui.foundation.ErrorMessage
 import org.keizar.client.services.UserService
 import org.keizar.utils.communication.LiteralChecker
 import org.keizar.utils.communication.account.AuthRequest
@@ -40,6 +41,8 @@ class AuthViewModel(
 
     val isProcessing: MutableStateFlow<Boolean> = MutableStateFlow(false)
     val agreementChecked: MutableStateFlow<Boolean> = MutableStateFlow(false)
+
+    val error: MutableStateFlow<ErrorMessage?> = MutableStateFlow(null)
 
     fun setUsername(username: String) {
         flushErrors()
@@ -77,18 +80,25 @@ class AuthViewModel(
         val username = username.value
         val password = password.value
 
-        return withTimeout(5000) {
-            doAuth(username, password, isRegister.value)
+        return try {
+            withTimeout(5000) {
+                doAuth(username, password, isRegister.value)
+            }
+        } catch (e: Exception) {
+            error.value = ErrorMessage.networkError(e)
+            return false
         }
     }
 
     private suspend fun doAuth(username: String, password: String, isRegister: Boolean): Boolean {
+        val response =
+            if (isRegister) {
+                userService.register(AuthRequest(username, password))
+            } else {
+                userService.login(AuthRequest(username, password))
+            }
 
-        val response = if (isRegister) {
-            userService.register(AuthRequest(username, password))
-        } else {
-            userService.login(AuthRequest(username, password))
-        }
+
         when (response.status) {
             AuthStatus.SUCCESS -> {
                 return if (isRegister) {
@@ -170,6 +180,8 @@ private fun AuthStatus.render(): String? {
         AuthStatus.SUCCESS -> null
         AuthStatus.USER_NOT_FOUND -> "User not found"
         AuthStatus.WRONG_PASSWORD -> "Wrong password"
-        else -> {""}
+        else -> {
+            ""
+        }
     }
 }

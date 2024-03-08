@@ -61,6 +61,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.keizar.android.R
+import org.keizar.android.ui.foundation.ErrorDialogHost
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.foundation.moveFocusOnEnter
@@ -128,6 +129,8 @@ fun AuthPage(
             }
         )
     }
+
+    ErrorDialogHost(errorFlow = viewModel.error)
 
     val errorFontSize = 14.sp
     Column(
