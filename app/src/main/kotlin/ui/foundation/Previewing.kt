@@ -1,11 +1,15 @@
 package org.keizar.android.ui.foundation
 
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocal
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
 import org.keizar.android.KeizarApplication
 import org.keizar.android.ui.KeizarApp
+import org.keizar.android.ui.theme.myDarkColorTheme
+import org.keizar.android.ui.theme.myLightColorTheme
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext
 
@@ -15,7 +19,10 @@ import org.koin.core.context.GlobalContext
  * All `@Preview` functions should use this function so that you see correct themes.
  */
 @Composable
-fun ProvideCompositionalLocalsForPreview(block: @Composable () -> Unit) {
+fun ProvideCompositionalLocalsForPreview(
+    colorScheme: ColorScheme = if (isSystemInDarkTheme()) myDarkColorTheme() else myLightColorTheme(),
+    block: @Composable () -> Unit
+) {
     if (GlobalContext.getOrNull() == null) {
         val context = LocalContext.current
         GlobalContext.startKoin {
@@ -25,7 +32,7 @@ fun ProvideCompositionalLocalsForPreview(block: @Composable () -> Unit) {
     }
 
     CompositionLocalProvider {
-        KeizarApp {
+        KeizarApp(colorScheme) {
             block()
         }
     }

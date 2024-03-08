@@ -57,9 +57,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.keizar.android.R
+import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.foundation.moveFocusOnEnter
 import org.keizar.android.ui.game.mp.room.ConnectingRoomDialog
+import org.keizar.android.ui.theme.myDarkColorTheme
+import org.keizar.android.ui.theme.myLightColorTheme
 import kotlin.time.Duration.Companion.seconds
 
 @Composable
@@ -314,7 +317,7 @@ fun AuthPage(
                             // Clicking "terms and conditions"
                             showTermsDialog = true
                         }
-                    })
+                    }, style = LocalTextStyle.current.copy(color = MaterialTheme.colorScheme.onBackground))
                 }
             }
         }
@@ -395,13 +398,32 @@ private fun PreviewLogin() {
 
 @Preview
 @Preview(fontScale = 2f)
+@Preview()
 @Preview(device = Devices.TABLET)
 @Composable
-private fun PreviewRegister() {
-    AuthScene(
-        initialIsRegister = true,
-        onClickBack = {},
-        onSuccess = {},
-        Modifier
-    )
+private fun PreviewRegisterDark() {
+    ProvideCompositionalLocalsForPreview(myDarkColorTheme()) {
+        AuthScene(
+            initialIsRegister = true,
+            onClickBack = {},
+            onSuccess = {},
+            Modifier
+        )
+    }
+}
+
+@Preview
+@Preview(fontScale = 2f)
+@Preview()
+@Preview(device = Devices.TABLET)
+@Composable
+private fun PreviewRegisterLight() {
+    ProvideCompositionalLocalsForPreview(myLightColorTheme()) {
+        AuthScene(
+            initialIsRegister = true,
+            onClickBack = {},
+            onSuccess = {},
+            Modifier
+        )
+    }
 }
