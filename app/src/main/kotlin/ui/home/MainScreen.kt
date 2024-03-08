@@ -3,6 +3,7 @@ package org.keizar.android.ui.home
 import android.app.Activity
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
@@ -133,13 +134,17 @@ fun MainScreen() {
                 },
             )
         ) { entry ->
+            val onClickGoBack: () -> Unit = { navController.popBackStack(entry.destination.id, true) }
+            BackHandler {
+                onClickGoBack()
+            }
             GameConfigurationScene(
                 initialConfiguration = entry.arguments?.getString("configuration")?.let {
                     GameStartConfigurationEncoder.decode(it)
                 } ?: remember {
                     GameStartConfiguration.random()
                 },
-                onClickGoBack = { navController.popBackStack(entry.destination.id, true) },
+                onClickGoBack = onClickGoBack,
                 navController = navController
             )
         }
@@ -202,13 +207,17 @@ fun MainScreen() {
                 }
 
                 true -> {
+                    val onClickHome = {
+                        if (lobbyViewModel.selfRoomId.value != null) {
+                            lobbyViewModel.removeSelfRoom()
+                        }
+                        navController.navigate("home")
+                    }
+                    BackHandler {
+                        onClickHome()
+                    }
                     MultiplayerLobbyScene(
-                        onClickHome = {
-                            if (lobbyViewModel.selfRoomId.value != null) {
-                                lobbyViewModel.removeSelfRoom()
-                            }
-                            navController.navigate("home")
-                        },
+                        onClickHome = onClickHome,
                         onJoinGame = { roomId ->
                             navController.navigate(
                                 navController.graph["game/room"].id,
@@ -232,14 +241,19 @@ fun MainScreen() {
         composable("game/room") { backStackEntry ->
             LoginChecker(navController)
             val roomId = backStackEntry.arguments!!.getString("roomId")!!.toUInt()
+
+            val onClickHome = {
+                if (navController.currentBackStackEntry?.destination?.route == "game/room") {
+                    navController.popBackStack("home", false)
+                }
+                lobbyViewModel.removeSelfRoom()
+            }
+            BackHandler {
+                onClickHome()
+            }
             PrivateRoomScene(
                 roomId = roomId,
-                onClickHome = {
-                    if (navController.currentBackStackEntry?.destination?.route == "game/room") {
-                        navController.popBackStack("home", false)
-                    }
-                    lobbyViewModel.removeSelfRoom()
-                },
+                onClickHome = onClickHome,
                 onPlayersReady = {
                     navController.navigate(
                         navController.graph["game/multiplayer"].id,
@@ -252,15 +266,39 @@ fun MainScreen() {
         }
         composable("game/multiplayer") { backStackEntry ->
             LoginChecker(navController)
+
+            var showConfirmExitDialog by remember { mutableStateOf(false) }
+            if (showConfirmExitDialog) {
+                AlertDialog(onDismissRequest = { showConfirmExitDialog = false },
+                    confirmButton = {
+                        Button(onClick = {
+                            showConfirmExitDialog = false
+
+                            navController.popBackStack("home", false)
+                            lobbyViewModel.removeSelfRoom()
+                        }) {
+                            Text("OK")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showConfirmExitDialog = false }) {
+                            Text(text = "Cancel")
+                        }
+                    },
+                    text = { Text(text = "Are you sure to exit the game?") })
+            }
+            val onClickHome = {
+                showConfirmExitDialog = true
+            }
+            BackHandler {
+                onClickHome()
+            }
             MultiplayerGameScene(
                 roomId = backStackEntry.arguments!!.getString("roomId")!!.toUInt(),
                 goBack = {
                     navController.popBackStack()
                 },
-                onClickHome = {
-                    navController.popBackStack("home", false)
-                    lobbyViewModel.removeSelfRoom()
-                },
+                onClickHome = onClickHome,
                 onClickGameConfig = {
                     navController.navigate("game/lobby")
                     lobbyViewModel.removeSelfRoom()
@@ -328,18 +366,22 @@ fun MainScreen() {
             enterTransition = { fadeIn() },
             exitTransition = { fadeOut() }
         ) { entry ->
+            val onClickBack: () -> Unit = onClickBack@{
+                if (navController.currentBackStackEntry != entry) {
+                    return@onClickBack
+                }
+                if (navController.previousBackStackEntry?.destination?.route == "profile") {
+                    navController.popBackStack("profile", true)
+                } else {
+                    navController.popBackStack()
+                }
+            }
+            BackHandler {
+                onClickBack()
+            }
             AuthScene(
                 initialIsRegister = entry.arguments?.getString("mode") == "register",
-                onClickBack = {
-                    if (navController.currentBackStackEntry != entry) {
-                        return@AuthScene
-                    }
-                    if (navController.previousBackStackEntry?.destination?.route == "profile") {
-                        navController.popBackStack("profile", true)
-                    } else {
-                        navController.popBackStack()
-                    }
-                },
+                onClickBack = onClickBack,
                 onSuccess = {
                     navController.popBackStack()
                 },
