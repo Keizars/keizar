@@ -32,7 +32,7 @@ interface RuleEngine {
     fun redo(): Boolean
 }
 
-open class RuleEngineImpl private constructor(
+internal class RuleEngineImpl private constructor(
     private val boardProperties: BoardProperties,
     private val board: Board,
 

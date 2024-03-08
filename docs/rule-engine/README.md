@@ -100,6 +100,51 @@ fun getRoundWinner(roundNo: Int): Flow<Player?>
 
 You can use the `GameSession.create` factory method to create a `GameSession` instance.
 You can optionally pass in a seed or a `BoardProperties` object to customize the game rules and board setup.
-You can also get a serializable snapshot of a `GameSession` instance by calling `GameSession.getSnapshot()`, 
-and restores a `GameSession` instance from the snapshot by calling `GameSession.restore()`.
 
+Additionally, you can also obtain a serializable snapshot `GameSnapshot` of a `GameSession` instance by calling `GameSession.getSnapshot()`, 
+and restores a `GameSession` instance from the `GameSnapshot` by calling `GameSession.restore()`.
+You can also build your own `GameSnapshot` through the `GameSnapshotBuilder` factory class using DSL,
+so that you can create `GameSession` in a customized state, convenient for testing and debugging.
+An example usage is shown below:
+```kotlin
+val gameSnapshot = buildGameSnapshot {
+    properties {
+        tiles { change("c3" to TileType.QUEEN) }
+    }
+    round {
+        curRole { Role.BLACK }
+        resetPieces {
+            white("c1")
+            black("g7")
+            black("d5")
+        }
+        winner { Role.BLACK }
+    }
+    val round2 = round {}
+    setCurRound(round2)
+}
+
+val game = GameSession.restore(gameSnapshot)
+```
+
+## Internal Classes
+
+### RuleEngine
+The `RuleEngineImpl` internal class contains the actual implementation of the game logic.
+It keeps track of all pieces on the board, records move history, and determines and updates the winner.
+
+It implements the `RuleEngine` interface which defines the minimal set of methods needed to
+interact with the game. The `RoundSession` depends on an implementation of `RuleEngine` 
+and delegate most of its work to it.
+
+### Board
+The `Board` internal class represents a physical game board.
+It contains a list of tiles and a list of pieces, and is used by the `RuleEngineImpl` 
+to query and update the pieces positions on the board.
+It uses the `RuleEngineCore` instance passed in its constructor to determine the validity of moves.
+
+### RuleEngineCore
+The `RuleEngineCore` interface contains only one method, `showValidMoves()`.
+It is used to determine the valid moves of a piece on the board according to the KEIZAR rule book.
+It is implemented in an adaptable and extensible way, so that it can quickly adapt to
+any changes in the game rules, or be modified to support variant of the KEIZAR game.

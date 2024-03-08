@@ -15,7 +15,7 @@ class Tile(val type: TileType) {
     var piece: Piece? = null
 }
 
-class Board(
+internal class Board(
     private val boardProperties: BoardProperties,
     private val ruleEngineCore: RuleEngineCore,
 ) {

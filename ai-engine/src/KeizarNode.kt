@@ -4,7 +4,6 @@ import org.keizar.game.BoardProperties
 import org.keizar.game.Role
 import org.keizar.game.TileType
 import org.keizar.game.internal.RuleEngineCoreImpl
-import org.keizar.game.internal.RuleEngineImpl
 import org.keizar.game.internal.Tile
 import org.keizar.utils.communication.game.BoardPos
 import java.util.LinkedList
