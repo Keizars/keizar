@@ -49,6 +49,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.keizar.android.ui.foundation.ErrorDialogHost
+import org.keizar.android.ui.foundation.ErrorMessage
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.foundation.launchInBackground
@@ -87,6 +89,7 @@ fun MultiplayerLobbyScene(
                 .background(MaterialTheme.colorScheme.background)
                 .padding(contentPadding)
         ) {
+            ErrorDialogHost(errorFlow = vm.error, clearError = true)
 //            val pagerState = rememberPagerState { 2 }
 //            val uiScope = rememberCoroutineScope()
 //            PrimaryTabRow(selectedTabIndex = pagerState.currentPage, Modifier.fillMaxWidth()) {
@@ -236,7 +239,8 @@ private fun PlayWithFriendsSection(
                                 showRoomFullDialog = true
                             }
                         } catch (e: Exception) {
-                            Log.e(null, "Error in joinRoom", e)
+                            error.value = ErrorMessage.networkError()
+                            throw e
                         } finally {
                             joiningRoom = false
                         }

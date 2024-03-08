@@ -51,6 +51,7 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -59,6 +60,7 @@ import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.GameBoard
 import org.keizar.android.ui.game.GameBoardScaffold
 import org.keizar.android.ui.game.GameBoardViewModel
+import org.keizar.android.ui.game.MultiplayerGameBoardViewModel
 import org.keizar.android.ui.game.PlayableGameBoardViewModel
 import org.keizar.android.ui.game.rememberSinglePlayerGameBoardForPreview
 
@@ -106,15 +108,47 @@ fun RoundOneBottomBar(
             icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, null) },
             text = { Text("Exit", fontSize = 10.sp) })
 
-        ActionButton(
-            onClick = {
-                vm.startNextRound(vm.selfPlayer)
-            },
-            icon = { Icon(Icons.Default.SkipNext, null) },
-            text = { Text("Next Round", fontSize = 10.sp, softWrap = false) },
-            Modifier.width(IntrinsicSize.Max)
-        )
-
+        if (vm is MultiplayerGameBoardViewModel) {
+            val isWaitingOpponentNext by vm.isWaitingOpponentNext.collectAsStateWithLifecycle()
+            if (isWaitingOpponentNext) {
+                ActionButton(
+                    onClick = {
+                        Toast.makeText(
+                            context,
+                            "Waiting for opponent to start next round",
+                            Toast.LENGTH_LONG,
+                        ).show()
+                    },
+                    icon = { Icon(Icons.Default.SkipNext, null) },
+                    text = {
+                        Text(
+                            "Waiting...", fontSize = 10.sp,
+                            softWrap = false,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    },
+                    Modifier.width(IntrinsicSize.Max)
+                )
+            } else {
+                ActionButton(
+                    onClick = {
+                        vm.startNextRound(vm.selfPlayer)
+                    },
+                    icon = { Icon(Icons.Default.SkipNext, null) },
+                    text = { Text("Next Round", fontSize = 10.sp, softWrap = false) },
+                    Modifier.width(IntrinsicSize.Max)
+                )
+            }
+        } else {
+            ActionButton(
+                onClick = {
+                    vm.startNextRound(vm.selfPlayer)
+                },
+                icon = { Icon(Icons.Default.SkipNext, null) },
+                text = { Text("Next Round", fontSize = 10.sp, softWrap = false) },
+                Modifier.width(IntrinsicSize.Max)
+            )
+        }
     }
 
 }

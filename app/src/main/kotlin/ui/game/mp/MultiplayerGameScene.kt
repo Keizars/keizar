@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import org.keizar.android.BuildConfig
 import org.keizar.android.ui.external.placeholder.placeholder
 import org.keizar.android.ui.foundation.AbstractViewModel
+import org.keizar.android.ui.foundation.ErrorDialogHost
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.game.BaseGamePage
 import org.keizar.android.ui.game.GameBoard
@@ -48,7 +49,7 @@ fun MultiplayerGameScene(
         MultiplayerGameConnector(roomId)
     }
 
-    val error by connector.error.collectAsStateWithLifecycle()
+    val error by connector.connectionError.collectAsStateWithLifecycle()
     if (error != null) {
         AlertDialog(
             onDismissRequest = goBack,
@@ -78,6 +79,10 @@ fun MultiplayerGameScene(
         )
     }
 
+    ErrorDialogHost(errorFlow = connector.error, onClickCancel = {
+        onClickHome()
+    })
+
     val client by connector.client.collectAsStateWithLifecycle(null)
     val session by connector.session.collectAsStateWithLifecycle(null)
 
@@ -91,9 +96,10 @@ fun MultiplayerGameScene(
 
     client?.let { c ->
         session?.let { s ->
-            val vm = remember {
+            val vm = remember(s, c) {
                 MultiplayerGameBoardViewModel(s, s.player, c.selfPlayer, c.opponentPlayer)
             }
+
             MultiplayerGamePage(vm, onClickHome, onClickGameConfig, modifier)
         }
     }

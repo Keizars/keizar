@@ -41,14 +41,14 @@ fun ConnectingRoomDialog(
         )
     },
     confirmButton: @Composable (() -> Unit)? = null,
-    onDismissRequest: () -> Unit = {},
+    onDismissRequest: (() -> Unit)? = null,
     properties: DialogProperties = DialogProperties(
-        dismissOnBackPress = false,
-        dismissOnClickOutside = false,
+        dismissOnBackPress = onDismissRequest != null,
+        dismissOnClickOutside = onDismissRequest != null,
     ),
 ) {
     Dialog(
-        onDismissRequest = onDismissRequest,
+        onDismissRequest = { onDismissRequest?.invoke() },
         properties = properties
     ) {
         val shape = RoundedCornerShape(12.dp)

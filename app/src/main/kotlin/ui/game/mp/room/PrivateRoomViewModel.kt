@@ -49,9 +49,6 @@ enum class ConnectRoomError {
  * View model for the [MultiplayerLobbyScene]
  */
 interface PrivateRoomViewModel : HasBackgroundScope {
-    /**
-     * The room id of the room.
-     */
     @Stable
     val roomId: UInt
 
@@ -70,9 +67,6 @@ interface PrivateRoomViewModel : HasBackgroundScope {
     @Stable
     val playersReady: SharedFlow<Boolean>
 
-    /**
-     * The game configuration of the room.
-     */
     @Stable
     val configuration: GameConfigurationViewModel
 

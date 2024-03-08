@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.withContext
@@ -71,11 +72,44 @@ class StateErrorDialogController : ErrorDialogController {
  *
  * [errorFlow] is a flow of error messages that will trigger the dialog to show.
  * If the flow emits `null`, the dialog is hidden.
+ *
+ * @param onClickCancel the action to perform when the cancel button is clicked, when the error is [recovering][ErrorMessage.isRecovering].
+ * @param onConfirm the action to perform when the confirm button is clicked, when the error is not [recovering][ErrorMessage.isRecovering].
+ * @param clearError whether to set the [errorFlow] to `null` when "OK" is clicked
+ */
+@Composable
+fun ErrorDialogHost(
+    errorFlow: MutableStateFlow<ErrorMessage?>,
+    onClickCancel: () -> Unit = {},
+    onConfirm: () -> Unit = { },
+    clearError: Boolean = false,
+) {
+    return ErrorDialogHost(
+        errorFlow = errorFlow as Flow<ErrorMessage?>,
+        onClickCancel = onClickCancel,
+        onConfirm = {
+            if (clearError) {
+                errorFlow.value = null
+            }
+            onConfirm()
+        },
+    )
+}
+
+/**
+ * Composes a [ErrorDialogHost] that shows a "Connection lost, reconnecting..." message and a cancel button.
+ *
+ * [errorFlow] is a flow of error messages that will trigger the dialog to show.
+ * If the flow emits `null`, the dialog is hidden.
+ *
+ * @param onClickCancel the action to perform when the cancel button is clicked, when the error is [recovering][ErrorMessage.isRecovering].
+ * @param onConfirm the action to perform when the confirm button is clicked, when the error is not [recovering][ErrorMessage.isRecovering].
  */
 @Composable
 fun ErrorDialogHost(
     errorFlow: Flow<ErrorMessage?>,
     onClickCancel: () -> Unit = {},
+    onConfirm: () -> Unit = {},
 ) {
     val controller = remember {
         StateErrorDialogController()
@@ -104,10 +138,16 @@ fun ErrorDialogHost(
                     LinearProgressIndicator(Modifier.width(128.dp))
                 }
             } else null,
+            onDismissRequest = {
+                if (error?.isRecovering == false) {
+                    controller.hide()
+                }
+            },
             confirmButton = {
                 if (error?.isRecovering == false) {
                     TextButton(onClick = {
                         controller.hide()
+                        onConfirm()
                     }) {
                         Text("OK")
                     }

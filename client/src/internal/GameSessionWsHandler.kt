@@ -7,7 +7,12 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.SelectClause0
+import kotlinx.coroutines.selects.select
+import me.him188.ani.utils.logging.info
+import me.him188.ani.utils.logging.logger
 import org.keizar.game.GameSession
 import org.keizar.game.Role
 import org.keizar.game.RoundSession
@@ -21,6 +26,18 @@ import org.keizar.utils.communication.message.RoomStateChange
 import kotlin.coroutines.CoroutineContext
 
 internal interface GameSessionWsHandler : AutoCloseable {
+    /**
+     * Returns `true` if this session is still connected and running.
+     * `false` indicates either [close] is called or network connection lost.
+     */
+    val isActive: Boolean
+
+    /**
+     * A clause completes when the websocket session is closed,
+     * either by calling [close] or by network connection lost.
+     */
+    val onComplete: SelectClause0
+
     fun getCurrentSelfRole(): StateFlow<Role>
     fun getSelfPlayer(): Player
     fun bind(session: GameSession)
@@ -44,6 +61,8 @@ internal class GameSessionWsHandlerImpl(
     private val onPlayerStateChange: suspend (respond: PlayerStateChange) -> Unit,
     private val onRoomStateChange: suspend (respond: RoomStateChange) -> Unit,
 ) : GameSessionWsHandler {
+    private val logger = logger(GameSessionWsHandlerImpl::class)
+
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
 
@@ -81,6 +100,20 @@ internal class GameSessionWsHandlerImpl(
                 }
             }
         }
+
+    init {
+        myCoroutineScope.launch {
+            select { websocketSessionHandler.onComplete {} }
+            logger.info { "Game websocket handler completed, GameSessionWsHandlerImpl is closing" }
+            close()
+        }
+    }
+
+    override val isActive: Boolean
+        get() = myCoroutineScope.isActive
+
+    override val onComplete: SelectClause0
+        get() = myCoroutineScope.coroutineContext[Job]!!.onJoin
 
     override suspend fun start() {
         websocketSessionHandler.start()

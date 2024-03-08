@@ -11,7 +11,9 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.selects.SelectClause0
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.json.Json
@@ -40,6 +42,17 @@ import kotlin.coroutines.CoroutineContext
  * It maintains a connection with the server and synchronizes the state of the room and the players.
  */
 interface Room : AutoCloseable {
+    /**
+     * Returns `true` if this session is still connected and running.
+     * `false` indicates either [close] is called or network connection lost.
+     */
+    val isActive: Boolean
+
+    /**
+     * A clause completes when the websocket session is closed, either by calling [close] or by network connection lost.
+     */
+    val onComplete: SelectClause0
+
     /**
      * Room number of the game room
      */
@@ -161,6 +174,10 @@ private class RoomImpl(
 ) : Room {
     private val myCoroutineScope: CoroutineScope =
         CoroutineScope(parentCoroutineContext + Job(parent = parentCoroutineContext[Job]))
+    override val isActive: Boolean
+        get() = myCoroutineScope.isActive
+    override val onComplete: SelectClause0
+        get() = myCoroutineScope.coroutineContext[Job]!!.onJoin
 
     override val selfPlayer: ClientPlayer get() = players.first { it.username == self.username }
     override val opponentPlayer: MutableStateFlow<ClientPlayer?> =
@@ -276,36 +293,45 @@ private class RoomImpl(
      */
     override suspend fun getGameSession(): RemoteGameSession {
         createGameMutex.withLock {
-            if (game == null) {
-                state.first { it == GameRoomState.PLAYING }
-
-                /**
-                 * Retrieve the non-null values of playerAllocation and gameSnapshot before
-                 * closing the websocketSessionHandler: if the player reconnects to the room
-                 * halfway through the game, the playerAllocation and gameSnapshot should
-                 * still be able to be set up properly.
-                 */
-                val selfPlayer = playerAllocation.first()
-                val gameSnapshot = gameSnapshot.first()
-                websocketSessionHandler.close()
-                println("Pregame websocket handler closed")
-
-                val wsHandler = GameSessionWsHandlerImpl(
-                    parentCoroutineContext = myCoroutineScope.coroutineContext,
-                    session = session,
-                    selfPlayer = selfPlayer,
-                    onPlayerStateChange = { respond ->
-                        players.firstOrNull { it.username == respond.username }
-                            ?.setState(respond.newState)
-                    },
-                    onRoomStateChange = { respond ->
-                        _state.emit(respond.newState)
-                    },
-                )
-                game = RemoteGameSession.createAndConnect(gameSnapshot, wsHandler)
+            val game = game
+            if (game != null && game.isActive) {
+                return game
             }
+            state.first { it == GameRoomState.PLAYING }
+
+            /**
+             * Retrieve the non-null values of playerAllocation and gameSnapshot before
+             * closing the websocketSessionHandler: if the player reconnects to the room
+             * halfway through the game, the playerAllocation and gameSnapshot should
+             * still be able to be set up properly.
+             */
+            /**
+             * Retrieve the non-null values of playerAllocation and gameSnapshot before
+             * closing the websocketSessionHandler: if the player reconnects to the room
+             * halfway through the game, the playerAllocation and gameSnapshot should
+             * still be able to be set up properly.
+             */
+            val selfPlayer = playerAllocation.first()
+            val gameSnapshot = gameSnapshot.first()
+            websocketSessionHandler.close()
+            println("Pregame websocket handler closed")
+
+            val wsHandler = GameSessionWsHandlerImpl(
+                parentCoroutineContext = myCoroutineScope.coroutineContext,
+                session = session,
+                selfPlayer = selfPlayer,
+                onPlayerStateChange = { respond ->
+                    players.firstOrNull { it.username == respond.username }
+                        ?.setState(respond.newState)
+                },
+                onRoomStateChange = { respond ->
+                    _state.emit(respond.newState)
+                },
+            )
+            val newGame = RemoteGameSession.createAndConnect(gameSnapshot, wsHandler)
+            this.game = newGame
+            return newGame
         }
-        return game!!
     }
 }
 

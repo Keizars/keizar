@@ -421,14 +421,23 @@ class MultiplayerGameBoardViewModel(
     }
 
 
+    val isWaitingOpponentNext = MutableStateFlow(false)
     override fun startNextRound(selfPlayer: Player) {
+        if (isWaitingOpponentNext.value) {
+            return
+        }
         logger.info { "startNextRound, selfPlayer = $selfPlayer" }
         // UNDISPATCHED is necessary here
         launchInMain(start = CoroutineStart.UNDISPATCHED) {
-            val curr = game.currentRoundNo.first()
-            if (currentRoundCount.value != 1) {
-                game.currentRoundNo.filter { curr != it }.first()
-                boardTransitionController.turnBoard()
+            isWaitingOpponentNext.value = true
+            try {
+                val curr = game.currentRoundNo.first()
+                if (currentRoundCount.value != 1) {
+                    game.currentRoundNo.filter { curr != it }.first()
+                    boardTransitionController.turnBoard()
+                }
+            } finally {
+                isWaitingOpponentNext.value = false
             }
         }
         launchInBackground(Dispatchers.IO) {
