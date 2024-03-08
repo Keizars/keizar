@@ -214,13 +214,13 @@ fun RoundTwoBottomBar(
             TextButton(
                 onClick = { if (context is Activity) context.finish() },
             ) {
-                Text(text = "Exit", textAlign = TextAlign.Center)
+                Text(text = "Exit", textAlign = TextAlign.Center, softWrap = false, maxLines = 1)
             }
 
             Button(
                 onClick = { onClickGameConfig() },
             ) {
-                Text(text = "New Game", textAlign = TextAlign.Center)
+                Text(text = "New Game", textAlign = TextAlign.Center, softWrap = false, maxLines = 1)
             }
 
         }
@@ -344,7 +344,24 @@ private fun PreviewBottomBar1() = ProvideCompositionalLocalsForPreview {
 
 @Preview(showBackground = true, device = Devices.TABLET)
 @Composable
-private fun PreviewBottomBar2() = ProvideCompositionalLocalsForPreview {
+private fun PreviewBottomBarSinglePlayerSaved() = ProvideCompositionalLocalsForPreview {
+    val vm = rememberSinglePlayerGameBoardForPreview()
+    vm.currentGameDataId = "1"
+    GameBoardScaffold(
+        vm,
+        board = {
+            GameBoard(vm, Modifier.size(400.dp))
+        },
+        bottomBar = {
+            RoundTwoBottomBar(vm = vm, onClickHome = {}, onClickGameConfig = {}, onClickLogin = {})
+        }
+    )
+}
+
+
+@Preview(showBackground = true, device = Devices.TABLET)
+@Composable
+private fun PreviewBottomBarMultiPlayer() = ProvideCompositionalLocalsForPreview {
     val vm = rememberSinglePlayerGameBoardForPreview()
     GameBoardScaffold(
         vm,
