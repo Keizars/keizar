@@ -102,4 +102,36 @@ class AccountModuleTest {
         assertEquals("test", user1.username)
         assertEquals("test", user1.nickname)
     }
+
+    @Test
+    fun `test updateInfo`() = runTest {
+        val accountModule = AccountModuleImpl(
+            database = InMemoryDatabaseManagerImpl(),
+            authTokenManager = plainAuthTokenManager,
+            avatarStorage = InMemoryAvatarStorage(),
+        )
+
+        val respond = accountModule.register("test", byteArrayOf(1))
+        assertEquals(AuthStatus.SUCCESS, respond.status)
+        assertNotNull(respond.token)
+        val userId = plainAuthTokenManager.matchToken(respond.token!!)
+        assertNotNull(userId)
+
+        val user = accountModule.getUser(UUID.fromString(userId))
+        assertEquals("test", user!!.username)
+        assertEquals("test", user.nickname)
+        assertEquals("", user.avatarUrl)
+
+        val newNickname = "newNickname"
+        val newUsername = "newUsername"
+        accountModule.updateInfo(
+            uid = UUID.fromString(userId),
+            newUsername = newUsername,
+            newNickname = newNickname,
+        )
+
+        val updatedUser = accountModule.getUser(UUID.fromString(userId))!!
+        assertEquals(newNickname, updatedUser.nickname)
+        assertEquals(newUsername, updatedUser.username)
+    }
 }

@@ -97,11 +97,6 @@ class AccountModuleImpl(
         )
     }
 
-//    override suspend fun getUserAvatar(uid: UUID): Pair<File, ContentType>? {
-//        val user = database.user.getUserById(uid.toString()) ?: return null
-//        return avatarStorage.uploadAvatar()
-//    }
-
     @OptIn(ExperimentalStdlibApi::class)
     override suspend fun uploadNewAvatar(uid: UUID, input: InputStream, contentType: ContentType) {
         val file = withContext(Dispatchers.IO) {
