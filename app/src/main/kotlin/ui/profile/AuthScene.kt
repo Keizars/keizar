@@ -130,7 +130,7 @@ fun AuthPage(
         )
     }
 
-    ErrorDialogHost(errorFlow = viewModel.error)
+    ErrorDialogHost(errorFlow = viewModel.error, clearError = true)
 
     val errorFontSize = 14.sp
     Column(
