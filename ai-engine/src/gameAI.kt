@@ -243,7 +243,7 @@ class AlgorithmAI(
                 myRole to session
             }.collectLatest { (myRole, session) ->
                 session.curRole.collect { currentRole ->
-                    if (myRole == currentRole) {
+                    if (myRole == currentRole && session.winner.first() == null) {
                         if (!disableDelay) {
                             delay(Random.nextLong(1000L..1500L))
                         }
