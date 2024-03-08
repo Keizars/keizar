@@ -239,16 +239,16 @@ class RoundSnapshotBuilder private constructor(
         }
     }
 
-    companion object {
-        fun from(
-            properties: BoardProperties,
-            snapshot: RoundSnapshot,
-            instructions: RoundSnapshotBuilder.() -> Unit = {},
-        ): RoundSnapshotBuilder {
-            return RoundSnapshotBuilder(BoardPropertiesBuilder(properties)) {
-                prototype(snapshot)
-                this.apply(instructions)
-            }
-        }
-    }
+//    companion object {
+//        fun from(
+//            properties: BoardProperties,
+//            snapshot: RoundSnapshot,
+//            instructions: RoundSnapshotBuilder.() -> Unit = {},
+//        ): RoundSnapshotBuilder {
+//            return RoundSnapshotBuilder(BoardPropertiesBuilder(properties)) {
+//                prototype(snapshot)
+//                this.apply(instructions)
+//            }
+//        }
+//    }
 }

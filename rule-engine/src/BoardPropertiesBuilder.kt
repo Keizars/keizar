@@ -7,7 +7,7 @@ import org.keizar.utils.communication.game.BoardPos
 annotation class BoardPropertiesDslMarker
 
 @BoardPropertiesDslMarker
-class BoardPropertiesBuilder private constructor(
+class BoardPropertiesBuilder internal constructor(
     private var width: Int,
     private var height: Int,
     private var keizarTilePos: BoardPos,
@@ -138,16 +138,16 @@ class BoardPropertiesBuilder private constructor(
     }
 }
 
-private fun example() {
-    val customProperties = BoardPropertiesBuilder(
-        prototype = BoardPropertiesPrototypes.Standard(seed = 100),
-    ) {
-        winningCount { 5 }
-        roundsCount { 4 }
-        tiles {
-            change("d5" to TileType.PLAIN)
-            change("a1" to TileType.KEIZAR)
-            change("e8" to TileType.BISHOP)
-        }
-    }.build()
-}
+//private fun example() {
+//    val customProperties = BoardPropertiesBuilder(
+//        prototype = BoardPropertiesPrototypes.Standard(seed = 100),
+//    ) {
+//        winningCount { 5 }
+//        roundsCount { 4 }
+//        tiles {
+//            change("d5" to TileType.PLAIN)
+//            change("a1" to TileType.KEIZAR)
+//            change("e8" to TileType.BISHOP)
+//        }
+//    }.build()
+//}
