@@ -30,5 +30,20 @@ Typically, a Page is used by only one Scene. This design is just to avoid consid
 navigation-related compatibility issues during UI preview.
 A Page is a container that actually contains UI widgets (Column, Button, etc.).
 
+#### ViewModel
+
+All ViewModels inherit from `AbstractViewModel`. After constructing an instance, it must be bound to
+the current composable's lifecycle with Compose's `remember{}`.
+
+## Domain Layer
+
+The domain layer encapsulates complex business logic of the app, including:
+
+- The rule engine (included from the `:rule-engine` module)
+- `SessionManager` which manages the user's session
+- The `Tutorial` framework which encapsulates the tutorial logics
+- The `Room` from `:client` module which encapsulates the game room logics
+
 ## Data Layer
 
+Refer to Google's [documentation](https://developer.android.com/topic/architecture/data-layer).
