@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import org.keizar.game.internal.RuleEngine
@@ -17,6 +18,7 @@ import org.keizar.utils.communication.game.NeutralStats
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.game.RoundStats
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.time.Duration.Companion.seconds
 
 /***
  * API for the backend. Representation of a complete game that may contain multiple rounds
@@ -66,20 +68,24 @@ interface GameSession {
     )
 
     // Replay current round of the game. Reset the round state.
-    // Can only be called in single player mode.
+    // Should only be called in single player mode.
     fun replayCurrentRound(): Boolean
 
     // Replay the whole game. Change the currentRoundNo to 0, and reset the game state.
-    // Can only be called in single player mode.
+    // Should only be called in single player mode.
     fun replayGame(): Boolean
 
+    // Calculate the corresponding player of the role in the specified round.
     fun getPlayer(role: Role, roundNo: Int): Player
+
+    // Calculate the role of the player in the specified round.
     fun getRole(player: Player, roundNo: Int): Role
+
+    // Get the winner of the specified round.
     fun getRoundWinner(roundNo: Int): Flow<Player?>
 
+    // Get the statistics of the specified round.
     fun getRoundStats(roundNo: Int, selfPlayer: Player): Flow<RoundStats>
-
-    fun getSavedRoundStats(roundNo: Int): Flow<RoundStats>?
 
     companion object {
         // Create a standard GameSession using the seed provided.
@@ -212,7 +218,7 @@ class GameSessionImpl(
             } else {
                 GameResult.Draw
             }
-        }
+        }.debounce(1.seconds)
     }
 
     override fun currentRole(player: Player): StateFlow<Role> {
@@ -291,14 +297,6 @@ class GameSessionImpl(
         return stats
     }
 
-    override fun getSavedRoundStats(roundNo: Int): Flow<RoundStats>? {
-        return if (roundNo == 0) {
-            round1Stats
-        } else {
-            round2Stats
-        }
-    }
-
     override fun getRole(player: Player, roundNo: Int): Role {
         return if ((player.ordinal + roundNo) % 2 == 0) Role.WHITE else Role.BLACK
     }
@@ -306,7 +304,4 @@ class GameSessionImpl(
     override fun getPlayer(role: Role, roundNo: Int): Player {
         return Player.fromOrdinal((role.ordinal + roundNo) % 2)
     }
-
-
 }
-
