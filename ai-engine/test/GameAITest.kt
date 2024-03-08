@@ -41,11 +41,8 @@ class RoundSessionTest {
         assertEquals(0, game.currentRoundNo.value)
         ai1.start()
         ai2.start()
-        game.finalWinner.filterNotNull().take(2).collectIndexed() { index, winner ->
-            if (index == 1) {
-                assertEquals(GameResult.Draw, winner)
-            }
-        }
+        val finalWinner = game.finalWinner.filterNotNull().first()
+        assertEquals(GameResult.Draw, finalWinner)
     }
 
 //    @Test
