@@ -23,6 +23,7 @@ interface RoundSession {
     val moveDurations: StateFlow<List<Instant>>
     val whitePlayerMoves: StateFlow<Int>
     val blackPlayerMoves: StateFlow<Int>
+    val replayedRounds: StateFlow<Int>
 
     // undo/redo: only available when playing against computer.
     // Players can only undo in their own turn before they make a move.
@@ -71,6 +72,8 @@ class RoundSessionImpl(
     override val canUndo: StateFlow<Boolean> = ruleEngine.canUndo
 
     override val canRedo: StateFlow<Boolean> = ruleEngine.canRedo
+
+    override val replayedRounds: MutableStateFlow<Int> = MutableStateFlow(0)
 
     // statistics
     private val _moveDurations = MutableStateFlow<List<Instant>>(emptyList())
@@ -156,5 +159,6 @@ class RoundSessionImpl(
         ruleEngine.reset()
         _blackPlayerMoves.value = 0
         _whitePlayerMoves.value = 0
+        ++replayedRounds.value
     }
 }
