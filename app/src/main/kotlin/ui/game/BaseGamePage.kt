@@ -4,6 +4,7 @@ import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -36,8 +37,9 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import org.keizar.android.data.encode
-import org.keizar.android.ui.KeizarApp
+import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.isSystemInLandscape
+import org.keizar.android.ui.game.actions.UndoButton
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
 import org.keizar.game.Difficulty
@@ -112,10 +114,15 @@ fun BaseGamePage(
                     GameBoardScaffold(
                         vm,
                         board = { board(size) },
-                        modifier = Modifier.width(IntrinsicSize.Min),
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .width(IntrinsicSize.Min),
                         bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickGameConfig, onClickLogin) },
-                        actions = actions,
+                        actions = {},
                     )
+                    Row(Modifier.align(Alignment.BottomCenter)) {
+                        actions()
+                    }
                 }
             } else {
                 BoxWithConstraints {
@@ -129,7 +136,14 @@ fun BaseGamePage(
                                     vm,
                                     board = { board(size) },
                                     modifier = Modifier.fillMaxSize(),
-                                    bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickGameConfig, onClickLogin) },
+                                    bottomBar = {
+                                        DialogsAndBottomBar(
+                                            vm,
+                                            onClickHome,
+                                            onClickGameConfig,
+                                            onClickLogin
+                                        )
+                                    },
                                     actions = actions,
                                 )
                             }
@@ -145,12 +159,16 @@ fun BaseGamePage(
 @Preview(showBackground = true, device = Devices.TABLET)
 @Composable
 private fun PreviewGamePage() {
-    KeizarApp {
+    ProvideCompositionalLocalsForPreview {
+        val vm = rememberSinglePlayerGameBoardForPreview()
         BaseGamePage(
-            vm = rememberSinglePlayerGameBoardForPreview(),
+            vm = vm,
             onClickHome = {},
             onClickGameConfig = {},
             onClickLogin = {},
+            actions = {
+                UndoButton(vm = vm)
+            }
         )
     }
 }
