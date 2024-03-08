@@ -31,3 +31,5 @@ See [Build](build) for details on building the Android app and running the serve
 
 - [Android App](app/README)
 - [Rule Engine](rule-engine/README)
+- [AI](ai/README)
+- [Server](rule-engine/README)

@@ -84,7 +84,9 @@ private val json = Json { ignoreUnknownKeys = true }
 /**
  * The content of the main activity.
  *
- * It is a navigation controller
+ * A Screen is a container for a navigation controller, supporting transitions between multiple scenes.
+ * The content of a Scene is a Page. The Scene connects Pages, which are unrelated to navigation, to
+ * the navigation system.
  */
 @Composable
 fun MainScreen() {
