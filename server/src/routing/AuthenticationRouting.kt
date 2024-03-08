@@ -1,4 +1,4 @@
-package org.solvo.server.modules
+package org.keizar.server.routing
 
 import io.ktor.http.*
 import io.ktor.server.application.*

@@ -25,7 +25,7 @@ import org.keizar.utils.communication.account.EditUserRequest
 import org.keizar.utils.communication.account.EditUserResponse
 import org.keizar.utils.communication.account.User
 import org.keizar.utils.communication.account.UsernameValidityResponse
-import org.solvo.server.modules.AuthDigest
+
 
 fun Application.usersRouting(context: ServerContext) {
     val accounts = context.accounts

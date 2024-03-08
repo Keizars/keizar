@@ -1,12 +1,11 @@
 package org.keizar.server
 
 import kotlinx.coroutines.test.runTest
-import org.keizar.server.database.InMemoryDatabaseManagerImpl
-import org.keizar.server.modules.SeedBankModuleImpl
+import org.keizar.server.data.InMemoryDatabaseManagerImpl
+import org.keizar.server.logic.SeedBankModuleImpl
 import java.util.UUID
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
-import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class SeedBankModuleTest {

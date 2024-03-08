@@ -1,6 +1,6 @@
-package org.keizar.server.database
+package org.keizar.server.data
 
-import org.keizar.server.database.models.GameDataModel
+import org.keizar.server.data.models.GameDataModel
 import java.util.UUID
 
 interface GameDataRepository {

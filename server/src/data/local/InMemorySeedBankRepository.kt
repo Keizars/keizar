@@ -1,9 +1,9 @@
-package org.keizar.server.database.local
+package org.keizar.server.data.local
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.keizar.server.database.SeedBankRepository
-import org.keizar.server.database.models.SeedBankModel
+import org.keizar.server.data.SeedBankRepository
+import org.keizar.server.data.models.SeedBankModel
 
 class InMemorySeedBankRepository : SeedBankRepository {
     private val _data: MutableList<SeedBankModel> = mutableListOf()

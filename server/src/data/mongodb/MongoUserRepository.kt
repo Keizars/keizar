@@ -1,11 +1,11 @@
-package org.keizar.server.database.mongodb
+package org.keizar.server.data.mongodb
 
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import kotlinx.coroutines.flow.firstOrNull
-import org.keizar.server.database.AbstractUserRepository
-import org.keizar.server.database.models.UserModel
+import org.keizar.server.data.AbstractUserRepository
+import org.keizar.server.data.models.UserModel
 
 class MongoUserRepository(
     private val userTable: MongoCollection<UserModel>

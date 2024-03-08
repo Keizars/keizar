@@ -2,16 +2,16 @@ package org.keizar.server
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.keizar.server.database.DatabaseManager
-import org.keizar.server.database.InMemoryDatabaseManagerImpl
-import org.keizar.server.database.MongoDatabaseManagerImpl
-import org.keizar.server.modules.AccountModuleImpl
+import org.keizar.server.data.DatabaseManager
+import org.keizar.server.data.InMemoryDatabaseManagerImpl
+import org.keizar.server.data.MongoDatabaseManagerImpl
+import org.keizar.server.logic.AccountModuleImpl
 import org.keizar.server.data.AvatarStorage
 import org.keizar.server.data.AwsAvatarStorage
-import org.keizar.server.modules.GameDataModuleImpl
-import org.keizar.server.modules.GameRoomsModuleImpl
+import org.keizar.server.logic.GameDataModuleImpl
+import org.keizar.server.logic.GameRoomsModuleImpl
 import org.keizar.server.data.InMemoryAvatarStorage
-import org.keizar.server.modules.SeedBankModuleImpl
+import org.keizar.server.logic.SeedBankModuleImpl
 import org.keizar.server.utils.AesEncoder
 import org.keizar.server.utils.AuthTokenConfig
 import org.keizar.server.utils.AuthTokenManager

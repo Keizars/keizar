@@ -1,8 +1,8 @@
 package org.keizar.server
 
 import kotlinx.coroutines.test.runTest
-import org.keizar.server.database.InMemoryDatabaseManagerImpl
-import org.keizar.server.modules.AccountModuleImpl
+import org.keizar.server.data.InMemoryDatabaseManagerImpl
+import org.keizar.server.logic.AccountModuleImpl
 import org.keizar.server.data.InMemoryAvatarStorage
 import org.keizar.server.utils.AuthTokenManager
 import org.keizar.utils.communication.account.AuthStatus

@@ -1,4 +1,4 @@
-package org.keizar.server.modules.gameroom
+package org.keizar.server.logic.gameroom
 
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.sync.Mutex

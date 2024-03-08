@@ -8,10 +8,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.ClosedReceiveChannelException
 import kotlinx.coroutines.launch
-import org.keizar.client.exception.NetworkFailureException
+import org.keizar.client.exceptions.NetworkFailureException
 import org.keizar.utils.communication.message.Request
 import org.keizar.utils.communication.message.Respond
 import java.util.concurrent.atomic.AtomicBoolean

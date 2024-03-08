@@ -1,4 +1,4 @@
-package org.keizar.server.database.mongodb
+package org.keizar.server.data.mongodb
 
 import kotlinx.serialization.StringFormat
 import kotlinx.serialization.serializerOrNull

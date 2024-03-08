@@ -1,8 +1,8 @@
-package org.keizar.server.modules
+package org.keizar.server.logic
 
-import org.keizar.server.database.DatabaseManager
-import org.keizar.server.database.models.GameDataModel
-import org.keizar.server.database.models.dataToModel
+import org.keizar.server.data.DatabaseManager
+import org.keizar.server.data.models.GameDataModel
+import org.keizar.server.data.models.dataToModel
 import org.keizar.utils.communication.game.GameDataGet
 import org.keizar.utils.communication.game.GameDataStore
 import org.keizar.utils.communication.game.jsonElementToRoundStats

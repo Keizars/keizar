@@ -1,4 +1,4 @@
-package org.keizar.server.modules
+package org.keizar.server.logic
 
 import io.ktor.server.plugins.BadRequestException
 import io.ktor.server.plugins.NotFoundException
@@ -8,9 +8,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.keizar.game.BoardProperties
-import org.keizar.server.modules.gameroom.GameRoom
-import org.keizar.server.modules.gameroom.ServerGameRoomState
-import org.keizar.server.modules.gameroom.PlayerSession
+import org.keizar.server.logic.gameroom.GameRoom
+import org.keizar.server.logic.gameroom.ServerGameRoomState
+import org.keizar.server.logic.gameroom.PlayerSession
 import org.keizar.utils.communication.PlayerSessionState
 import org.keizar.utils.communication.message.UserInfo
 import org.slf4j.Logger

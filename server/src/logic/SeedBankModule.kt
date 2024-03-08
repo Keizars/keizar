@@ -1,7 +1,6 @@
-package org.keizar.server.modules
+package org.keizar.server.logic
 
-import org.keizar.server.ServerContext
-import org.keizar.server.database.DatabaseManager
+import org.keizar.server.data.DatabaseManager
 import java.util.UUID
 
 interface SeedBankModule {

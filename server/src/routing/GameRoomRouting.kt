@@ -13,9 +13,9 @@ import io.ktor.util.pipeline.PipelineContext
 import org.keizar.game.BoardProperties
 import org.keizar.game.protocol.RoomInfo
 import org.keizar.server.ServerContext
-import org.keizar.server.modules.GameRoomModule
-import org.keizar.server.modules.gameroom.GameRoom
-import org.keizar.server.modules.gameroom.PlayerSession
+import org.keizar.server.logic.GameRoomModule
+import org.keizar.server.logic.gameroom.GameRoom
+import org.keizar.server.logic.gameroom.PlayerSession
 import org.keizar.server.utils.checkAuthentication
 import org.keizar.server.utils.getAuthenticated
 import org.keizar.server.utils.getUserIdOrRespond

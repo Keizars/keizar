@@ -3,7 +3,7 @@ package org.keizar.client.services
 import org.keizar.client.AccessTokenProvider
 import org.keizar.client.Room
 import org.keizar.client.annotations.InternalClientApi
-import org.keizar.client.exception.RoomFullException
+import org.keizar.client.exceptions.RoomFullException
 import org.keizar.client.internal.KeizarHttpClient
 import org.keizar.client.internal.KeizarHttpClientImpl
 import org.keizar.game.BoardProperties

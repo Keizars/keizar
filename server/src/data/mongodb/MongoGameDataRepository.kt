@@ -1,12 +1,12 @@
-package org.keizar.server.database.mongodb
+package org.keizar.server.data.mongodb
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import com.mongodb.client.model.Filters
 import com.mongodb.client.model.Updates
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.toList
 
-import org.keizar.server.database.GameDataRepository
-import org.keizar.server.database.models.GameDataModel
+import org.keizar.server.data.GameDataRepository
+import org.keizar.server.data.models.GameDataModel
 import java.util.UUID
 
 class MongoGameDataRepository(

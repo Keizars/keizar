@@ -1,10 +1,10 @@
-package org.keizar.server.database.mongodb
+package org.keizar.server.data.mongodb
 
 import com.mongodb.kotlin.client.coroutine.MongoCollection
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
-import org.keizar.server.database.SeedBankRepository
-import org.keizar.server.database.models.SeedBankModel
+import org.keizar.server.data.SeedBankRepository
+import org.keizar.server.data.models.SeedBankModel
 
 class MongoSeedBankRepository(
     private val seedBankTable: MongoCollection<SeedBankModel>

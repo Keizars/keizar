@@ -1,4 +1,4 @@
-package org.keizar.server.modules
+package org.keizar.server.logic
 
 import io.ktor.http.ContentType
 import kotlinx.coroutines.Dispatchers
@@ -6,8 +6,8 @@ import kotlinx.coroutines.withContext
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
 import org.keizar.server.data.AvatarStorage
-import org.keizar.server.database.DatabaseManager
-import org.keizar.server.database.models.UserModel
+import org.keizar.server.data.DatabaseManager
+import org.keizar.server.data.models.UserModel
 import org.keizar.server.utils.AuthTokenManager
 import org.keizar.utils.communication.LiteralChecker
 import org.keizar.utils.communication.account.AuthResponse

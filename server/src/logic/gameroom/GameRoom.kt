@@ -1,4 +1,4 @@
-package org.keizar.server.modules.gameroom
+package org.keizar.server.logic.gameroom
 
 import io.ktor.serialization.WebsocketDeserializeException
 import io.ktor.server.websocket.DefaultWebSocketServerSession

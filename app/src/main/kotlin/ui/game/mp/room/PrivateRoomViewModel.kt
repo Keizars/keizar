@@ -28,7 +28,7 @@ import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
 import org.keizar.client.ClientPlayer
 import org.keizar.client.Room
-import org.keizar.client.exception.RoomFullException
+import org.keizar.client.exceptions.RoomFullException
 import org.keizar.client.services.RoomService
 import org.keizar.client.services.UserService
 import org.keizar.game.Difficulty

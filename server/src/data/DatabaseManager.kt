@@ -1,26 +1,22 @@
-package org.keizar.server.database
+package org.keizar.server.data
 
 import com.mongodb.ConnectionString
 import com.mongodb.MongoClientSettings
 import com.mongodb.client.model.IndexOptions
 import com.mongodb.client.model.Indexes
 import com.mongodb.kotlin.client.coroutine.MongoClient
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.flatMapLatest
 import org.bson.UuidRepresentation
 import org.bson.codecs.configuration.CodecRegistries
-import org.keizar.server.database.local.InMemoryGameDataRepository
-import org.keizar.server.database.local.InMemorySeedBankRepository
-import org.keizar.server.database.local.InMemoryUserRepository
-import org.keizar.server.database.models.GameDataModel
-import org.keizar.server.database.models.SeedBankModel
-import org.keizar.server.database.models.UserModel
-import org.keizar.server.database.mongodb.KeizarCodecRegistry
-import org.keizar.server.database.mongodb.MongoGameDataRepository
-import org.keizar.server.database.mongodb.MongoSeedBankRepository
-import org.keizar.server.database.mongodb.MongoUserRepository
+import org.keizar.server.data.local.InMemoryGameDataRepository
+import org.keizar.server.data.local.InMemorySeedBankRepository
+import org.keizar.server.data.local.InMemoryUserRepository
+import org.keizar.server.data.models.GameDataModel
+import org.keizar.server.data.models.SeedBankModel
+import org.keizar.server.data.models.UserModel
+import org.keizar.server.data.mongodb.KeizarCodecRegistry
+import org.keizar.server.data.mongodb.MongoGameDataRepository
+import org.keizar.server.data.mongodb.MongoSeedBankRepository
+import org.keizar.server.data.mongodb.MongoUserRepository
 import org.keizar.server.plugins.ServerJson
 
 /**

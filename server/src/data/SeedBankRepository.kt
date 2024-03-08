@@ -1,4 +1,4 @@
-package org.keizar.server.database
+package org.keizar.server.data
 
 interface SeedBankRepository {
     suspend fun addSeed(userId: String, seed: String): Boolean

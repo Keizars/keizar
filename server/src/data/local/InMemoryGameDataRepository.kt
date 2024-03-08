@@ -1,9 +1,9 @@
-package org.keizar.server.database.local
+package org.keizar.server.data.local
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.keizar.server.database.GameDataRepository
-import org.keizar.server.database.models.GameDataModel
+import org.keizar.server.data.GameDataRepository
+import org.keizar.server.data.models.GameDataModel
 import java.util.UUID
 
 class InMemoryGameDataRepository: GameDataRepository {

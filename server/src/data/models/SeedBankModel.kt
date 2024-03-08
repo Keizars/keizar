@@ -1,4 +1,4 @@
-package org.keizar.server.database.models
+package org.keizar.server.data.models
 
 import org.bson.codecs.pojo.annotations.BsonId
 import java.util.UUID

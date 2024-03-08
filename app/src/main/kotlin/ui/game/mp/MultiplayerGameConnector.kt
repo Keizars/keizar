@@ -11,7 +11,7 @@ import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.client.Room
-import org.keizar.client.exception.RoomFullException
+import org.keizar.client.exceptions.RoomFullException
 import org.keizar.client.services.RoomService
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

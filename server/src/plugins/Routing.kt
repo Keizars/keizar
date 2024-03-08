@@ -10,7 +10,7 @@ import org.keizar.server.routing.gameDataRouting
 import org.keizar.server.routing.usersRouting
 import org.keizar.server.routing.gameRoomRouting
 import org.keizar.server.routing.seedBankRouting
-import org.solvo.server.modules.authenticationRouting
+import org.keizar.server.routing.authenticationRouting
 
 fun Application.configureMultiplayerRouting(context: ServerContext) {
     routing {

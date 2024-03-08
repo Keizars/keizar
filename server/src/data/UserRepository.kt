@@ -1,6 +1,6 @@
-package org.keizar.server.database
+package org.keizar.server.data
 
-import org.keizar.server.database.models.UserModel
+import org.keizar.server.data.models.UserModel
 
 interface UserRepository {
     suspend fun addUser(userModel: UserModel): Boolean

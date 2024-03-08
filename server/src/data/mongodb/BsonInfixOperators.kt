@@ -1,4 +1,4 @@
-package org.keizar.server.database.mongodb
+package org.keizar.server.data.mongodb
 
 import com.mongodb.client.model.Filters
 import org.bson.conversions.Bson

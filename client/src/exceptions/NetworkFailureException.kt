@@ -1,4 +1,4 @@
-package org.keizar.client.exception
+package org.keizar.client.exceptions
 
 
 class NetworkFailureException(

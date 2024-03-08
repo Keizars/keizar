@@ -11,7 +11,7 @@ import org.keizar.server.plugins.configureSecurity
 import org.keizar.server.plugins.configureSerialization
 import org.keizar.server.plugins.configureSockets
 import org.keizar.server.routing.usersRouting
-import org.solvo.server.modules.authenticationRouting
+import org.keizar.server.routing.authenticationRouting
 
 class ServerTest {
     private fun Application.basicSetup(): ServerContext {

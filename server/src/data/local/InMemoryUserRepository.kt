@@ -1,9 +1,9 @@
-package org.keizar.server.database.local
+package org.keizar.server.data.local
 
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import org.keizar.server.database.AbstractUserRepository
-import org.keizar.server.database.models.UserModel
+import org.keizar.server.data.AbstractUserRepository
+import org.keizar.server.data.models.UserModel
 
 class InMemoryUserRepository : AbstractUserRepository() {
     private val _data: MutableList<UserModel> = mutableListOf()
