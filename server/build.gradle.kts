@@ -29,6 +29,7 @@ dependencies {
     implementation(libs.aws.s3control)
     implementation(libs.aws.sts)
     implementation(libs.aws.secretsmanager)
+    testImplementation("io.mockk:mockk:1.12.0")
 }
 
 application {

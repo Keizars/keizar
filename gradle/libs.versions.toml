@@ -1,6 +1,7 @@
 [versions]
 kotlin = "2.0.0-Beta4"
 coroutines = "1.7.3"
+mockk = "1.12.0"
 mongodb-driver-kotlin-coroutine = "4.10.1"
 aws = "1.0.41"
 serialization = "1.6.2"
@@ -76,6 +77,7 @@ ktor-server-websocket-jvm = { module = "io.ktor:ktor-server-websockets-jvm", ver
 ktor-server-status = { module = "io.ktor:ktor-server-status-pages", version.ref = "ktor" }
 
 # Retrofit
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
 mongodb-driver-kotlin-coroutine = { module = "org.mongodb:mongodb-driver-kotlin-coroutine", version.ref = "mongodb-driver-kotlin-coroutine" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 retrofit-kotlinx-serialization = { module = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter", version.ref = "retrofit-kotlinx-serialization" }
