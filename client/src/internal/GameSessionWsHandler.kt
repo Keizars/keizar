@@ -31,7 +31,7 @@ internal interface GameSessionWsHandler : AutoCloseable {
 }
 
 /**
- * The websocket handler for a ongoing game.
+ * The websocket handler for an ongoing game.
  * Used by a [RemoteGameSession] to communication with server.
  * Created by a [GameRoomClient] whose state changes to [GameRoomState.PLAYING].
  *

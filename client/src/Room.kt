@@ -62,12 +62,12 @@ interface Room : AutoCloseable {
     val players: List<ClientPlayer>
 
     /**
-     * Player information of the the self user.
+     * Player information of the self user.
      */
     val selfPlayer: ClientPlayer
 
     /**
-     * Player information of the the self user.
+     * Player information of the opponent user.
      *
      * The flow emits not null iff all players are connected to the room,
      * i.e. [state] is [GameRoomState.ALL_CONNECTED] or further.
