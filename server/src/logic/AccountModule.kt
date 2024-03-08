@@ -5,6 +5,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.logger
+import org.keizar.server.data.AvatarStorage
 import org.keizar.server.database.DatabaseManager
 import org.keizar.server.database.models.UserModel
 import org.keizar.server.utils.AuthTokenManager

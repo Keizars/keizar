@@ -1,4 +1,4 @@
-package org.keizar.server.modules
+package org.keizar.server.data
 
 import aws.sdk.kotlin.runtime.auth.credentials.EnvironmentCredentialsProvider
 import aws.sdk.kotlin.services.s3.S3Client
