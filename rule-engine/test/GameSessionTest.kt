@@ -14,6 +14,14 @@ import org.keizar.utils.communication.game.Player
 
 class GameSessionTest {
     @Test
+    fun `test random create`() = runTest {
+        val game = GameSession.create()
+        assertEquals(0, game.currentRoundNo.value)
+        assertEquals(Role.WHITE, game.currentRole(Player.FirstWhitePlayer).value)
+        assertEquals(Role.BLACK, game.currentRole(Player.FirstBlackPlayer).value)
+    }
+
+    @Test
     fun `test currentRole`() = runTest {
         val game = GameSession.create(0)
         assertEquals(Role.WHITE, game.currentRole(Player.FirstWhitePlayer).value)
@@ -573,5 +581,64 @@ class GameSessionTest {
         assertTrue(whiteMoves.isEmpty())
         assertTrue(round.move(BoardPos("a2"), BoardPos("a1")))
         assertEquals(Role.BLACK, round.winner.value)
+    }
+
+    @Test
+    fun `test getRoundStats`() = runTest {
+        val game = GameSession.create(0)
+        val curRound = game.currentRound
+        val round1 = curRound.first()
+
+        assertTrue(round1.move(BoardPos("e2"), BoardPos("e3")))
+        assertTrue(round1.move(BoardPos("d7"), BoardPos("d6")))
+        assertTrue(round1.move(BoardPos("e3"), BoardPos("d5")))
+        assertTrue(round1.move(BoardPos("a7"), BoardPos("a6")))
+        assertTrue(round1.move(BoardPos("a2"), BoardPos("a3")))
+        assertTrue(round1.move(BoardPos("a6"), BoardPos("a5")))
+        assertTrue(round1.move(BoardPos("a3"), BoardPos("a4")))
+        assertTrue(round1.move(BoardPos("d6"), BoardPos("d5")))
+        assertTrue(round1.move(BoardPos("h2"), BoardPos("h3")))
+        assertTrue(round1.move(BoardPos("f7"), BoardPos("f6")))
+        assertTrue(round1.move(BoardPos("h3"), BoardPos("h4")))
+        assertTrue(round1.move(BoardPos("f6"), BoardPos("f5")))
+        assertTrue(round1.move(BoardPos("h4"), BoardPos("h5")))
+
+        val stats = game.getRoundStats(0, Player.FirstWhitePlayer).first()
+        assertEquals(Player.FirstWhitePlayer, stats.player)
+        assertEquals(Player.FirstBlackPlayer, stats.winner)
+        assertEquals(0, stats.neutralStats.whiteCaptured)
+        assertEquals(1, stats.neutralStats.blackCaptured)
+        assertEquals(6, stats.neutralStats.whiteMoves)
+        assertEquals(7, stats.neutralStats.blackMoves)
+
+        assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
+        assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
+
+        val round2 = curRound.first()
+
+        assertTrue(round2.move(BoardPos("e2"), BoardPos("e3")))
+        assertTrue(round2.move(BoardPos("d7"), BoardPos("d6")))
+        assertTrue(round2.move(BoardPos("e3"), BoardPos("d5")))
+        assertTrue(round2.move(BoardPos("a7"), BoardPos("a6")))
+        assertTrue(round2.move(BoardPos("a2"), BoardPos("a3")))
+        assertTrue(round2.move(BoardPos("a6"), BoardPos("a5")))
+        assertTrue(round2.move(BoardPos("a3"), BoardPos("a4")))
+        assertTrue(round2.move(BoardPos("d6"), BoardPos("d5")))
+        assertTrue(round2.move(BoardPos("h2"), BoardPos("h3")))
+        assertTrue(round2.move(BoardPos("f7"), BoardPos("f6")))
+        assertTrue(round2.move(BoardPos("h3"), BoardPos("h4")))
+        assertTrue(round2.move(BoardPos("f6"), BoardPos("f5")))
+        assertTrue(round2.move(BoardPos("h4"), BoardPos("h5")))
+        assertEquals(Role.BLACK, round2.winner.value)
+        assertEquals(3, round2.winningCounter.value)
+
+        assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
+        assertTrue(game.confirmNextRound(Player.FirstBlackPlayer))
+
+        assertEquals(1, game.currentRoundNo.value)
+        assertEquals(1, game.wonRounds(Player.FirstWhitePlayer).first())
+        assertEquals(1, game.wonRounds(Player.FirstBlackPlayer).first())
+        assertEquals(Player.FirstBlackPlayer, game.getRoundWinner(0).first())
+        assertEquals(Player.FirstWhitePlayer, game.getRoundWinner(1).first())
     }
 }

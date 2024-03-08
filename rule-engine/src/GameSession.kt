@@ -105,21 +105,6 @@ interface GameSession {
             }
         }
 
-        // Create a standard GameSession using the BoardProperties
-        // and a RoundSessionConstructor provided.
-        fun create(
-            properties: BoardProperties,
-            roundSessionConstructor: (ruleEngine: RuleEngine) -> RoundSession,
-        ): GameSession {
-            return GameSessionImpl(properties) {
-                val ruleEngine = RuleEngineImpl(
-                    boardProperties = properties,
-                    ruleEngineCore = RuleEngineCoreImpl(properties),
-                )
-                roundSessionConstructor(ruleEngine)
-            }
-        }
-
         // Restore a GameSession by a snapshot of the game.
         fun restore(snapshot: GameSnapshot): GameSession {
             return GameSessionImpl(

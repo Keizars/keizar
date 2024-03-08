@@ -333,4 +333,25 @@ class RoundSessionTest {
         assertTrue(round.move(BoardPos("h2"), BoardPos("h3")))
         assertFalse(round.recoverLast())
     }
+
+    @Test
+    fun `test getNeutralStatistics`() = runTest {
+        val game = GameSession.create(0)
+        val round = game.currentRound.first()
+
+        assertTrue(round.move(BoardPos("f2"), BoardPos("f4")))
+        assertTrue(round.move(BoardPos("e7"), BoardPos("e6")))
+        assertTrue(round.move(BoardPos("f4"), BoardPos("f5")))
+        assertTrue(round.move(BoardPos("e6"), BoardPos("f5")))
+        assertTrue(round.move(BoardPos("g2"), BoardPos("g4")))
+        assertTrue(round.move(BoardPos("g7"), BoardPos("g6")))
+        assertTrue(round.move(BoardPos("g4"), BoardPos("f5")))
+        assertTrue(round.move(BoardPos("g6"), BoardPos("f5")))
+
+        val stats = round.getNeutralStatistics()
+        assertEquals(1, stats.whiteCaptured)
+        assertEquals(2, stats.blackCaptured)
+        assertEquals(4, stats.whiteMoves)
+        assertEquals(4, stats.blackMoves)
+    }
 }
