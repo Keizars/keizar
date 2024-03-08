@@ -7,7 +7,6 @@ import io.ktor.server.testing.testApplication
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import org.junit.jupiter.api.Test
-import org.keizar.server.plugins.configureDatabases
 import org.keizar.server.plugins.configureSecurity
 import org.keizar.server.plugins.configureSerialization
 import org.keizar.server.plugins.configureSockets
@@ -26,7 +25,6 @@ class ServerTest {
 
         configureSecurity(context)
         configureSerialization()
-        configureDatabases()
         configureSockets()
         return context
     }
