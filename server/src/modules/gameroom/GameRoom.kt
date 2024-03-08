@@ -297,7 +297,16 @@ class GameRoomImpl(
 
     override fun connect(user: UserInfo, session: DefaultWebSocketServerSession): PlayerSession? {
         val playerSession = players[user] ?: return null
-        playerSession.connect(session)
+        playerSession.connect(
+            newSession = session,
+            recoverToState = when (state.value) {
+                is ServerGameRoomState.Started,
+                is ServerGameRoomState.AllConnected -> PlayerSessionState.STARTED
+
+                is ServerGameRoomState.Playing,
+                is ServerGameRoomState.Finished -> PlayerSessionState.PLAYING
+            }
+        )
         myCoroutineScope.launch {
             notifyRemoteSessionSetup(playerSession)
             session.sendRespond(RoomStateChange(state.value.toGameRoomState()))

@@ -20,10 +20,14 @@ interface PlayerSession {
     fun setState(newState: PlayerSessionState)
     fun cancel(message: String)
     fun checkConnection(terminateOnDisconnected: Boolean = false)
-    fun connect(newSession: DefaultWebSocketServerSession)
+    fun connect(newSession: DefaultWebSocketServerSession, recoverToState: PlayerSessionState)
 
     companion object {
-        fun create(user: UserInfo, playerAllocation: Player, isHost: Boolean = false): PlayerSession {
+        fun create(
+            user: UserInfo,
+            playerAllocation: Player,
+            isHost: Boolean = false
+        ): PlayerSession {
             return PlayerSessionImpl(user, playerAllocation, isHost)
         }
     }
@@ -48,20 +52,21 @@ class PlayerSessionImpl(
         if (session.value?.isActive != true) {
             if (terminateOnDisconnected) {
                 setState(PlayerSessionState.TERMINATING)
-            } else if (state.value == PlayerSessionState.READY) {
-                setState(PlayerSessionState.STARTED)
-            } else if (state.value == PlayerSessionState.PLAYING) {
+            } else {
                 setState(PlayerSessionState.DISCONNECTED)
             }
             session.value = null
         }
     }
 
-    override fun connect(newSession: DefaultWebSocketServerSession) {
+    override fun connect(
+        newSession: DefaultWebSocketServerSession,
+        recoverToState: PlayerSessionState,
+    ) {
         session.value?.cancel("Session expired")
         session.value = newSession
         if (state.value == PlayerSessionState.DISCONNECTED) {
-            setState(PlayerSessionState.PLAYING)
+            setState(recoverToState)
         }
 
     }
