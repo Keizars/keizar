@@ -95,6 +95,10 @@ interface CapturedPieceHostState {
         }
     }
 
+    fun uncapture(pieceIndex: Int) {
+        slots.firstOrNull { it.pieceIndex == pieceIndex }?.let { it.pieceIndex = null }
+    }
+
     /**
      * Removes all captured pieces.
      */

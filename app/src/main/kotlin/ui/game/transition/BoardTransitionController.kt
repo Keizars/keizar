@@ -180,6 +180,7 @@ private class BoardTransitionControllerImpl(
                 getCapturedPieceHostState(piece.role, playAs).capture(piece.index)
                     .offsetFromBoard
             } else {
+                getCapturedPieceHostState(piece.role, playAs).uncapture(piece.index)
                 pos
             }
         }.mapLatest {
