@@ -85,5 +85,8 @@ The data layer is responsible for handling the persistent data storage.
 It is defined in the `data` package. The data layer contains two components, 
 the database and the static object storage.
 
-### Database
-The database is managed by the `DatabaseManager` class. It contains
+The database is managed by the `DatabaseManager` class. Refer to the documentation in the class file
+for its structure and detailed usage.
+
+The static object storage currently only contains the `AvatarStorage` class, which is used to
+store and retrieve the avatar images of the users.
