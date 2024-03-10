@@ -300,7 +300,9 @@ fun MainScreen() {
                 },
                 onClickHome = onClickHome,
                 onClickNewGame = {
-                    navController.navigate("game/lobby")
+                    navController.navigate("game/lobby") {
+                        popUpTo("home") { inclusive = false }
+                    }
                     lobbyViewModel.removeSelfRoom()
                 },
                 Modifier.fillMaxSize()
