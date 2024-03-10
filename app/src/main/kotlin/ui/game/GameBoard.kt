@@ -135,7 +135,7 @@ fun GameBoardScaffold(
 fun DialogsAndBottomBar(
     vm: GameBoardViewModel,
     onClickHome: () -> Unit,
-    onClickGameConfig: () -> Unit,
+    onClickNewGame: () -> Unit,
     onClickLogin: () -> Unit
 ) {
     val winner by vm.winner.collectAsState()
@@ -169,7 +169,7 @@ fun DialogsAndBottomBar(
         if (showRoundTwoBottomBar) {
             Column {
                 RoundTwoBottomBar(
-                    vm, onClickHome, onClickGameConfig, onClickLogin,
+                    vm, onClickHome, onClickNewGame, onClickLogin,
                     if (isSystemInLandscape()) Modifier else Modifier.fillMaxWidth()
                 )
             }

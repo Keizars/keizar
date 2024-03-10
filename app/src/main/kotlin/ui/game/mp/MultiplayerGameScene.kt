@@ -42,7 +42,7 @@ fun MultiplayerGameScene(
     roomId: UInt,
     goBack: () -> Unit,
     onClickHome: () -> Unit,
-    onClickGameConfig: () -> Unit,
+    onClickNewGame: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val connector = remember(roomId) {
@@ -100,7 +100,7 @@ fun MultiplayerGameScene(
                 MultiplayerGameBoardViewModel(s, s.player, c.selfPlayer, c.opponentPlayer)
             }
 
-            MultiplayerGamePage(vm, onClickHome, onClickGameConfig, modifier)
+            MultiplayerGamePage(vm, onClickHome, onClickNewGame, modifier)
         }
     }
 }
@@ -109,13 +109,13 @@ fun MultiplayerGameScene(
 private fun MultiplayerGamePage(
     vm: MultiplayerGameBoardViewModel,
     onClickHome: () -> Unit,
-    onClickGameConfig: () -> Unit,
+    onClickNewGame: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     BaseGamePage(
         vm,
         onClickHome = onClickHome,
-        onClickGameConfig = onClickGameConfig,
+        onClickNewGame = onClickNewGame,
         modifier = modifier,
         board = { size ->
             GameBoard(
@@ -192,7 +192,7 @@ private fun PreviewMultiplayerGame() {
         MultiplayerGamePage(
             vm,
             onClickHome = {},
-            onClickGameConfig = {},
+            onClickNewGame = {},
         )
     }
 }

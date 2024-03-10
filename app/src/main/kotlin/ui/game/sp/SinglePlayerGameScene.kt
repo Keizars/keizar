@@ -91,7 +91,7 @@ fun SinglePlayerGameScene(
     BaseGamePage(
         vm,
         onClickHome = onClickHome,
-        onClickGameConfig = onClickGameConfig,
+        onClickNewGame = onClickGameConfig,
         onClickLogin = onClickLogin,
         actions = {
             UndoButton(vm = vm)
@@ -126,7 +126,7 @@ private fun TestEndGameWhenNoPiecesCanMove() {
                 difficulty = Difficulty.EASY,
             ),
             onClickHome = { },
-            onClickGameConfig = { }
+            onClickNewGame = { }
         )
     }
 }

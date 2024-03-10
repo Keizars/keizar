@@ -157,7 +157,7 @@ fun RoundOneBottomBar(
 fun RoundTwoBottomBar(
     vm: GameBoardViewModel,
     onClickHome: () -> Unit,
-    onClickGameConfig: () -> Unit,
+    onClickNewGame: () -> Unit,
     onClickLogin: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -257,7 +257,7 @@ fun RoundTwoBottomBar(
             }
 
             Button(
-                onClick = { onClickGameConfig() },
+                onClick = { onClickNewGame() },
             ) {
                 Text(
                     text = "New Game",
@@ -338,7 +338,7 @@ private fun PreviewRoundTwoBottomBar() {
     RoundTwoBottomBar(
         rememberSinglePlayerGameBoardForPreview(),
         onClickHome = { /* Navigate to home page*/ },
-        onClickGameConfig = { /* Navigate to game configuration page*/ },
+        onClickNewGame = { /* Navigate to game configuration page*/ },
         onClickLogin = { /* Navigate to login page*/ }
     )
 }
@@ -397,7 +397,7 @@ private fun PreviewBottomBarSinglePlayerSaved() = ProvideCompositionalLocalsForP
             GameBoard(vm, Modifier.size(400.dp))
         },
         bottomBar = {
-            RoundTwoBottomBar(vm = vm, onClickHome = {}, onClickGameConfig = {}, onClickLogin = {})
+            RoundTwoBottomBar(vm = vm, onClickHome = {}, onClickNewGame = {}, onClickLogin = {})
         }
     )
 }
@@ -413,7 +413,7 @@ private fun PreviewBottomBarMultiPlayer() = ProvideCompositionalLocalsForPreview
             GameBoard(vm, Modifier.size(400.dp))
         },
         bottomBar = {
-            RoundTwoBottomBar(vm = vm, onClickHome = {}, onClickGameConfig = {}, onClickLogin = {})
+            RoundTwoBottomBar(vm = vm, onClickHome = {}, onClickNewGame = {}, onClickLogin = {})
         }
     )
 }

@@ -59,7 +59,7 @@ import org.keizar.utils.communication.game.Player
 fun BaseGamePage(
     vm: GameBoardViewModel,
     onClickHome: () -> Unit,
-    onClickGameConfig: () -> Unit,
+    onClickNewGame: () -> Unit,
     onClickLogin: () -> Unit = {},
     modifier: Modifier = Modifier,
     board: @Composable (Dp) -> Unit = @Composable { size ->
@@ -160,7 +160,7 @@ fun BaseGamePage(
                         modifier = Modifier
                             .align(Alignment.Center)
                             .width(IntrinsicSize.Min),
-                        bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickGameConfig, onClickLogin) },
+                        bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickNewGame, onClickLogin) },
                         actions = {},
                     )
                     Row(Modifier.align(Alignment.BottomCenter)) {
@@ -183,7 +183,7 @@ fun BaseGamePage(
                                         DialogsAndBottomBar(
                                             vm,
                                             onClickHome,
-                                            onClickGameConfig,
+                                            onClickNewGame,
                                             onClickLogin
                                         )
                                     },
@@ -207,7 +207,7 @@ private fun PreviewGamePage() {
         BaseGamePage(
             vm = vm,
             onClickHome = {},
-            onClickGameConfig = {},
+            onClickNewGame = {},
             onClickLogin = {},
             actions = {
                 UndoButton(vm = vm)
