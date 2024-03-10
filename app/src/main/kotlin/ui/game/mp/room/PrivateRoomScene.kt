@@ -296,12 +296,11 @@ private fun ActionArea(
         )
     } else {
         val readyMessage = if (opponentIsReady) " is ready!" else " is not ready yet"
-        Row(
+        Column(
             Modifier
-                .padding(bottom = 16.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
                 text = "Opponent:  ",
@@ -309,28 +308,36 @@ private fun ActionArea(
                 modifier = Modifier.padding(start = 8.dp),
                 softWrap = false,
             )
-            AvatarImage(
-                url = opponentAvatar,
-                Modifier
-                    .clip(CircleShape)
-                    .size(32.dp),
-            )
-            Text(
-                text = "$opponentName",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier
-                    .padding(start = 8.dp),
-                overflow = TextOverflow.Ellipsis,
-            )
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center,
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AvatarImage(
+                        url = opponentAvatar,
+                        Modifier
+                            .clip(CircleShape)
+                            .size(32.dp),
+                    )
+                    Text(
+                        text = "$opponentName",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 8.dp),
+                        overflow = TextOverflow.Ellipsis,
+                        softWrap = false
+                    )
+                }
+            }
             Text(
                 text = readyMessage,
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier,
-                softWrap = false,
             )
         }
-
     }
 }
 
