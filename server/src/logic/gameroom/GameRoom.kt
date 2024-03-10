@@ -194,7 +194,10 @@ class GameRoomImpl(
         myCoroutineScope.launch {
             this@GameRoomImpl.state.collect { newState ->
                 logger.info("Notify player ${player.username} of room state change: $newState")
-                player.session.value?.sendRespond(RoomStateChange(newState.toGameRoomState()), logger)
+                player.session.value?.sendRespond(
+                    RoomStateChange(newState.toGameRoomState()),
+                    logger
+                )
             }
         }
     }
@@ -224,7 +227,8 @@ class GameRoomImpl(
                         }
                     } catch (e: WebsocketDeserializeException) {
                         // ignore
-                    } catch (e: ClosedReceiveChannelException) {
+                    } catch (e: Exception) {
+                        logger.error("Failed to receive message from session $it due to: \n ${e.stackTraceToString()}")
                         return@collectLatest
                     }
                 }
@@ -314,7 +318,10 @@ class GameRoomImpl(
             notifyRemoteSessionSetup(playerSession)
             session.sendRespond(RoomStateChange(state.value.toGameRoomState()), logger)
             for (player in players.values) {
-                session.sendRespond(PlayerStateChange(player.user.username, player.state.value), logger)
+                session.sendRespond(
+                    PlayerStateChange(player.user.username, player.state.value),
+                    logger
+                )
             }
         }
         logger.info("Session of user ${user.username} changed to $session")
@@ -445,7 +452,8 @@ class GameRoomImpl(
                     processRequest(message, curState, player, from, to)
                 } catch (e: WebsocketDeserializeException) {
                     // ignore
-                } catch (e: ClosedReceiveChannelException) {
+                } catch (e: Exception) {
+                    logger.error("Failed to receive message from session $session due to: \n ${e.stackTraceToString()}")
                     return@collectLatest
                 }
             }
@@ -494,22 +502,28 @@ class GameRoomImpl(
     }
 }
 
-suspend inline fun DefaultWebSocketServerSession.sendRespond(message: Respond, logger: Logger): Boolean {
+suspend inline fun DefaultWebSocketServerSession.sendRespond(
+    message: Respond,
+    logger: Logger
+): Boolean {
     return try {
         sendSerialized(message)
         true
     } catch (e: Exception) {
-        logger.info("Failed to send message to session $this")
+        logger.info("Failed to send message to session $this due to: \n ${e.stackTraceToString()}")
         false
     }
 }
 
-suspend inline fun DefaultWebSocketServerSession.sendRequest(message: Request, logger: Logger): Boolean {
+suspend inline fun DefaultWebSocketServerSession.sendRequest(
+    message: Request,
+    logger: Logger
+): Boolean {
     return try {
         sendSerialized(message)
         true
     } catch (e: Exception) {
-        logger.info("Failed to send message to session $this")
+        logger.info("Failed to send message to session $this due to: \n ${e.stackTraceToString()}")
         false
     }
 }
