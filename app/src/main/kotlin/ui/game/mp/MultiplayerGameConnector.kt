@@ -73,6 +73,7 @@ class MultiplayerGameConnector(
                 continue
             } catch (e: Exception) {
                 logger.error(e) { "roomService.connect failed" }
+                error.value = ErrorMessage.networkErrorRecovering()
                 delay(3.seconds)
                 continue
             }
@@ -81,7 +82,13 @@ class MultiplayerGameConnector(
 
     val session = client.mapLatest {
         logger.info { "Getting GameSession" }
-        val session = it.getGameSession()
+        val session = try {
+            it.getGameSession()
+        } catch (e: Throwable) {
+            logger.error(e) { "Failed to get GameSession" }
+            error.value = ErrorMessage.networkErrorRecovering(e)
+            null
+        }
         logger.info { "Got GameSession: $session" }
         session
     }.shareInBackground(SharingStarted.Eagerly)
