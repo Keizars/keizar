@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import org.keizar.game.internal.RuleEngine
@@ -215,7 +216,13 @@ class GameSessionImpl(
     }
 
     override fun lostPieces(player: Player): Flow<Int> {
-        return combine(rounds.map { it.getLostPiecesCount(currentRole(player).value) }) {
+        return combine(rounds.map { round ->
+            currentRole(player).flatMapLatest { role ->
+                round.getLostPiecesCount(
+                    role
+                )
+            }
+        }) {
             it.sum()
         }
     }
@@ -271,7 +278,7 @@ class GameSessionImpl(
                 neutralStats = rounds[roundNo].getNeutralStatistics(),
                 player = selfPlayer,
                 winner = winner,
-                )
+            )
         }
         if (roundNo == 1) {
             round1Stats = stats
