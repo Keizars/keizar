@@ -237,8 +237,8 @@ class GameSessionImpl(
     }
 
     override suspend fun confirmNextRound(player: Player): Boolean {
-        if (currentRoundNo.value >= properties.rounds) return false
         confirmNextRoundLock.withLock {
+            if (currentRoundNo.value >= properties.rounds) return false
             val value = playersConfirmedNextRound.value
             if (value.contains(player)) return false
             playersConfirmedNextRound.value = value.plus(player)

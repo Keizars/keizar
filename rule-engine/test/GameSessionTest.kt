@@ -664,6 +664,10 @@ class GameSessionTest {
         assertTrue(round1.move(BoardPos("h4"), BoardPos("h5")))
 
         assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
+        assertContentEquals(
+            setOf(Player.FirstWhitePlayer),
+            game.playersConfirmedNextRound.value.asIterable()
+        )
 
         val snapshot = game.getSnapshot()
         assertContentEquals(
@@ -675,5 +679,9 @@ class GameSessionTest {
         assertTrue(newGame.confirmNextRound(Player.FirstBlackPlayer))
 
         assertEquals(1, newGame.currentRoundNo.value)
+        assertContentEquals(
+            emptySet(),
+            newGame.playersConfirmedNextRound.value.asIterable()
+        )
     }
 }
