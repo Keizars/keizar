@@ -4,12 +4,14 @@ import kotlinx.serialization.Serializable
 import org.keizar.game.BoardProperties
 import org.keizar.game.Role
 import org.keizar.utils.communication.game.BoardPos
+import org.keizar.utils.communication.game.Player
 
 @Serializable
 data class GameSnapshot(
     val properties: BoardProperties,
     val rounds: List<RoundSnapshot>,
     val currentRoundNo: Int,
+    val playersConfirmedNextRound: Set<Player>,
 )
 
 @Serializable
