@@ -70,7 +70,7 @@ fun SinglePlayerGameScene(
             text = { Text(text = "Are you sure to exit the game?") })
     }
 
-    
+
     val onClickLogin = {
         navController.navigate("auth/login") {
             launchSingleTop = true
@@ -79,6 +79,7 @@ fun SinglePlayerGameScene(
     val onClickGameConfig = {
         navController.navigate("game/configuration") {
             launchSingleTop = true
+            popUpTo("home") { inclusive = false }
         }
     }
     val onClickHome: () -> Unit = {
