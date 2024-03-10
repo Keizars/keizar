@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -320,13 +322,15 @@ private fun ActionArea(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
-                    .padding(start = 8.dp),
+                    .padding(start = 8.dp)
+                    .weight(1f, fill = false),
                 overflow = TextOverflow.Ellipsis,
+                softWrap = false,
             )
             Text(
                 text = readyMessage,
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier,
+                modifier = Modifier.width(IntrinsicSize.Max),
                 softWrap = false,
             )
         }

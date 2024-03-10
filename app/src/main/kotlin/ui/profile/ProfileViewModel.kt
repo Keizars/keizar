@@ -183,6 +183,12 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
     }
 
     suspend fun confirmEditNickname() {
+        if (nicknameError.value != null) {
+            errorDialog.value = ErrorMessage.simple(
+                "Invalid nickname. Please try with a shorter one."
+            )
+            throw IllegalArgumentException("Invalid nickname")
+        }
         val success = try {
             updateNickname()
         } catch (e: Throwable) {
