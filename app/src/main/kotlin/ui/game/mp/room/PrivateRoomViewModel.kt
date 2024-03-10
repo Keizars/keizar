@@ -1,7 +1,6 @@
 package org.keizar.android.ui.game.mp.room
 
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
@@ -166,9 +165,8 @@ class PrivateRoomViewModelImpl(
 
     private val selfPlayer = client.map { it.selfPlayer }
 
-    private val boardChangeFromOtherClient = mutableStateOf(false)
-
     override val opponentPlayer = client.flatMapLatest { it.opponentPlayer }
+    private val boardChangeFromOtherClient: MutableStateFlow<Boolean> = MutableStateFlow(false)
     override suspend fun boardChangeFromOtherClientUpdate() {
         boardChangeFromOtherClient.value = false
     }
@@ -213,7 +211,7 @@ class PrivateRoomViewModelImpl(
             .shareInBackground()
 
     private suspend fun setSeed(seed: UInt) {
-        if (boardChangeFromOtherClient.value) {
+        if (boardChangeFromOtherClient.value || !selfIsHost.first()) {
             return
         } else {
             try {
@@ -222,6 +220,11 @@ class PrivateRoomViewModelImpl(
                 errorToast.value = ErrorMessage.networkError()
             }
         }
+//        try {
+//            client.first().changeSeed(seed)
+//        } catch (e: Exception) {
+//            errorToast.value = ErrorMessage.networkError()
+//        }
     }
 
     private fun changeBoardProperties(layoutSeed: Int) {
