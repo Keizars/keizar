@@ -150,7 +150,7 @@ fun AboutPage(modifier: Modifier = Modifier) {
                         browse("https://github.com/him188")
                     }
                     ClickableText(text = AnnotatedString("Shengyue Zhu"), style = MaterialTheme.typography.bodyMedium) {
-
+                        browse("https://github.com/harrisonsz")
                     }
                     ClickableText(text = AnnotatedString("Yiqin Li"), style = MaterialTheme.typography.bodyMedium) {
 
