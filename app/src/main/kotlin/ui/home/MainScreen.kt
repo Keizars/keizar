@@ -391,14 +391,14 @@ fun MainScreen() {
         }
         composable(
             "profile",
-        ) {
+        ) { entry ->
             LoginChecker(navController)
             ProfileScene(
                 remember {
                     ProfileViewModel()
                 },
                 onClickBack = {
-                    navController.popBackStack()
+                    navController.popBackStack(entry.destination.id, true)
                 },
                 onClickPlayGame = {
                     navController.navigate(
