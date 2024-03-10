@@ -28,6 +28,7 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.browser)
     implementation(libs.accompanist.pager.indicators)
     implementation(libs.datastore.preferences)
     implementation(libs.coil)

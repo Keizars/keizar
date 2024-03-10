@@ -1,7 +1,5 @@
 package org.keizar.android.ui.about
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -34,6 +32,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.keizar.android.R
+import org.keizar.android.ui.foundation.AndroidBrowserNavigator
 import org.keizar.android.ui.home.CopyrightText
 
 @Composable
@@ -143,10 +142,7 @@ fun AboutPage(modifier: Modifier = Modifier) {
 
                     val context = LocalContext.current
                     fun browse(url: String) {
-                        runCatching {
-                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                            context.startActivity(browserIntent)
-                        }
+                        AndroidBrowserNavigator.openBrowser(context, url)
                     }
                     ClickableText(text = AnnotatedString("Tianyi Guan"), style = MaterialTheme.typography.bodyMedium) {
                         browse("https://github.com/him188")
