@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -159,7 +160,8 @@ fun RoundTwoBottomBar(
     onClickHome: () -> Unit,
     onClickNewGame: () -> Unit,
     onClickLogin: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    hideReplay: Boolean = false,
 ) {
     Column {
         Row(
@@ -174,7 +176,7 @@ fun RoundTwoBottomBar(
                 icon = { Icon(Icons.Default.Home, null) },
                 text = { Text("Home", fontSize = 10.sp) })
 
-            if (vm.singlePlayerMode) {
+            if (vm.singlePlayerMode && !hideReplay) {
                 ActionButton(
                     onClick = {
                         vm.replayCurrentRound()
@@ -253,7 +255,10 @@ fun RoundTwoBottomBar(
             TextButton(
                 onClick = { if (context is Activity) context.finish() },
             ) {
-                Text(text = "Exit App", textAlign = TextAlign.Center, softWrap = false, maxLines = 1)
+                Text(
+                    text = "Exit App", textAlign = TextAlign.Center, softWrap = false, maxLines = 1,
+                    modifier = Modifier.width(IntrinsicSize.Max)
+                )
             }
 
             Button(
@@ -413,7 +418,11 @@ private fun PreviewBottomBarMultiPlayer() = ProvideCompositionalLocalsForPreview
             GameBoard(vm, Modifier.size(400.dp))
         },
         bottomBar = {
-            RoundTwoBottomBar(vm = vm, onClickHome = {}, onClickNewGame = {}, onClickLogin = {})
-        }
+            RoundTwoBottomBar(
+                vm = vm, onClickHome = {}, onClickNewGame = {}, onClickLogin = {},
+                hideReplay = true,
+                modifier = Modifier.widthIn(max = 400.dp),
+            )
+        },
     )
 }

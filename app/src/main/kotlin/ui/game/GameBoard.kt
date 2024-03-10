@@ -170,7 +170,7 @@ fun DialogsAndBottomBar(
             Column {
                 RoundTwoBottomBar(
                     vm, onClickHome, onClickNewGame, onClickLogin,
-                    if (isSystemInLandscape()) Modifier else Modifier.fillMaxWidth()
+                    modifier = if (isSystemInLandscape()) Modifier else Modifier.fillMaxWidth()
                 )
             }
         }
