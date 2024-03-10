@@ -219,7 +219,7 @@ private fun PlayWithFriendsSection(
                     confirmButton = {
                         Button(onClick = { showRoomFullDialog = false }) { Text(text = "OK") }
                     },
-                    text = { Text(text = "Room is full") }
+                    text = { Text(text = "Room is full or does not exist") }
                 )
             }
 
