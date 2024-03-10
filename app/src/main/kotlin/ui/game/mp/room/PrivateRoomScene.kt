@@ -49,6 +49,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -305,25 +306,28 @@ private fun ActionArea(
             Text(
                 text = "Opponent:  ",
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier.padding(start = 8.dp),
+                softWrap = false,
             )
             AvatarImage(
                 url = opponentAvatar,
                 Modifier
                     .clip(CircleShape)
-                    .size(32.dp)
+                    .size(32.dp),
             )
             Text(
                 text = "$opponentName",
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier
-                    .padding(start = 8.dp)
+                    .padding(start = 8.dp),
+                overflow = TextOverflow.Ellipsis,
             )
             Text(
                 text = readyMessage,
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier
+                modifier = Modifier,
+                softWrap = false,
             )
         }
 
@@ -377,7 +381,7 @@ private fun PreviewOpponentSetting() {
     ProvideCompositionalLocalsForPreview {
         ActionArea(
             roomId = 123u,
-            opponentName = "Test",
+            opponentName = "Long".repeat(10),
             opponentAvatar = "https://ui-avatars.com/api/?name=123",
             opponentIsReady = true
         )
