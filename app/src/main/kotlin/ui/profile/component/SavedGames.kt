@@ -243,32 +243,34 @@ fun SavedGameCard(
                                 contentDescription = "More options",
                                 modifier = Modifier.size(24.dp)
                             )
-                        }
-                        val context = LocalContext.current
-                        DropdownMenu(
-                            expanded = showMenu,
-                            onDismissRequest = { showMenu = false }
-                        ) {
 
-                            DropdownMenuItem(onClick = {
-                                showMenu = false
-                                val clipboard =
-                                    context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                                val clip =
-                                    ClipData.newPlainText("Copied seed", gameData.gameConfiguration)
-                                clipboard.setPrimaryClip(clip)
-                            }) {
-                                Text("Copy seed")
-                            }
 
-                            DropdownMenuItem(onClick = {
-                                showMenu = false
-                                vm.launchInBackground {
-                                    vm.deleteGame(gameData.dataId)
-                                    vm.selectedGame.value = null
+                            val context = LocalContext.current
+                            DropdownMenu(
+                                expanded = showMenu,
+                                onDismissRequest = { showMenu = false }
+                            ) {
+
+                                DropdownMenuItem(onClick = {
+                                    showMenu = false
+                                    val clipboard =
+                                        context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                                    val clip =
+                                        ClipData.newPlainText("Copied seed", gameData.gameConfiguration)
+                                    clipboard.setPrimaryClip(clip)
+                                }) {
+                                    Text("Copy seed")
                                 }
-                            }) {
-                                Text("Delete")
+
+                                DropdownMenuItem(onClick = {
+                                    showMenu = false
+                                    vm.launchInBackground {
+                                        vm.deleteGame(gameData.dataId)
+                                        vm.selectedGame.value = null
+                                    }
+                                }) {
+                                    Text("Delete")
+                                }
                             }
                         }
                     }
