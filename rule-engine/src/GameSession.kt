@@ -4,11 +4,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -17,10 +14,8 @@ import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
 import org.keizar.game.snapshot.GameSnapshot
 import org.keizar.utils.communication.game.GameResult
-import org.keizar.utils.communication.game.NeutralStats
 import org.keizar.utils.communication.game.Player
 import org.keizar.utils.communication.game.RoundStats
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.time.Duration.Companion.seconds
 
 /***
@@ -225,12 +220,8 @@ class GameSessionImpl(
     }
 
     override fun lostPieces(player: Player): Flow<Int> {
-        return combine(rounds.map { round ->
-            currentRole(player).flatMapLatest { role ->
-                round.getLostPiecesCount(
-                    role
-                )
-            }
+        return combine(rounds.mapIndexed { index, round ->
+            round.getLostPiecesCount(getRole(player, index))
         }) {
             it.sum()
         }
