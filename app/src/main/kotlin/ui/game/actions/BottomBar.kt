@@ -106,7 +106,7 @@ fun RoundOneBottomBar(
         ActionButton(
             onClick = { if (context is Activity) context.finish() },
             icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, null) },
-            text = { Text("Exit", fontSize = 10.sp) })
+            text = { Text("Exit App", fontSize = 10.sp) })
 
         if (vm is MultiplayerGameBoardViewModel) {
             val isWaitingOpponentNext by vm.isWaitingOpponentNext.collectAsStateWithLifecycle()
@@ -253,7 +253,7 @@ fun RoundTwoBottomBar(
             TextButton(
                 onClick = { if (context is Activity) context.finish() },
             ) {
-                Text(text = "Exit", textAlign = TextAlign.Center, softWrap = false, maxLines = 1)
+                Text(text = "Exit App", textAlign = TextAlign.Center, softWrap = false, maxLines = 1)
             }
 
             Button(
