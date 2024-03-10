@@ -3,6 +3,7 @@ package org.keizar.android.ui.tutorial
 import androidx.compose.runtime.Stable
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.launchIn
@@ -37,9 +38,7 @@ class TutorialGameBoardViewModel(
 ) : BaseGameBoardViewModel(game, selfPlayer) {
     override val startConfiguration: GameStartConfiguration = GameStartConfiguration.random()
     override var arePiecesClickable: Boolean = false
-    override var currentGameDataId: StateFlow<String>
-        get() = TODO()
-        set(value) {}
+    override var currentGameDataId: StateFlow<String> = MutableStateFlow("")
 
     init {
         tutorialSession.requests.requestingShowPossibleMoves
