@@ -20,6 +20,7 @@ import org.keizar.android.data.SessionManager
 import org.keizar.android.ui.foundation.AbstractViewModel
 import org.keizar.android.ui.foundation.ErrorMessage
 import org.keizar.android.ui.foundation.runUntilSuccess
+import org.keizar.client.services.FileTooLargeException
 import org.keizar.client.services.GameDataService
 import org.keizar.client.services.SeedBankService
 import org.keizar.client.services.StreamingService
@@ -120,7 +121,11 @@ class ProfileViewModel : KoinComponent, AbstractViewModel() {
             refreshAll()
         } catch (e: Exception) {
             logger.error(e) { "Failed to upload avatar" }
-            errorDialog.value = ErrorMessage.networkError(e)
+            if (e is FileTooLargeException) {
+                errorDialog.value = ErrorMessage.simple("The image is too large. Please pick a smaller one.")
+            } else {
+                errorDialog.value = ErrorMessage.networkError(e)
+            }
         } finally {
             temp.delete()
         }
