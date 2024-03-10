@@ -134,7 +134,9 @@ fun MainScreen() {
                 },
             )
         ) { entry ->
-            val onClickGoBack: () -> Unit = { navController.popBackStack(entry.destination.id, true) }
+            val onClickGoBack: () -> Unit = {
+                navController.popBackStack("home", false)
+            }
             BackHandler {
                 onClickGoBack()
             }
