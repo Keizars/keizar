@@ -11,6 +11,7 @@ import org.keizar.game.snapshot.buildGameSnapshot
 import org.keizar.utils.communication.game.BoardPos
 import org.keizar.utils.communication.game.GameResult
 import org.keizar.utils.communication.game.Player
+import kotlin.test.assertContentEquals
 
 class GameSessionTest {
     @Test
@@ -640,5 +641,39 @@ class GameSessionTest {
         assertEquals(1, game.wonRounds(Player.FirstBlackPlayer).first())
         assertEquals(Player.FirstBlackPlayer, game.getRoundWinner(0).first())
         assertEquals(Player.FirstWhitePlayer, game.getRoundWinner(1).first())
+    }
+
+    @Test
+    fun `test playersConfirmedNextRound in snapshot`() = runTest {
+        val game = GameSession.create(0)
+        val curRound = game.currentRound
+        val round1 = curRound.first()
+
+        assertTrue(round1.move(BoardPos("e2"), BoardPos("e3")))
+        assertTrue(round1.move(BoardPos("d7"), BoardPos("d6")))
+        assertTrue(round1.move(BoardPos("e3"), BoardPos("d5")))
+        assertTrue(round1.move(BoardPos("a7"), BoardPos("a6")))
+        assertTrue(round1.move(BoardPos("a2"), BoardPos("a3")))
+        assertTrue(round1.move(BoardPos("a6"), BoardPos("a5")))
+        assertTrue(round1.move(BoardPos("a3"), BoardPos("a4")))
+        assertTrue(round1.move(BoardPos("d6"), BoardPos("d5")))
+        assertTrue(round1.move(BoardPos("h2"), BoardPos("h3")))
+        assertTrue(round1.move(BoardPos("f7"), BoardPos("f6")))
+        assertTrue(round1.move(BoardPos("h3"), BoardPos("h4")))
+        assertTrue(round1.move(BoardPos("f6"), BoardPos("f5")))
+        assertTrue(round1.move(BoardPos("h4"), BoardPos("h5")))
+
+        assertTrue(game.confirmNextRound(Player.FirstWhitePlayer))
+
+        val snapshot = game.getSnapshot()
+        assertContentEquals(
+            setOf(Player.FirstWhitePlayer),
+            snapshot.playersConfirmedNextRound.asIterable()
+        )
+
+        val newGame = GameSession.restore(snapshot)
+        assertTrue(newGame.confirmNextRound(Player.FirstBlackPlayer))
+
+        assertEquals(1, newGame.currentRoundNo.value)
     }
 }

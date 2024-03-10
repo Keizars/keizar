@@ -88,7 +88,8 @@ class GameSnapshotBuilder @PublishedApi internal constructor(
         return GameSnapshot(
             properties = concreteProperties,
             rounds = rounds.map { it.build() },
-            currentRoundNo = currentRoundNo
+            currentRoundNo = currentRoundNo,
+            playersConfirmedNextRound = emptySet(),
         )
     }
 }

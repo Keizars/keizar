@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import org.keizar.game.internal.RuleEngine
 import org.keizar.game.internal.RuleEngineCoreImpl
 import org.keizar.game.internal.RuleEngineImpl
@@ -46,6 +48,10 @@ interface GameSession {
     // Values could be GameResult.Winner(Player1/Player2) or GameResult.Draw.
     val finalWinner: Flow<GameResult?>
 
+    // The players who have confirmed the next round.
+    // This flow will only emit non-empty list when the game is in the state of
+    // finishing one round and waiting for both players to confirm the next round.
+    val playersConfirmedNextRound: StateFlow<Set<Player>>
 
     // Returns the role (black/white) of the specified player in current round of game.
     fun currentRole(player: Player): StateFlow<Role>
@@ -66,6 +72,7 @@ interface GameSession {
         properties = properties,
         rounds = rounds.map { it.getSnapshot() },
         currentRoundNo = currentRoundNo.value,
+        playersConfirmedNextRound = playersConfirmedNextRound.value,
     )
 
     // Replay current round of the game. Reset the round state.
@@ -111,6 +118,7 @@ interface GameSession {
             return GameSessionImpl(
                 properties = snapshot.properties,
                 startFromRoundNo = snapshot.currentRoundNo,
+                initialPlayersConfirmedNextRound = snapshot.playersConfirmedNextRound,
             ) { index ->
                 val ruleEngine = RuleEngineImpl.restore(
                     properties = snapshot.properties,
@@ -129,6 +137,7 @@ interface GameSession {
             return GameSessionImpl(
                 properties = snapshot.properties,
                 startFromRoundNo = snapshot.currentRoundNo,
+                initialPlayersConfirmedNextRound = snapshot.playersConfirmedNextRound,
             ) { index ->
                 val ruleEngine = RuleEngineImpl.restore(
                     properties = snapshot.properties,
@@ -144,6 +153,7 @@ interface GameSession {
 class GameSessionImpl(
     override val properties: BoardProperties,
     startFromRoundNo: Int = 0,
+    initialPlayersConfirmedNextRound: Set<Player> = emptySet(),
     roundSessionConstructor: (index: Int) -> RoundSession,
 ) : GameSession {
     override val rounds: List<RoundSession>
@@ -156,9 +166,8 @@ class GameSessionImpl(
     private val curRoles: List<MutableStateFlow<Role>>
     private val wonRounds: List<Flow<List<Int>>>
 
-    private val nextRoundAgreement: MutableList<Boolean>
-    private val agreementCounter: AtomicInteger = AtomicInteger(0)
-
+    override val playersConfirmedNextRound: MutableStateFlow<Set<Player>>
+    private val confirmNextRoundLock: Mutex = Mutex()
 
     private var round1Stats: Flow<RoundStats>? = null
     private var round2Stats: Flow<RoundStats>? = null
@@ -182,7 +191,7 @@ class GameSessionImpl(
             }
         }
 
-        nextRoundAgreement = mutableListOf(false, false)
+        playersConfirmedNextRound = MutableStateFlow(initialPlayersConfirmedNextRound)
 
         finalWinner = combine(
             rounds[properties.rounds - 1].winner,
@@ -229,14 +238,16 @@ class GameSessionImpl(
 
     override suspend fun confirmNextRound(player: Player): Boolean {
         if (currentRoundNo.value >= properties.rounds) return false
-        if (nextRoundAgreement[player.ordinal]) return false
-        nextRoundAgreement[player.ordinal] = true
-        agreementCounter.incrementAndGet()
-        if (agreementCounter.compareAndSet(2, 0)) {
-            proceedToNextRound()
-            nextRoundAgreement.replaceAll { false }
+        confirmNextRoundLock.withLock {
+            val value = playersConfirmedNextRound.value
+            if (value.contains(player)) return false
+            playersConfirmedNextRound.value = value.plus(player)
+            if (playersConfirmedNextRound.value.size == Player.entries.size) {
+                playersConfirmedNextRound.value = emptySet()
+                proceedToNextRound()
+            }
+            return true
         }
-        return true
     }
 
     private fun proceedToNextRound() {
@@ -248,15 +259,13 @@ class GameSessionImpl(
 
     override fun replayCurrentRound(): Boolean {
         rounds[_currentRoundNo.value].reset()
-        nextRoundAgreement.replaceAll { false }
-        agreementCounter.set(0)
+        playersConfirmedNextRound.value = emptySet()
         return true
     }
 
     override fun replayGame(): Boolean {
         rounds.forEach { it.reset() }
-        nextRoundAgreement.replaceAll { false }
-        agreementCounter.set(0)
+        playersConfirmedNextRound.value = emptySet()
         resetGameStatus()
         return true
     }
