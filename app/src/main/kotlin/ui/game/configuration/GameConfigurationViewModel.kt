@@ -19,8 +19,8 @@ import org.keizar.android.ui.foundation.Disposable
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.client.services.SeedBankService
 import org.keizar.game.BoardProperties
-import org.keizar.utils.communication.game.Difficulty
 import org.keizar.game.Role
+import org.keizar.utils.communication.game.Difficulty
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
@@ -38,7 +38,7 @@ interface GameConfigurationViewModel : Disposable, HasBackgroundScope {
     /**
      * Update game configuration board seed with random seed.
      */
-    fun updateRandomSeed()
+    suspend fun updateRandomSeed()
 
     /**
      * The board properties of the current seed.
@@ -113,9 +113,10 @@ interface GameConfigurationViewModel : Disposable, HasBackgroundScope {
     fun setNewConfiguration(configuration: GameStartConfiguration)
 }
 
-fun GameConfigurationViewModel(
+fun PrivateRoomGameConfigurationViewModel(
     initialConfiguration: GameStartConfiguration = GameStartConfiguration.random(),
-): GameConfigurationViewModel = GameConfigurationViewModelImpl(initialConfiguration)
+    updateConfiguration: suspend (GameStartConfiguration) -> Unit,
+): GameConfigurationViewModel = PrivateGameConfigurationViewModelImpl(initialConfiguration, updateConfiguration)
 
 fun SinglePlayerGameConfigurationViewModel(
     initialConfiguration: GameStartConfiguration = GameStartConfiguration.random(),
@@ -141,8 +142,9 @@ data class GameStartConfiguration(
 fun GameStartConfiguration.createBoard(): BoardProperties =
     BoardProperties.getStandardProperties(layoutSeed)
 
-private class GameConfigurationViewModelImpl(
+class PrivateGameConfigurationViewModelImpl(
     initialConfiguration: GameStartConfiguration = GameStartConfiguration.random(),
+    private val updateConfiguration: suspend (GameStartConfiguration) -> Unit,
 ) : GameConfigurationViewModel, AbstractViewModel(), KoinComponent {
     override val configuration: MutableStateFlow<GameStartConfiguration> =
         MutableStateFlow(initialConfiguration)
@@ -159,9 +161,7 @@ private class GameConfigurationViewModelImpl(
     private val layoutSeed: Flow<Int> = configuration.map { it.layoutSeed }
     override val playAs: Flow<Role> = configuration.map { it.playAs }
     override fun setPlayAs(role: Role) {
-        updateConfiguration {
-            copy(playAs = role)
-        }
+        // not supported
     }
 
     override val boardProperties: SharedFlow<BoardProperties> =
@@ -173,9 +173,7 @@ private class GameConfigurationViewModelImpl(
     override val difficulty: Flow<Difficulty> = configuration.map { it.difficulty }
 
     override fun setDifficulty(difficulty: Difficulty) {
-        updateConfiguration {
-            copy(difficulty = difficulty)
-        }
+        // not supported
     }
 
     override val freshButtonEnable: MutableStateFlow<Boolean> = MutableStateFlow(true)
@@ -192,14 +190,14 @@ private class GameConfigurationViewModelImpl(
     }
 
     override fun setConfigurationSeedText(value: String) {
+        setFreshButtonEnable(false)
+        _configurationSeedText.value = value
         backgroundScope.launch {
-            setFreshButtonEnable(false)
-            _configurationSeedText.value = value
-            GameStartConfigurationEncoder.decode(value)?.let {
-                updateConfiguration { it }
+            try {
+                delay(3000)
+            } finally {
+                setFreshButtonEnable(true)
             }
-            delay(3000)
-            setFreshButtonEnable(true)
         }
     }
 
@@ -207,21 +205,15 @@ private class GameConfigurationViewModelImpl(
         GameStartConfigurationEncoder.decode(it) == null
     }
 
-    override fun updateRandomSeed() {
-        backgroundScope.launch {
-            setFreshButtonEnable(false)
-            updateConfiguration {
-                GameStartConfiguration.random()
-            }
+    override suspend fun updateRandomSeed() {
+        setFreshButtonEnable(false)
+        try {
+            updateConfiguration(GameStartConfiguration.random())
             delay(3000)
+        } finally {
             setFreshButtonEnable(true)
         }
     }
-
-    private inline fun updateConfiguration(block: GameStartConfiguration.() -> GameStartConfiguration) {
-        this.configuration.value = this.configuration.value.block()
-    }
-
 }
 
 private class SinglePlayerGameConfigurationViewModelImpl(
@@ -282,7 +274,7 @@ private class SinglePlayerGameConfigurationViewModelImpl(
         }
     }
 
-    override fun updateRandomSeed() {
+    override suspend fun updateRandomSeed() {
         updateConfiguration {
             GameStartConfiguration.random()
         }

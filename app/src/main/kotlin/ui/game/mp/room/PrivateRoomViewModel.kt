@@ -22,6 +22,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.yield
+import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import me.him188.ani.utils.logging.warn
 import org.keizar.android.ui.foundation.AbstractViewModel
@@ -29,6 +30,7 @@ import org.keizar.android.ui.foundation.ErrorMessage
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.game.configuration.GameConfigurationViewModel
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
+import org.keizar.android.ui.game.configuration.PrivateRoomGameConfigurationViewModel
 import org.keizar.android.ui.game.mp.MultiplayerLobbyScene
 import org.keizar.client.ClientPlayer
 import org.keizar.client.Room
@@ -176,7 +178,15 @@ class PrivateRoomViewModelImpl(
     override val errorDialog: MutableStateFlow<ErrorMessage?> = MutableStateFlow(null)
     override val errorToast: MutableStateFlow<ErrorMessage?> = MutableStateFlow(null)
 
-    override val configuration: GameConfigurationViewModel = GameConfigurationViewModel()
+    override val configuration: GameConfigurationViewModel = PrivateRoomGameConfigurationViewModel {
+        try {
+            client.first().changeSeed(it.layoutSeed.toUInt())
+        } catch (e: Exception) {
+            logger.error(e) { "Failed to change seed" }
+            errorToast.value = ErrorMessage.networkError()
+        }
+    }
+
     override val selfReady: Flow<Boolean> =
         selfPlayer.flatMapLatest { it.state }.map { it >= PlayerSessionState.READY }
     override val opponentReady: Flow<Boolean> =
@@ -184,11 +194,6 @@ class PrivateRoomViewModelImpl(
             .map { it >= PlayerSessionState.READY }
 
     init {
-        backgroundScope.launch {
-            configuration.boardProperties.collect {
-                it.seed?.let { it1 -> setSeed(it1.toUInt()) }
-            }
-        }
         backgroundScope.launch {
             client.flatMapLatest { it.boardProperties }.collect { boardProperties ->
                 boardProperties.seed?.let { it1 -> changeBoardProperties(it1) }

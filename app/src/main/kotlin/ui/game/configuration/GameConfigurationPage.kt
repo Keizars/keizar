@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.get
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
@@ -65,10 +66,10 @@ import org.keizar.android.ui.game.BoardTileLabels
 import org.keizar.android.ui.game.BoardTiles
 import org.keizar.android.ui.game.transition.PieceArranger
 import org.keizar.game.BoardProperties
-import org.keizar.utils.communication.game.Difficulty
 import org.keizar.game.Role
 import org.keizar.game.Role.BLACK
 import org.keizar.game.Role.WHITE
+import org.keizar.utils.communication.game.Difficulty
 
 @Composable
 fun GameConfigurationScene(
@@ -248,7 +249,11 @@ private fun SaveSeedButton(vm: GameConfigurationViewModel, onClickLogin: () -> U
                         }
                     } catch (e: Exception) {
                         withContext(Dispatchers.Main) {
-                            Toast.makeText(context, "Failed to save seed, please check your network connection", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context,
+                                "Failed to save seed, please check your network connection",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                         throw e
                     }
@@ -297,7 +302,7 @@ private fun BoardSeedTextField(
     BoardSeedTextField(
         text = text,
         onValueChange = { vm.setConfigurationSeedText(it) },
-        onClickRandom = { vm.updateRandomSeed() },
+        onClickRandom = { vm.launchInBackground(start = CoroutineStart.UNDISPATCHED) { updateRandomSeed() } },
         isError = isError,
         refreshEnable = refreshEnable,
         readOnly = false,

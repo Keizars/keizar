@@ -135,7 +135,7 @@ private fun PrivateRoomPage(
         },
     ) { contentPadding ->
         ErrorDialogHost(errorFlow = vm.errorDialog)
-        
+
         if (isSystemInLandscape()) {
             Row(
                 Modifier
@@ -240,8 +240,10 @@ private fun Configurations(
             text = vm.configuration.configurationSeedText.collectAsStateWithLifecycle().value,
             onValueChange = { vm.configuration.setConfigurationSeedText(it) },
             onClickRandom = {
-                vm.configuration.updateRandomSeed()
-                vm.backgroundScope.launch { vm.boardChangeFromOtherClientUpdate() }
+                vm.backgroundScope.launch {
+                    vm.configuration.updateRandomSeed()
+                    vm.boardChangeFromOtherClientUpdate()
+                }
             },
             isError = vm.configuration.isConfigurationSeedTextError.collectAsStateWithLifecycle(
                 false
