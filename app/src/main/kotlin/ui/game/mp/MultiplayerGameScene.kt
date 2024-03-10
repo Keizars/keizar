@@ -99,6 +99,9 @@ fun MultiplayerGameScene(
             val vm = remember(s, c) {
                 MultiplayerGameBoardViewModel(s, s.player, c.selfPlayer, c.opponentPlayer)
             }
+            ErrorDialogHost(errorFlow = vm.error, onClickCancel = {
+                onClickHome()
+            })
 
             MultiplayerGamePage(vm, onClickHome, onClickNewGame, modifier)
         }

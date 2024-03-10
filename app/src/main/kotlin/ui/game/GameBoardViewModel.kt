@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import me.him188.ani.utils.logging.error
 import me.him188.ani.utils.logging.info
 import org.keizar.aiengine.AIParameters
 import org.keizar.aiengine.AlgorithmAI
@@ -35,9 +36,11 @@ import org.keizar.android.data.SavedStateRepository
 import org.keizar.android.data.SessionManager
 import org.keizar.android.data.encode
 import org.keizar.android.ui.foundation.AbstractViewModel
+import org.keizar.android.ui.foundation.ErrorMessage
 import org.keizar.android.ui.foundation.HasBackgroundScope
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.foundation.launchInMain
+import org.keizar.android.ui.foundation.runUntilSuccess
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.transition.BoardTransitionController
 import org.keizar.android.ui.game.transition.CapturedPieceHostState
@@ -407,15 +410,16 @@ class MultiplayerGameBoardViewModel(
         )
 
     override val singlePlayerMode = false
+    val error = MutableStateFlow<ErrorMessage?>(null)
 
     @Stable
     val myUser: SharedFlow<User> = flow {
-        emit(userService.getUser(selfClientPlayer.username))
+        emit(runUntilSuccess { userService.getUser(selfClientPlayer.username) })
     }.shareInBackground()
 
     @Stable
     val opponentUser: SharedFlow<User> = opponentClientPlayer.filterNotNull().map {
-        userService.getUser(it.username)
+        runUntilSuccess { userService.getUser(it.username) }
     }.shareInBackground()
 
     init {
@@ -449,7 +453,12 @@ class MultiplayerGameBoardViewModel(
             }
         }
         launchInBackground(Dispatchers.IO) {
-            game.confirmNextRound(selfPlayer)
+            try {
+                game.confirmNextRound(selfPlayer)
+            } catch (e: Exception) {
+                logger.error(e) { "Failed to confirm next round" }
+                error.value = ErrorMessage.networkError()
+            }
         }
     }
 }
