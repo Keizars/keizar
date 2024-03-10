@@ -89,7 +89,7 @@ private class SessionManagerImpl : SessionManager, KoinComponent, HasBackgroundS
 
     private val logger = logger(SessionManager::class)
 
-    override val token: SharedFlow<String?> = tokenRepository.token.shareInBackground(started = SharingStarted.Eagerly)
+    override val token: SharedFlow<String?> = tokenRepository.token.stateInBackground(started = SharingStarted.Eagerly)
 
     /**
      * Current user's information.
