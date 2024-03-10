@@ -143,8 +143,10 @@ fun AboutPage(modifier: Modifier = Modifier) {
 
                     val context = LocalContext.current
                     fun browse(url: String) {
-                        val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                        context.startActivity(browserIntent)
+                        runCatching {
+                            val browserIntent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            context.startActivity(browserIntent)
+                        }
                     }
                     ClickableText(text = AnnotatedString("Tianyi Guan"), style = MaterialTheme.typography.bodyMedium) {
                         browse("https://github.com/him188")
