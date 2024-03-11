@@ -130,6 +130,7 @@ val game = GameSession.restore(gameSnapshot)
 ## Internal Classes
 
 ### RuleEngine
+
 The `RuleEngineImpl` internal class contains the actual implementation of the game logic.
 It keeps track of all pieces on the board, records move history, and determines and updates the winner.
 
