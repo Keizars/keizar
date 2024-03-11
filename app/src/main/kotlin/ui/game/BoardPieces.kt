@@ -4,7 +4,6 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.draggable2D
 import androidx.compose.foundation.gestures.rememberDraggable2DState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -114,15 +113,15 @@ fun BoardPieces(
                             Modifier
                         }
                     )
-                    .draggable2D(
-                        draggableState,
-                        onDragStarted = {
-                            vm.onHold(piece)
-                        },
-                        onDragStopped = {
-                            vm.onRelease(piece)
-                        },
-                    )
+//                    .draggable2D(
+//                        draggableState,
+//                        onDragStarted = {
+//                            vm.onHold(piece)
+//                        },
+//                        onDragStopped = {
+//                            vm.onRelease(piece)
+//                        },
+//                    )
                     .clickable(
                         remember {
                             MutableInteractionSource()
