@@ -57,6 +57,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
+import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.foundation.launchInBackground
 import org.keizar.android.ui.game.GameBoard
 import org.keizar.android.ui.game.GameBoardScaffold
@@ -137,7 +138,7 @@ fun RoundOneBottomBar(
                     },
                     icon = { Icon(Icons.Default.SkipNext, null) },
                     text = { Text("Next Round", fontSize = 10.sp, softWrap = false) },
-                    Modifier.width(IntrinsicSize.Max)
+                    Modifier.then(if (isSystemInLandscape()) Modifier.widthIn(min = 120.dp) else Modifier)
                 )
             }
         } else {
@@ -147,7 +148,7 @@ fun RoundOneBottomBar(
                 },
                 icon = { Icon(Icons.Default.SkipNext, null) },
                 text = { Text("Next Round", fontSize = 10.sp, softWrap = false) },
-                Modifier.width(IntrinsicSize.Max)
+                Modifier.then(if (isSystemInLandscape()) Modifier.widthIn(min = 120.dp) else Modifier)
             )
         }
     }
