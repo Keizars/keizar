@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -49,6 +50,8 @@ import org.keizar.android.data.GameStartConfigurationEncoder
 import org.keizar.android.ui.foundation.ProvideCompositionalLocalsForPreview
 import org.keizar.android.ui.foundation.isSystemInLandscape
 import org.keizar.android.ui.foundation.launchInBackground
+import org.keizar.android.ui.game.actions.GameBoardTopBar
+import org.keizar.android.ui.game.actions.TurnStatusIndicator
 import org.keizar.android.ui.game.actions.UndoButton
 import org.keizar.android.ui.game.configuration.GameStartConfiguration
 import org.keizar.android.ui.game.configuration.createBoard
@@ -96,7 +99,16 @@ fun BaseGamePage(
                 mutableStateOf(GameStartConfigurationEncoder.encode(vm.startConfiguration))
             }
             TopAppBar(
-                title = { Text(text = "Game") },
+                title = {
+                    if (isSystemInLandscape()) {
+                        Box(Modifier.fillMaxWidth()) {
+                            Text(text = "Game")
+                            TurnStatusIndicator(vm, Modifier.align(Alignment.Center))
+                        }
+                    } else {
+                        Text(text = "Game")
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onClickHome) {
                         Icon(Icons.Rounded.Home, contentDescription = "Back")
@@ -164,9 +176,10 @@ fun BaseGamePage(
                     verticalArrangement = Arrangement.Center
                 ) {
                     BoxWithConstraints(Modifier.padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
-                        val size = min(maxWidth, maxHeight) - 300.dp
+                        val size = min(maxWidth, maxHeight) - 240.dp
                         GameBoardScaffold(
                             vm,
+                            topBar = { GameBoardTopBar(vm, turnStatusIndicator = null) },
                             board = { board(size) },
                             modifier = Modifier
                                 .align(Alignment.Center)
@@ -175,9 +188,9 @@ fun BaseGamePage(
                             actions = {},
                         )
                     }
-                    Row {
-                        actions()
-                    }
+                }
+                Row(Modifier.align(Alignment.BottomEnd)) {
+                    actions()
                 }
             } else {
                 BoxWithConstraints {
