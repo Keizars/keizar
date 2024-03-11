@@ -15,7 +15,7 @@ import org.keizar.android.ui.game.GameBoardViewModel
 fun GameBoardTopBar(
     vm: GameBoardViewModel,
     turnStatusIndicator: (@Composable () -> Unit)? = {
-        TurnStatusIndicator(vm, Modifier.padding(all = 6.dp))
+        TurnStatusIndicator(vm, Modifier.padding(vertical = 6.dp))
     },
     winningCounter: (@Composable () -> Unit)? = {
         val counter by vm.winningCounter.collectAsState()
@@ -24,7 +24,7 @@ fun GameBoardTopBar(
 ) {
     Box(Modifier.fillMaxWidth()) {
         turnStatusIndicator?.let { it ->
-            Box(modifier = Modifier.padding(all = 6.dp)) {
+            Box {
                 it()
             }
         }

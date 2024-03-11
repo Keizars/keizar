@@ -5,8 +5,10 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.LocalOverscrollConfiguration
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -132,7 +134,11 @@ fun BaseGamePage(
                                     }
                                 } catch (e: Exception) {
                                     withContext(Dispatchers.Main) {
-                                        Toast.makeText(context, "Failed to save, please check your network connection", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(
+                                            context,
+                                            "Failed to save, please check your network connection",
+                                            Toast.LENGTH_SHORT
+                                        ).show()
                                     }
                                     throw e
                                 }
@@ -152,18 +158,24 @@ fun BaseGamePage(
             contentAlignment = Alignment.Center
         ) {
             if (isSystemInLandscape()) {
-                BoxWithConstraints(Modifier.padding(horizontal = 16.dp)) {
-                    val size = maxHeight - 240.dp
-                    GameBoardScaffold(
-                        vm,
-                        board = { board(size) },
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .width(IntrinsicSize.Min),
-                        bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickNewGame, onClickLogin) },
-                        actions = {},
-                    )
-                    Row(Modifier.align(Alignment.BottomCenter)) {
+                Column(
+                    Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    BoxWithConstraints(Modifier.padding(horizontal = 16.dp), contentAlignment = Alignment.Center) {
+                        val size = min(maxWidth, maxHeight) - 300.dp
+                        GameBoardScaffold(
+                            vm,
+                            board = { board(size) },
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .width(IntrinsicSize.Min),
+                            bottomBar = { DialogsAndBottomBar(vm, onClickHome, onClickNewGame, onClickLogin) },
+                            actions = {},
+                        )
+                    }
+                    Row {
                         actions()
                     }
                 }
