@@ -3,16 +3,15 @@ package org.keizar.android.ui.tutorial
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -37,7 +36,6 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.coerceAtMost
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -102,59 +100,60 @@ private fun TutorialSelectionPage(
             )
         },
     ) { contentPadding ->
-        Column {
-            BoxWithConstraints(
-                Modifier
-                    .padding(contentPadding)
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                val size = if (isSystemInLandscape()) {
-                    min(maxWidth, maxHeight).coerceAtMost(400.dp)
-                } else {
-                    min(maxWidth, maxHeight)
-                }
-                GameBoardScaffold(
-                    vm,
-                    modifier = Modifier.then(if (isSystemInLandscape()) Modifier.width(IntrinsicSize.Min) else Modifier.fillMaxSize()),
-                    topBar = { GameBoardTopBar(vm = vm, turnStatusIndicator = null) },
-                    actions = {
-                        Box(
-                            Modifier
-                                .weight(1f)
-                                .padding(end = 12.dp)
+        Column(
+            Modifier
+                .padding(contentPadding)
+                .fillMaxSize(),
+        ) {
+            GameBoardScaffold(
+                vm,
+                modifier = Modifier.fillMaxSize(),
+                topBar = { GameBoardTopBar(vm = vm, turnStatusIndicator = null) },
+                actions = {
+                    Box(
+                        Modifier
+                            .weight(1f, fill = false)
+                            .padding(end = 12.dp)
+                    ) {
+                        val message by vm.tutorialSession.presentation.message.collectAsState()
+                        message?.let { it() }
+                    }
+
+                    Box {
+                        TextButton(
+                            onClick = { vm.launchInBackground { vm.tutorialSession.back() } },
+                            enabled = remember(vm) {
+                                vm.tutorialSession.currentStep.map { it.index != 0 }
+                            }.collectAsStateWithLifecycle(false).value,
                         ) {
-                            val message by vm.tutorialSession.presentation.message.collectAsState()
-                            message?.let { it() }
+                            Text(text = "Back")
                         }
+                    }
 
-                        Box {
-                            TextButton(
-                                onClick = { vm.launchInBackground { vm.tutorialSession.back() } },
-                                enabled = remember(vm) {
-                                    vm.tutorialSession.currentStep.map { it.index != 0 }
-                                }.collectAsStateWithLifecycle(false).value,
+                    Box(contentAlignment = if (isSystemInLandscape()) Alignment.Center else Alignment.CenterEnd) {
+                        val next by remember {
+                            vm.tutorialSession.requests.requestingClickNext
+                        }.collectAsStateWithLifecycle(null)
+                        next.let { n ->
+                            Button(
+                                onClick = { n?.respond() },
+                                enabled = n != null && !n.isResponded
                             ) {
-                                Text(text = "Back")
+                                val buttonName by vm.tutorialSession.presentation.buttonName.collectAsState()
+                                Text(text = buttonName)
                             }
                         }
-
-                        Box {
-                            val next by remember {
-                                vm.tutorialSession.requests.requestingClickNext
-                            }.collectAsStateWithLifecycle(null)
-                            next.let { n ->
-                                Button(
-                                    onClick = { n?.respond() },
-                                    enabled = n != null && !n.isResponded
-                                ) {
-                                    val buttonName by vm.tutorialSession.presentation.buttonName.collectAsState()
-                                    Text(text = buttonName)
-                                }
-                            }
+                    }
+                },
+                board = {
+                    BoxWithConstraints(
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        val size = if (isSystemInLandscape()) {
+                            min(maxWidth, maxHeight) - 200.dp
+                        } else {
+                            min(maxWidth, maxHeight)
                         }
-                    },
-                    board = {
                         GameBoard(
                             vm,
                             Modifier
@@ -184,19 +183,14 @@ private fun TutorialSelectionPage(
                                 }
                             }
                         )
-                    },
-                )
-            }
+                    }
+                },
+            )
 
-            Column(
-                Modifier
-                    .padding(horizontal = 16.dp)
-                    .padding(vertical = 8.dp)
-            ) {
-            }
-
-            vm.tutorialSession.requests.requestingCompose.collectAsStateWithLifecycle(initialValue = null).value?.let {
-                it.content(it)
+            Row(horizontalArrangement = Arrangement.Center) {
+                vm.tutorialSession.requests.requestingCompose.collectAsStateWithLifecycle(initialValue = null).value?.let {
+                    it.content(it)
+                }
             }
         }
     }

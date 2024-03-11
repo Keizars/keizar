@@ -109,7 +109,8 @@ fun GameBoardScaffold(
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp), horizontalArrangement = Arrangement.End
+                    .padding(horizontal = 16.dp),
+                horizontalArrangement = if (isSystemInLandscape()) Arrangement.Center else Arrangement.End
             ) {
                 actions()
             }
