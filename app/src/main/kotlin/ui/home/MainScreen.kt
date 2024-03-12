@@ -609,3 +609,4 @@ fun CopyrightText() {
 private fun PreviewMainScreen() = ProvideCompositionalLocalsForPreview {
     MainScreen()
 }
+
