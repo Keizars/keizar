@@ -10,3 +10,4 @@ from [Releases](https://github.com/keizar24/keizar/releases/latest).
 ## Contributing
 
 To start working on the project, please refer to [Development Documentation](./docs/dev.md).
+
